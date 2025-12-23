@@ -1,0 +1,14 @@
+# Конфигурация деплоя
+# Скопируй в deploy.conf и заполни своими данными
+
+# SSH подключение
+DEPLOY_HOST=192.168.1.100
+DEPLOY_USER=root
+DEPLOY_PORT=22
+
+# Путь на сервере
+DEPLOY_PATH=/opt/weather
+
+# Git репозиторий (для первоначального клонирования)
+GIT_REPO=https://github.com/iRootPro/weather.git
+GIT_BRANCH=main

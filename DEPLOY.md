@@ -1,10 +1,56 @@
 # Деплой Weather на Proxmox
 
-## Требования
+## Быстрый деплой (автоматический)
+
+### 1. Настрой SSH ключ (один раз)
+```bash
+# На своём Mac/Linux
+ssh-copy-id root@192.168.1.100
+```
+
+### 2. Создай deploy.conf
+```bash
+cp deploy.conf.example deploy.conf
+nano deploy.conf
+```
+
+Заполни:
+```
+DEPLOY_HOST=192.168.1.100
+DEPLOY_USER=root
+DEPLOY_PATH=/opt/weather
+GIT_REPO=https://github.com/iRootPro/weather.git
+```
+
+### 3. Первоначальная настройка сервера (один раз)
+```bash
+make deploy-init    # Установит Docker, Git на сервере
+```
+
+### 4. Деплой!
+```bash
+make deploy         # Раскатит всё на сервер
+```
+
+### Полезные команды
+```bash
+make deploy         # Полный деплой (git pull + rebuild)
+make deploy-logs    # Смотреть логи
+make deploy-status  # Статус контейнеров
+make deploy-restart # Перезапустить consumer
+make deploy-check   # Проверить данные в БД
+make deploy-stop    # Остановить всё
+```
+
+---
+
+## Ручная установка
+
+### Требования
 - Docker + Docker Compose
 - Git
 
-## Установка
+### Установка
 
 ### 1. Клонируем репозиторий
 ```bash

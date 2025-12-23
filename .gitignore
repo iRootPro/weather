@@ -4,6 +4,7 @@ bin/
 
 # Env файлы с секретами
 .env
+deploy.conf
 
 # IDE
 .idea/

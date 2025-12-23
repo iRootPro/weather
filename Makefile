@@ -1,4 +1,4 @@
-.PHONY: build run-consumer run-api test lint migrate-up migrate-down docker-up docker-down tidy
+.PHONY: build run-consumer run-api test lint migrate-up migrate-down docker-up docker-down tidy deploy deploy-logs deploy-status deploy-stop deploy-init
 
 # Сборка
 build:
@@ -57,3 +57,48 @@ tidy:
 # Линтер
 lint:
 	golangci-lint run ./...
+
+# ============================================
+# Деплой на удалённый сервер
+# ============================================
+
+# Загружаем конфигурацию деплоя
+-include deploy.conf
+export
+
+SSH_CMD := ssh -p $(or $(DEPLOY_PORT),22) $(DEPLOY_USER)@$(DEPLOY_HOST)
+
+# Полный деплой (git pull + rebuild + restart)
+deploy:
+	@chmod +x scripts/deploy.sh
+	@./scripts/deploy.sh
+
+# Первоначальная настройка сервера
+deploy-init:
+	@echo "=== Первоначальная настройка сервера ==="
+	$(SSH_CMD) " \
+		apt-get update && apt-get install -y docker.io docker-compose git && \
+		systemctl enable docker && \
+		systemctl start docker && \
+		echo 'Docker установлен' \
+	"
+
+# Логи с сервера
+deploy-logs:
+	$(SSH_CMD) "cd $(DEPLOY_PATH) && docker-compose -f docker-compose.prod.yml logs -f --tail=100"
+
+# Статус контейнеров
+deploy-status:
+	$(SSH_CMD) "cd $(DEPLOY_PATH) && docker-compose -f docker-compose.prod.yml ps"
+
+# Остановить сервисы
+deploy-stop:
+	$(SSH_CMD) "cd $(DEPLOY_PATH) && docker-compose -f docker-compose.prod.yml down"
+
+# Перезапустить consumer
+deploy-restart:
+	$(SSH_CMD) "cd $(DEPLOY_PATH) && docker-compose -f docker-compose.prod.yml restart mqtt-consumer"
+
+# Проверить данные в БД
+deploy-check:
+	$(SSH_CMD) "cd $(DEPLOY_PATH) && docker exec weather-postgres psql -U weather -d weather -c 'SELECT COUNT(*) as total, MAX(time) as last_update FROM weather_data;'"
