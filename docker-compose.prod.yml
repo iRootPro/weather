@@ -1,0 +1,53 @@
+services:
+  postgres:
+    image: timescale/timescaledb:latest-pg16
+    container_name: weather-postgres
+    environment:
+      POSTGRES_USER: ${DB_USER:-weather}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-weather}
+      POSTGRES_DB: ${DB_NAME:-weather}
+      TZ: Europe/Moscow
+    ports:
+      - "127.0.0.1:${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-weather} -d ${DB_NAME:-weather}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  migrator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: migrator
+    container_name: weather-migrator
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    volumes:
+      - ./migrations:/app/migrations:ro
+
+  mqtt-consumer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: mqtt-consumer
+    container_name: weather-mqtt-consumer
+    environment:
+      TZ: Europe/Moscow
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrator:
+        condition: service_completed_successfully
+    env_file:
+      - .env
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

@@ -1,0 +1,41 @@
+# Этап сборки
+FROM golang:1.24-alpine AS builder
+
+WORKDIR /app
+
+# Копируем файлы зависимостей
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Копируем исходный код
+COPY . .
+
+# Собираем бинарники
+RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/mqtt-consumer ./cmd/mqtt-consumer
+RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/api-server ./cmd/api-server
+RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/migrator ./cmd/migrator
+
+# MQTT Consumer
+FROM alpine:3.20 AS mqtt-consumer
+RUN apk --no-cache add ca-certificates tzdata
+WORKDIR /app
+COPY --from=builder /bin/mqtt-consumer /app/mqtt-consumer
+CMD ["/app/mqtt-consumer"]
+
+# API Server
+FROM alpine:3.20 AS api-server
+RUN apk --no-cache add ca-certificates tzdata
+WORKDIR /app
+COPY --from=builder /bin/api-server /app/api-server
+COPY --from=builder /app/internal/web/templates /app/templates
+COPY --from=builder /app/internal/web/static /app/static
+EXPOSE 8080
+CMD ["/app/api-server"]
+
+# Migrator
+FROM alpine:3.20 AS migrator
+RUN apk --no-cache add ca-certificates tzdata
+WORKDIR /app
+COPY --from=builder /bin/migrator /app/migrator
+COPY --from=builder /app/migrations /app/migrations
+CMD ["/app/migrator", "up"]
