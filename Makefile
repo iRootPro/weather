@@ -85,19 +85,19 @@ deploy-init:
 
 # Логи с сервера
 deploy-logs:
-	$(SSH_CMD) "cd $(DEPLOY_PATH) && docker-compose -f docker-compose.prod.yml logs -f --tail=100"
+	$(SSH_CMD) "cd $(DEPLOY_PATH) && docker compose -f docker-compose.prod.yml logs -f --tail=100"
 
 # Статус контейнеров
 deploy-status:
-	$(SSH_CMD) "cd $(DEPLOY_PATH) && docker-compose -f docker-compose.prod.yml ps"
+	$(SSH_CMD) "cd $(DEPLOY_PATH) && docker compose -f docker-compose.prod.yml ps"
 
 # Остановить сервисы
 deploy-stop:
-	$(SSH_CMD) "cd $(DEPLOY_PATH) && docker-compose -f docker-compose.prod.yml down"
+	$(SSH_CMD) "cd $(DEPLOY_PATH) && docker compose -f docker-compose.prod.yml down"
 
 # Перезапустить consumer
 deploy-restart:
-	$(SSH_CMD) "cd $(DEPLOY_PATH) && docker-compose -f docker-compose.prod.yml restart mqtt-consumer"
+	$(SSH_CMD) "cd $(DEPLOY_PATH) && docker compose -f docker-compose.prod.yml restart mqtt-consumer"
 
 # Проверить данные в БД
 deploy-check:

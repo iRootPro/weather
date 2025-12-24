@@ -66,12 +66,12 @@ $SSH_CMD "
 echo -e "${GREEN}[5/5] Пересобираю и перезапускаю контейнеры...${NC}"
 $SSH_CMD "
     cd ${DEPLOY_PATH}
-    docker-compose -f docker-compose.prod.yml build
-    docker-compose -f docker-compose.prod.yml up -d
+    docker compose -f docker-compose.prod.yml build
+    docker compose -f docker-compose.prod.yml up -d
 
     echo ''
     echo '=== Статус контейнеров ==='
-    docker-compose -f docker-compose.prod.yml ps
+    docker compose -f docker-compose.prod.yml ps
 "
 
 echo ""
