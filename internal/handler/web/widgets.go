@@ -5,6 +5,8 @@ import (
 	"log/slog"
 	"net/http"
 	"path/filepath"
+
+	"github.com/iRootPro/weather/internal/models"
 )
 
 // degreesToDirection converts wind direction in degrees to compass direction
@@ -40,6 +42,10 @@ func (h *Handler) CurrentWeatherWidget(w http.ResponseWriter, r *http.Request) {
 		Time             string
 		TempOutdoor      float32
 		TempIndoor       float32
+		TempFeelsLike    float32
+		HasFeelsLike     bool
+		DewPoint         float32
+		IsFoggy          bool
 		HumidityOutdoor  int16
 		HumidityIndoor   int16
 		PressureRelative float32
@@ -97,6 +103,23 @@ func (h *Handler) CurrentWeatherWidget(w http.ResponseWriter, r *http.Request) {
 	if data.SolarRadiation != nil {
 		templateData.SolarRadiation = *data.SolarRadiation
 		templateData.Illuminance = *data.SolarRadiation * 120 // approximate conversion to lux
+	}
+	if data.DewPoint != nil {
+		templateData.DewPoint = *data.DewPoint
+		// Определяем туман если разница между температурой и точкой росы < 2.5°C
+		if data.TempOutdoor != nil {
+			templateData.IsFoggy = models.IsFoggy(float64(*data.TempOutdoor), float64(*data.DewPoint))
+		}
+	}
+	if data.TempFeelsLike != nil {
+		templateData.TempFeelsLike = *data.TempFeelsLike
+		// Показываем "ощущается как" только если отличается от реальной на 1+ градус
+		if data.TempOutdoor != nil {
+			diff := *data.TempFeelsLike - *data.TempOutdoor
+			if diff > 1 || diff < -1 {
+				templateData.HasFeelsLike = true
+			}
+		}
 	}
 
 	tmpl, err := h.parsePartial("current_weather.html")

@@ -168,6 +168,24 @@ func (p *Parser) Parse(payload []byte) (*models.WeatherData, error) {
 		weather.SolarRadiation = p.parseFloatPtr(v)
 	}
 
+	// Вычисляем производные значения
+	if weather.TempOutdoor != nil && weather.HumidityOutdoor != nil {
+		tempC := float64(*weather.TempOutdoor)
+		humidity := float64(*weather.HumidityOutdoor)
+
+		// Точка росы
+		dewPoint := float32(models.CalculateDewPoint(tempC, humidity))
+		weather.DewPoint = &dewPoint
+
+		// Ощущаемая температура
+		windMs := 0.0
+		if weather.WindSpeed != nil {
+			windMs = float64(*weather.WindSpeed)
+		}
+		feelsLike := float32(models.CalculateFeelsLike(tempC, humidity, windMs))
+		weather.TempFeelsLike = &feelsLike
+	}
+
 	// Сохраняем сырые данные (без технических полей)
 	filteredData := make(map[string]string)
 	for k, v := range data {
