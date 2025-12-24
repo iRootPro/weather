@@ -41,13 +41,10 @@ func (h *Handler) CurrentWeatherWidget(w http.ResponseWriter, r *http.Request) {
 	templateData := struct {
 		Time             string
 		TempOutdoor      float32
-		TempIndoor       float32
 		TempFeelsLike    float32
-		HasFeelsLike     bool
 		DewPoint         float32
 		IsFoggy          bool
 		HumidityOutdoor  int16
-		HumidityIndoor   int16
 		PressureRelative float32
 		WindSpeed        float32
 		WindGust         float32
@@ -66,14 +63,8 @@ func (h *Handler) CurrentWeatherWidget(w http.ResponseWriter, r *http.Request) {
 	if data.TempOutdoor != nil {
 		templateData.TempOutdoor = *data.TempOutdoor
 	}
-	if data.TempIndoor != nil {
-		templateData.TempIndoor = *data.TempIndoor
-	}
 	if data.HumidityOutdoor != nil {
 		templateData.HumidityOutdoor = *data.HumidityOutdoor
-	}
-	if data.HumidityIndoor != nil {
-		templateData.HumidityIndoor = *data.HumidityIndoor
 	}
 	if data.PressureRelative != nil {
 		templateData.PressureRelative = *data.PressureRelative
@@ -113,13 +104,9 @@ func (h *Handler) CurrentWeatherWidget(w http.ResponseWriter, r *http.Request) {
 	}
 	if data.TempFeelsLike != nil {
 		templateData.TempFeelsLike = *data.TempFeelsLike
-		// Показываем "ощущается как" только если отличается от реальной на 1+ градус
-		if data.TempOutdoor != nil {
-			diff := *data.TempFeelsLike - *data.TempOutdoor
-			if diff > 1 || diff < -1 {
-				templateData.HasFeelsLike = true
-			}
-		}
+	} else if data.TempOutdoor != nil {
+		// Если нет рассчитанной, используем реальную температуру
+		templateData.TempFeelsLike = *data.TempOutdoor
 	}
 
 	tmpl, err := h.parsePartial("current_weather.html")

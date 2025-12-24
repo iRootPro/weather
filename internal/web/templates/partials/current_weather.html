@@ -1,32 +1,18 @@
 <div class="bg-white rounded-lg shadow p-6">
-    <!-- Weather alerts -->
-    {{if or (gt .RainRate 0.0) .IsFoggy}}
-    <div class="mb-4 flex flex-wrap gap-2">
-        {{if gt .RainRate 0.0}}
-        <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center">
-            <svg class="w-6 h-6 text-blue-500 mr-3 animate-pulse" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2c-5.33 4.55-8 8.48-8 11.8 0 4.98 3.8 8.2 8 8.2s8-3.22 8-8.2c0-3.32-2.67-7.25-8-11.8zm0 18c-3.35 0-6-2.57-6-6.2 0-2.34 1.95-5.44 6-9.14 4.05 3.7 6 6.79 6 9.14 0 3.63-2.65 6.2-6 6.2z"/>
-                <path d="M12 5.1c-4.05 3.7-6 6.79-6 9.14 0 3.63 2.65 6.2 6 6.2s6-2.57 6-6.2c0-2.34-1.95-5.44-6-9.14z" opacity=".3"/>
+    <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center space-x-2">
+            <h2 class="text-lg font-semibold text-gray-900">Текущая погода</h2>
+            {{if gt .RainRate 0.0}}
+            <svg class="w-5 h-5 text-blue-500 animate-pulse" fill="currentColor" viewBox="0 0 24 24" title="Идёт дождь">
+                <path d="M12 2c-5.33 4.55-8 8.48-8 11.8 0 4.98 3.8 8.2 8 8.2s8-3.22 8-8.2c0-3.32-2.67-7.25-8-11.8z"/>
             </svg>
-            <div>
-                <span class="font-medium text-blue-700">Идёт дождь</span>
-                <span class="text-blue-600 ml-2">{{printf "%.1f" .RainRate}} мм/ч</span>
-            </div>
-        </div>
-        {{end}}
-        {{if .IsFoggy}}
-        <div class="p-3 bg-gray-100 border border-gray-300 rounded-lg flex items-center">
-            <svg class="w-6 h-6 text-gray-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {{end}}
+            {{if .IsFoggy}}
+            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" title="Туман">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15h18M3 12h18M3 9h18"/>
             </svg>
-            <span class="font-medium text-gray-700">Туман</span>
+            {{end}}
         </div>
-        {{end}}
-    </div>
-    {{end}}
-
-    <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-semibold text-gray-900">Текущая погода</h2>
         <span class="text-sm text-gray-500">{{.Time}}</span>
     </div>
 
@@ -34,18 +20,18 @@
         <!-- Temperature -->
         <div class="text-center p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg">
             <div class="text-3xl font-bold text-orange-600">
-                {{if .TempOutdoor}}{{printf "%.1f" .TempOutdoor}}°{{else}}-{{end}}
+                {{printf "%.1f" .TempOutdoor}}°
             </div>
             <div class="text-sm text-gray-600 mt-1">Температура</div>
             <div class="text-xs text-gray-400">
-                {{if .HasFeelsLike}}ощущается: {{printf "%.1f" .TempFeelsLike}}°{{else}}дом: {{if .TempIndoor}}{{printf "%.1f" .TempIndoor}}°{{else}}-{{end}}{{end}}
+                ощущается: {{printf "%.1f" .TempFeelsLike}}°
             </div>
         </div>
 
         <!-- Humidity -->
         <div class="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
             <div class="text-3xl font-bold text-blue-600">
-                {{if .HumidityOutdoor}}{{.HumidityOutdoor}}%{{else}}-{{end}}
+                {{.HumidityOutdoor}}%
             </div>
             <div class="text-sm text-gray-600 mt-1">Влажность</div>
             <div class="text-xs text-gray-400">
@@ -56,7 +42,7 @@
         <!-- Pressure -->
         <div class="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg">
             <div class="text-3xl font-bold text-purple-600">
-                {{if .PressureRelative}}{{printf "%.0f" .PressureRelative}}{{else}}-{{end}}
+                {{printf "%.0f" .PressureRelative}}
             </div>
             <div class="text-sm text-gray-600 mt-1">мм рт.ст.</div>
         </div>
@@ -65,9 +51,9 @@
         <div class="text-center p-4 bg-gradient-to-br from-teal-50 to-teal-100 rounded-lg">
             <div class="flex items-center justify-center space-x-2">
                 <div class="text-3xl font-bold text-teal-600">
-                    {{if .WindSpeed}}{{printf "%.1f" .WindSpeed}}{{else}}-{{end}}
+                    {{printf "%.1f" .WindSpeed}}
                 </div>
-                {{if .WindDirection}}
+                {{if .WindDirectionStr}}
                 <div class="relative w-8 h-8">
                     <svg class="w-8 h-8 text-teal-500" viewBox="0 0 24 24" style="transform: rotate({{.WindDirection}}deg)">
                         <path fill="currentColor" d="M12 2L6 12h4v10h4V12h4L12 2z"/>
@@ -77,18 +63,18 @@
             </div>
             <div class="text-sm text-gray-600 mt-1">м/с {{if .WindDirectionStr}}({{.WindDirectionStr}}){{end}}</div>
             <div class="text-xs text-gray-400">
-                порывы: {{if .WindGust}}{{printf "%.1f" .WindGust}}{{else}}-{{end}} м/с
+                порывы: {{printf "%.1f" .WindGust}} м/с
             </div>
         </div>
 
         <!-- Rain -->
         <div class="text-center p-4 bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-lg">
             <div class="text-3xl font-bold text-cyan-600">
-                {{if .RainDaily}}{{printf "%.1f" .RainDaily}}{{else}}0{{end}}
+                {{printf "%.1f" .RainDaily}}
             </div>
             <div class="text-sm text-gray-600 mt-1">мм/день</div>
             <div class="text-xs text-gray-400">
-                месяц: {{if .RainMonthly}}{{printf "%.1f" .RainMonthly}}{{else}}0{{end}} мм
+                месяц: {{printf "%.1f" .RainMonthly}} мм
             </div>
         </div>
 
