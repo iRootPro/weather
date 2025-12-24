@@ -66,3 +66,8 @@ type WeatherStats struct {
 
 	RainTotal *float32 `json:"rain_total,omitempty"`
 }
+
+type ChartData struct {
+	Labels   []string             `json:"labels"`
+	Datasets map[string][]float64 `json:"datasets"`
+}

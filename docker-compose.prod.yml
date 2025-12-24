@@ -49,5 +49,24 @@ services:
       - .env
     restart: unless-stopped
 
+  api-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: api-server
+    container_name: weather-api-server
+    environment:
+      TZ: Europe/Moscow
+    ports:
+      - "${HTTP_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrator:
+        condition: service_completed_successfully
+    env_file:
+      - .env
+    restart: unless-stopped
+
 volumes:
   postgres_data:

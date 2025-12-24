@@ -11,6 +11,7 @@ type WeatherRepository interface {
 	Save(ctx context.Context, data *models.WeatherData) error
 	GetLatest(ctx context.Context) (*models.WeatherData, error)
 	GetByTimeRange(ctx context.Context, from, to time.Time) ([]models.WeatherData, error)
+	GetAggregated(ctx context.Context, from, to time.Time, interval string) ([]models.WeatherData, error)
 	GetStats(ctx context.Context, from, to time.Time) (*models.WeatherStats, error)
 }
 
