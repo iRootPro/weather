@@ -150,7 +150,7 @@ function initCharts() {
                 y: {
                     ...commonOptions.scales.y,
                     ticks: {
-                        callback: (value) => value.toFixed(0) + ' мм',
+                        callback: (value) => value.toFixed(1) + ' мм',
                         font: { size: 10 }
                     }
                 }
