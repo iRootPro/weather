@@ -7,6 +7,20 @@ import (
 	"path/filepath"
 )
 
+// degreesToDirection converts wind direction in degrees to compass direction
+func degreesToDirection(degrees int16) string {
+	// Normalize to 0-360
+	deg := int(degrees) % 360
+	if deg < 0 {
+		deg += 360
+	}
+
+	directions := []string{"С", "СВ", "В", "ЮВ", "Ю", "ЮЗ", "З", "СЗ"}
+	// Each direction covers 45 degrees, offset by 22.5 degrees
+	index := ((deg + 22) % 360) / 45
+	return directions[index]
+}
+
 func (h *Handler) parsePartial(name string) (*template.Template, error) {
 	partialPath := filepath.Join(h.templatesDir, "partials", name)
 	return template.ParseFiles(partialPath)
@@ -31,6 +45,8 @@ func (h *Handler) CurrentWeatherWidget(w http.ResponseWriter, r *http.Request) {
 		PressureRelative float32
 		WindSpeed        float32
 		WindGust         float32
+		WindDirection    int16
+		WindDirectionStr string
 		RainRate         float32
 		RainDaily        float32
 		RainMonthly      float32
@@ -61,6 +77,10 @@ func (h *Handler) CurrentWeatherWidget(w http.ResponseWriter, r *http.Request) {
 	}
 	if data.WindGust != nil {
 		templateData.WindGust = *data.WindGust
+	}
+	if data.WindDirection != nil {
+		templateData.WindDirection = *data.WindDirection
+		templateData.WindDirectionStr = degreesToDirection(*data.WindDirection)
 	}
 	if data.RainRate != nil {
 		templateData.RainRate = *data.RainRate

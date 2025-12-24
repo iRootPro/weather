@@ -51,10 +51,19 @@
 
         <!-- Wind -->
         <div class="text-center p-4 bg-gradient-to-br from-teal-50 to-teal-100 rounded-lg">
-            <div class="text-3xl font-bold text-teal-600">
-                {{if .WindSpeed}}{{printf "%.1f" .WindSpeed}}{{else}}-{{end}}
+            <div class="flex items-center justify-center space-x-2">
+                <div class="text-3xl font-bold text-teal-600">
+                    {{if .WindSpeed}}{{printf "%.1f" .WindSpeed}}{{else}}-{{end}}
+                </div>
+                {{if .WindDirection}}
+                <div class="relative w-8 h-8">
+                    <svg class="w-8 h-8 text-teal-500" viewBox="0 0 24 24" style="transform: rotate({{.WindDirection}}deg)">
+                        <path fill="currentColor" d="M12 2L6 12h4v10h4V12h4L12 2z"/>
+                    </svg>
+                </div>
+                {{end}}
             </div>
-            <div class="text-sm text-gray-600 mt-1">м/с</div>
+            <div class="text-sm text-gray-600 mt-1">м/с {{if .WindDirectionStr}}({{.WindDirectionStr}}){{end}}</div>
             <div class="text-xs text-gray-400">
                 порывы: {{if .WindGust}}{{printf "%.1f" .WindGust}}{{else}}-{{end}} м/с
             </div>

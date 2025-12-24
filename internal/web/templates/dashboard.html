@@ -64,21 +64,22 @@
                 <h3 class="text-sm font-medium text-gray-700 mb-2">Ветер</h3>
                 <canvas id="windChart"></canvas>
             </div>
-            <div class="h-48">
+            <div class="h-48 pb-4">
                 <h3 class="text-sm font-medium text-gray-700 mb-2">Освещённость</h3>
                 <canvas id="solarChart"></canvas>
             </div>
-            <div class="h-48 relative">
+            <div class="h-48 pb-4">
                 <h3 class="text-sm font-medium text-gray-700 mb-2">Осадки</h3>
-                <canvas id="rainChart"></canvas>
-                <div id="noRainMessage" class="hidden absolute inset-0 flex items-center justify-center bg-gray-50 rounded-lg">
-                    <span class="text-gray-400 text-sm">Дождя не было</span>
+                <div class="relative h-36">
+                    <canvas id="rainChart"></canvas>
+                    <div id="noRainMessage" class="hidden absolute inset-0 flex items-center justify-center bg-gray-50 rounded-lg border border-gray-100">
+                        <span class="text-gray-400 text-sm">Дождя не было</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-<div class="h-8"></div>
 {{end}}
 
 {{define "scripts"}}
