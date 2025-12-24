@@ -2,7 +2,10 @@ services:
   postgres:
     image: timescale/timescaledb:latest-pg16
     container_name: weather-postgres
-    privileged: true  # Нужно для Docker в LXC контейнере Proxmox
+    privileged: true
+    security_opt:
+      - apparmor:unconfined
+      - seccomp:unconfined
     environment:
       POSTGRES_USER: ${DB_USER:-weather}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-weather}
