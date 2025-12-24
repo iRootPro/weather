@@ -356,6 +356,20 @@ async function loadChartData(interval) {
             charts.rain.data.labels = labels;
             charts.rain.data.datasets[0].data = data.datasets.rain_rate;
             charts.rain.update();
+
+            // Show/hide no-rain message
+            const noRainMsg = document.getElementById('noRainMessage');
+            const rainCanvas = document.getElementById('rainChart');
+            if (noRainMsg && rainCanvas) {
+                const hasRain = data.datasets.rain_rate && data.datasets.rain_rate.some(v => v > 0);
+                if (hasRain) {
+                    noRainMsg.classList.add('hidden');
+                    rainCanvas.classList.remove('hidden');
+                } else {
+                    noRainMsg.classList.remove('hidden');
+                    rainCanvas.classList.add('hidden');
+                }
+            }
         }
 
     } catch (error) {

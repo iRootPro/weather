@@ -41,9 +41,9 @@
         <div class="flex items-center justify-between mb-4">
             <h2 class="text-lg font-semibold text-gray-900">Графики за 24 часа</h2>
             <div class="flex space-x-2">
-                <button onclick="updateCharts('5m')" class="chart-interval-btn px-3 py-1 text-sm rounded-md bg-gray-200 text-gray-700" data-interval="5m">5м</button>
+                <button onclick="updateCharts('5m')" class="chart-interval-btn px-3 py-1 text-sm rounded-md bg-blue-500 text-white" data-interval="5m">5м</button>
                 <button onclick="updateCharts('15m')" class="chart-interval-btn px-3 py-1 text-sm rounded-md bg-gray-200 text-gray-700" data-interval="15m">15м</button>
-                <button onclick="updateCharts('1h')" class="chart-interval-btn px-3 py-1 text-sm rounded-md bg-blue-500 text-white" data-interval="1h">1ч</button>
+                <button onclick="updateCharts('1h')" class="chart-interval-btn px-3 py-1 text-sm rounded-md bg-gray-200 text-gray-700" data-interval="1h">1ч</button>
             </div>
         </div>
 
@@ -68,13 +68,17 @@
                 <h3 class="text-sm font-medium text-gray-700 mb-2">Освещённость</h3>
                 <canvas id="solarChart"></canvas>
             </div>
-            <div class="h-48">
+            <div class="h-48 relative">
                 <h3 class="text-sm font-medium text-gray-700 mb-2">Осадки</h3>
                 <canvas id="rainChart"></canvas>
+                <div id="noRainMessage" class="hidden absolute inset-0 flex items-center justify-center bg-gray-50 rounded-lg">
+                    <span class="text-gray-400 text-sm">Дождя не было</span>
+                </div>
             </div>
         </div>
     </div>
 </div>
+<div class="h-8"></div>
 {{end}}
 
 {{define "scripts"}}
@@ -82,7 +86,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         initCharts();
-        loadChartData('1h');
+        loadChartData('5m');
     });
 </script>
 {{end}}
