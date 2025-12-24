@@ -121,3 +121,7 @@ func (s *WeatherService) GetChartData(ctx context.Context, from, to time.Time, i
 
 	return chart, nil
 }
+
+func (s *WeatherService) GetRecords(ctx context.Context) (*models.WeatherRecords, error) {
+	return s.repo.GetRecords(ctx)
+}

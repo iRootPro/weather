@@ -71,3 +71,40 @@ type ChartData struct {
 	Labels   []string             `json:"labels"`
 	Datasets map[string][]float64 `json:"datasets"`
 }
+
+// RecordValue represents a single record (min/max) with its value and timestamp
+type RecordValue struct {
+	Value float64   `json:"value"`
+	Time  time.Time `json:"time"`
+}
+
+// WeatherRecords contains all-time records for various measurements
+type WeatherRecords struct {
+	// Период данных
+	FirstRecord time.Time `json:"first_record"`
+	LastRecord  time.Time `json:"last_record"`
+	TotalDays   int       `json:"total_days"`
+
+	// Температура
+	TempOutdoorMin RecordValue `json:"temp_outdoor_min"`
+	TempOutdoorMax RecordValue `json:"temp_outdoor_max"`
+
+	// Влажность
+	HumidityOutdoorMin RecordValue `json:"humidity_outdoor_min"`
+	HumidityOutdoorMax RecordValue `json:"humidity_outdoor_max"`
+
+	// Давление
+	PressureMin RecordValue `json:"pressure_min"`
+	PressureMax RecordValue `json:"pressure_max"`
+
+	// Ветер
+	WindSpeedMax RecordValue `json:"wind_speed_max"`
+	WindGustMax  RecordValue `json:"wind_gust_max"`
+
+	// Осадки
+	RainDailyMax RecordValue `json:"rain_daily_max"`
+
+	// Солнечная радиация
+	SolarRadiationMax RecordValue `json:"solar_radiation_max"`
+	UVIndexMax        RecordValue `json:"uv_index_max"`
+}

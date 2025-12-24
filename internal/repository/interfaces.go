@@ -13,6 +13,7 @@ type WeatherRepository interface {
 	GetByTimeRange(ctx context.Context, from, to time.Time) ([]models.WeatherData, error)
 	GetAggregated(ctx context.Context, from, to time.Time, interval string) ([]models.WeatherData, error)
 	GetStats(ctx context.Context, from, to time.Time) (*models.WeatherStats, error)
+	GetRecords(ctx context.Context) (*models.WeatherRecords, error)
 }
 
 type SensorRepository interface {

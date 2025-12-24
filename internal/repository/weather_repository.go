@@ -231,3 +231,127 @@ func (r *weatherRepository) GetStats(ctx context.Context, from, to time.Time) (*
 
 	return stats, nil
 }
+
+func (r *weatherRepository) GetRecords(ctx context.Context) (*models.WeatherRecords, error) {
+	records := &models.WeatherRecords{}
+
+	// Получаем диапазон данных
+	rangeQuery := `SELECT MIN(time), MAX(time) FROM weather_data`
+	err := r.pool.QueryRow(ctx, rangeQuery).Scan(&records.FirstRecord, &records.LastRecord)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get data range: %w", err)
+	}
+	records.TotalDays = int(records.LastRecord.Sub(records.FirstRecord).Hours() / 24)
+
+	// Минимальная температура
+	err = r.pool.QueryRow(ctx, `
+		SELECT temp_outdoor, time FROM weather_data
+		WHERE temp_outdoor IS NOT NULL
+		ORDER BY temp_outdoor ASC LIMIT 1
+	`).Scan(&records.TempOutdoorMin.Value, &records.TempOutdoorMin.Time)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get min temp: %w", err)
+	}
+
+	// Максимальная температура
+	err = r.pool.QueryRow(ctx, `
+		SELECT temp_outdoor, time FROM weather_data
+		WHERE temp_outdoor IS NOT NULL
+		ORDER BY temp_outdoor DESC LIMIT 1
+	`).Scan(&records.TempOutdoorMax.Value, &records.TempOutdoorMax.Time)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get max temp: %w", err)
+	}
+
+	// Минимальная влажность
+	err = r.pool.QueryRow(ctx, `
+		SELECT humidity_outdoor, time FROM weather_data
+		WHERE humidity_outdoor IS NOT NULL
+		ORDER BY humidity_outdoor ASC LIMIT 1
+	`).Scan(&records.HumidityOutdoorMin.Value, &records.HumidityOutdoorMin.Time)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get min humidity: %w", err)
+	}
+
+	// Максимальная влажность
+	err = r.pool.QueryRow(ctx, `
+		SELECT humidity_outdoor, time FROM weather_data
+		WHERE humidity_outdoor IS NOT NULL
+		ORDER BY humidity_outdoor DESC LIMIT 1
+	`).Scan(&records.HumidityOutdoorMax.Value, &records.HumidityOutdoorMax.Time)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get max humidity: %w", err)
+	}
+
+	// Минимальное давление
+	err = r.pool.QueryRow(ctx, `
+		SELECT pressure_relative, time FROM weather_data
+		WHERE pressure_relative IS NOT NULL
+		ORDER BY pressure_relative ASC LIMIT 1
+	`).Scan(&records.PressureMin.Value, &records.PressureMin.Time)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get min pressure: %w", err)
+	}
+
+	// Максимальное давление
+	err = r.pool.QueryRow(ctx, `
+		SELECT pressure_relative, time FROM weather_data
+		WHERE pressure_relative IS NOT NULL
+		ORDER BY pressure_relative DESC LIMIT 1
+	`).Scan(&records.PressureMax.Value, &records.PressureMax.Time)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get max pressure: %w", err)
+	}
+
+	// Максимальная скорость ветра
+	err = r.pool.QueryRow(ctx, `
+		SELECT wind_speed, time FROM weather_data
+		WHERE wind_speed IS NOT NULL
+		ORDER BY wind_speed DESC LIMIT 1
+	`).Scan(&records.WindSpeedMax.Value, &records.WindSpeedMax.Time)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get max wind speed: %w", err)
+	}
+
+	// Максимальные порывы ветра
+	err = r.pool.QueryRow(ctx, `
+		SELECT wind_gust, time FROM weather_data
+		WHERE wind_gust IS NOT NULL
+		ORDER BY wind_gust DESC LIMIT 1
+	`).Scan(&records.WindGustMax.Value, &records.WindGustMax.Time)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get max wind gust: %w", err)
+	}
+
+	// Максимальные осадки за день
+	err = r.pool.QueryRow(ctx, `
+		SELECT rain_daily, time FROM weather_data
+		WHERE rain_daily IS NOT NULL
+		ORDER BY rain_daily DESC LIMIT 1
+	`).Scan(&records.RainDailyMax.Value, &records.RainDailyMax.Time)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get max rain daily: %w", err)
+	}
+
+	// Максимальная солнечная радиация
+	err = r.pool.QueryRow(ctx, `
+		SELECT solar_radiation, time FROM weather_data
+		WHERE solar_radiation IS NOT NULL
+		ORDER BY solar_radiation DESC LIMIT 1
+	`).Scan(&records.SolarRadiationMax.Value, &records.SolarRadiationMax.Time)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get max solar radiation: %w", err)
+	}
+
+	// Максимальный UV индекс
+	err = r.pool.QueryRow(ctx, `
+		SELECT uv_index, time FROM weather_data
+		WHERE uv_index IS NOT NULL
+		ORDER BY uv_index DESC LIMIT 1
+	`).Scan(&records.UVIndexMax.Value, &records.UVIndexMax.Time)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get max uv index: %w", err)
+	}
+
+	return records, nil
+}

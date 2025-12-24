@@ -95,6 +95,7 @@ func main() {
 	// Web pages
 	mux.HandleFunc("GET /", webHandler.Dashboard)
 	mux.HandleFunc("GET /history", webHandler.History)
+	mux.HandleFunc("GET /records", webHandler.Records)
 
 	// HTMX widgets
 	mux.HandleFunc("GET /widgets/current", webHandler.CurrentWeatherWidget)
