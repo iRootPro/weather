@@ -74,7 +74,7 @@ function initCharts() {
                 y: {
                     ...commonOptions.scales.y,
                     ticks: {
-                        callback: (value) => value.toFixed(0) + '°',
+                        callback: (value) => value.toFixed(1) + '°',
                         font: { size: 10 }
                     }
                 }
@@ -184,7 +184,7 @@ function initCharts() {
             ...commonOptions,
             plugins: {
                 ...commonOptions.plugins,
-                legend: { display: true, position: 'top', labels: { font: { size: 10 } } },
+                legend: { display: true, position: 'top', labels: { font: { size: 10 }, usePointStyle: true, pointStyle: 'line' } },
                 tooltip: {
                     ...commonOptions.plugins.tooltip,
                     callbacks: {
@@ -246,6 +246,47 @@ function initCharts() {
             }
         });
     }
+
+    // Rain chart
+    const rainCanvas = document.getElementById('rainChart');
+    if (rainCanvas) {
+        charts.rain = new Chart(rainCanvas, {
+            type: 'bar',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Осадки',
+                    data: [],
+                    backgroundColor: 'rgba(6, 182, 212, 0.7)',
+                    borderColor: '#06b6d4',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                ...commonOptions,
+                plugins: {
+                    ...commonOptions.plugins,
+                    tooltip: {
+                        ...commonOptions.plugins.tooltip,
+                        callbacks: {
+                            label: (ctx) => ctx.dataset.label + ': ' + ctx.raw.toFixed(2) + ' мм/ч'
+                        }
+                    }
+                },
+                scales: {
+                    ...commonOptions.scales,
+                    y: {
+                        ...commonOptions.scales.y,
+                        min: 0,
+                        ticks: {
+                            callback: (value) => value.toFixed(1) + ' мм',
+                            font: { size: 10 }
+                        }
+                    }
+                }
+            }
+        });
+    }
 }
 
 async function loadChartData(interval) {
@@ -272,7 +313,7 @@ async function loadChartData(interval) {
 
     try {
         const response = await fetch(
-            `/api/weather/chart?from=${fromStr}&to=${toStr}&interval=${interval}&fields=temp_outdoor,humidity_outdoor,pressure_relative,wind_speed,wind_gust,solar_radiation`
+            `/api/weather/chart?from=${fromStr}&to=${toStr}&interval=${interval}&fields=temp_outdoor,humidity_outdoor,pressure_relative,wind_speed,wind_gust,solar_radiation,rain_rate`
         );
         const data = await response.json();
 
@@ -308,6 +349,13 @@ async function loadChartData(interval) {
             charts.solar.data.labels = labels;
             charts.solar.data.datasets[0].data = data.datasets.solar_radiation;
             charts.solar.update();
+        }
+
+        // Update rain chart
+        if (charts.rain) {
+            charts.rain.data.labels = labels;
+            charts.rain.data.datasets[0].data = data.datasets.rain_rate;
+            charts.rain.update();
         }
 
     } catch (error) {

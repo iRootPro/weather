@@ -31,6 +31,7 @@ func (h *Handler) CurrentWeatherWidget(w http.ResponseWriter, r *http.Request) {
 		PressureRelative float32
 		WindSpeed        float32
 		WindGust         float32
+		RainRate         float32
 		RainDaily        float32
 		RainMonthly      float32
 		UVIndex          float32
@@ -60,6 +61,9 @@ func (h *Handler) CurrentWeatherWidget(w http.ResponseWriter, r *http.Request) {
 	}
 	if data.WindGust != nil {
 		templateData.WindGust = *data.WindGust
+	}
+	if data.RainRate != nil {
+		templateData.RainRate = *data.RainRate
 	}
 	if data.RainDaily != nil {
 		templateData.RainDaily = *data.RainDaily
