@@ -27,10 +27,9 @@ func NewHandler(weatherRepo repository.WeatherRepository, logger *slog.Logger) *
 // HandleMessage возвращает обработчик для MQTT сообщений
 func (h *Handler) HandleMessage() mqtt.MessageHandler {
 	return func(client mqtt.Client, msg mqtt.Message) {
-		// Temporary INFO level to see raw payload
-		h.logger.Info("received MQTT message",
+		h.logger.Debug("received message",
 			"topic", msg.Topic(),
-			"payload", string(msg.Payload()),
+			"payload_size", len(msg.Payload()),
 		)
 
 		weather, err := h.parser.Parse(msg.Payload())

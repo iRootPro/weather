@@ -158,6 +158,44 @@ function initCharts() {
         }
     });
 
+    // Solar/Illuminance chart
+    charts.solar = new Chart(document.getElementById('solarChart'), {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Освещённость',
+                data: [],
+                borderColor: '#eab308',
+                backgroundColor: 'rgba(234, 179, 8, 0.1)',
+                fill: true
+            }]
+        },
+        options: {
+            ...commonOptions,
+            plugins: {
+                ...commonOptions.plugins,
+                tooltip: {
+                    ...commonOptions.plugins.tooltip,
+                    callbacks: {
+                        label: (ctx) => ctx.dataset.label + ': ' + Math.round(ctx.raw * 120) + ' люкс'
+                    }
+                }
+            },
+            scales: {
+                ...commonOptions.scales,
+                y: {
+                    ...commonOptions.scales.y,
+                    min: 0,
+                    ticks: {
+                        callback: (value) => Math.round(value * 120) + ' лк',
+                        font: { size: 10 }
+                    }
+                }
+            }
+        }
+    });
+
     // Wind chart
     charts.wind = new Chart(document.getElementById('windChart'), {
         type: 'line',
@@ -231,7 +269,7 @@ async function loadChartData(interval) {
 
     try {
         const response = await fetch(
-            `/api/weather/chart?from=${fromStr}&to=${toStr}&interval=${interval}&fields=temp_outdoor,humidity_outdoor,pressure_relative,wind_speed,wind_gust`
+            `/api/weather/chart?from=${fromStr}&to=${toStr}&interval=${interval}&fields=temp_outdoor,humidity_outdoor,pressure_relative,wind_speed,wind_gust,solar_radiation`
         );
         const data = await response.json();
 
@@ -261,6 +299,11 @@ async function loadChartData(interval) {
         charts.wind.data.datasets[0].data = data.datasets.wind_speed;
         charts.wind.data.datasets[1].data = data.datasets.wind_gust;
         charts.wind.update();
+
+        // Update solar chart
+        charts.solar.data.labels = labels;
+        charts.solar.data.datasets[0].data = data.datasets.solar_radiation;
+        charts.solar.update();
 
     } catch (error) {
         console.error('Error loading chart data:', error);

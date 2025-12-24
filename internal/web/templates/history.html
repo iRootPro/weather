@@ -69,6 +69,10 @@
                 <h3 class="text-sm font-medium text-gray-700 mb-2">Осадки</h3>
                 <canvas id="historyRainChart"></canvas>
             </div>
+            <div class="h-48">
+                <h3 class="text-sm font-medium text-gray-700 mb-2">Освещённость</h3>
+                <canvas id="historySolarChart"></canvas>
+            </div>
         </div>
     </div>
 </div>
@@ -170,6 +174,16 @@
                 scales: { ...commonOptions.scales, y: { ...commonOptions.scales.y, min: 0, ticks: { callback: (v) => v.toFixed(1) + ' мм', font: { size: 10 } } } }
             }
         });
+
+        historyCharts.solar = new Chart(document.getElementById('historySolarChart'), {
+            type: 'line',
+            data: { labels: [], datasets: [{ label: 'Освещённость', data: [], borderColor: '#eab308', backgroundColor: 'rgba(234, 179, 8, 0.1)', fill: true }] },
+            options: {
+                ...commonOptions,
+                plugins: { ...commonOptions.plugins, tooltip: { callbacks: { label: (ctx) => Math.round(ctx.raw * 120) + ' люкс' } } },
+                scales: { ...commonOptions.scales, y: { ...commonOptions.scales.y, min: 0, ticks: { callback: (v) => Math.round(v * 120) + ' лк', font: { size: 10 } } } }
+            }
+        });
     }
 
     async function loadHistoryData() {
@@ -177,7 +191,7 @@
         const to = document.getElementById('dateTo').value;
         const interval = document.getElementById('interval').value;
 
-        const response = await fetch(`/api/weather/chart?from=${from}&to=${to}&interval=${interval}&fields=temp_outdoor,humidity_outdoor,pressure_relative,wind_speed,wind_gust,rain_rate`);
+        const response = await fetch(`/api/weather/chart?from=${from}&to=${to}&interval=${interval}&fields=temp_outdoor,humidity_outdoor,pressure_relative,wind_speed,wind_gust,rain_rate,solar_radiation`);
         const data = await response.json();
 
         historyCharts.temp.data.labels = data.labels;
@@ -200,6 +214,10 @@
         historyCharts.rain.data.labels = data.labels;
         historyCharts.rain.data.datasets[0].data = data.datasets.rain_rate;
         historyCharts.rain.update();
+
+        historyCharts.solar.data.labels = data.labels;
+        historyCharts.solar.data.datasets[0].data = data.datasets.solar_radiation;
+        historyCharts.solar.update();
     }
 </script>
 {{end}}

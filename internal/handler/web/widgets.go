@@ -35,6 +35,7 @@ func (h *Handler) CurrentWeatherWidget(w http.ResponseWriter, r *http.Request) {
 		RainMonthly      float32
 		UVIndex          float32
 		SolarRadiation   float32
+		Illuminance      float32 // lux = solar radiation * 120
 	}{
 		Time: data.Time.Format("15:04"),
 	}
@@ -71,6 +72,7 @@ func (h *Handler) CurrentWeatherWidget(w http.ResponseWriter, r *http.Request) {
 	}
 	if data.SolarRadiation != nil {
 		templateData.SolarRadiation = *data.SolarRadiation
+		templateData.Illuminance = *data.SolarRadiation * 120 // approximate conversion to lux
 	}
 
 	tmpl, err := h.parsePartial("current_weather.html")
