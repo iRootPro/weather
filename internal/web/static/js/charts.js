@@ -16,9 +16,9 @@ function initCharts() {
             },
             tooltip: {
                 backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                padding: 12,
-                titleFont: { size: 14 },
-                bodyFont: { size: 13 }
+                padding: 8,
+                titleFont: { size: 12 },
+                bodyFont: { size: 11 }
             }
         },
         scales: {
@@ -27,17 +27,21 @@ function initCharts() {
                 ticks: {
                     maxRotation: 0,
                     autoSkip: true,
-                    maxTicksLimit: 8
+                    maxTicksLimit: 6,
+                    font: { size: 10 }
                 }
             },
             y: {
                 grid: { color: '#f3f4f6' },
-                ticks: { padding: 8 }
+                ticks: {
+                    padding: 4,
+                    font: { size: 10 }
+                }
             }
         },
         elements: {
-            point: { radius: 2, hoverRadius: 5 },
-            line: { tension: 0.3 }
+            point: { radius: 1, hoverRadius: 4 },
+            line: { tension: 0.3, borderWidth: 2 }
         }
     };
 
