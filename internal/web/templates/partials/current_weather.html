@@ -1,0 +1,71 @@
+<div class="bg-white rounded-lg shadow p-6">
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold text-gray-900">Текущая погода</h2>
+        <span class="text-sm text-gray-500">{{.Time}}</span>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <!-- Temperature -->
+        <div class="text-center p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg">
+            <div class="text-3xl font-bold text-orange-600">
+                {{if .TempOutdoor}}{{printf "%.1f" .TempOutdoor}}°{{else}}-{{end}}
+            </div>
+            <div class="text-sm text-gray-600 mt-1">Температура</div>
+            <div class="text-xs text-gray-400">
+                дом: {{if .TempIndoor}}{{printf "%.1f" .TempIndoor}}°{{else}}-{{end}}
+            </div>
+        </div>
+
+        <!-- Humidity -->
+        <div class="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
+            <div class="text-3xl font-bold text-blue-600">
+                {{if .HumidityOutdoor}}{{.HumidityOutdoor}}%{{else}}-{{end}}
+            </div>
+            <div class="text-sm text-gray-600 mt-1">Влажность</div>
+            <div class="text-xs text-gray-400">
+                дом: {{if .HumidityIndoor}}{{.HumidityIndoor}}%{{else}}-{{end}}
+            </div>
+        </div>
+
+        <!-- Pressure -->
+        <div class="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg">
+            <div class="text-3xl font-bold text-purple-600">
+                {{if .PressureRelative}}{{printf "%.0f" .PressureRelative}}{{else}}-{{end}}
+            </div>
+            <div class="text-sm text-gray-600 mt-1">мм рт.ст.</div>
+        </div>
+
+        <!-- Wind -->
+        <div class="text-center p-4 bg-gradient-to-br from-teal-50 to-teal-100 rounded-lg">
+            <div class="text-3xl font-bold text-teal-600">
+                {{if .WindSpeed}}{{printf "%.1f" .WindSpeed}}{{else}}-{{end}}
+            </div>
+            <div class="text-sm text-gray-600 mt-1">м/с</div>
+            <div class="text-xs text-gray-400">
+                порывы: {{if .WindGust}}{{printf "%.1f" .WindGust}}{{else}}-{{end}} м/с
+            </div>
+        </div>
+
+        <!-- Rain -->
+        <div class="text-center p-4 bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-lg">
+            <div class="text-3xl font-bold text-cyan-600">
+                {{if .RainDaily}}{{printf "%.1f" .RainDaily}}{{else}}0{{end}}
+            </div>
+            <div class="text-sm text-gray-600 mt-1">мм/день</div>
+            <div class="text-xs text-gray-400">
+                месяц: {{if .RainMonthly}}{{printf "%.1f" .RainMonthly}}{{else}}0{{end}} мм
+            </div>
+        </div>
+
+        <!-- Solar/UV -->
+        <div class="text-center p-4 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg">
+            <div class="text-3xl font-bold text-yellow-600">
+                {{if .UVIndex}}{{printf "%.0f" .UVIndex}}{{else}}0{{end}}
+            </div>
+            <div class="text-sm text-gray-600 mt-1">UV индекс</div>
+            <div class="text-xs text-gray-400">
+                {{if .SolarRadiation}}{{printf "%.0f" .SolarRadiation}}{{else}}0{{end}} Вт/м²
+            </div>
+        </div>
+    </div>
+</div>

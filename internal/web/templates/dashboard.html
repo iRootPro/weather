@@ -1,0 +1,80 @@
+{{template "base.html" .}}
+
+{{define "title"}}Главная - Метеостанция{{end}}
+
+{{define "content"}}
+<div class="space-y-6">
+    <!-- Current Weather -->
+    <div id="current-weather"
+         hx-get="/widgets/current"
+         hx-trigger="load, every 60s"
+         hx-swap="innerHTML">
+        <div class="animate-pulse bg-white rounded-lg shadow p-6">
+            <div class="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+            <div class="h-24 bg-gray-200 rounded"></div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div id="daily-stats"
+         hx-get="/widgets/stats"
+         hx-trigger="load, every 300s"
+         hx-swap="innerHTML">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="animate-pulse bg-white rounded-lg shadow p-4">
+                <div class="h-6 bg-gray-200 rounded w-1/2 mb-2"></div>
+                <div class="h-10 bg-gray-200 rounded"></div>
+            </div>
+            <div class="animate-pulse bg-white rounded-lg shadow p-4">
+                <div class="h-6 bg-gray-200 rounded w-1/2 mb-2"></div>
+                <div class="h-10 bg-gray-200 rounded"></div>
+            </div>
+            <div class="animate-pulse bg-white rounded-lg shadow p-4">
+                <div class="h-6 bg-gray-200 rounded w-1/2 mb-2"></div>
+                <div class="h-10 bg-gray-200 rounded"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold text-gray-900">Графики за 24 часа</h2>
+            <div class="flex space-x-2">
+                <button onclick="updateCharts('1h')" class="chart-interval-btn px-3 py-1 text-sm rounded-md bg-blue-500 text-white" data-interval="1h">1ч</button>
+                <button onclick="updateCharts('15m')" class="chart-interval-btn px-3 py-1 text-sm rounded-md bg-gray-200 text-gray-700" data-interval="15m">15м</button>
+                <button onclick="updateCharts('5m')" class="chart-interval-btn px-3 py-1 text-sm rounded-md bg-gray-200 text-gray-700" data-interval="5m">5м</button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div>
+                <h3 class="text-sm font-medium text-gray-700 mb-2">Температура</h3>
+                <canvas id="tempChart" height="200"></canvas>
+            </div>
+            <div>
+                <h3 class="text-sm font-medium text-gray-700 mb-2">Влажность</h3>
+                <canvas id="humidityChart" height="200"></canvas>
+            </div>
+            <div>
+                <h3 class="text-sm font-medium text-gray-700 mb-2">Давление</h3>
+                <canvas id="pressureChart" height="200"></canvas>
+            </div>
+            <div>
+                <h3 class="text-sm font-medium text-gray-700 mb-2">Ветер</h3>
+                <canvas id="windChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{define "scripts"}}
+<script src="/static/js/charts.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        initCharts();
+        loadChartData('1h');
+    });
+</script>
+{{end}}

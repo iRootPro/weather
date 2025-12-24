@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{block "title" .}}Метеостанция{{end}}</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#10B981',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
+                    </svg>
+                    <h1 class="text-xl font-bold text-gray-900">Метеостанция</h1>
+                </div>
+                <nav class="flex space-x-4">
+                    <a href="/" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium {{if eq .ActivePage "dashboard"}}bg-gray-100 text-gray-900{{end}}">
+                        Главная
+                    </a>
+                    <a href="/history" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium {{if eq .ActivePage "history"}}bg-gray-100 text-gray-900{{end}}">
+                        История
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+        {{block "content" .}}{{end}}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t mt-auto">
+        <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+            <p class="text-center text-gray-500 text-sm">
+                EcoWitt GW3000A &bull;
+                <span id="last-update" hx-get="/api/weather/current" hx-trigger="load" hx-swap="none"
+                      hx-on::after-request="updateLastTime(event)">
+                    Загрузка...
+                </span>
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        function updateLastTime(event) {
+            if (event.detail.successful) {
+                const data = JSON.parse(event.detail.xhr.responseText);
+                const time = new Date(data.time);
+                document.getElementById('last-update').textContent =
+                    'Обновлено: ' + time.toLocaleTimeString('ru-RU');
+            }
+        }
+    </script>
+
+    {{block "scripts" .}}{{end}}
+</body>
+</html>

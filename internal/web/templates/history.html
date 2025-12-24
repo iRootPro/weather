@@ -1,0 +1,144 @@
+{{template "base.html" .}}
+
+{{define "title"}}История - Метеостанция{{end}}
+
+{{define "content"}}
+<div class="space-y-6">
+    <!-- Date Range Selector -->
+    <div class="bg-white rounded-lg shadow p-4">
+        <div class="flex flex-wrap items-center gap-4">
+            <div>
+                <label for="dateFrom" class="block text-sm font-medium text-gray-700">От</label>
+                <input type="date" id="dateFrom" class="mt-1 block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+            </div>
+            <div>
+                <label for="dateTo" class="block text-sm font-medium text-gray-700">До</label>
+                <input type="date" id="dateTo" class="mt-1 block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+            </div>
+            <div>
+                <label for="interval" class="block text-sm font-medium text-gray-700">Интервал</label>
+                <select id="interval" class="mt-1 block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <option value="5m">5 минут</option>
+                    <option value="15m">15 минут</option>
+                    <option value="1h" selected>1 час</option>
+                    <option value="1d">1 день</option>
+                </select>
+            </div>
+            <div class="flex items-end">
+                <button onclick="loadHistoryData()" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    Загрузить
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Period Stats -->
+    <div id="period-stats"
+         hx-get="/widgets/stats?period=week"
+         hx-trigger="load"
+         hx-swap="innerHTML">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="animate-pulse bg-white rounded-lg shadow p-4">
+                <div class="h-6 bg-gray-200 rounded w-1/2 mb-2"></div>
+                <div class="h-10 bg-gray-200 rounded"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Графики</h2>
+        <div class="space-y-6">
+            <div>
+                <h3 class="text-sm font-medium text-gray-700 mb-2">Температура</h3>
+                <canvas id="historyTempChart" height="150"></canvas>
+            </div>
+            <div>
+                <h3 class="text-sm font-medium text-gray-700 mb-2">Влажность</h3>
+                <canvas id="historyHumidityChart" height="150"></canvas>
+            </div>
+            <div>
+                <h3 class="text-sm font-medium text-gray-700 mb-2">Давление</h3>
+                <canvas id="historyPressureChart" height="150"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{define "scripts"}}
+<script src="/static/js/charts.js"></script>
+<script>
+    let historyCharts = {};
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set default dates
+        const today = new Date();
+        const weekAgo = new Date(today);
+        weekAgo.setDate(weekAgo.getDate() - 7);
+
+        document.getElementById('dateTo').value = today.toISOString().split('T')[0];
+        document.getElementById('dateFrom').value = weekAgo.toISOString().split('T')[0];
+
+        initHistoryCharts();
+        loadHistoryData();
+    });
+
+    function initHistoryCharts() {
+        const commonOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: {
+                    grid: { display: false }
+                },
+                y: {
+                    grid: { color: '#f3f4f6' }
+                }
+            }
+        };
+
+        historyCharts.temp = new Chart(document.getElementById('historyTempChart'), {
+            type: 'line',
+            data: { labels: [], datasets: [{ label: 'Температура', data: [], borderColor: '#f97316', backgroundColor: 'rgba(249, 115, 22, 0.1)', fill: true, tension: 0.3 }] },
+            options: commonOptions
+        });
+
+        historyCharts.humidity = new Chart(document.getElementById('historyHumidityChart'), {
+            type: 'line',
+            data: { labels: [], datasets: [{ label: 'Влажность', data: [], borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.3 }] },
+            options: commonOptions
+        });
+
+        historyCharts.pressure = new Chart(document.getElementById('historyPressureChart'), {
+            type: 'line',
+            data: { labels: [], datasets: [{ label: 'Давление', data: [], borderColor: '#8b5cf6', backgroundColor: 'rgba(139, 92, 246, 0.1)', fill: true, tension: 0.3 }] },
+            options: commonOptions
+        });
+    }
+
+    async function loadHistoryData() {
+        const from = document.getElementById('dateFrom').value;
+        const to = document.getElementById('dateTo').value;
+        const interval = document.getElementById('interval').value;
+
+        const response = await fetch(`/api/weather/chart?from=${from}&to=${to}&interval=${interval}&fields=temp_outdoor,humidity_outdoor,pressure_relative`);
+        const data = await response.json();
+
+        historyCharts.temp.data.labels = data.labels;
+        historyCharts.temp.data.datasets[0].data = data.datasets.temp_outdoor;
+        historyCharts.temp.update();
+
+        historyCharts.humidity.data.labels = data.labels;
+        historyCharts.humidity.data.datasets[0].data = data.datasets.humidity_outdoor;
+        historyCharts.humidity.update();
+
+        historyCharts.pressure.data.labels = data.labels;
+        historyCharts.pressure.data.datasets[0].data = data.datasets.pressure_relative;
+        historyCharts.pressure.update();
+    }
+</script>
+{{end}}

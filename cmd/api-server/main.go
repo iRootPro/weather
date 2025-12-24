@@ -13,6 +13,7 @@ import (
 
 	"github.com/iRootPro/weather/internal/config"
 	"github.com/iRootPro/weather/internal/handler/api"
+	"github.com/iRootPro/weather/internal/handler/web"
 	"github.com/iRootPro/weather/internal/repository"
 	"github.com/iRootPro/weather/internal/service"
 	"github.com/iRootPro/weather/pkg/database"
@@ -62,6 +63,19 @@ func main() {
 	weatherHandler := api.NewWeatherHandler(weatherService)
 	sensorHandler := api.NewSensorHandler(sensorService)
 
+	// Web handler - try Docker path first, then local development path
+	templatesDir := "templates"
+	staticDir := "static"
+	if _, err := os.Stat(templatesDir); os.IsNotExist(err) {
+		templatesDir = "internal/web/templates"
+		staticDir = "internal/web/static"
+	}
+
+	webHandler, err := web.NewHandler(templatesDir, weatherService)
+	if err != nil {
+		log.Fatalf("failed to create web handler: %v", err)
+	}
+
 	// Настройка роутера
 	mux := http.NewServeMux()
 
@@ -77,6 +91,17 @@ func main() {
 	// Sensors API
 	mux.HandleFunc("GET /api/sensors", sensorHandler.GetAll)
 	mux.HandleFunc("GET /api/sensors/{code}", sensorHandler.GetByCode)
+
+	// Web pages
+	mux.HandleFunc("GET /", webHandler.Dashboard)
+	mux.HandleFunc("GET /history", webHandler.History)
+
+	// HTMX widgets
+	mux.HandleFunc("GET /widgets/current", webHandler.CurrentWeatherWidget)
+	mux.HandleFunc("GET /widgets/stats", webHandler.StatsWidget)
+
+	// Static files
+	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.Dir(staticDir))))
 
 	// Middleware
 	handler := corsMiddleware(loggingMiddleware(mux))
