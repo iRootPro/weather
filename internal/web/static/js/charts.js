@@ -60,12 +60,22 @@ function initCharts() {
         },
         options: {
             ...commonOptions,
+            plugins: {
+                ...commonOptions.plugins,
+                tooltip: {
+                    ...commonOptions.plugins.tooltip,
+                    callbacks: {
+                        label: (ctx) => ctx.dataset.label + ': ' + ctx.raw.toFixed(1) + '°C'
+                    }
+                }
+            },
             scales: {
                 ...commonOptions.scales,
                 y: {
                     ...commonOptions.scales.y,
                     ticks: {
-                        callback: (value) => value + '°C'
+                        callback: (value) => value.toFixed(0) + '°',
+                        font: { size: 10 }
                     }
                 }
             }
@@ -87,6 +97,15 @@ function initCharts() {
         },
         options: {
             ...commonOptions,
+            plugins: {
+                ...commonOptions.plugins,
+                tooltip: {
+                    ...commonOptions.plugins.tooltip,
+                    callbacks: {
+                        label: (ctx) => ctx.dataset.label + ': ' + Math.round(ctx.raw) + '%'
+                    }
+                }
+            },
             scales: {
                 ...commonOptions.scales,
                 y: {
@@ -94,7 +113,8 @@ function initCharts() {
                     min: 0,
                     max: 100,
                     ticks: {
-                        callback: (value) => value + '%'
+                        callback: (value) => value + '%',
+                        font: { size: 10 }
                     }
                 }
             }
@@ -116,12 +136,22 @@ function initCharts() {
         },
         options: {
             ...commonOptions,
+            plugins: {
+                ...commonOptions.plugins,
+                tooltip: {
+                    ...commonOptions.plugins.tooltip,
+                    callbacks: {
+                        label: (ctx) => ctx.dataset.label + ': ' + ctx.raw.toFixed(1) + ' мм'
+                    }
+                }
+            },
             scales: {
                 ...commonOptions.scales,
                 y: {
                     ...commonOptions.scales.y,
                     ticks: {
-                        callback: (value) => value + ' мм'
+                        callback: (value) => value.toFixed(0) + ' мм',
+                        font: { size: 10 }
                     }
                 }
             }
@@ -154,7 +184,13 @@ function initCharts() {
             ...commonOptions,
             plugins: {
                 ...commonOptions.plugins,
-                legend: { display: true, position: 'top' }
+                legend: { display: true, position: 'top', labels: { font: { size: 10 } } },
+                tooltip: {
+                    ...commonOptions.plugins.tooltip,
+                    callbacks: {
+                        label: (ctx) => ctx.dataset.label + ': ' + ctx.raw.toFixed(1) + ' м/с'
+                    }
+                }
             },
             scales: {
                 ...commonOptions.scales,
@@ -162,7 +198,8 @@ function initCharts() {
                     ...commonOptions.scales.y,
                     min: 0,
                     ticks: {
-                        callback: (value) => value + ' м/с'
+                        callback: (value) => value.toFixed(0) + ' м/с',
+                        font: { size: 10 }
                     }
                 }
             }
