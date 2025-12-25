@@ -44,6 +44,10 @@ func (h *Handler) CurrentWeatherWidget(w http.ResponseWriter, r *http.Request) {
 		TempFeelsLike    float32
 		DewPoint         float32
 		IsFoggy          bool
+		IsRaining        bool
+		RainIntensity    string // "дождь", "сильный дождь", "ливень"
+		IsWindy          bool
+		WindIntensity    string // "ветер", "сильный ветер", "шторм"
 		HumidityOutdoor  int16
 		PressureRelative float32
 		WindSpeed        float32
@@ -57,7 +61,7 @@ func (h *Handler) CurrentWeatherWidget(w http.ResponseWriter, r *http.Request) {
 		SolarRadiation   float32
 		Illuminance      float32 // lux = solar radiation * 120
 	}{
-		Time: data.Time.Format("15:04"),
+		Time: "Данные на " + data.Time.Format("15:04"),
 	}
 
 	if data.TempOutdoor != nil {
@@ -71,6 +75,18 @@ func (h *Handler) CurrentWeatherWidget(w http.ResponseWriter, r *http.Request) {
 	}
 	if data.WindSpeed != nil {
 		templateData.WindSpeed = *data.WindSpeed
+		// Определяем интенсивность ветра
+		if *data.WindSpeed >= 5 {
+			templateData.IsWindy = true
+			switch {
+			case *data.WindSpeed >= 17:
+				templateData.WindIntensity = "шторм"
+			case *data.WindSpeed >= 10:
+				templateData.WindIntensity = "сильный ветер"
+			default:
+				templateData.WindIntensity = "ветер"
+			}
+		}
 	}
 	if data.WindGust != nil {
 		templateData.WindGust = *data.WindGust
@@ -81,6 +97,18 @@ func (h *Handler) CurrentWeatherWidget(w http.ResponseWriter, r *http.Request) {
 	}
 	if data.RainRate != nil {
 		templateData.RainRate = *data.RainRate
+		// Определяем интенсивность дождя
+		if *data.RainRate > 0 {
+			templateData.IsRaining = true
+			switch {
+			case *data.RainRate >= 7.5:
+				templateData.RainIntensity = "ливень"
+			case *data.RainRate >= 2.5:
+				templateData.RainIntensity = "сильный дождь"
+			default:
+				templateData.RainIntensity = "дождь"
+			}
+		}
 	}
 	if data.RainDaily != nil {
 		templateData.RainDaily = *data.RainDaily
