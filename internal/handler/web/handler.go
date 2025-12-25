@@ -125,3 +125,22 @@ func (h *Handler) Records(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }
+
+// Help renders the help/reference page
+func (h *Handler) Help(w http.ResponseWriter, r *http.Request) {
+	tmpl, err := h.parseTemplate("help.html")
+	if err != nil {
+		slog.Error("failed to parse help template", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	data := PageData{
+		ActivePage: "help",
+	}
+
+	if err := tmpl.Execute(w, data); err != nil {
+		slog.Error("failed to render help", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}
