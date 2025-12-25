@@ -12,12 +12,14 @@ import (
 type Handler struct {
 	templatesDir   string
 	weatherService *service.WeatherService
+	sunService     *service.SunService
 }
 
-func NewHandler(templatesDir string, weatherService *service.WeatherService) (*Handler, error) {
+func NewHandler(templatesDir string, weatherService *service.WeatherService, sunService *service.SunService) (*Handler, error) {
 	return &Handler{
 		templatesDir:   templatesDir,
 		weatherService: weatherService,
+		sunService:     sunService,
 	}, nil
 }
 

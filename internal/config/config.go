@@ -9,10 +9,17 @@ import (
 )
 
 type Config struct {
-	DB   DBConfig   `yaml:"db"`
-	MQTT MQTTConfig `yaml:"mqtt"`
-	HTTP HTTPConfig `yaml:"http"`
-	Log  LogConfig  `yaml:"log"`
+	DB       DBConfig       `yaml:"db"`
+	MQTT     MQTTConfig     `yaml:"mqtt"`
+	HTTP     HTTPConfig     `yaml:"http"`
+	Log      LogConfig      `yaml:"log"`
+	Location LocationConfig `yaml:"location"`
+}
+
+type LocationConfig struct {
+	Latitude  float64 `env:"LOCATION_LATITUDE" env-default:"44.995574"`
+	Longitude float64 `env:"LOCATION_LONGITUDE" env-default:"41.128354"`
+	Timezone  string  `env:"LOCATION_TIMEZONE" env-default:"Europe/Moscow"`
 }
 
 type DBConfig struct {

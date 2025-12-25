@@ -1,10 +1,12 @@
 package web
 
 import (
+	"fmt"
 	"html/template"
 	"log/slog"
 	"net/http"
 	"path/filepath"
+	"time"
 
 	"github.com/iRootPro/weather/internal/models"
 )
@@ -263,6 +265,53 @@ func (h *Handler) StatsWidget(w http.ResponseWriter, r *http.Request) {
 
 	if err := tmpl.Execute(w, templateData); err != nil {
 		slog.Error("failed to render stats widget", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}
+
+// formatDuration formats duration as "Xч Yмин"
+func formatDuration(d time.Duration) string {
+	hours := int(d.Hours())
+	minutes := int(d.Minutes()) % 60
+	return fmt.Sprintf("%dч %dмин", hours, minutes)
+}
+
+// SunTimesWidget renders the sun times widget
+func (h *Handler) SunTimesWidget(w http.ResponseWriter, r *http.Request) {
+	if h.sunService == nil {
+		http.Error(w, "Sun service not configured", http.StatusInternalServerError)
+		return
+	}
+
+	sunTimes := h.sunService.GetTodaySunTimes()
+
+	templateData := struct {
+		Date        string
+		Dawn        string
+		Sunrise     string
+		Sunset      string
+		Dusk        string
+		DayLength   string
+		LightLength string
+	}{
+		Date:        time.Now().Format("2 января"),
+		Dawn:        sunTimes.Dawn.Format("15:04"),
+		Sunrise:     sunTimes.Sunrise.Format("15:04"),
+		Sunset:      sunTimes.Sunset.Format("15:04"),
+		Dusk:        sunTimes.Dusk.Format("15:04"),
+		DayLength:   formatDuration(sunTimes.DayLength),
+		LightLength: formatDuration(sunTimes.LightLength),
+	}
+
+	tmpl, err := h.parsePartial("sun_times.html")
+	if err != nil {
+		slog.Error("failed to parse sun times template", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	if err := tmpl.Execute(w, templateData); err != nil {
+		slog.Error("failed to render sun times widget", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }
