@@ -126,16 +126,19 @@ func (s *WeatherService) GetRecords(ctx context.Context) (*models.WeatherRecords
 	return s.repo.GetRecords(ctx)
 }
 
-// GetCurrentWithHourlyChange returns current data and data from 1 hour ago for comparison
-func (s *WeatherService) GetCurrentWithHourlyChange(ctx context.Context) (current *models.WeatherData, hourAgo *models.WeatherData, err error) {
+// GetCurrentWithHourlyChange returns current data, data from 1 hour ago, and daily min/max
+func (s *WeatherService) GetCurrentWithHourlyChange(ctx context.Context) (current *models.WeatherData, hourAgo *models.WeatherData, dailyMinMax *repository.DailyMinMax, err error) {
 	current, err = s.repo.GetLatest(ctx)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	// Получаем данные за час назад (игнорируем ошибку - данных может не быть)
 	targetTime := time.Now().Add(-1 * time.Hour)
 	hourAgo, _ = s.repo.GetDataNearTime(ctx, targetTime)
 
-	return current, hourAgo, nil
+	// Получаем мин/макс за сутки (игнорируем ошибку)
+	dailyMinMax, _ = s.repo.GetDailyMinMax(ctx)
+
+	return current, hourAgo, dailyMinMax, nil
 }

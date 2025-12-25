@@ -232,6 +232,46 @@ func (r *weatherRepository) GetStats(ctx context.Context, from, to time.Time) (*
 	return stats, nil
 }
 
+// DailyMinMax contains min/max values for the current day
+type DailyMinMax struct {
+	TempMin     *float32
+	TempMax     *float32
+	HumidityMin *int16
+	HumidityMax *int16
+	PressureMin *float32
+	PressureMax *float32
+	WindMax     *float32
+	GustMax     *float32
+}
+
+func (r *weatherRepository) GetDailyMinMax(ctx context.Context) (*DailyMinMax, error) {
+	// Начало текущих суток (00:00 по локальному времени)
+	now := time.Now()
+	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+
+	query := `
+		SELECT
+			MIN(temp_outdoor), MAX(temp_outdoor),
+			MIN(humidity_outdoor), MAX(humidity_outdoor),
+			MIN(pressure_relative), MAX(pressure_relative),
+			MAX(wind_speed), MAX(wind_gust)
+		FROM weather_data
+		WHERE time >= $1`
+
+	result := &DailyMinMax{}
+	err := r.pool.QueryRow(ctx, query, startOfDay).Scan(
+		&result.TempMin, &result.TempMax,
+		&result.HumidityMin, &result.HumidityMax,
+		&result.PressureMin, &result.PressureMax,
+		&result.WindMax, &result.GustMax,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get daily min/max: %w", err)
+	}
+
+	return result, nil
+}
+
 func (r *weatherRepository) GetDataNearTime(ctx context.Context, targetTime time.Time) (*models.WeatherData, error) {
 	// Ищем ближайшую запись к указанному времени (в пределах 10 минут)
 	query := `

@@ -47,7 +47,12 @@
             {{if .HasHourlyData}}
             <div class="mt-1 text-xs {{if gt .TempChange 0.0}}text-red-500{{else if lt .TempChange 0.0}}text-blue-500{{else}}text-gray-400{{end}}">
                 {{if gt .TempChange 0.0}}↑{{else if lt .TempChange 0.0}}↓{{else}}→{{end}}
-                {{if gt .TempChange 0.0}}+{{end}}{{printf "%.1f" .TempChange}}°/ч
+                {{printf "%.1f" .TempChange}}°/ч
+            </div>
+            {{end}}
+            {{if .HasDailyData}}
+            <div class="mt-1 text-xs text-gray-400">
+                {{printf "%.1f" .TempMin}}° / {{printf "%.1f" .TempMax}}°
             </div>
             {{end}}
         </div>
@@ -64,7 +69,12 @@
             {{if .HasHourlyData}}
             <div class="mt-1 text-xs {{if gt .HumidityChange 0}}text-blue-500{{else if lt .HumidityChange 0}}text-orange-500{{else}}text-gray-400{{end}}">
                 {{if gt .HumidityChange 0}}↑{{else if lt .HumidityChange 0}}↓{{else}}→{{end}}
-                {{if gt .HumidityChange 0}}+{{end}}{{.HumidityChange}}%/ч
+                {{.HumidityChange}}%/ч
+            </div>
+            {{end}}
+            {{if .HasDailyData}}
+            <div class="mt-1 text-xs text-gray-400">
+                {{.HumidityMin}}% / {{.HumidityMax}}%
             </div>
             {{end}}
         </div>
@@ -76,9 +86,14 @@
             </div>
             <div class="text-sm text-gray-600 mt-1">мм рт.ст.</div>
             {{if .HasHourlyData}}
-            <div class="mt-2 text-xs {{if gt .PressureChange 0.0}}text-green-500{{else if lt .PressureChange 0.0}}text-red-500{{else}}text-gray-400{{end}}">
+            <div class="mt-1 text-xs {{if gt .PressureChange 0.0}}text-green-500{{else if lt .PressureChange 0.0}}text-red-500{{else}}text-gray-400{{end}}">
                 {{if gt .PressureChange 0.0}}↑{{else if lt .PressureChange 0.0}}↓{{else}}→{{end}}
-                {{if gt .PressureChange 0.0}}+{{end}}{{printf "%.1f" .PressureChange}}/ч
+                {{printf "%.1f" .PressureChange}}/ч
+            </div>
+            {{end}}
+            {{if .HasDailyData}}
+            <div class="mt-1 text-xs text-gray-400">
+                {{printf "%.0f" .PressureMin}} / {{printf "%.0f" .PressureMax}}
             </div>
             {{end}}
         </div>
@@ -101,10 +116,9 @@
             <div class="text-xs text-gray-400">
                 порывы: {{printf "%.1f" .WindGust}} м/с
             </div>
-            {{if .HasHourlyData}}
-            <div class="mt-1 text-xs {{if gt .WindChange 0.0}}text-red-500{{else if lt .WindChange 0.0}}text-green-500{{else}}text-gray-400{{end}}">
-                {{if gt .WindChange 0.0}}↑{{else if lt .WindChange 0.0}}↓{{else}}→{{end}}
-                {{if gt .WindChange 0.0}}+{{end}}{{printf "%.1f" .WindChange}} м/с
+            {{if .HasDailyData}}
+            <div class="mt-1 text-xs text-gray-400">
+                макс: {{printf "%.1f" .WindMax}} м/с
             </div>
             {{end}}
         </div>

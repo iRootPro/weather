@@ -30,7 +30,7 @@ func (h *Handler) parsePartial(name string) (*template.Template, error) {
 
 // CurrentWeatherWidget renders the current weather widget
 func (h *Handler) CurrentWeatherWidget(w http.ResponseWriter, r *http.Request) {
-	data, hourAgo, err := h.weatherService.GetCurrentWithHourlyChange(r.Context())
+	data, hourAgo, dailyMinMax, err := h.weatherService.GetCurrentWithHourlyChange(r.Context())
 	if err != nil {
 		slog.Error("failed to get current weather", "error", err)
 		http.Error(w, "Failed to load weather data", http.StatusInternalServerError)
@@ -61,17 +61,27 @@ func (h *Handler) CurrentWeatherWidget(w http.ResponseWriter, r *http.Request) {
 		SolarRadiation   float32
 		Illuminance      float32 // lux = solar radiation * 120
 		// Hourly changes
-		TempChange       float32
-		HumidityChange   int16
-		PressureChange   float32
-		WindChange       float32
-		HasHourlyData    bool
+		TempChange     float32
+		HumidityChange int16
+		PressureChange float32
+		HasHourlyData  bool
+		// Daily min/max
+		TempMin        float32
+		TempMax        float32
+		HumidityMin    int16
+		HumidityMax    int16
+		PressureMin    float32
+		PressureMax    float32
+		WindMax        float32
+		HasDailyData   bool
 	}{
 		Time: "Данные на " + data.Time.Format("15:04"),
 	}
 
 	// Check if we have hourly comparison data
 	templateData.HasHourlyData = hourAgo != nil
+	// Check if we have daily min/max data
+	templateData.HasDailyData = dailyMinMax != nil
 
 	if data.TempOutdoor != nil {
 		templateData.TempOutdoor = *data.TempOutdoor
@@ -93,9 +103,6 @@ func (h *Handler) CurrentWeatherWidget(w http.ResponseWriter, r *http.Request) {
 	}
 	if data.WindSpeed != nil {
 		templateData.WindSpeed = *data.WindSpeed
-		if hourAgo != nil && hourAgo.WindSpeed != nil {
-			templateData.WindChange = *data.WindSpeed - *hourAgo.WindSpeed
-		}
 		// Определяем интенсивность ветра
 		if *data.WindSpeed >= 5 {
 			templateData.IsWindy = true
@@ -156,6 +163,31 @@ func (h *Handler) CurrentWeatherWidget(w http.ResponseWriter, r *http.Request) {
 	} else if data.TempOutdoor != nil {
 		// Если нет рассчитанной, используем реальную температуру
 		templateData.TempFeelsLike = *data.TempOutdoor
+	}
+
+	// Daily min/max
+	if dailyMinMax != nil {
+		if dailyMinMax.TempMin != nil {
+			templateData.TempMin = *dailyMinMax.TempMin
+		}
+		if dailyMinMax.TempMax != nil {
+			templateData.TempMax = *dailyMinMax.TempMax
+		}
+		if dailyMinMax.HumidityMin != nil {
+			templateData.HumidityMin = *dailyMinMax.HumidityMin
+		}
+		if dailyMinMax.HumidityMax != nil {
+			templateData.HumidityMax = *dailyMinMax.HumidityMax
+		}
+		if dailyMinMax.PressureMin != nil {
+			templateData.PressureMin = *dailyMinMax.PressureMin
+		}
+		if dailyMinMax.PressureMax != nil {
+			templateData.PressureMax = *dailyMinMax.PressureMax
+		}
+		if dailyMinMax.WindMax != nil {
+			templateData.WindMax = *dailyMinMax.WindMax
+		}
 	}
 
 	tmpl, err := h.parsePartial("current_weather.html")

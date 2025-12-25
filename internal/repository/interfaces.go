@@ -15,6 +15,7 @@ type WeatherRepository interface {
 	GetStats(ctx context.Context, from, to time.Time) (*models.WeatherStats, error)
 	GetRecords(ctx context.Context) (*models.WeatherRecords, error)
 	GetDataNearTime(ctx context.Context, targetTime time.Time) (*models.WeatherData, error)
+	GetDailyMinMax(ctx context.Context) (*DailyMinMax, error)
 }
 
 type SensorRepository interface {
