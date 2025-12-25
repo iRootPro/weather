@@ -20,7 +20,11 @@
         </h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
-                <span class="text-gray-500">Оборудование:</span>
+                <span class="text-gray-500">Датчик:</span>
+                <span class="ml-2 text-gray-900">Ecowitt WS90 (7-в-1)</span>
+            </div>
+            <div>
+                <span class="text-gray-500">Шлюз:</span>
                 <span class="ml-2 text-gray-900">Ecowitt GW3000</span>
             </div>
             <div>
@@ -34,6 +38,10 @@
             <div>
                 <span class="text-gray-500">Часовой пояс:</span>
                 <span class="ml-2 text-gray-900">Europe/Moscow (UTC+3)</span>
+            </div>
+            <div>
+                <span class="text-gray-500">Питание датчика:</span>
+                <span class="ml-2 text-gray-900">Солнечная панель + 2×AA</span>
             </div>
         </div>
     </div>
@@ -84,25 +92,31 @@
             <!-- Wind -->
             <div class="border-l-4 border-teal-400 pl-4">
                 <h3 class="font-medium text-gray-900">Ветер</h3>
-                <p class="text-sm text-gray-600 mt-1">Скорость измеряется чашечным анемометром, направление — флюгером. Порывы — максимальная скорость за интервал.</p>
+                <p class="text-sm text-gray-600 mt-1">Измеряется ультразвуковым анемометром — без движущихся частей, не требует обслуживания. Определяет скорость, направление и порывы.</p>
                 <div class="mt-2 text-xs text-gray-500">
                     <span class="inline-block bg-gray-100 rounded px-2 py-1 mr-2">Единица: м/с</span>
-                    <span class="inline-block bg-gray-100 rounded px-2 py-1 mr-2">Направление: 0-360°</span>
-                    <span class="inline-block bg-gray-100 rounded px-2 py-1">Диапазон: 0-50 м/с</span>
+                    <span class="inline-block bg-gray-100 rounded px-2 py-1 mr-2">Мин. скорость: 0.3 м/с</span>
+                    <span class="inline-block bg-gray-100 rounded px-2 py-1">Обновление: 2 сек</span>
                 </div>
                 <div class="mt-2 text-sm text-gray-600">
                     <span class="font-medium">Направления:</span> С, СВ, В, ЮВ, Ю, ЮЗ, З, СЗ (8 румбов по 45°)
+                </div>
+                <div class="mt-1 text-xs text-gray-400">
+                    Встроенный подогрев при T &lt; 0°C для предотвращения обледенения
                 </div>
             </div>
 
             <!-- Rain -->
             <div class="border-l-4 border-cyan-400 pl-4">
                 <h3 class="font-medium text-gray-900">Осадки</h3>
-                <p class="text-sm text-gray-600 mt-1">Измеряются опрокидывающимся ковшом (tipping bucket). Каждое опрокидывание = 0.1 мм осадков.</p>
+                <p class="text-sm text-gray-600 mt-1">Измеряются пьезоэлектрическим (haptic) датчиком — без движущихся частей, не требует обслуживания. Определяет начало и окончание дождя.</p>
                 <div class="mt-2 text-xs text-gray-500">
                     <span class="inline-block bg-gray-100 rounded px-2 py-1 mr-2">Единица: мм</span>
-                    <span class="inline-block bg-gray-100 rounded px-2 py-1 mr-2">Разрешение: 0.1 мм</span>
-                    <span class="inline-block bg-gray-100 rounded px-2 py-1">Интенсивность: мм/ч</span>
+                    <span class="inline-block bg-gray-100 rounded px-2 py-1 mr-2">Интенсивность: мм/ч</span>
+                    <span class="inline-block bg-gray-100 rounded px-2 py-1">Антивибрационный</span>
+                </div>
+                <div class="mt-1 text-xs text-gray-400">
+                    При сильном ветре и крупных каплях точность может незначительно снижаться
                 </div>
             </div>
 
