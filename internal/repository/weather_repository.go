@@ -232,6 +232,44 @@ func (r *weatherRepository) GetStats(ctx context.Context, from, to time.Time) (*
 	return stats, nil
 }
 
+func (r *weatherRepository) GetDataNearTime(ctx context.Context, targetTime time.Time) (*models.WeatherData, error) {
+	// Ищем ближайшую запись к указанному времени (в пределах 10 минут)
+	query := `
+		SELECT time, temp_outdoor, temp_indoor,
+			humidity_outdoor, humidity_indoor,
+			pressure_relative, pressure_absolute,
+			wind_speed, wind_gust, wind_direction,
+			rain_rate, rain_daily, rain_weekly, rain_monthly, rain_yearly,
+			uv_index, solar_radiation,
+			temp_feels_like, dew_point,
+			raw_data
+		FROM weather_data
+		WHERE time BETWEEN $1 AND $2
+		ORDER BY ABS(EXTRACT(EPOCH FROM (time - $3)))
+		LIMIT 1`
+
+	// Ищем в окне ±10 минут от целевого времени
+	from := targetTime.Add(-10 * time.Minute)
+	to := targetTime.Add(10 * time.Minute)
+
+	var data models.WeatherData
+	err := r.pool.QueryRow(ctx, query, from, to, targetTime).Scan(
+		&data.Time, &data.TempOutdoor, &data.TempIndoor,
+		&data.HumidityOutdoor, &data.HumidityIndoor,
+		&data.PressureRelative, &data.PressureAbsolute,
+		&data.WindSpeed, &data.WindGust, &data.WindDirection,
+		&data.RainRate, &data.RainDaily, &data.RainWeekly, &data.RainMonthly, &data.RainYearly,
+		&data.UVIndex, &data.SolarRadiation,
+		&data.TempFeelsLike, &data.DewPoint,
+		&data.RawData,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get weather data near time: %w", err)
+	}
+
+	return &data, nil
+}
+
 func (r *weatherRepository) GetRecords(ctx context.Context) (*models.WeatherRecords, error) {
 	records := &models.WeatherRecords{}
 

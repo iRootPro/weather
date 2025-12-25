@@ -125,3 +125,17 @@ func (s *WeatherService) GetChartData(ctx context.Context, from, to time.Time, i
 func (s *WeatherService) GetRecords(ctx context.Context) (*models.WeatherRecords, error) {
 	return s.repo.GetRecords(ctx)
 }
+
+// GetCurrentWithHourlyChange returns current data and data from 1 hour ago for comparison
+func (s *WeatherService) GetCurrentWithHourlyChange(ctx context.Context) (current *models.WeatherData, hourAgo *models.WeatherData, err error) {
+	current, err = s.repo.GetLatest(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Получаем данные за час назад (игнорируем ошибку - данных может не быть)
+	targetTime := time.Now().Add(-1 * time.Hour)
+	hourAgo, _ = s.repo.GetDataNearTime(ctx, targetTime)
+
+	return current, hourAgo, nil
+}

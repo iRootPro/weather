@@ -44,6 +44,12 @@
             <div class="text-xs text-gray-400">
                 ощущается: {{printf "%.1f" .TempFeelsLike}}°
             </div>
+            {{if .HasHourlyData}}
+            <div class="mt-1 text-xs {{if gt .TempChange 0.0}}text-red-500{{else if lt .TempChange 0.0}}text-blue-500{{else}}text-gray-400{{end}}">
+                {{if gt .TempChange 0.0}}↑{{else if lt .TempChange 0.0}}↓{{else}}→{{end}}
+                {{if gt .TempChange 0.0}}+{{end}}{{printf "%.1f" .TempChange}}°/ч
+            </div>
+            {{end}}
         </div>
 
         <!-- Humidity -->
@@ -55,6 +61,12 @@
             <div class="text-xs text-gray-400">
                 точка росы: {{printf "%.1f" .DewPoint}}°
             </div>
+            {{if .HasHourlyData}}
+            <div class="mt-1 text-xs {{if gt .HumidityChange 0}}text-blue-500{{else if lt .HumidityChange 0}}text-orange-500{{else}}text-gray-400{{end}}">
+                {{if gt .HumidityChange 0}}↑{{else if lt .HumidityChange 0}}↓{{else}}→{{end}}
+                {{if gt .HumidityChange 0}}+{{end}}{{.HumidityChange}}%/ч
+            </div>
+            {{end}}
         </div>
 
         <!-- Pressure -->
@@ -63,6 +75,12 @@
                 {{printf "%.0f" .PressureRelative}}
             </div>
             <div class="text-sm text-gray-600 mt-1">мм рт.ст.</div>
+            {{if .HasHourlyData}}
+            <div class="mt-2 text-xs {{if gt .PressureChange 0.0}}text-green-500{{else if lt .PressureChange 0.0}}text-red-500{{else}}text-gray-400{{end}}">
+                {{if gt .PressureChange 0.0}}↑{{else if lt .PressureChange 0.0}}↓{{else}}→{{end}}
+                {{if gt .PressureChange 0.0}}+{{end}}{{printf "%.1f" .PressureChange}}/ч
+            </div>
+            {{end}}
         </div>
 
         <!-- Wind -->
@@ -83,6 +101,12 @@
             <div class="text-xs text-gray-400">
                 порывы: {{printf "%.1f" .WindGust}} м/с
             </div>
+            {{if .HasHourlyData}}
+            <div class="mt-1 text-xs {{if gt .WindChange 0.0}}text-red-500{{else if lt .WindChange 0.0}}text-green-500{{else}}text-gray-400{{end}}">
+                {{if gt .WindChange 0.0}}↑{{else if lt .WindChange 0.0}}↓{{else}}→{{end}}
+                {{if gt .WindChange 0.0}}+{{end}}{{printf "%.1f" .WindChange}} м/с
+            </div>
+            {{end}}
         </div>
 
         <!-- Rain -->

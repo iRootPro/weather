@@ -30,7 +30,7 @@ func (h *Handler) parsePartial(name string) (*template.Template, error) {
 
 // CurrentWeatherWidget renders the current weather widget
 func (h *Handler) CurrentWeatherWidget(w http.ResponseWriter, r *http.Request) {
-	data, err := h.weatherService.GetCurrent(r.Context())
+	data, hourAgo, err := h.weatherService.GetCurrentWithHourlyChange(r.Context())
 	if err != nil {
 		slog.Error("failed to get current weather", "error", err)
 		http.Error(w, "Failed to load weather data", http.StatusInternalServerError)
@@ -60,21 +60,42 @@ func (h *Handler) CurrentWeatherWidget(w http.ResponseWriter, r *http.Request) {
 		UVIndex          float32
 		SolarRadiation   float32
 		Illuminance      float32 // lux = solar radiation * 120
+		// Hourly changes
+		TempChange       float32
+		HumidityChange   int16
+		PressureChange   float32
+		WindChange       float32
+		HasHourlyData    bool
 	}{
 		Time: "Данные на " + data.Time.Format("15:04"),
 	}
 
+	// Check if we have hourly comparison data
+	templateData.HasHourlyData = hourAgo != nil
+
 	if data.TempOutdoor != nil {
 		templateData.TempOutdoor = *data.TempOutdoor
+		if hourAgo != nil && hourAgo.TempOutdoor != nil {
+			templateData.TempChange = *data.TempOutdoor - *hourAgo.TempOutdoor
+		}
 	}
 	if data.HumidityOutdoor != nil {
 		templateData.HumidityOutdoor = *data.HumidityOutdoor
+		if hourAgo != nil && hourAgo.HumidityOutdoor != nil {
+			templateData.HumidityChange = *data.HumidityOutdoor - *hourAgo.HumidityOutdoor
+		}
 	}
 	if data.PressureRelative != nil {
 		templateData.PressureRelative = *data.PressureRelative
+		if hourAgo != nil && hourAgo.PressureRelative != nil {
+			templateData.PressureChange = *data.PressureRelative - *hourAgo.PressureRelative
+		}
 	}
 	if data.WindSpeed != nil {
 		templateData.WindSpeed = *data.WindSpeed
+		if hourAgo != nil && hourAgo.WindSpeed != nil {
+			templateData.WindChange = *data.WindSpeed - *hourAgo.WindSpeed
+		}
 		// Определяем интенсивность ветра
 		if *data.WindSpeed >= 5 {
 			templateData.IsWindy = true
