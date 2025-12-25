@@ -20,6 +20,18 @@ type SunTimes struct {
 	LightLength time.Duration // from dawn to dusk
 }
 
+type SunTimesWithComparison struct {
+	SunTimes
+	// Day length changes
+	DayChangeDay   time.Duration // compared to yesterday
+	DayChangeWeek  time.Duration // compared to a week ago
+	DayChangeMonth time.Duration // compared to a month ago
+	// Light length changes
+	LightChangeDay   time.Duration
+	LightChangeWeek  time.Duration
+	LightChangeMonth time.Duration
+}
+
 func NewSunService(latitude, longitude float64, timezone string) (*SunService, error) {
 	loc, err := time.LoadLocation(timezone)
 	if err != nil {
@@ -54,6 +66,24 @@ func (s *SunService) GetSunTimes(date time.Time) *SunTimes {
 
 func (s *SunService) GetTodaySunTimes() *SunTimes {
 	return s.GetSunTimes(time.Now())
+}
+
+func (s *SunService) GetTodaySunTimesWithComparison() *SunTimesWithComparison {
+	now := time.Now()
+	today := s.GetSunTimes(now)
+	yesterday := s.GetSunTimes(now.AddDate(0, 0, -1))
+	weekAgo := s.GetSunTimes(now.AddDate(0, 0, -7))
+	monthAgo := s.GetSunTimes(now.AddDate(0, -1, 0))
+
+	return &SunTimesWithComparison{
+		SunTimes:         *today,
+		DayChangeDay:     today.DayLength - yesterday.DayLength,
+		DayChangeWeek:    today.DayLength - weekAgo.DayLength,
+		DayChangeMonth:   today.DayLength - monthAgo.DayLength,
+		LightChangeDay:   today.LightLength - yesterday.LightLength,
+		LightChangeWeek:  today.LightLength - weekAgo.LightLength,
+		LightChangeMonth: today.LightLength - monthAgo.LightLength,
+	}
 }
 
 // calcSunrise calculates sunrise time using NOAA algorithm

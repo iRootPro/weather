@@ -276,6 +276,30 @@ func formatDuration(d time.Duration) string {
 	return fmt.Sprintf("%dч %dмин", hours, minutes)
 }
 
+// formatDurationChange formats duration change with sign and appropriate units
+func formatDurationChange(d time.Duration) string {
+	sign := ""
+	if d > 0 {
+		sign = "+"
+	}
+
+	totalSeconds := int(d.Seconds())
+	if totalSeconds < 0 {
+		totalSeconds = -totalSeconds
+	}
+
+	minutes := totalSeconds / 60
+	seconds := totalSeconds % 60
+
+	if minutes == 0 {
+		return fmt.Sprintf("%s%dсек", sign, int(d.Seconds()))
+	}
+	if seconds == 0 {
+		return fmt.Sprintf("%s%dмин", sign, int(d.Minutes()))
+	}
+	return fmt.Sprintf("%s%dмин %dсек", sign, int(d.Minutes()), seconds)
+}
+
 // SunTimesWidget renders the sun times widget
 func (h *Handler) SunTimesWidget(w http.ResponseWriter, r *http.Request) {
 	if h.sunService == nil {
@@ -283,24 +307,41 @@ func (h *Handler) SunTimesWidget(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sunTimes := h.sunService.GetTodaySunTimes()
+	sunTimes := h.sunService.GetTodaySunTimesWithComparison()
 
 	templateData := struct {
-		Date        string
-		Dawn        string
-		Sunrise     string
-		Sunset      string
-		Dusk        string
-		DayLength   string
-		LightLength string
+		Date             string
+		Dawn             string
+		Sunrise          string
+		Sunset           string
+		Dusk             string
+		DayLength        string
+		LightLength      string
+		DayChangeDay     string
+		DayChangeWeek    string
+		DayChangeMonth   string
+		LightChangeDay   string
+		LightChangeWeek  string
+		LightChangeMonth string
+		// For CSS classes (positive = growing day)
+		DayChangePositive   bool
+		LightChangePositive bool
 	}{
-		Date:        time.Now().Format("2 января"),
-		Dawn:        sunTimes.Dawn.Format("15:04"),
-		Sunrise:     sunTimes.Sunrise.Format("15:04"),
-		Sunset:      sunTimes.Sunset.Format("15:04"),
-		Dusk:        sunTimes.Dusk.Format("15:04"),
-		DayLength:   formatDuration(sunTimes.DayLength),
-		LightLength: formatDuration(sunTimes.LightLength),
+		Date:                time.Now().Format("2 января"),
+		Dawn:                sunTimes.Dawn.Format("15:04"),
+		Sunrise:             sunTimes.Sunrise.Format("15:04"),
+		Sunset:              sunTimes.Sunset.Format("15:04"),
+		Dusk:                sunTimes.Dusk.Format("15:04"),
+		DayLength:           formatDuration(sunTimes.DayLength),
+		LightLength:         formatDuration(sunTimes.LightLength),
+		DayChangeDay:        formatDurationChange(sunTimes.DayChangeDay),
+		DayChangeWeek:       formatDurationChange(sunTimes.DayChangeWeek),
+		DayChangeMonth:      formatDurationChange(sunTimes.DayChangeMonth),
+		LightChangeDay:      formatDurationChange(sunTimes.LightChangeDay),
+		LightChangeWeek:     formatDurationChange(sunTimes.LightChangeWeek),
+		LightChangeMonth:    formatDurationChange(sunTimes.LightChangeMonth),
+		DayChangePositive:   sunTimes.DayChangeDay >= 0,
+		LightChangePositive: sunTimes.LightChangeDay >= 0,
 	}
 
 	tmpl, err := h.parsePartial("sun_times.html")

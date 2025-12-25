@@ -58,15 +58,52 @@
         </div>
     </div>
 
-    <!-- Day length info -->
-    <div class="mt-4 pt-4 border-t border-gray-100 flex justify-center gap-8">
-        <div class="text-center">
-            <span class="text-sm text-gray-500">Световой день:</span>
-            <span class="ml-1 text-sm font-medium text-gray-700">{{.DayLength}}</span>
-        </div>
-        <div class="text-center">
-            <span class="text-sm text-gray-500">Светлое время:</span>
-            <span class="ml-1 text-sm font-medium text-gray-700">{{.LightLength}}</span>
+    <!-- Day length info with comparisons -->
+    <div class="mt-4 pt-4 border-t border-gray-100">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Day Length -->
+            <div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg p-4">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm font-medium text-gray-700">Световой день</span>
+                    <span class="text-lg font-bold {{if .DayChangePositive}}text-green-600{{else}}text-orange-600{{end}}">{{.DayLength}}</span>
+                </div>
+                <div class="grid grid-cols-3 gap-2 text-xs">
+                    <div class="text-center">
+                        <div class="text-gray-400">вчера</div>
+                        <div class="font-medium {{if .DayChangePositive}}text-green-600{{else}}text-orange-600{{end}}">{{.DayChangeDay}}</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-gray-400">неделя</div>
+                        <div class="font-medium {{if .DayChangePositive}}text-green-600{{else}}text-orange-600{{end}}">{{.DayChangeWeek}}</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-gray-400">месяц</div>
+                        <div class="font-medium {{if .DayChangePositive}}text-green-600{{else}}text-orange-600{{end}}">{{.DayChangeMonth}}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Light Length -->
+            <div class="bg-gradient-to-br from-sky-50 to-indigo-50 rounded-lg p-4">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm font-medium text-gray-700">Светлое время</span>
+                    <span class="text-lg font-bold {{if .LightChangePositive}}text-green-600{{else}}text-indigo-600{{end}}">{{.LightLength}}</span>
+                </div>
+                <div class="grid grid-cols-3 gap-2 text-xs">
+                    <div class="text-center">
+                        <div class="text-gray-400">вчера</div>
+                        <div class="font-medium {{if .LightChangePositive}}text-green-600{{else}}text-indigo-600{{end}}">{{.LightChangeDay}}</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-gray-400">неделя</div>
+                        <div class="font-medium {{if .LightChangePositive}}text-green-600{{else}}text-indigo-600{{end}}">{{.LightChangeWeek}}</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-gray-400">месяц</div>
+                        <div class="font-medium {{if .LightChangePositive}}text-green-600{{else}}text-indigo-600{{end}}">{{.LightChangeMonth}}</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
