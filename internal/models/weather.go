@@ -40,6 +40,10 @@ type WeatherData struct {
 	TempFeelsLike *float32 `json:"temp_feels_like,omitempty" db:"temp_feels_like"`
 	DewPoint      *float32 `json:"dew_point,omitempty" db:"dew_point"`
 
+	// Питание (вольты)
+	WH65Batt    *float32 `json:"wh65batt,omitempty" db:"wh65batt"`          // Батарейки 2×AA внешнего датчика (V)
+	WS90CapVolt *float32 `json:"ws90cap_volt,omitempty" db:"ws90cap_volt"` // Аккумулятор от солнечной панели (V)
+
 	// Сырые данные
 	RawData json.RawMessage `json:"raw_data,omitempty" db:"raw_data"`
 }

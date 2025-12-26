@@ -23,6 +23,7 @@ const (
 	TabDashboard = iota
 	TabCharts
 	TabEvents
+	TabHelp
 )
 
 // Model represents the main TUI application state

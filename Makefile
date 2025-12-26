@@ -1,10 +1,11 @@
-.PHONY: build run-consumer run-api test lint migrate-up migrate-down docker-up docker-down tidy deploy deploy-logs deploy-status deploy-stop deploy-init
+.PHONY: build run-consumer run-api run-tui test lint migrate-up migrate-down docker-up docker-down tidy deploy deploy-logs deploy-status deploy-stop deploy-init
 
 # Сборка
 build:
 	go build -o bin/mqtt-consumer ./cmd/mqtt-consumer
 	go build -o bin/api-server ./cmd/api-server
 	go build -o bin/migrator ./cmd/migrator
+	go build -o bin/weather-tui ./cmd/weather-tui
 
 build-consumer:
 	go build -o bin/mqtt-consumer ./cmd/mqtt-consumer
@@ -15,12 +16,18 @@ build-api:
 build-migrator:
 	go build -o bin/migrator ./cmd/migrator
 
+build-tui:
+	go build -o bin/weather-tui ./cmd/weather-tui
+
 # Запуск
 run-consumer:
 	go run ./cmd/mqtt-consumer
 
 run-api:
 	go run ./cmd/api-server
+
+run-tui:
+	go run ./cmd/weather-tui
 
 # Тесты
 test:

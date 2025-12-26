@@ -28,6 +28,8 @@ func (m Model) View() string {
 		content = components.RenderCharts(m.chartData, m.chartPeriod, m.chartMetric, width)
 	case TabEvents:
 		content = components.RenderEvents(m.events, width)
+	case TabHelp:
+		content = components.RenderHelp(m.currentWeather, width)
 	}
 
 	// Error message if present
@@ -49,7 +51,7 @@ func (m Model) View() string {
 
 // renderHeader renders the header with tabs
 func (m Model) renderHeader() string {
-	tabs := []string{"Дашборд", "Графики", "События"}
+	tabs := []string{"Дашборд", "Графики", "События", "Справка"}
 	var renderedTabs []string
 
 	for i, tab := range tabs {
@@ -74,11 +76,13 @@ func (m Model) renderFooter() string {
 
 	switch m.activeTab {
 	case TabDashboard:
-		help = "Tab: переключить вкладку | 1-3: прямой переход | r: обновить | q: выход"
+		help = "Tab: переключить вкладку | 1-4: прямой переход | r: обновить | q: выход"
 	case TabCharts:
 		help = "←/→ или h/l: период | ↑/↓ или k/j: метрика | Tab: вкладки | r: обновить | q: выход"
 	case TabEvents:
-		help = "Tab: переключить вкладку | 1-3: прямой переход | r: обновить | q: выход"
+		help = "Tab: переключить вкладку | 1-4: прямой переход | r: обновить | q: выход"
+	case TabHelp:
+		help = "Tab: переключить вкладку | 1-4: прямой переход | r: обновить | q: выход"
 	}
 
 	// Add last update time

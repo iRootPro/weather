@@ -30,7 +30,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 
 		case "tab":
-			m.activeTab = (m.activeTab + 1) % 3
+			m.activeTab = (m.activeTab + 1) % 4
 			return m, nil
 
 		case "1":
@@ -43,6 +43,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "3":
 			m.activeTab = TabEvents
+			return m, nil
+
+		case "4":
+			m.activeTab = TabHelp
 			return m, nil
 
 		case "r":

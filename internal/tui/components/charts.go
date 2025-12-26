@@ -115,7 +115,7 @@ func renderTemperatureChart(data []models.WeatherData, width int) string {
 
 	graph := asciigraph.Plot(values,
 		asciigraph.Height(12),
-		asciigraph.Width(width-10),
+		asciigraph.Width(width-20),
 		asciigraph.Caption(fmt.Sprintf("Температура °C  |  Мин: %.1f  Макс: %.1f  Сред: %.1f", min, max, avg)),
 	)
 
@@ -144,7 +144,7 @@ func renderPressureChart(data []models.WeatherData, width int) string {
 
 	graph := asciigraph.Plot(values,
 		asciigraph.Height(12),
-		asciigraph.Width(width-10),
+		asciigraph.Width(width-20),
 		asciigraph.Caption(fmt.Sprintf("Давление мм рт.ст.  |  Мин: %.0f  Макс: %.0f  Сред: %.0f", min, max, avg)),
 	)
 
@@ -184,7 +184,7 @@ func renderWindChart(data []models.WeatherData, width int) string {
 
 	graph := asciigraph.Plot(values,
 		asciigraph.Height(12),
-		asciigraph.Width(width-10),
+		asciigraph.Width(width-20),
 		asciigraph.Caption(fmt.Sprintf("Скорость ветра м/с  |  Мин: %.1f  Макс: %.1f  Сред: %.1f  Порывы до: %.1f", min, max, avg, gustMax)),
 	)
 
@@ -212,7 +212,7 @@ func renderHumidityChart(data []models.WeatherData, width int) string {
 
 	graph := asciigraph.Plot(values,
 		asciigraph.Height(12),
-		asciigraph.Width(width-10),
+		asciigraph.Width(width-20),
 		asciigraph.Caption(fmt.Sprintf("Влажность %%  |  Мин: %.0f  Макс: %.0f  Сред: %.0f", min, max, avg)),
 	)
 

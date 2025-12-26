@@ -398,5 +398,85 @@
             </div>
         </div>
     </div>
+
+    <!-- Battery Status -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+            <svg class="w-5 h-5 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+            Питание датчика
+        </h2>
+
+        <div class="space-y-4">
+            <!-- Solar Panel Capacitor -->
+            <div class="border-l-4 border-amber-400 pl-4">
+                <h3 class="font-medium text-gray-900 dark:text-white flex items-center">
+                    <span class="text-xl mr-2">☀️</span>
+                    Аккумулятор (от солнечной панели)
+                </h3>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                    Суперконденсатор заряжается от <strong>солнечной панели</strong> и обеспечивает основное питание датчика.
+                    Напряжение измеряется в вольтах (V).
+                </p>
+                <div class="mt-3 space-y-2">
+                    <div class="flex items-start text-sm">
+                        <span class="inline-block w-2 h-2 bg-green-400 rounded-full mt-1.5 mr-3 flex-shrink-0"></span>
+                        <span class="text-gray-600 dark:text-gray-300">
+                            <span class="font-medium text-gray-900 dark:text-white">≥ 4.0V (Отличный):</span> Полный заряд от солнца
+                        </span>
+                    </div>
+                    <div class="flex items-start text-sm">
+                        <span class="inline-block w-2 h-2 bg-green-400 rounded-full mt-1.5 mr-3 flex-shrink-0"></span>
+                        <span class="text-gray-600 dark:text-gray-300">
+                            <span class="font-medium text-gray-900 dark:text-white">3.0-4.0V (Нормальный):</span> Достаточный заряд
+                        </span>
+                    </div>
+                    <div class="flex items-start text-sm">
+                        <span class="inline-block w-2 h-2 bg-red-400 rounded-full mt-1.5 mr-3 flex-shrink-0"></span>
+                        <span class="text-gray-600 dark:text-gray-300">
+                            <span class="font-medium text-red-600 dark:text-red-400">< 3.0V (Низкий):</span> Недостаточное освещение
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AA Batteries -->
+            <div class="border-l-4 border-blue-400 pl-4">
+                <h3 class="font-medium text-gray-900 dark:text-white flex items-center">
+                    <span class="text-xl mr-2">🔋</span>
+                    Батарейки 2×AA (резервное питание)
+                </h3>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                    Обеспечивают работу датчика ночью и в пасмурную погоду, когда солнечная панель не заряжает аккумулятор.
+                    Напряжение измеряется в вольтах (V).
+                </p>
+                <div class="mt-3 space-y-2">
+                    <div class="flex items-start text-sm">
+                        <span class="inline-block w-2 h-2 bg-green-400 rounded-full mt-1.5 mr-3 flex-shrink-0"></span>
+                        <span class="text-gray-600 dark:text-gray-300">
+                            <span class="font-medium text-gray-900 dark:text-white">≥ 2.7V (Хороший):</span> Батарейки в отличном состоянии
+                        </span>
+                    </div>
+                    <div class="flex items-start text-sm">
+                        <span class="inline-block w-2 h-2 bg-yellow-400 rounded-full mt-1.5 mr-3 flex-shrink-0"></span>
+                        <span class="text-gray-600 dark:text-gray-300">
+                            <span class="font-medium text-yellow-700 dark:text-yellow-400">2.4-2.7V (Средний):</span> Батарейки разряжаются
+                        </span>
+                    </div>
+                    <div class="flex items-start text-sm">
+                        <span class="inline-block w-2 h-2 bg-red-400 rounded-full mt-1.5 mr-3 flex-shrink-0"></span>
+                        <span class="text-gray-600 dark:text-gray-300">
+                            <span class="font-medium text-red-600 dark:text-red-400">< 2.4V (НИЗКИЙ!):</span> Требуется срочная замена
+                        </span>
+                    </div>
+                </div>
+                <div class="mt-3 bg-amber-50 dark:bg-amber-900/20 rounded p-3 text-sm text-amber-700 dark:text-amber-400">
+                    <strong>Важно:</strong> Даже при низком заряде батареек датчик продолжает работать днём от солнечной панели.
+                    Однако для надёжной работы ночью рекомендуется поддерживать напряжение батареек выше 2.4V.
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {{end}}

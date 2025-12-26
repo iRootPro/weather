@@ -15,19 +15,16 @@ type Parser struct{}
 
 // Поля для исключения из raw_data (технические данные)
 var excludeFields = map[string]bool{
-	"PASSKEY":      true,
-	"passkey":      true,
-	"runtime":      true,
-	"interval":     true,
-	"wh90batt":     true,
-	"wh65batt":     true,
-	"wh25batt":     true,
-	"batt1":        true,
-	"batt2":        true,
-	"ws90_ver":     true,
-	"dns_err_cnt":  true,
-	"ws90cap_volt": true,
-	"freq":         true,
+	"PASSKEY":     true,
+	"passkey":     true,
+	"runtime":     true,
+	"interval":    true,
+	"wh90batt":    true,
+	"batt1":       true,
+	"batt2":       true,
+	"ws90_ver":    true,
+	"dns_err_cnt": true,
+	"freq":        true,
 }
 
 func NewParser() *Parser {
@@ -184,6 +181,14 @@ func (p *Parser) Parse(payload []byte) (*models.WeatherData, error) {
 		}
 		feelsLike := float32(models.CalculateFeelsLike(tempC, humidity, windMs))
 		weather.TempFeelsLike = &feelsLike
+	}
+
+	// Питание (вольты)
+	if v, ok := data["wh65batt"]; ok {
+		weather.WH65Batt = p.parseFloatPtr(v)
+	}
+	if v, ok := data["ws90cap_volt"]; ok {
+		weather.WS90CapVolt = p.parseFloatPtr(v)
 	}
 
 	// Сохраняем сырые данные (без технических полей)
