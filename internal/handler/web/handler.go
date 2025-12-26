@@ -33,6 +33,12 @@ var templateFuncs = template.FuncMap{
 	"sub": func(a, b float64) float64 {
 		return a - b
 	},
+	"deref": func(ptr *float32) float64 {
+		if ptr == nil {
+			return 0
+		}
+		return float64(*ptr)
+	},
 }
 
 func (h *Handler) parseTemplate(name string) (*template.Template, error) {
