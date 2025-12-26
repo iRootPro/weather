@@ -60,12 +60,11 @@
                     <div class="flex items-center justify-between mb-2">
                         <span class="text-xs font-medium text-gray-600 dark:text-gray-400">☀️ Аккумулятор</span>
                         {{if .Current.WS90CapVolt}}
-                        {{$voltage := .Current.WS90CapVolt}}
-                        {{if lt $voltage 3.0}}
+                        {{if lt .Current.WS90CapVolt 3.0}}
                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
                             Низкий
                         </span>
-                        {{else if lt $voltage 4.0}}
+                        {{else if lt .Current.WS90CapVolt 4.0}}
                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
                             Норма
                         </span>
@@ -77,10 +76,9 @@
                         {{end}}
                     </div>
                     {{if .Current.WS90CapVolt}}
-                    {{$voltage := .Current.WS90CapVolt}}
                     <div class="flex items-baseline">
-                        <span class="text-3xl font-bold {{if lt $voltage 3.0}}text-red-600 dark:text-red-400{{else}}text-green-600 dark:text-green-400{{end}}">
-                            {{printf "%.2f" $voltage}}
+                        <span class="text-3xl font-bold {{if lt .Current.WS90CapVolt 3.0}}text-red-600 dark:text-red-400{{else}}text-green-600 dark:text-green-400{{end}}">
+                            {{printf "%.2f" .Current.WS90CapVolt}}
                         </span>
                         <span class="ml-1 text-sm text-gray-600 dark:text-gray-400">V</span>
                     </div>
@@ -95,12 +93,11 @@
                     <div class="flex items-center justify-between mb-2">
                         <span class="text-xs font-medium text-gray-600 dark:text-gray-400">🔋 Батарейки 2×AA</span>
                         {{if .Current.WH65Batt}}
-                        {{$voltage := .Current.WH65Batt}}
-                        {{if lt $voltage 2.4}}
+                        {{if lt .Current.WH65Batt 2.4}}
                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
                             Замена!
                         </span>
-                        {{else if lt $voltage 2.7}}
+                        {{else if lt .Current.WH65Batt 2.7}}
                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">
                             Средний
                         </span>
@@ -112,10 +109,9 @@
                         {{end}}
                     </div>
                     {{if .Current.WH65Batt}}
-                    {{$voltage := .Current.WH65Batt}}
                     <div class="flex items-baseline">
-                        <span class="text-3xl font-bold {{if lt $voltage 2.4}}text-red-600 dark:text-red-400{{else if lt $voltage 2.7}}text-yellow-600 dark:text-yellow-400{{else}}text-green-600 dark:text-green-400{{end}}">
-                            {{printf "%.2f" $voltage}}
+                        <span class="text-3xl font-bold {{if lt .Current.WH65Batt 2.4}}text-red-600 dark:text-red-400{{else if lt .Current.WH65Batt 2.7}}text-yellow-600 dark:text-yellow-400{{else}}text-green-600 dark:text-green-400{{end}}">
+                            {{printf "%.2f" .Current.WH65Batt}}
                         </span>
                         <span class="ml-1 text-sm text-gray-600 dark:text-gray-400">V</span>
                     </div>
