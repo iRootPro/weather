@@ -172,8 +172,8 @@
                     </div>
 
                     <div class="flex items-center justify-between">
-                        <span class="text-xs font-medium text-gray-700 dark:text-gray-300">До новолуния</span>
-                        <span class="text-md font-bold text-purple-600 dark:text-purple-400">{{printf "%.0f" (sub 29.53 .MoonAge)}} дней</span>
+                        <span class="text-xs font-medium text-gray-700 dark:text-gray-300">{{.NextPhaseName}}</span>
+                        <span class="text-md font-bold text-purple-600 dark:text-purple-400">{{printf "%.0f" .DaysToNextPhase}} дней</span>
                     </div>
                 </div>
             </div>

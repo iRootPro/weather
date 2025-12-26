@@ -341,13 +341,15 @@ func (h *Handler) SunTimesWidget(w http.ResponseWriter, r *http.Request) {
 		DayChangePositive   bool
 		LightChangePositive bool
 		// Moon data
-		HasMoonData      bool
-		MoonPhase        string
-		MoonPhaseIcon    string
-		MoonIllumination float64
-		MoonAge          float64
-		Moonrise         string
-		Moonset          string
+		HasMoonData         bool
+		MoonPhase           string
+		MoonPhaseIcon       string
+		MoonIllumination    float64
+		MoonAge             float64
+		Moonrise            string
+		Moonset             string
+		DaysToNextPhase     float64
+		NextPhaseName       string
 	}{
 		Date:                time.Now().Format("2 января"),
 		Dawn:                sunTimes.Dawn.Format("15:04"),
@@ -375,6 +377,21 @@ func (h *Handler) SunTimesWidget(w http.ResponseWriter, r *http.Request) {
 		templateData.MoonAge = moonData.Age
 		templateData.Moonrise = moonData.Moonrise.Format("15:04")
 		templateData.Moonset = moonData.Moonset.Format("15:04")
+
+		// Determine next major phase (full moon or new moon)
+		// Synodic month is 29.53 days, full moon is at ~14.765 days
+		const fullMoonAge = 14.765
+		const synodicMonth = 29.53
+
+		if moonData.Age < fullMoonAge {
+			// Waxing moon - show days to full moon
+			templateData.DaysToNextPhase = fullMoonAge - moonData.Age
+			templateData.NextPhaseName = "До полнолуния"
+		} else {
+			// Waning moon - show days to new moon
+			templateData.DaysToNextPhase = synodicMonth - moonData.Age
+			templateData.NextPhaseName = "До новолуния"
+		}
 	}
 
 	tmpl, err := h.parsePartial("sun_times.html")
