@@ -303,7 +303,10 @@ func formatDurationChange(d time.Duration) string {
 
 // SunTimesWidget renders the sun and moon times widget
 func (h *Handler) SunTimesWidget(w http.ResponseWriter, r *http.Request) {
+	slog.Info("SunTimesWidget called")
+
 	if h.sunService == nil {
+		slog.Error("sun service is nil")
 		http.Error(w, "Sun service not configured", http.StatusInternalServerError)
 		return
 	}

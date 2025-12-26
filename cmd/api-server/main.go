@@ -62,10 +62,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to create sun service: %v", err)
 	}
+	slog.Info("creating moon service", "latitude", cfg.Location.Latitude, "longitude", cfg.Location.Longitude, "timezone", cfg.Location.Timezone)
 	moonService, err := service.NewMoonService(cfg.Location.Latitude, cfg.Location.Longitude, cfg.Location.Timezone)
 	if err != nil {
 		log.Fatalf("failed to create moon service: %v", err)
 	}
+	slog.Info("moon service created successfully")
 
 	// Инициализация хендлеров
 	weatherHandler := api.NewWeatherHandler(weatherService)
@@ -79,10 +81,12 @@ func main() {
 		staticDir = "internal/web/static"
 	}
 
+	slog.Info("creating web handler", "templatesDir", templatesDir)
 	webHandler, err := web.NewHandler(templatesDir, weatherService, sunService, moonService)
 	if err != nil {
 		log.Fatalf("failed to create web handler: %v", err)
 	}
+	slog.Info("web handler created successfully")
 
 	// Настройка роутера
 	mux := http.NewServeMux()
@@ -109,7 +113,9 @@ func main() {
 	// HTMX widgets
 	mux.HandleFunc("GET /widgets/current", webHandler.CurrentWeatherWidget)
 	mux.HandleFunc("GET /widgets/stats", webHandler.StatsWidget)
+	slog.Info("registering sun widget route")
 	mux.HandleFunc("GET /widgets/sun", webHandler.SunTimesWidget)
+	slog.Info("sun widget route registered")
 
 	// Static files
 	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.Dir(staticDir))))
