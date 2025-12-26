@@ -278,6 +278,98 @@
         </div>
     </div>
 
+    <!-- Moon Calculations -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+            <svg class="w-5 h-5 mr-2 text-indigo-400" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+            Расчёт луны
+        </h2>
+
+        <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">
+            Фазы луны, время восхода и заката рассчитываются на основе астрономических алгоритмов,
+            учитывающих координаты станции и текущую дату.
+        </p>
+
+        <div class="space-y-4">
+            <!-- Moon Phases -->
+            <div>
+                <div class="font-medium text-gray-700 dark:text-gray-300 mb-3">Фазы луны (8 фаз)</div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                    <div class="bg-slate-50 dark:bg-slate-900/20 rounded p-2 text-center">
+                        <div class="text-2xl mb-1">🌑</div>
+                        <div class="font-medium text-gray-700 dark:text-gray-300">Новолуние</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">0-3.7 дней</div>
+                    </div>
+                    <div class="bg-slate-50 dark:bg-slate-900/20 rounded p-2 text-center">
+                        <div class="text-2xl mb-1">🌒</div>
+                        <div class="font-medium text-gray-700 dark:text-gray-300">Растущая</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">3.7-7.4 дней</div>
+                    </div>
+                    <div class="bg-slate-50 dark:bg-slate-900/20 rounded p-2 text-center">
+                        <div class="text-2xl mb-1">🌓</div>
+                        <div class="font-medium text-gray-700 dark:text-gray-300">Первая четверть</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">7.4-11.1 дней</div>
+                    </div>
+                    <div class="bg-slate-50 dark:bg-slate-900/20 rounded p-2 text-center">
+                        <div class="text-2xl mb-1">🌔</div>
+                        <div class="font-medium text-gray-700 dark:text-gray-300">Прибывающая</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">11.1-14.8 дней</div>
+                    </div>
+                    <div class="bg-amber-50 dark:bg-amber-900/20 rounded p-2 text-center">
+                        <div class="text-2xl mb-1">🌕</div>
+                        <div class="font-medium text-amber-700 dark:text-amber-300">Полнолуние</div>
+                        <div class="text-xs text-amber-600 dark:text-amber-400">14.8-18.4 дней</div>
+                    </div>
+                    <div class="bg-slate-50 dark:bg-slate-900/20 rounded p-2 text-center">
+                        <div class="text-2xl mb-1">🌖</div>
+                        <div class="font-medium text-gray-700 dark:text-gray-300">Убывающая</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">18.4-22.1 дней</div>
+                    </div>
+                    <div class="bg-slate-50 dark:bg-slate-900/20 rounded p-2 text-center">
+                        <div class="text-2xl mb-1">🌗</div>
+                        <div class="font-medium text-gray-700 dark:text-gray-300">Последняя четв.</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">22.1-25.8 дней</div>
+                    </div>
+                    <div class="bg-slate-50 dark:bg-slate-900/20 rounded p-2 text-center">
+                        <div class="text-2xl mb-1">🌘</div>
+                        <div class="font-medium text-gray-700 dark:text-gray-300">Стареющая</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">25.8-29.5 дней</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calculations -->
+            <div class="bg-gray-50 dark:bg-gray-700 rounded p-4 text-sm space-y-3">
+                <div>
+                    <div class="font-medium text-gray-700 dark:text-gray-300 mb-1">Синодический месяц</div>
+                    <p class="text-gray-600 dark:text-gray-400">
+                        Период между двумя одинаковыми фазами луны составляет <strong>29.53 дней</strong>.
+                        Возраст луны отсчитывается от известного новолуния (6 января 2000 г., 18:14 UTC).
+                    </p>
+                </div>
+
+                <div>
+                    <div class="font-medium text-gray-700 dark:text-gray-300 mb-1">Освещённость</div>
+                    <p class="text-gray-600 dark:text-gray-400">
+                        Процент видимого освещённого диска луны рассчитывается по формуле:<br>
+                        <span class="font-mono text-xs">Освещённость = (1 - cos(фаза × 2π)) / 2 × 100%</span>
+                    </p>
+                </div>
+
+                <div>
+                    <div class="font-medium text-gray-700 dark:text-gray-300 mb-1">Восход и заход луны</div>
+                    <p class="text-gray-600 dark:text-gray-400">
+                        Рассчитывается положение луны с учётом её средней долготы, аномалии и аргумента широты.
+                        Учитывается параллакс (~0.9°) и рефракция атмосферы. В некоторые дни луна может
+                        не восходить или не заходить.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Data Collection -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
