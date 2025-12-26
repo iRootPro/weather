@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"path/filepath"
 
+	"github.com/iRootPro/weather/internal/models"
 	"github.com/iRootPro/weather/internal/service"
 )
 
@@ -58,6 +59,7 @@ func (h *Handler) parseTemplate(name string) (*template.Template, error) {
 type PageData struct {
 	ActivePage string
 	Data       interface{}
+	Current    *models.WeatherData
 }
 
 // Dashboard renders the main dashboard page
@@ -140,8 +142,16 @@ func (h *Handler) Help(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Get current weather for power status
+	current, err := h.weatherService.GetCurrent(r.Context())
+	if err != nil {
+		slog.Warn("failed to get current weather for help page", "error", err)
+		current = nil
+	}
+
 	data := PageData{
 		ActivePage: "help",
+		Current:    current,
 	}
 
 	if err := tmpl.Execute(w, data); err != nil {

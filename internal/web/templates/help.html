@@ -44,6 +44,89 @@
                 <span class="ml-2 text-gray-900 dark:text-white">Солнечная панель + 2×AA</span>
             </div>
         </div>
+
+        {{if .Current}}
+        <!-- Current Power Status -->
+        <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 flex items-center">
+                <svg class="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                Текущее состояние питания
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Solar Capacitor -->
+                <div class="bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 rounded-lg p-4 border border-amber-200 dark:border-amber-800">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-medium text-gray-600 dark:text-gray-400">☀️ Аккумулятор</span>
+                        {{if .Current.WS90CapVolt}}
+                        {{$voltage := .Current.WS90CapVolt}}
+                        {{if lt $voltage 3.0}}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
+                            Низкий
+                        </span>
+                        {{else if lt $voltage 4.0}}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                            Норма
+                        </span>
+                        {{else}}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                            Отлично
+                        </span>
+                        {{end}}
+                        {{end}}
+                    </div>
+                    {{if .Current.WS90CapVolt}}
+                    {{$voltage := .Current.WS90CapVolt}}
+                    <div class="flex items-baseline">
+                        <span class="text-3xl font-bold {{if lt $voltage 3.0}}text-red-600 dark:text-red-400{{else}}text-green-600 dark:text-green-400{{end}}">
+                            {{printf "%.2f" $voltage}}
+                        </span>
+                        <span class="ml-1 text-sm text-gray-600 dark:text-gray-400">V</span>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">от солнечной панели</p>
+                    {{else}}
+                    <span class="text-sm text-gray-400 dark:text-gray-500">Нет данных</span>
+                    {{end}}
+                </div>
+
+                <!-- AA Batteries -->
+                <div class="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-medium text-gray-600 dark:text-gray-400">🔋 Батарейки 2×AA</span>
+                        {{if .Current.WH65Batt}}
+                        {{$voltage := .Current.WH65Batt}}
+                        {{if lt $voltage 2.4}}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
+                            Замена!
+                        </span>
+                        {{else if lt $voltage 2.7}}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">
+                            Средний
+                        </span>
+                        {{else}}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                            Хорошие
+                        </span>
+                        {{end}}
+                        {{end}}
+                    </div>
+                    {{if .Current.WH65Batt}}
+                    {{$voltage := .Current.WH65Batt}}
+                    <div class="flex items-baseline">
+                        <span class="text-3xl font-bold {{if lt $voltage 2.4}}text-red-600 dark:text-red-400{{else if lt $voltage 2.7}}text-yellow-600 dark:text-yellow-400{{else}}text-green-600 dark:text-green-400{{end}}">
+                            {{printf "%.2f" $voltage}}
+                        </span>
+                        <span class="ml-1 text-sm text-gray-600 dark:text-gray-400">V</span>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">резервное питание</p>
+                    {{else}}
+                    <span class="text-sm text-gray-400 dark:text-gray-500">Нет данных</span>
+                    {{end}}
+                </div>
+            </div>
+        </div>
+        {{end}}
     </div>
 
     <!-- Direct Measurements -->
