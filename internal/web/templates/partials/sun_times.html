@@ -64,48 +64,50 @@
                 </div>
             </div>
 
-            <!-- Day length info -->
-            <div class="space-y-2">
-                <!-- Day Length -->
-                <div class="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-lg p-3">
-                    <div class="flex items-center justify-between mb-1">
-                        <span class="text-xs font-medium text-gray-700 dark:text-gray-300">Световой день</span>
-                        <span class="text-md font-bold {{if .DayChangePositive}}text-green-600 dark:text-green-400{{else}}text-orange-600 dark:text-orange-400{{end}}">{{.DayLength}}</span>
+            <!-- Day and Light length info combined -->
+            <div class="bg-gradient-to-br from-amber-50 via-sky-50 to-indigo-50 dark:from-amber-900/20 dark:via-sky-900/20 dark:to-indigo-900/20 rounded-lg p-3">
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Day Length -->
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-medium text-gray-700 dark:text-gray-300">Световой день</span>
+                            <span class="text-md font-bold {{if .DayChangePositive}}text-green-600 dark:text-green-400{{else}}text-orange-600 dark:text-orange-400{{end}}">{{.DayLength}}</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-1 text-xs">
+                            <div class="text-center">
+                                <div class="text-gray-400 dark:text-gray-500 text-xs">вчера</div>
+                                <div class="font-medium {{if .DayChangePositive}}text-green-600 dark:text-green-400{{else}}text-orange-600 dark:text-orange-400{{end}}">{{.DayChangeDay}}</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-gray-400 dark:text-gray-500 text-xs">неделя</div>
+                                <div class="font-medium {{if .DayChangePositive}}text-green-600 dark:text-green-400{{else}}text-orange-600 dark:text-orange-400{{end}}">{{.DayChangeWeek}}</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-gray-400 dark:text-gray-500 text-xs">месяц</div>
+                                <div class="font-medium {{if .DayChangePositive}}text-green-600 dark:text-green-400{{else}}text-orange-600 dark:text-orange-400{{end}}">{{.DayChangeMonth}}</div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="grid grid-cols-3 gap-1 text-xs">
-                        <div class="text-center">
-                            <div class="text-gray-400 dark:text-gray-500 text-xs">вчера</div>
-                            <div class="font-medium {{if .DayChangePositive}}text-green-600 dark:text-green-400{{else}}text-orange-600 dark:text-orange-400{{end}}">{{.DayChangeDay}}</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="text-gray-400 dark:text-gray-500 text-xs">неделя</div>
-                            <div class="font-medium {{if .DayChangePositive}}text-green-600 dark:text-green-400{{else}}text-orange-600 dark:text-orange-400{{end}}">{{.DayChangeWeek}}</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="text-gray-400 dark:text-gray-500 text-xs">месяц</div>
-                            <div class="font-medium {{if .DayChangePositive}}text-green-600 dark:text-green-400{{else}}text-orange-600 dark:text-orange-400{{end}}">{{.DayChangeMonth}}</div>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Light Length -->
-                <div class="bg-gradient-to-br from-sky-50 to-indigo-50 dark:from-sky-900/20 dark:to-indigo-900/20 rounded-lg p-3">
-                    <div class="flex items-center justify-between mb-1">
-                        <span class="text-xs font-medium text-gray-700 dark:text-gray-300">Светлое время</span>
-                        <span class="text-md font-bold {{if .LightChangePositive}}text-green-600 dark:text-green-400{{else}}text-indigo-600 dark:text-indigo-400{{end}}">{{.LightLength}}</span>
-                    </div>
-                    <div class="grid grid-cols-3 gap-1 text-xs">
-                        <div class="text-center">
-                            <div class="text-gray-400 dark:text-gray-500 text-xs">вчера</div>
-                            <div class="font-medium {{if .LightChangePositive}}text-green-600 dark:text-green-400{{else}}text-indigo-600 dark:text-indigo-400{{end}}">{{.LightChangeDay}}</div>
+                    <!-- Light Length -->
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-medium text-gray-700 dark:text-gray-300">Светлое время</span>
+                            <span class="text-md font-bold {{if .LightChangePositive}}text-green-600 dark:text-green-400{{else}}text-indigo-600 dark:text-indigo-400{{end}}">{{.LightLength}}</span>
                         </div>
-                        <div class="text-center">
-                            <div class="text-gray-400 dark:text-gray-500 text-xs">неделя</div>
-                            <div class="font-medium {{if .LightChangePositive}}text-green-600 dark:text-green-400{{else}}text-indigo-600 dark:text-indigo-400{{end}}">{{.LightChangeWeek}}</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="text-gray-400 dark:text-gray-500 text-xs">месяц</div>
-                            <div class="font-medium {{if .LightChangePositive}}text-green-600 dark:text-green-400{{else}}text-indigo-600 dark:text-indigo-400{{end}}">{{.LightChangeMonth}}</div>
+                        <div class="grid grid-cols-3 gap-1 text-xs">
+                            <div class="text-center">
+                                <div class="text-gray-400 dark:text-gray-500 text-xs">вчера</div>
+                                <div class="font-medium {{if .LightChangePositive}}text-green-600 dark:text-green-400{{else}}text-indigo-600 dark:text-indigo-400{{end}}">{{.LightChangeDay}}</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-gray-400 dark:text-gray-500 text-xs">неделя</div>
+                                <div class="font-medium {{if .LightChangePositive}}text-green-600 dark:text-green-400{{else}}text-indigo-600 dark:text-indigo-400{{end}}">{{.LightChangeWeek}}</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-gray-400 dark:text-gray-500 text-xs">месяц</div>
+                                <div class="font-medium {{if .LightChangePositive}}text-green-600 dark:text-green-400{{else}}text-indigo-600 dark:text-indigo-400{{end}}">{{.LightChangeMonth}}</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -161,17 +163,15 @@
                 </div>
             </div>
 
-            <!-- Moon info - 2 items like sun stats -->
-            <div class="space-y-2">
-                <div class="bg-gradient-to-br from-slate-50 to-gray-100 dark:from-slate-900/20 dark:to-gray-900/20 rounded-lg p-3">
-                    <div class="flex items-center justify-between mb-1">
+            <!-- Moon info combined -->
+            <div class="bg-gradient-to-br from-slate-50 via-purple-50 to-pink-50 dark:from-slate-900/20 dark:via-purple-900/20 dark:to-pink-900/20 rounded-lg p-3">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="flex items-center justify-between">
                         <span class="text-xs font-medium text-gray-700 dark:text-gray-300">Возраст луны</span>
                         <span class="text-md font-bold text-gray-600 dark:text-gray-400">{{printf "%.1f" .MoonAge}} дней</span>
                     </div>
-                </div>
 
-                <div class="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg p-3">
-                    <div class="flex items-center justify-between mb-1">
+                    <div class="flex items-center justify-between">
                         <span class="text-xs font-medium text-gray-700 dark:text-gray-300">До новолуния</span>
                         <span class="text-md font-bold text-purple-600 dark:text-purple-400">{{printf "%.0f" (sub 29.53 .MoonAge)}} дней</span>
                     </div>
