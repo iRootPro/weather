@@ -1,6 +1,8 @@
 package web
 
 import (
+	"encoding/json"
+	"html/template"
 	"log/slog"
 	"net/http"
 	"time"
@@ -100,10 +102,10 @@ func (h *Handler) DetailTemperature(w http.ResponseWriter, r *http.Request) {
 			"RecordMin":     records.TempOutdoorMin.Value,
 			"RecordMinTime": records.TempOutdoorMin.Time.Format("2 января 2006, 15:04"),
 
-			// Chart data
-			"Chart24h":  prepareChartData(chart24h, "TempOutdoor"),
-			"Chart7d":   prepareChartData(chart7d, "TempOutdoor"),
-			"Chart30d":  prepareChartData(chart30d, "TempOutdoor"),
+			// Chart data (as JSON)
+			"Chart24h":  toJSON(prepareChartData(chart24h, "TempOutdoor")),
+			"Chart7d":   toJSON(prepareChartData(chart7d, "TempOutdoor")),
+			"Chart30d":  toJSON(prepareChartData(chart30d, "TempOutdoor")),
 			"HasCharts": len(chart24h) > 0,
 		},
 	}
@@ -158,10 +160,51 @@ func calculateAmplitude(min, max *float32) float32 {
 	return *max - *min
 }
 
-func prepareChartData(data interface{}, field string) map[string]interface{} {
-	// This is a placeholder - we'll implement proper chart data preparation
-	return map[string]interface{}{
-		"labels": []string{},
-		"values": []float64{},
+func prepareChartData(data []models.WeatherData, field string) map[string]interface{} {
+	labels := make([]string, 0, len(data))
+	temps := make([]float64, 0, len(data))
+	feelsLike := make([]float64, 0, len(data))
+	dewPoint := make([]float64, 0, len(data))
+
+	for _, item := range data {
+		// Format time label
+		labels = append(labels, item.Time.Format("15:04"))
+
+		// Temperature
+		if item.TempOutdoor != nil {
+			temps = append(temps, float64(*item.TempOutdoor))
+		} else {
+			temps = append(temps, 0)
+		}
+
+		// Feels like
+		if item.TempFeelsLike != nil {
+			feelsLike = append(feelsLike, float64(*item.TempFeelsLike))
+		} else {
+			feelsLike = append(feelsLike, 0)
+		}
+
+		// Dew point
+		if item.DewPoint != nil {
+			dewPoint = append(dewPoint, float64(*item.DewPoint))
+		} else {
+			dewPoint = append(dewPoint, 0)
+		}
 	}
+
+	return map[string]interface{}{
+		"labels":    labels,
+		"temps":     temps,
+		"feelsLike": feelsLike,
+		"dewPoint":  dewPoint,
+	}
+}
+
+func toJSON(data map[string]interface{}) template.JS {
+	jsonBytes, err := json.Marshal(data)
+	if err != nil {
+		slog.Error("failed to marshal chart data", "error", err)
+		return template.JS("{}")
+	}
+	return template.JS(jsonBytes)
 }

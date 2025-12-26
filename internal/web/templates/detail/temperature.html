@@ -22,7 +22,7 @@
             </div>
 
             <!-- Secondary indicators -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 max-w-3xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 max-w-2xl mx-auto">
                 <div class="bg-white/50 dark:bg-gray-800/50 rounded-lg p-4">
                     <div class="text-sm text-gray-600 dark:text-gray-400">Ощущается как</div>
                     <div class="text-2xl font-bold text-orange-700 dark:text-orange-300">{{printf "%.1f" .Data.FeelsLike}}°C</div>
@@ -30,13 +30,6 @@
                 <div class="bg-white/50 dark:bg-gray-800/50 rounded-lg p-4">
                     <div class="text-sm text-gray-600 dark:text-gray-400">Точка росы</div>
                     <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{printf "%.1f" .Data.DewPoint}}°C</div>
-                </div>
-                <div class="bg-white/50 dark:bg-gray-800/50 rounded-lg p-4">
-                    <div class="text-sm text-gray-600 dark:text-gray-400">Внутри помещения</div>
-                    <div class="text-2xl font-bold text-gray-700 dark:text-gray-300">{{printf "%.1f" .Data.IndoorTemp}}°C</div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        разница: {{printf "%+.1f" .Data.IndoorDiff}}°C
-                    </div>
                 </div>
             </div>
 
@@ -212,15 +205,155 @@
 
 {{define "scripts"}}
 <script>
-// Chart functionality will be added later
+// Chart data from server
+const chartData = {
+    '24h': {{ .Data.Chart24h }},
+    '7d': {{ .Data.Chart7d }},
+    '30d': {{ .Data.Chart30d }}
+};
+
+let tempChart = null;
+
+function getThemeColors() {
+    const isDark = document.documentElement.classList.contains('dark');
+    return {
+        gridColor: isDark ? 'rgba(156, 163, 175, 0.15)' : '#f3f4f6',
+        textColor: isDark ? '#9ca3af' : '#6b7280'
+    };
+}
+
+function createChart(period) {
+    const ctx = document.getElementById('tempChart').getContext('2d');
+    const data = chartData[period];
+    const colors = getThemeColors();
+
+    // Destroy existing chart
+    if (tempChart) {
+        tempChart.destroy();
+    }
+
+    tempChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.labels,
+            datasets: [
+                {
+                    label: 'Температура',
+                    data: data.temps,
+                    borderColor: 'rgb(234, 88, 12)',
+                    backgroundColor: 'rgba(234, 88, 12, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: 'Ощущается',
+                    data: data.feelsLike,
+                    borderColor: 'rgb(239, 68, 68)',
+                    backgroundColor: 'rgba(239, 68, 68, 0.05)',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    tension: 0.4,
+                    fill: false
+                },
+                {
+                    label: 'Точка росы',
+                    data: data.dewPoint,
+                    borderColor: 'rgb(59, 130, 246)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.05)',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    tension: 0.4,
+                    fill: false
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        color: colors.textColor,
+                        usePointStyle: true,
+                        padding: 15
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    titleFont: {
+                        size: 14
+                    },
+                    bodyFont: {
+                        size: 13
+                    },
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ' + context.parsed.y.toFixed(1) + '°C';
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        color: colors.gridColor
+                    },
+                    ticks: {
+                        color: colors.textColor,
+                        maxRotation: 45,
+                        minRotation: 0
+                    }
+                },
+                y: {
+                    grid: {
+                        color: colors.gridColor
+                    },
+                    ticks: {
+                        color: colors.textColor,
+                        callback: function(value) {
+                            return value + '°C';
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
 function showChart(period) {
     // Update button states
     document.getElementById('btn-24h').className = period === '24h' ? 'px-4 py-2 rounded-lg bg-blue-500 text-white font-medium' : 'px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium';
     document.getElementById('btn-7d').className = period === '7d' ? 'px-4 py-2 rounded-lg bg-blue-500 text-white font-medium' : 'px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium';
     document.getElementById('btn-30d').className = period === '30d' ? 'px-4 py-2 rounded-lg bg-blue-500 text-white font-medium' : 'px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium';
 
-    // Load chart data for selected period
-    console.log('Loading chart for period:', period);
+    // Create chart with selected period data
+    createChart(period);
 }
+
+// Initialize chart on page load
+document.addEventListener('DOMContentLoaded', function() {
+    showChart('24h');
+});
+
+// Update chart colors on theme change
+window.addEventListener('themeChanged', function() {
+    if (tempChart) {
+        const colors = getThemeColors();
+        tempChart.options.scales.x.grid.color = colors.gridColor;
+        tempChart.options.scales.y.grid.color = colors.gridColor;
+        tempChart.options.scales.x.ticks.color = colors.textColor;
+        tempChart.options.scales.y.ticks.color = colors.textColor;
+        tempChart.options.plugins.legend.labels.color = colors.textColor;
+        tempChart.update();
+    }
+});
 </script>
 {{end}}
