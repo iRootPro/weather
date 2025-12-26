@@ -76,6 +76,7 @@ func (h *Handler) CurrentWeatherWidget(w http.ResponseWriter, r *http.Request) {
 		PressureMin    float32
 		PressureMax    float32
 		WindMax        float32
+		WindGustMax    float32
 		HasDailyData   bool
 	}{
 		Time: "Данные на " + data.Time.Format("15:04"),
@@ -190,6 +191,9 @@ func (h *Handler) CurrentWeatherWidget(w http.ResponseWriter, r *http.Request) {
 		}
 		if dailyMinMax.WindMax != nil {
 			templateData.WindMax = *dailyMinMax.WindMax
+		}
+		if dailyMinMax.GustMax != nil {
+			templateData.WindGustMax = *dailyMinMax.GustMax
 		}
 	}
 
