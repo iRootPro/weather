@@ -1,14 +1,62 @@
 // Dashboard Charts
 let charts = {};
 let currentInterval = '1h';
+let sharedTooltipIndex = null;
 
 // Get theme-specific colors
 function getThemeColors() {
     const isDark = document.documentElement.classList.contains('dark');
     return {
         gridColor: isDark ? 'rgba(156, 163, 175, 0.15)' : '#f3f4f6', // Barely visible gray grid in dark mode
-        textColor: isDark ? '#9ca3af' : '#6b7280'
+        textColor: isDark ? '#9ca3af' : '#6b7280',
+        crosshairColor: isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.2)'
     };
+}
+
+// Crosshair plugin to draw vertical line
+const crosshairPlugin = {
+    id: 'crosshair',
+    afterDraw: (chart) => {
+        if (sharedTooltipIndex !== null && chart.tooltip?._active?.length) {
+            const ctx = chart.ctx;
+            const x = chart.tooltip._active[0].element.x;
+            const topY = chart.scales.y.top;
+            const bottomY = chart.scales.y.bottom;
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(x, topY);
+            ctx.lineTo(x, bottomY);
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = getThemeColors().crosshairColor;
+            ctx.setLineDash([5, 5]);
+            ctx.stroke();
+            ctx.restore();
+        }
+    }
+};
+
+// Sync tooltips across all charts
+function syncChartTooltips(sourceChart, dataIndex) {
+    sharedTooltipIndex = dataIndex;
+
+    Object.values(charts).forEach(chart => {
+        if (!chart || chart === sourceChart) return;
+
+        if (dataIndex !== null && dataIndex < chart.data.labels.length) {
+            const meta = chart.getDatasetMeta(0);
+            if (meta && meta.data[dataIndex]) {
+                chart.tooltip.setActiveElements([{
+                    datasetIndex: 0,
+                    index: dataIndex
+                }]);
+                chart.update('none');
+            }
+        } else {
+            chart.tooltip.setActiveElements([]);
+            chart.update('none');
+        }
+    });
 }
 
 function initCharts() {
@@ -20,6 +68,13 @@ function initCharts() {
         interaction: {
             intersect: false,
             mode: 'index'
+        },
+        onHover: function(event, activeElements) {
+            if (activeElements.length > 0) {
+                syncChartTooltips(this, activeElements[0].index);
+            } else {
+                syncChartTooltips(this, null);
+            }
         },
         plugins: {
             legend: {
@@ -33,7 +88,8 @@ function initCharts() {
                 padding: 8,
                 titleFont: { size: 12 },
                 bodyFont: { size: 11 }
-            }
+            },
+            crosshair: true
         },
         scales: {
             x: {
@@ -95,7 +151,8 @@ function initCharts() {
                     }
                 }
             }
-        }
+        },
+        plugins: [crosshairPlugin]
     });
 
     // Humidity chart
@@ -134,7 +191,8 @@ function initCharts() {
                     }
                 }
             }
-        }
+        },
+        plugins: [crosshairPlugin]
     });
 
     // Pressure chart
@@ -171,7 +229,8 @@ function initCharts() {
                     }
                 }
             }
-        }
+        },
+        plugins: [crosshairPlugin]
     });
 
     // Wind chart
@@ -228,7 +287,8 @@ function initCharts() {
                     }
                 }
             }
-        }
+        },
+        plugins: [crosshairPlugin]
     });
 
     // Solar/Illuminance chart
@@ -268,7 +328,8 @@ function initCharts() {
                         }
                     }
                 }
-            }
+            },
+            plugins: [crosshairPlugin]
         });
     }
 
@@ -309,7 +370,8 @@ function initCharts() {
                         }
                     }
                 }
-            }
+            },
+            plugins: [crosshairPlugin]
         });
     }
 }
