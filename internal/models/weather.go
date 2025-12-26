@@ -113,8 +113,11 @@ type WeatherRecords struct {
 type WeatherEvent struct {
 	Type        string    `json:"type"`        // "rain_start", "rain_end", "temp_drop", "temp_rise", "wind_gust", "pressure_drop", "pressure_rise"
 	Time        time.Time `json:"time"`        // Время события
-	Value       float64   `json:"value"`       // Значение (температура, скорость ветра и т.д.)
+	Value       float64   `json:"value"`       // Текущее значение (температура, скорость ветра и т.д.)
+	ValueFrom   float64   `json:"value_from"`  // Начальное значение (для изменений)
 	Change      float64   `json:"change"`      // Изменение (для температуры/давления)
+	Period      string    `json:"period"`      // Период изменения ("за час", "за 3 часа")
 	Description string    `json:"description"` // "Начало дождя", "Порыв ветра 15 м/с"
+	Details     string    `json:"details"`     // Подробности "755 → 752 мм за 3 часа"
 	Icon        string    `json:"icon"`        // Эмодзи для иконки
 }

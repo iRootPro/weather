@@ -260,15 +260,20 @@ func detectTemperatureChanges(data []models.WeatherData) []models.WeatherEvent {
 		}
 
 		change := *curr.TempOutdoor - *prev.TempOutdoor
+		currTemp := float64(*curr.TempOutdoor)
+		prevTemp := float64(*prev.TempOutdoor)
 
 		if change >= TEMP_CHANGE_THRESHOLD {
 			// Температура выросла
 			events = append(events, models.WeatherEvent{
 				Type:        "temp_rise",
 				Time:        curr.Time,
-				Value:       float64(*curr.TempOutdoor),
+				Value:       currTemp,
+				ValueFrom:   prevTemp,
 				Change:      float64(change),
+				Period:      "за час",
 				Description: fmt.Sprintf("Потеплело на %.1f°C", change),
+				Details:     fmt.Sprintf("%.1f → %.1f°C за час", prevTemp, currTemp),
 				Icon:        "🌡️",
 			})
 		} else if change <= -TEMP_CHANGE_THRESHOLD {
@@ -276,9 +281,12 @@ func detectTemperatureChanges(data []models.WeatherData) []models.WeatherEvent {
 			events = append(events, models.WeatherEvent{
 				Type:        "temp_drop",
 				Time:        curr.Time,
-				Value:       float64(*curr.TempOutdoor),
+				Value:       currTemp,
+				ValueFrom:   prevTemp,
 				Change:      float64(change),
+				Period:      "за час",
 				Description: fmt.Sprintf("Похолодало на %.1f°C", -change),
+				Details:     fmt.Sprintf("%.1f → %.1f°C за час", prevTemp, currTemp),
 				Icon:        "🥶",
 			})
 		}
@@ -323,15 +331,20 @@ func detectPressureChanges(data []models.WeatherData) []models.WeatherEvent {
 		}
 
 		change := *curr.PressureRelative - *prev.PressureRelative
+		currPress := float64(*curr.PressureRelative)
+		prevPress := float64(*prev.PressureRelative)
 
 		if change >= PRESSURE_CHANGE_THRESHOLD {
 			// Давление выросло
 			events = append(events, models.WeatherEvent{
 				Type:        "pressure_rise",
 				Time:        curr.Time,
-				Value:       float64(*curr.PressureRelative),
+				Value:       currPress,
+				ValueFrom:   prevPress,
 				Change:      float64(change),
+				Period:      "за 3 часа",
 				Description: fmt.Sprintf("Давление растёт (+%.1f мм)", change),
+				Details:     fmt.Sprintf("%.0f → %.0f мм за 3 часа", prevPress, currPress),
 				Icon:        "⬆️",
 			})
 		} else if change <= -PRESSURE_CHANGE_THRESHOLD {
@@ -339,9 +352,12 @@ func detectPressureChanges(data []models.WeatherData) []models.WeatherEvent {
 			events = append(events, models.WeatherEvent{
 				Type:        "pressure_drop",
 				Time:        curr.Time,
-				Value:       float64(*curr.PressureRelative),
+				Value:       currPress,
+				ValueFrom:   prevPress,
 				Change:      float64(change),
+				Period:      "за 3 часа",
 				Description: fmt.Sprintf("Давление падает (%.1f мм)", change),
+				Details:     fmt.Sprintf("%.0f → %.0f мм за 3 часа", prevPress, currPress),
 				Icon:        "⬇️",
 			})
 		}
