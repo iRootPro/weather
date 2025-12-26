@@ -112,6 +112,11 @@ func main() {
 
 	// Detail pages
 	mux.HandleFunc("GET /detail/temperature", webHandler.DetailTemperature)
+	mux.HandleFunc("GET /detail/humidity", webHandler.DetailHumidity)
+	mux.HandleFunc("GET /detail/pressure", webHandler.DetailPressure)
+	mux.HandleFunc("GET /detail/wind", webHandler.DetailWind)
+	mux.HandleFunc("GET /detail/rain", webHandler.DetailRain)
+	mux.HandleFunc("GET /detail/solar", webHandler.DetailSolar)
 
 	// HTMX widgets
 	mux.HandleFunc("GET /widgets/current", webHandler.CurrentWeatherWidget)

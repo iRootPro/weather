@@ -1,0 +1,195 @@
+{{template "base.html" .}}
+
+{{define "title"}}Осадки - подробно{{end}}
+
+{{define "content"}}
+<div class="max-w-7xl mx-auto space-y-6">
+    <!-- Hero section with current rain -->
+    <div class="bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-900/20 dark:to-cyan-800/20 rounded-lg shadow-lg p-8">
+        <div class="flex flex-col md:flex-row items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Осадки</h1>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Обновлено: {{.Data.UpdateDate}} в {{.Data.UpdateTime}}</p>
+            </div>
+            <div class="mt-4 md:mt-0">
+                <div class="text-7xl font-bold text-cyan-600 dark:text-cyan-400">{{printf "%.1f" .Data.Daily}}</div>
+                <div class="text-center text-sm text-gray-600 dark:text-gray-400 mt-2">мм/день</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current readings -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Текущие показатели</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="p-4 bg-cyan-50 dark:bg-cyan-900/20 rounded-lg">
+                <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">За день</div>
+                <div class="text-3xl font-bold text-cyan-600 dark:text-cyan-400">{{printf "%.1f" .Data.Daily}} мм</div>
+            </div>
+            <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">За месяц</div>
+                <div class="text-3xl font-bold text-blue-600 dark:text-blue-400">{{printf "%.1f" .Data.Monthly}} мм</div>
+            </div>
+            <div class="p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg">
+                <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Интенсивность</div>
+                <div class="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{{printf "%.1f" .Data.Rate}} мм/ч</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Changes -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Изменения (дневные осадки)</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {{if .Data.HasHourData}}
+            <div class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">За час</div>
+                <div class="text-2xl font-bold {{if gt .Data.ChangeHour 0.0}}text-blue-500{{else if lt .Data.ChangeHour 0.0}}text-orange-500{{else}}text-gray-500{{end}}">
+                    {{if gt .Data.ChangeHour 0.0}}↑{{else if lt .Data.ChangeHour 0.0}}↓{{else}}→{{end}}
+                    {{printf "%.1f" .Data.ChangeHour}} мм
+                </div>
+            </div>
+            {{end}}
+            {{if .Data.HasDayData}}
+            <div class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">За сутки</div>
+                <div class="text-2xl font-bold {{if gt .Data.ChangeDay 0.0}}text-blue-500{{else if lt .Data.ChangeDay 0.0}}text-orange-500{{else}}text-gray-500{{end}}">
+                    {{if gt .Data.ChangeDay 0.0}}↑{{else if lt .Data.ChangeDay 0.0}}↓{{else}}→{{end}}
+                    {{printf "%.1f" .Data.ChangeDay}} мм
+                </div>
+            </div>
+            {{end}}
+            {{if .Data.HasWeekData}}
+            <div class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">За неделю</div>
+                <div class="text-2xl font-bold {{if gt .Data.ChangeWeek 0.0}}text-blue-500{{else if lt .Data.ChangeWeek 0.0}}text-orange-500{{else}}text-gray-500{{end}}">
+                    {{if gt .Data.ChangeWeek 0.0}}↑{{else if lt .Data.ChangeWeek 0.0}}↓{{else}}→{{end}}
+                    {{printf "%.1f" .Data.ChangeWeek}} мм
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </div>
+
+    <!-- All-time records -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Рекорды за все время</h2>
+        <div class="grid grid-cols-1 gap-4">
+            <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Макс. интенсивность осадков</div>
+                <div class="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">{{printf "%.1f" .Data.RecordRate}} мм/ч</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">{{.Data.RecordRateTime}}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    {{if .Data.HasCharts}}
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">История</h2>
+            <div class="flex gap-2">
+                <button onclick="switchPeriod('24h')" id="btn-24h" class="px-4 py-2 text-sm font-medium text-white bg-cyan-600 rounded-lg hover:bg-cyan-700 transition-colors">24 часа</button>
+                <button onclick="switchPeriod('7d')" id="btn-7d" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">7 дней</button>
+                <button onclick="switchPeriod('30d')" id="btn-30d" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">30 дней</button>
+            </div>
+        </div>
+        <div style="height: 400px;">
+            <canvas id="rainChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        let rainChart = null;
+        const chartData = {
+            '24h': {{ .Data.Chart24h }},
+            '7d': {{ .Data.Chart7d }},
+            '30d': {{ .Data.Chart30d }}
+        };
+
+        function createChart(period) {
+            const ctx = document.getElementById('rainChart').getContext('2d');
+            const data = chartData[period];
+
+            if (rainChart) {
+                rainChart.destroy();
+            }
+
+            const isDark = document.documentElement.classList.contains('dark');
+            const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
+            const textColor = isDark ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)';
+
+            rainChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [
+                        {
+                            label: 'Дневные осадки (мм)',
+                            data: data.rainDaily,
+                            borderColor: 'rgb(6, 182, 212)',
+                            backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Интенсивность (мм/ч)',
+                            data: data.rainRate,
+                            borderColor: 'rgb(59, 130, 246)',
+                            borderDash: [5, 5],
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: textColor }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            grid: { color: gridColor },
+                            ticks: { color: textColor }
+                        },
+                        x: {
+                            grid: { color: gridColor },
+                            ticks: {
+                                color: textColor,
+                                maxTicksLimit: 12
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function switchPeriod(period) {
+            // Update button styles
+            ['24h', '7d', '30d'].forEach(p => {
+                const btn = document.getElementById(`btn-${p}`);
+                if (p === period) {
+                    btn.classList.remove('bg-gray-200', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
+                    btn.classList.add('bg-cyan-600', 'text-white');
+                } else {
+                    btn.classList.remove('bg-cyan-600', 'text-white');
+                    btn.classList.add('bg-gray-200', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
+                }
+            });
+
+            createChart(period);
+        }
+
+        // Initialize with 24h period
+        document.addEventListener('DOMContentLoaded', () => {
+            createChart('24h');
+        });
+    </script>
+    {{end}}
+</div>
+{{end}}

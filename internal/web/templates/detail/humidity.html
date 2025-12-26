@@ -1,0 +1,220 @@
+{{template "base.html" .}}
+
+{{define "title"}}Влажность - подробно{{end}}
+
+{{define "content"}}
+<div class="max-w-7xl mx-auto space-y-6">
+    <!-- Hero section with current humidity -->
+    <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg shadow-lg p-8">
+        <div class="flex flex-col md:flex-row items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Влажность воздуха</h1>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Обновлено: {{.Data.UpdateDate}} в {{.Data.UpdateTime}}</p>
+            </div>
+            <div class="mt-4 md:mt-0">
+                <div class="text-7xl font-bold text-blue-600 dark:text-blue-400">{{.Data.Current}}%</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current readings -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Текущие показатели</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Влажность</div>
+                <div class="text-3xl font-bold text-blue-600 dark:text-blue-400">{{.Data.Current}}%</div>
+            </div>
+            <div class="p-4 bg-cyan-50 dark:bg-cyan-900/20 rounded-lg">
+                <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Точка росы</div>
+                <div class="text-3xl font-bold text-cyan-600 dark:text-cyan-400">{{printf "%.1f" .Data.DewPoint}}°</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Changes -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Изменения</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {{if .Data.HasHourData}}
+            <div class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">За час</div>
+                <div class="text-2xl font-bold {{if gt .Data.ChangeHour 0}}text-blue-500{{else if lt .Data.ChangeHour 0}}text-orange-500{{else}}text-gray-500{{end}}">
+                    {{if gt .Data.ChangeHour 0}}↑{{else if lt .Data.ChangeHour 0}}↓{{else}}→{{end}}
+                    {{.Data.ChangeHour}}%
+                </div>
+            </div>
+            {{end}}
+            {{if .Data.HasDayData}}
+            <div class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">За сутки</div>
+                <div class="text-2xl font-bold {{if gt .Data.ChangeDay 0}}text-blue-500{{else if lt .Data.ChangeDay 0}}text-orange-500{{else}}text-gray-500{{end}}">
+                    {{if gt .Data.ChangeDay 0}}↑{{else if lt .Data.ChangeDay 0}}↓{{else}}→{{end}}
+                    {{.Data.ChangeDay}}%
+                </div>
+            </div>
+            {{end}}
+            {{if .Data.HasWeekData}}
+            <div class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">За неделю</div>
+                <div class="text-2xl font-bold {{if gt .Data.ChangeWeek 0}}text-blue-500{{else if lt .Data.ChangeWeek 0}}text-orange-500{{else}}text-gray-500{{end}}">
+                    {{if gt .Data.ChangeWeek 0}}↑{{else if lt .Data.ChangeWeek 0}}↓{{else}}→{{end}}
+                    {{.Data.ChangeWeek}}%
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </div>
+
+    <!-- Today's stats -->
+    {{if .Data.HasDailyData}}
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Сегодня</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-center">
+                <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Минимум</div>
+                <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{.Data.TodayMin}}%</div>
+            </div>
+            <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-center">
+                <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Максимум</div>
+                <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{.Data.TodayMax}}%</div>
+            </div>
+            <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-center">
+                <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Средняя</div>
+                <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{.Data.TodayAvg}}%</div>
+            </div>
+            <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-center">
+                <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Амплитуда</div>
+                <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{.Data.TodayAmplitude}}%</div>
+            </div>
+        </div>
+    </div>
+    {{end}}
+
+    <!-- All-time records -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Рекорды за все время</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Максимум</div>
+                <div class="text-3xl font-bold text-red-600 dark:text-red-400 mb-2">{{.Data.RecordMax}}%</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">{{.Data.RecordMaxTime}}</div>
+            </div>
+            <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Минимум</div>
+                <div class="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">{{.Data.RecordMin}}%</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">{{.Data.RecordMinTime}}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    {{if .Data.HasCharts}}
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">История</h2>
+            <div class="flex gap-2">
+                <button onclick="switchPeriod('24h')" id="btn-24h" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">24 часа</button>
+                <button onclick="switchPeriod('7d')" id="btn-7d" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">7 дней</button>
+                <button onclick="switchPeriod('30d')" id="btn-30d" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">30 дней</button>
+            </div>
+        </div>
+        <div style="height: 400px;">
+            <canvas id="humidityChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        let humidityChart = null;
+        const chartData = {
+            '24h': {{ .Data.Chart24h }},
+            '7d': {{ .Data.Chart7d }},
+            '30d': {{ .Data.Chart30d }}
+        };
+
+        function createChart(period) {
+            const ctx = document.getElementById('humidityChart').getContext('2d');
+            const data = chartData[period];
+
+            if (humidityChart) {
+                humidityChart.destroy();
+            }
+
+            const isDark = document.documentElement.classList.contains('dark');
+            const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
+            const textColor = isDark ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)';
+
+            humidityChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [
+                        {
+                            label: 'Влажность',
+                            data: data.humidity,
+                            borderColor: 'rgb(37, 99, 235)',
+                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Точка росы',
+                            data: data.dewPoint,
+                            borderColor: 'rgb(6, 182, 212)',
+                            borderDash: [5, 5],
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: textColor }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            grid: { color: gridColor },
+                            ticks: { color: textColor }
+                        },
+                        x: {
+                            grid: { color: gridColor },
+                            ticks: {
+                                color: textColor,
+                                maxTicksLimit: 12
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function switchPeriod(period) {
+            // Update button styles
+            ['24h', '7d', '30d'].forEach(p => {
+                const btn = document.getElementById(`btn-${p}`);
+                if (p === period) {
+                    btn.classList.remove('bg-gray-200', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
+                    btn.classList.add('bg-blue-600', 'text-white');
+                } else {
+                    btn.classList.remove('bg-blue-600', 'text-white');
+                    btn.classList.add('bg-gray-200', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
+                }
+            });
+
+            createChart(period);
+        }
+
+        // Initialize with 24h period
+        document.addEventListener('DOMContentLoaded', () => {
+            createChart('24h');
+        });
+    </script>
+    {{end}}
+</div>
+{{end}}
