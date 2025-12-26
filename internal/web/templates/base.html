@@ -11,10 +11,22 @@
     <!-- PWA / Add to Home Screen -->
     <link rel="manifest" href="/static/manifest.json?v=4">
     <link rel="apple-touch-icon" href="/static/icon-180.png?v=4">
-    <meta name="theme-color" content="#3b82f6">
+    <meta name="theme-color" content="#3b82f6" id="theme-color-meta">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Погода">
+
+    <!-- Theme script (before CSS to prevent flash) -->
+    <script>
+        (function() {
+            const stored = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const isDark = stored === 'dark' || (!stored && prefersDark);
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -31,6 +43,7 @@
 
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
@@ -42,55 +55,68 @@
         }
     </script>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen transition-colors duration-200">
     <!-- Header (sticky) -->
-    <header class="bg-white shadow-sm sticky top-0 z-50">
+    <header class="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-50 transition-colors duration-200">
         <div class="max-w-7xl mx-auto px-4 py-3 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-2">
                     <svg class="w-7 h-7 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
                     </svg>
-                    <h1 class="text-lg font-bold text-gray-900 hidden sm:block">Армавир</h1>
+                    <h1 class="text-lg font-bold text-gray-900 dark:text-white hidden sm:block">Армавир</h1>
                 </div>
-                <!-- Desktop nav -->
-                <nav class="hidden sm:flex space-x-2">
-                    <a href="/" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium {{if eq .ActivePage "dashboard"}}bg-gray-100 text-gray-900{{end}}">
-                        Главная
-                    </a>
-                    <a href="/history" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium {{if eq .ActivePage "history"}}bg-gray-100 text-gray-900{{end}}">
-                        История
-                    </a>
-                    <a href="/records" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium {{if eq .ActivePage "records"}}bg-gray-100 text-gray-900{{end}}">
-                        Рекорды
-                    </a>
-                    <a href="/help" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium {{if eq .ActivePage "help"}}bg-gray-100 text-gray-900{{end}}">
-                        Справка
-                    </a>
-                </nav>
-                <!-- Mobile nav -->
-                <nav class="flex sm:hidden space-x-1">
-                    <a href="/" class="px-3 py-2 rounded-md text-sm font-medium {{if eq .ActivePage "dashboard"}}bg-blue-500 text-white{{else}}text-gray-600{{end}}">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                <div class="flex items-center space-x-2">
+                    <!-- Desktop nav -->
+                    <nav class="hidden sm:flex space-x-2">
+                        <a href="/" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium {{if eq .ActivePage "dashboard"}}bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white{{end}}">
+                            Главная
+                        </a>
+                        <a href="/history" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium {{if eq .ActivePage "history"}}bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white{{end}}">
+                            История
+                        </a>
+                        <a href="/records" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium {{if eq .ActivePage "records"}}bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white{{end}}">
+                            Рекорды
+                        </a>
+                        <a href="/help" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium {{if eq .ActivePage "help"}}bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white{{end}}">
+                            Справка
+                        </a>
+                    </nav>
+                    <!-- Theme toggle -->
+                    <button onclick="toggleTheme()" class="p-2 rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" title="Переключить тему">
+                        <!-- Sun icon (shown in dark mode) -->
+                        <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
                         </svg>
-                    </a>
-                    <a href="/history" class="px-3 py-2 rounded-md text-sm font-medium {{if eq .ActivePage "history"}}bg-blue-500 text-white{{else}}text-gray-600{{end}}">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        <!-- Moon icon (shown in light mode) -->
+                        <svg class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
                         </svg>
-                    </a>
-                    <a href="/records" class="px-3 py-2 rounded-md text-sm font-medium {{if eq .ActivePage "records"}}bg-blue-500 text-white{{else}}text-gray-600{{end}}">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
-                        </svg>
-                    </a>
-                    <a href="/help" class="px-3 py-2 rounded-md text-sm font-medium {{if eq .ActivePage "help"}}bg-blue-500 text-white{{else}}text-gray-600{{end}}">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                    </a>
-                </nav>
+                    </button>
+                    <!-- Mobile nav -->
+                    <nav class="flex sm:hidden space-x-1">
+                        <a href="/" class="px-3 py-2 rounded-md text-sm font-medium {{if eq .ActivePage "dashboard"}}bg-blue-500 text-white{{else}}text-gray-600 dark:text-gray-300{{end}}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                            </svg>
+                        </a>
+                        <a href="/history" class="px-3 py-2 rounded-md text-sm font-medium {{if eq .ActivePage "history"}}bg-blue-500 text-white{{else}}text-gray-600 dark:text-gray-300{{end}}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                            </svg>
+                        </a>
+                        <a href="/records" class="px-3 py-2 rounded-md text-sm font-medium {{if eq .ActivePage "records"}}bg-blue-500 text-white{{else}}text-gray-600 dark:text-gray-300{{end}}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                            </svg>
+                        </a>
+                        <a href="/help" class="px-3 py-2 rounded-md text-sm font-medium {{if eq .ActivePage "help"}}bg-blue-500 text-white{{else}}text-gray-600 dark:text-gray-300{{end}}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </a>
+                    </nav>
+                </div>
             </div>
         </div>
     </header>
@@ -99,6 +125,38 @@
     <main class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
         {{block "content" .}}{{end}}
     </main>
+
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const isDark = html.classList.contains('dark');
+
+            if (isDark) {
+                html.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+                document.getElementById('theme-color-meta').content = '#3b82f6';
+            } else {
+                html.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+                document.getElementById('theme-color-meta').content = '#1f2937';
+            }
+
+            // Dispatch event for charts to update
+            window.dispatchEvent(new CustomEvent('themeChanged'));
+        }
+
+        // Listen for system theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            if (!localStorage.getItem('theme')) {
+                if (e.matches) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+                window.dispatchEvent(new CustomEvent('themeChanged'));
+            }
+        });
+    </script>
 
     {{block "scripts" .}}{{end}}
 </body>

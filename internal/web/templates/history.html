@@ -5,22 +5,22 @@
 {{define "content"}}
 <div class="space-y-6">
   <!-- Date Range Selector -->
-  <div class="bg-white rounded-lg shadow p-4">
+  <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 transition-colors">
     <div class="flex flex-wrap items-center gap-4">
       <div>
-        <label for="dateFrom" class="block text-sm font-medium text-gray-700">От</label>
+        <label for="dateFrom" class="block text-sm font-medium text-gray-700 dark:text-gray-300">От</label>
         <input type="date" id="dateFrom"
-          class="mt-1 block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+          class="mt-1 block rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500">
       </div>
       <div>
-        <label for="dateTo" class="block text-sm font-medium text-gray-700">До</label>
+        <label for="dateTo" class="block text-sm font-medium text-gray-700 dark:text-gray-300">До</label>
         <input type="date" id="dateTo"
-          class="mt-1 block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+          class="mt-1 block rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500">
       </div>
       <div>
-        <label for="interval" class="block text-sm font-medium text-gray-700">Интервал</label>
+        <label for="interval" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Интервал</label>
         <select id="interval"
-          class="mt-1 block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+          class="mt-1 block rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500">
           <option value="5m">5 минут</option>
           <option value="15m">15 минут</option>
           <option value="1h" selected>1 час</option>
@@ -29,7 +29,7 @@
       </div>
       <div class="flex items-end">
         <button onclick="loadHistoryData()"
-          class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
           Загрузить
         </button>
       </div>
@@ -39,39 +39,39 @@
   <!-- Period Stats -->
   <div id="period-stats" hx-get="/widgets/stats?period=week" hx-trigger="load" hx-swap="innerHTML">
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div class="animate-pulse bg-white rounded-lg shadow p-4">
-        <div class="h-6 bg-gray-200 rounded w-1/2 mb-2"></div>
-        <div class="h-10 bg-gray-200 rounded"></div>
+      <div class="animate-pulse bg-white dark:bg-gray-800 rounded-lg shadow p-4 transition-colors">
+        <div class="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-2"></div>
+        <div class="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
       </div>
     </div>
   </div>
 
   <!-- Charts -->
-  <div class="bg-white rounded-lg shadow p-6">
-    <h2 class="text-lg font-semibold text-gray-900 mb-4">Графики</h2>
+  <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
+    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Графики</h2>
     <div class="space-y-8">
       <div class="h-48">
-        <h3 class="text-sm font-medium text-gray-700 mb-2">Температура</h3>
+        <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Температура</h3>
         <canvas id="historyTempChart"></canvas>
       </div>
       <div class="h-48">
-        <h3 class="text-sm font-medium text-gray-700 mb-2">Влажность</h3>
+        <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Влажность</h3>
         <canvas id="historyHumidityChart"></canvas>
       </div>
       <div class="h-48">
-        <h3 class="text-sm font-medium text-gray-700 mb-2">Давление</h3>
+        <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Давление</h3>
         <canvas id="historyPressureChart"></canvas>
       </div>
       <div class="h-48">
-        <h3 class="text-sm font-medium text-gray-700 mb-2">Ветер</h3>
+        <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Ветер</h3>
         <canvas id="historyWindChart"></canvas>
       </div>
       <div class="h-48">
-        <h3 class="text-sm font-medium text-gray-700 mb-2">Осадки</h3>
+        <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Осадки</h3>
         <canvas id="historyRainChart"></canvas>
       </div>
       <div class="h-48">
-        <h3 class="text-sm font-medium text-gray-700 mb-2">Освещённость</h3>
+        <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Освещённость</h3>
         <canvas id="historySolarChart"></canvas>
       </div>
     </div>

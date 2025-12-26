@@ -2,7 +2,18 @@
 let charts = {};
 let currentInterval = '1h';
 
+// Get theme-specific colors
+function getThemeColors() {
+    const isDark = document.documentElement.classList.contains('dark');
+    return {
+        gridColor: isDark ? '#374151' : '#f3f4f6',
+        textColor: isDark ? '#9ca3af' : '#6b7280'
+    };
+}
+
 function initCharts() {
+    const themeColors = getThemeColors();
+
     const commonOptions = {
         responsive: true,
         maintainAspectRatio: false,
@@ -12,7 +23,10 @@ function initCharts() {
         },
         plugins: {
             legend: {
-                display: false
+                display: false,
+                labels: {
+                    color: themeColors.textColor
+                }
             },
             tooltip: {
                 backgroundColor: 'rgba(0, 0, 0, 0.8)',
@@ -28,14 +42,16 @@ function initCharts() {
                     maxRotation: 0,
                     autoSkip: true,
                     maxTicksLimit: 6,
-                    font: { size: 10 }
+                    font: { size: 10 },
+                    color: themeColors.textColor
                 }
             },
             y: {
-                grid: { color: '#f3f4f6' },
+                grid: { color: themeColors.gridColor },
                 ticks: {
                     padding: 4,
-                    font: { size: 10 }
+                    font: { size: 10 },
+                    color: themeColors.textColor
                 }
             }
         },
@@ -184,7 +200,16 @@ function initCharts() {
             ...commonOptions,
             plugins: {
                 ...commonOptions.plugins,
-                legend: { display: true, position: 'top', labels: { font: { size: 10 }, usePointStyle: true, pointStyle: 'line' } },
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        font: { size: 10 },
+                        usePointStyle: true,
+                        pointStyle: 'line',
+                        color: getThemeColors().textColor
+                    }
+                },
                 tooltip: {
                     ...commonOptions.plugins.tooltip,
                     callbacks: {
@@ -293,13 +318,14 @@ async function loadChartData(interval) {
     currentInterval = interval;
 
     // Update button states
+    const isDark = document.documentElement.classList.contains('dark');
     document.querySelectorAll('.chart-interval-btn').forEach(btn => {
         if (btn.dataset.interval === interval) {
-            btn.classList.remove('bg-gray-200', 'text-gray-700');
+            btn.classList.remove('bg-gray-200', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
             btn.classList.add('bg-blue-500', 'text-white');
         } else {
             btn.classList.remove('bg-blue-500', 'text-white');
-            btn.classList.add('bg-gray-200', 'text-gray-700');
+            btn.classList.add('bg-gray-200', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
         }
     });
 
@@ -380,6 +406,38 @@ async function loadChartData(interval) {
 function updateCharts(interval) {
     loadChartData(interval);
 }
+
+// Update chart colors when theme changes
+function updateChartColors() {
+    const themeColors = getThemeColors();
+
+    Object.values(charts).forEach(chart => {
+        if (!chart) return;
+
+        // Update grid colors
+        if (chart.options.scales?.y?.grid) {
+            chart.options.scales.y.grid.color = themeColors.gridColor;
+        }
+
+        // Update tick colors
+        if (chart.options.scales?.x?.ticks) {
+            chart.options.scales.x.ticks.color = themeColors.textColor;
+        }
+        if (chart.options.scales?.y?.ticks) {
+            chart.options.scales.y.ticks.color = themeColors.textColor;
+        }
+
+        // Update legend colors
+        if (chart.options.plugins?.legend?.labels) {
+            chart.options.plugins.legend.labels.color = themeColors.textColor;
+        }
+
+        chart.update('none'); // Update without animation
+    });
+}
+
+// Listen for theme changes
+window.addEventListener('themeChanged', updateChartColors);
 
 // Auto-refresh charts every 5 minutes
 setInterval(() => {

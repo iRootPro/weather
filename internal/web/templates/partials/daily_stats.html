@@ -1,68 +1,68 @@
 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
     <!-- Temperature Stats -->
-    <div class="bg-white rounded-lg shadow p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 transition-colors">
         <div class="flex items-center justify-between">
-            <h3 class="text-sm font-medium text-gray-500">Температура за сутки</h3>
+            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Температура за сутки</h3>
             <svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
             </svg>
         </div>
         <div class="mt-2 flex items-baseline space-x-4">
             <div>
-                <span class="text-2xl font-bold text-blue-600">{{printf "%.1f" .TempOutdoorMin}}°</span>
-                <span class="text-xs text-gray-500">мин</span>
+                <span class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{printf "%.1f" .TempOutdoorMin}}°</span>
+                <span class="text-xs text-gray-500 dark:text-gray-400">мин</span>
             </div>
             <div>
-                <span class="text-2xl font-bold text-gray-700">{{printf "%.1f" .TempOutdoorAvg}}°</span>
-                <span class="text-xs text-gray-500">сред</span>
+                <span class="text-2xl font-bold text-gray-700 dark:text-gray-300">{{printf "%.1f" .TempOutdoorAvg}}°</span>
+                <span class="text-xs text-gray-500 dark:text-gray-400">сред</span>
             </div>
             <div>
-                <span class="text-2xl font-bold text-red-600">{{printf "%.1f" .TempOutdoorMax}}°</span>
-                <span class="text-xs text-gray-500">макс</span>
+                <span class="text-2xl font-bold text-red-600 dark:text-red-400">{{printf "%.1f" .TempOutdoorMax}}°</span>
+                <span class="text-xs text-gray-500 dark:text-gray-400">макс</span>
             </div>
         </div>
     </div>
 
     <!-- Pressure Stats -->
-    <div class="bg-white rounded-lg shadow p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 transition-colors">
         <div class="flex items-center justify-between">
-            <h3 class="text-sm font-medium text-gray-500">Давление за сутки</h3>
+            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Давление за сутки</h3>
             <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
             </svg>
         </div>
         <div class="mt-2 flex items-baseline space-x-4">
             <div>
-                <span class="text-2xl font-bold text-blue-600">{{printf "%.0f" .PressureRelativeMin}}</span>
-                <span class="text-xs text-gray-500">мин</span>
+                <span class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{printf "%.0f" .PressureRelativeMin}}</span>
+                <span class="text-xs text-gray-500 dark:text-gray-400">мин</span>
             </div>
             <div>
-                <span class="text-2xl font-bold text-gray-700">{{printf "%.0f" .PressureRelativeAvg}}</span>
-                <span class="text-xs text-gray-500">сред</span>
+                <span class="text-2xl font-bold text-gray-700 dark:text-gray-300">{{printf "%.0f" .PressureRelativeAvg}}</span>
+                <span class="text-xs text-gray-500 dark:text-gray-400">сред</span>
             </div>
             <div>
-                <span class="text-2xl font-bold text-red-600">{{printf "%.0f" .PressureRelativeMax}}</span>
-                <span class="text-xs text-gray-500">макс</span>
+                <span class="text-2xl font-bold text-red-600 dark:text-red-400">{{printf "%.0f" .PressureRelativeMax}}</span>
+                <span class="text-xs text-gray-500 dark:text-gray-400">макс</span>
             </div>
         </div>
     </div>
 
     <!-- Wind & Rain Stats -->
-    <div class="bg-white rounded-lg shadow p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 transition-colors">
         <div class="flex items-center justify-between">
-            <h3 class="text-sm font-medium text-gray-500">Ветер и осадки</h3>
+            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Ветер и осадки</h3>
             <svg class="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
             </svg>
         </div>
         <div class="mt-2 flex items-baseline space-x-4">
             <div>
-                <span class="text-2xl font-bold text-teal-600">{{printf "%.1f" .WindSpeedMax}}</span>
-                <span class="text-xs text-gray-500">м/с макс</span>
+                <span class="text-2xl font-bold text-teal-600 dark:text-teal-400">{{printf "%.1f" .WindSpeedMax}}</span>
+                <span class="text-xs text-gray-500 dark:text-gray-400">м/с макс</span>
             </div>
             <div>
-                <span class="text-2xl font-bold text-cyan-600">{{printf "%.1f" .RainTotal}}</span>
-                <span class="text-xs text-gray-500">мм осадков</span>
+                <span class="text-2xl font-bold text-cyan-600 dark:text-cyan-400">{{printf "%.1f" .RainTotal}}</span>
+                <span class="text-xs text-gray-500 dark:text-gray-400">мм осадков</span>
             </div>
         </div>
     </div>

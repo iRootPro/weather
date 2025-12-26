@@ -9,9 +9,9 @@
          hx-get="/widgets/current"
          hx-trigger="load, every 60s"
          hx-swap="innerHTML">
-        <div class="animate-pulse bg-white rounded-lg shadow p-6">
-            <div class="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-            <div class="h-24 bg-gray-200 rounded"></div>
+        <div class="animate-pulse bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
+            <div class="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4"></div>
+            <div class="h-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
         </div>
     </div>
 
@@ -20,9 +20,9 @@
          hx-get="/widgets/sun"
          hx-trigger="load"
          hx-swap="innerHTML">
-        <div class="animate-pulse bg-white rounded-lg shadow p-6">
-            <div class="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-            <div class="h-16 bg-gray-200 rounded"></div>
+        <div class="animate-pulse bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
+            <div class="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4"></div>
+            <div class="h-16 bg-gray-200 dark:bg-gray-700 rounded"></div>
         </div>
     </div>
 
@@ -32,59 +32,59 @@
          hx-trigger="load, every 300s"
          hx-swap="innerHTML">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="animate-pulse bg-white rounded-lg shadow p-4">
-                <div class="h-6 bg-gray-200 rounded w-1/2 mb-2"></div>
-                <div class="h-10 bg-gray-200 rounded"></div>
+            <div class="animate-pulse bg-white dark:bg-gray-800 rounded-lg shadow p-4 transition-colors">
+                <div class="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-2"></div>
+                <div class="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
             </div>
-            <div class="animate-pulse bg-white rounded-lg shadow p-4">
-                <div class="h-6 bg-gray-200 rounded w-1/2 mb-2"></div>
-                <div class="h-10 bg-gray-200 rounded"></div>
+            <div class="animate-pulse bg-white dark:bg-gray-800 rounded-lg shadow p-4 transition-colors">
+                <div class="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-2"></div>
+                <div class="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
             </div>
-            <div class="animate-pulse bg-white rounded-lg shadow p-4">
-                <div class="h-6 bg-gray-200 rounded w-1/2 mb-2"></div>
-                <div class="h-10 bg-gray-200 rounded"></div>
+            <div class="animate-pulse bg-white dark:bg-gray-800 rounded-lg shadow p-4 transition-colors">
+                <div class="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-2"></div>
+                <div class="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
             </div>
         </div>
     </div>
 
     <!-- Charts -->
-    <div class="bg-white rounded-lg shadow p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
         <div class="flex items-center justify-between mb-4">
-            <h2 class="text-lg font-semibold text-gray-900">Графики за 24 часа</h2>
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Графики за 24 часа</h2>
             <div class="flex space-x-2">
-                <button onclick="updateCharts('5m')" class="chart-interval-btn px-3 py-1 text-sm rounded-md bg-blue-500 text-white" data-interval="5m">5м</button>
-                <button onclick="updateCharts('15m')" class="chart-interval-btn px-3 py-1 text-sm rounded-md bg-gray-200 text-gray-700" data-interval="15m">15м</button>
-                <button onclick="updateCharts('1h')" class="chart-interval-btn px-3 py-1 text-sm rounded-md bg-gray-200 text-gray-700" data-interval="1h">1ч</button>
+                <button onclick="updateCharts('5m')" class="chart-interval-btn px-3 py-1 text-sm rounded-md bg-blue-500 text-white hover:bg-blue-600 transition-colors" data-interval="5m">5м</button>
+                <button onclick="updateCharts('15m')" class="chart-interval-btn px-3 py-1 text-sm rounded-md bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors" data-interval="15m">15м</button>
+                <button onclick="updateCharts('1h')" class="chart-interval-btn px-3 py-1 text-sm rounded-md bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors" data-interval="1h">1ч</button>
             </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-8">
-            <div class="h-48 border-b border-gray-100 pb-4">
-                <h3 class="text-sm font-medium text-gray-700 mb-2">Температура</h3>
+            <div class="h-48 border-b border-gray-100 dark:border-gray-700 pb-4">
+                <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Температура</h3>
                 <canvas id="tempChart"></canvas>
             </div>
-            <div class="h-48 border-b border-gray-100 pb-4">
-                <h3 class="text-sm font-medium text-gray-700 mb-2">Влажность</h3>
+            <div class="h-48 border-b border-gray-100 dark:border-gray-700 pb-4">
+                <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Влажность</h3>
                 <canvas id="humidityChart"></canvas>
             </div>
-            <div class="h-48 border-b border-gray-100 pb-4">
-                <h3 class="text-sm font-medium text-gray-700 mb-2">Давление</h3>
+            <div class="h-48 border-b border-gray-100 dark:border-gray-700 pb-4">
+                <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Давление</h3>
                 <canvas id="pressureChart"></canvas>
             </div>
-            <div class="h-48 border-b border-gray-100 pb-4">
-                <h3 class="text-sm font-medium text-gray-700 mb-2">Ветер</h3>
+            <div class="h-48 border-b border-gray-100 dark:border-gray-700 pb-4">
+                <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Ветер</h3>
                 <canvas id="windChart"></canvas>
             </div>
             <div class="h-48 pb-4">
-                <h3 class="text-sm font-medium text-gray-700 mb-2">Освещённость</h3>
+                <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Освещённость</h3>
                 <canvas id="solarChart"></canvas>
             </div>
             <div class="h-48 pb-4">
-                <h3 class="text-sm font-medium text-gray-700 mb-2">Осадки</h3>
+                <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Осадки</h3>
                 <div class="relative h-36">
                     <canvas id="rainChart"></canvas>
-                    <div id="noRainMessage" class="hidden absolute inset-0 flex items-center justify-center bg-gray-50 rounded-lg border border-gray-100">
-                        <span class="text-gray-400 text-sm">Дождя не было</span>
+                    <div id="noRainMessage" class="hidden absolute inset-0 flex items-center justify-center bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700">
+                        <span class="text-gray-400 dark:text-gray-500 text-sm">Дождя не было</span>
                     </div>
                 </div>
             </div>
