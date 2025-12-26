@@ -433,3 +433,50 @@ func (r *weatherRepository) GetRecords(ctx context.Context) (*models.WeatherReco
 
 	return records, nil
 }
+
+// GetDataForEventDetection returns weather data for event detection with 5-minute intervals
+func (r *weatherRepository) GetDataForEventDetection(ctx context.Context, from, to time.Time) ([]models.WeatherData, error) {
+	query := `
+		SELECT
+			time_bucket('5 minutes', time) AS bucket,
+			AVG(temp_outdoor) as temp_outdoor,
+			AVG(humidity_outdoor)::smallint as humidity_outdoor,
+			AVG(pressure_relative) as pressure_relative,
+			AVG(wind_speed) as wind_speed,
+			MAX(wind_gust) as wind_gust,
+			AVG(wind_direction)::smallint as wind_direction,
+			AVG(rain_rate) as rain_rate,
+			MAX(rain_daily) as rain_daily
+		FROM weather_data
+		WHERE time >= $1 AND time <= $2
+		GROUP BY bucket
+		ORDER BY bucket ASC`
+
+	rows, err := r.pool.Query(ctx, query, from, to)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query weather data for events: %w", err)
+	}
+	defer rows.Close()
+
+	var result []models.WeatherData
+	for rows.Next() {
+		var data models.WeatherData
+		err := rows.Scan(
+			&data.Time,
+			&data.TempOutdoor,
+			&data.HumidityOutdoor,
+			&data.PressureRelative,
+			&data.WindSpeed,
+			&data.WindGust,
+			&data.WindDirection,
+			&data.RainRate,
+			&data.RainDaily,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan weather data for events: %w", err)
+		}
+		result = append(result, data)
+	}
+
+	return result, nil
+}

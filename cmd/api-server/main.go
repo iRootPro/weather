@@ -124,6 +124,7 @@ func main() {
 	slog.Info("registering sun widget route")
 	mux.HandleFunc("GET /widgets/sun", webHandler.SunTimesWidget)
 	slog.Info("sun widget route registered")
+	mux.HandleFunc("GET /widgets/events", webHandler.WeatherEventsWidget)
 
 	// Static files
 	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.Dir(staticDir))))

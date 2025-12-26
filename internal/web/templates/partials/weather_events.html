@@ -1,0 +1,24 @@
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 transition-colors">
+    <div class="flex items-center justify-between mb-4">
+        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Погодные события (24 часа)</h3>
+        <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+    </div>
+
+    {{if .NoEvents}}
+    <p class="text-sm text-gray-500 dark:text-gray-400 text-center py-4">Значимых погодных событий не зафиксировано</p>
+    {{else}}
+    <div class="space-y-3">
+        {{range .Events}}
+        <div class="flex items-start space-x-3 text-sm border-l-2 border-gray-200 dark:border-gray-700 pl-3 hover:border-blue-500 dark:hover:border-blue-400 transition-colors">
+            <span class="text-2xl flex-shrink-0">{{.Icon}}</span>
+            <div class="flex-1 min-w-0">
+                <p class="text-gray-900 dark:text-white font-medium">{{.Description}}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">{{.Time.Format "15:04, 2 января"}}</p>
+            </div>
+        </div>
+        {{end}}
+    </div>
+    {{end}}
+</div>

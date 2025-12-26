@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/iRootPro/weather/internal/models"
@@ -146,4 +147,307 @@ func (s *WeatherService) GetCurrentWithHourlyChange(ctx context.Context) (curren
 // GetDataAt returns weather data closest to the specified time
 func (s *WeatherService) GetDataAt(ctx context.Context, targetTime time.Time) (*models.WeatherData, error) {
 	return s.repo.GetDataNearTime(ctx, targetTime)
+}
+
+// Пороговые значения для событий
+const (
+	RAIN_THRESHOLD            = 0.1  // мм/ч - минимальная интенсивность для "дождя"
+	TEMP_CHANGE_THRESHOLD     = 3.0  // °C за час
+	WIND_GUST_THRESHOLD       = 10.0 // м/с
+	PRESSURE_CHANGE_THRESHOLD = 3.0  // мм рт.ст. за 3 часа
+	PRESSURE_PERIOD_HOURS     = 3    // период для анализа изменения давления
+)
+
+// GetRecentEvents returns detected weather events for the last N hours
+func (s *WeatherService) GetRecentEvents(ctx context.Context, hours int) ([]models.WeatherEvent, error) {
+	now := time.Now()
+	from := now.Add(-time.Duration(hours) * time.Hour)
+
+	// Получаем данные с интервалом 5 минут для анализа
+	data, err := s.repo.GetDataForEventDetection(ctx, from, now)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(data) == 0 {
+		return []models.WeatherEvent{}, nil
+	}
+
+	var events []models.WeatherEvent
+
+	// Определяем события дождя
+	rainEvents := detectRainEvents(data)
+	events = append(events, rainEvents...)
+
+	// Определяем изменения температуры
+	tempEvents := detectTemperatureChanges(data)
+	events = append(events, tempEvents...)
+
+	// Определяем порывы ветра
+	windEvents := detectWindGusts(data)
+	events = append(events, windEvents...)
+
+	// Определяем изменения давления
+	pressureEvents := detectPressureChanges(data)
+	events = append(events, pressureEvents...)
+
+	// Сортируем события по времени (от новых к старым)
+	sortEvents(events)
+
+	// Ограничиваем количество событий для виджета
+	if len(events) > 7 {
+		events = events[:7]
+	}
+
+	return events, nil
+}
+
+// detectRainEvents определяет начало и окончание дождя
+func detectRainEvents(data []models.WeatherData) []models.WeatherEvent {
+	var events []models.WeatherEvent
+	var rainStartTime time.Time
+	var isRaining bool
+
+	for i, d := range data {
+		currentRain := d.RainRate != nil && *d.RainRate >= RAIN_THRESHOLD
+
+		if currentRain && !isRaining {
+			// Начало дождя
+			rainStartTime = d.Time
+			isRaining = true
+		} else if !currentRain && isRaining && i > 0 {
+			// Конец дождя
+			duration := d.Time.Sub(rainStartTime)
+			events = append(events, models.WeatherEvent{
+				Type:        "rain_end",
+				Time:        d.Time,
+				Value:       0,
+				Change:      duration.Hours(),
+				Description: formatDuration(duration),
+				Icon:        "☀️",
+			})
+			isRaining = false
+		}
+	}
+
+	// Если дождь все еще идет
+	if isRaining && len(data) > 0 {
+		duration := data[len(data)-1].Time.Sub(rainStartTime)
+		events = append(events, models.WeatherEvent{
+			Type:        "rain_start",
+			Time:        rainStartTime,
+			Value:       0,
+			Change:      duration.Hours(),
+			Description: "Дождь идёт " + formatDuration(duration),
+			Icon:        "🌧️",
+		})
+	}
+
+	return events
+}
+
+// detectTemperatureChanges определяет резкие изменения температуры
+func detectTemperatureChanges(data []models.WeatherData) []models.WeatherEvent {
+	var events []models.WeatherEvent
+
+	// Проверяем изменения за час (12 точек по 5 минут)
+	for i := 12; i < len(data); i++ {
+		curr := data[i]
+		prev := data[i-12] // час назад
+
+		if curr.TempOutdoor == nil || prev.TempOutdoor == nil {
+			continue
+		}
+
+		change := *curr.TempOutdoor - *prev.TempOutdoor
+
+		if change >= TEMP_CHANGE_THRESHOLD {
+			// Температура выросла
+			events = append(events, models.WeatherEvent{
+				Type:        "temp_rise",
+				Time:        curr.Time,
+				Value:       float64(*curr.TempOutdoor),
+				Change:      float64(change),
+				Description: fmt.Sprintf("Потеплело на %.1f°C", change),
+				Icon:        "🌡️",
+			})
+		} else if change <= -TEMP_CHANGE_THRESHOLD {
+			// Температура упала
+			events = append(events, models.WeatherEvent{
+				Type:        "temp_drop",
+				Time:        curr.Time,
+				Value:       float64(*curr.TempOutdoor),
+				Change:      float64(change),
+				Description: fmt.Sprintf("Похолодало на %.1f°C", -change),
+				Icon:        "🥶",
+			})
+		}
+	}
+
+	// Группируем близкие по времени события
+	return groupSimilarEvents(events, 30*time.Minute)
+}
+
+// detectWindGusts определяет сильные порывы ветра
+func detectWindGusts(data []models.WeatherData) []models.WeatherEvent {
+	var events []models.WeatherEvent
+
+	for _, d := range data {
+		if d.WindGust != nil && *d.WindGust >= WIND_GUST_THRESHOLD {
+			events = append(events, models.WeatherEvent{
+				Type:        "wind_gust",
+				Time:        d.Time,
+				Value:       float64(*d.WindGust),
+				Change:      0,
+				Description: fmt.Sprintf("Порыв ветра %.1f м/с", *d.WindGust),
+				Icon:        "💨",
+			})
+		}
+	}
+
+	// Группируем близкие порывы и берем максимальный
+	return groupWindGusts(events, 30*time.Minute)
+}
+
+// detectPressureChanges определяет резкие изменения давления
+func detectPressureChanges(data []models.WeatherData) []models.WeatherEvent {
+	var events []models.WeatherEvent
+
+	// Проверяем изменения за 3 часа (36 точек по 5 минут)
+	for i := 36; i < len(data); i++ {
+		curr := data[i]
+		prev := data[i-36] // 3 часа назад
+
+		if curr.PressureRelative == nil || prev.PressureRelative == nil {
+			continue
+		}
+
+		change := *curr.PressureRelative - *prev.PressureRelative
+
+		if change >= PRESSURE_CHANGE_THRESHOLD {
+			// Давление выросло
+			events = append(events, models.WeatherEvent{
+				Type:        "pressure_rise",
+				Time:        curr.Time,
+				Value:       float64(*curr.PressureRelative),
+				Change:      float64(change),
+				Description: fmt.Sprintf("Давление растёт (+%.1f мм)", change),
+				Icon:        "⬆️",
+			})
+		} else if change <= -PRESSURE_CHANGE_THRESHOLD {
+			// Давление упало
+			events = append(events, models.WeatherEvent{
+				Type:        "pressure_drop",
+				Time:        curr.Time,
+				Value:       float64(*curr.PressureRelative),
+				Change:      float64(change),
+				Description: fmt.Sprintf("Давление падает (%.1f мм)", change),
+				Icon:        "⬇️",
+			})
+		}
+	}
+
+	// Группируем близкие по времени события
+	return groupSimilarEvents(events, 60*time.Minute)
+}
+
+// formatDuration форматирует длительность дождя
+func formatDuration(d time.Duration) string {
+	hours := int(d.Hours())
+	minutes := int(d.Minutes()) % 60
+
+	if hours > 0 && minutes > 0 {
+		return fmt.Sprintf("Дождь прошёл (%dч %dм)", hours, minutes)
+	} else if hours > 0 {
+		return fmt.Sprintf("Дождь прошёл (%dч)", hours)
+	} else if minutes > 0 {
+		return fmt.Sprintf("Дождь прошёл (%dм)", minutes)
+	}
+	return "Дождь прошёл"
+}
+
+// groupSimilarEvents группирует похожие события, оставляя самое значимое
+func groupSimilarEvents(events []models.WeatherEvent, window time.Duration) []models.WeatherEvent {
+	if len(events) == 0 {
+		return events
+	}
+
+	// Сортируем по времени
+	sortEvents(events)
+
+	var grouped []models.WeatherEvent
+	i := 0
+
+	for i < len(events) {
+		// Начинаем новую группу
+		maxEvent := events[i]
+		j := i + 1
+
+		// Ищем все события в пределах окна
+		for j < len(events) && events[j].Time.Sub(events[i].Time) <= window {
+			// Берем событие с максимальным изменением
+			if abs(events[j].Change) > abs(maxEvent.Change) {
+				maxEvent = events[j]
+			}
+			j++
+		}
+
+		grouped = append(grouped, maxEvent)
+		i = j
+	}
+
+	return grouped
+}
+
+// groupWindGusts группирует порывы ветра, оставляя максимальный в окне
+func groupWindGusts(events []models.WeatherEvent, window time.Duration) []models.WeatherEvent {
+	if len(events) == 0 {
+		return events
+	}
+
+	// Сортируем по времени
+	sortEvents(events)
+
+	var grouped []models.WeatherEvent
+	i := 0
+
+	for i < len(events) {
+		// Начинаем новую группу
+		maxEvent := events[i]
+		j := i + 1
+
+		// Ищем все порывы в пределах окна
+		for j < len(events) && events[j].Time.Sub(events[i].Time) <= window {
+			// Берем максимальный порыв
+			if events[j].Value > maxEvent.Value {
+				maxEvent = events[j]
+			}
+			j++
+		}
+
+		grouped = append(grouped, maxEvent)
+		i = j
+	}
+
+	return grouped
+}
+
+// sortEvents сортирует события по времени (от новых к старым)
+func sortEvents(events []models.WeatherEvent) {
+	// Простая сортировка пузырьком (достаточно для небольшого количества событий)
+	for i := 0; i < len(events)-1; i++ {
+		for j := 0; j < len(events)-i-1; j++ {
+			if events[j].Time.Before(events[j+1].Time) {
+				events[j], events[j+1] = events[j+1], events[j]
+			}
+		}
+	}
+}
+
+// abs возвращает абсолютное значение
+func abs(x float64) float64 {
+	if x < 0 {
+		return -x
+	}
+	return x
 }

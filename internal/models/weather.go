@@ -108,3 +108,13 @@ type WeatherRecords struct {
 	SolarRadiationMax RecordValue `json:"solar_radiation_max"`
 	UVIndexMax        RecordValue `json:"uv_index_max"`
 }
+
+// WeatherEvent represents a detected weather event
+type WeatherEvent struct {
+	Type        string    `json:"type"`        // "rain_start", "rain_end", "temp_drop", "temp_rise", "wind_gust", "pressure_drop", "pressure_rise"
+	Time        time.Time `json:"time"`        // Время события
+	Value       float64   `json:"value"`       // Значение (температура, скорость ветра и т.д.)
+	Change      float64   `json:"change"`      // Изменение (для температуры/давления)
+	Description string    `json:"description"` // "Начало дождя", "Порыв ветра 15 м/с"
+	Icon        string    `json:"icon"`        // Эмодзи для иконки
+}

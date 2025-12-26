@@ -406,3 +406,34 @@ func (h *Handler) SunTimesWidget(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }
+
+// WeatherEventsWidget renders the weather events widget
+func (h *Handler) WeatherEventsWidget(w http.ResponseWriter, r *http.Request) {
+	hours := 24 // показываем события за последние 24 часа
+	events, err := h.weatherService.GetRecentEvents(r.Context(), hours)
+	if err != nil {
+		slog.Error("failed to get weather events", "error", err)
+		http.Error(w, "Failed to load weather events", http.StatusInternalServerError)
+		return
+	}
+
+	templateData := struct {
+		Events   []models.WeatherEvent
+		NoEvents bool
+	}{
+		Events:   events,
+		NoEvents: len(events) == 0,
+	}
+
+	tmpl, err := h.parsePartial("weather_events.html")
+	if err != nil {
+		slog.Error("failed to parse weather events template", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	if err := tmpl.Execute(w, templateData); err != nil {
+		slog.Error("failed to render weather events widget", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}
