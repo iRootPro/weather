@@ -12,6 +12,7 @@ type Config struct {
 	DB       DBConfig       `yaml:"db"`
 	MQTT     MQTTConfig     `yaml:"mqtt"`
 	HTTP     HTTPConfig     `yaml:"http"`
+	API      APIConfig      `yaml:"api"`
 	Log      LogConfig      `yaml:"log"`
 	Location LocationConfig `yaml:"location"`
 }
@@ -58,6 +59,10 @@ type HTTPConfig struct {
 
 func (c HTTPConfig) Addr() string {
 	return fmt.Sprintf("%s:%d", c.Host, c.Port)
+}
+
+type APIConfig struct {
+	URL string `env:"API_URL" env-default:"http://localhost:8080"`
 }
 
 type LogConfig struct {

@@ -94,6 +94,24 @@ func (h *WeatherHandler) GetChartData(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, data)
 }
 
+// GET /api/weather/events?hours=24
+func (h *WeatherHandler) GetEvents(w http.ResponseWriter, r *http.Request) {
+	hours := 24 // default
+	if hoursStr := r.URL.Query().Get("hours"); hoursStr != "" {
+		if h, err := time.ParseDuration(hoursStr + "h"); err == nil {
+			hours = int(h.Hours())
+		}
+	}
+
+	events, err := h.weatherService.GetRecentEvents(r.Context(), hours)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	respondJSON(w, events)
+}
+
 func parseTimeRange(r *http.Request) (time.Time, time.Time, error) {
 	fromStr := r.URL.Query().Get("from")
 	toStr := r.URL.Query().Get("to")
