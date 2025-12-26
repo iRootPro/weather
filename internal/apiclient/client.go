@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/iRootPro/weather/internal/models"
@@ -140,14 +141,17 @@ func (c *Client) GetDailyMinMax(ctx context.Context) (*repository.DailyMinMax, e
 
 // GetHistory fetches historical weather data
 func (c *Client) GetHistory(ctx context.Context, from, to time.Time, interval string) ([]models.WeatherData, error) {
-	url := fmt.Sprintf("%s/api/weather/history?from=%s&to=%s&interval=%s",
-		c.baseURL,
-		from.Format(time.RFC3339),
-		to.Format(time.RFC3339),
-		interval,
-	)
+	baseURL := fmt.Sprintf("%s/api/weather/history", c.baseURL)
 
-	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	// Build URL with properly encoded query parameters
+	params := url.Values{}
+	params.Add("from", from.Format(time.RFC3339))
+	params.Add("to", to.Format(time.RFC3339))
+	params.Add("interval", interval)
+
+	fullURL := fmt.Sprintf("%s?%s", baseURL, params.Encode())
+
+	req, err := http.NewRequestWithContext(ctx, "GET", fullURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
@@ -173,9 +177,14 @@ func (c *Client) GetHistory(ctx context.Context, from, to time.Time, interval st
 
 // GetStats fetches weather statistics
 func (c *Client) GetStats(ctx context.Context, period string) (*models.WeatherStats, error) {
-	url := fmt.Sprintf("%s/api/weather/stats?period=%s", c.baseURL, period)
+	baseURL := fmt.Sprintf("%s/api/weather/stats", c.baseURL)
 
-	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	params := url.Values{}
+	params.Add("period", period)
+
+	fullURL := fmt.Sprintf("%s?%s", baseURL, params.Encode())
+
+	req, err := http.NewRequestWithContext(ctx, "GET", fullURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
@@ -201,9 +210,14 @@ func (c *Client) GetStats(ctx context.Context, period string) (*models.WeatherSt
 
 // GetRecentEvents fetches recent weather events
 func (c *Client) GetRecentEvents(ctx context.Context, hours int) ([]models.WeatherEvent, error) {
-	url := fmt.Sprintf("%s/api/weather/events?hours=%d", c.baseURL, hours)
+	baseURL := fmt.Sprintf("%s/api/weather/events", c.baseURL)
 
-	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	params := url.Values{}
+	params.Add("hours", fmt.Sprintf("%d", hours))
+
+	fullURL := fmt.Sprintf("%s?%s", baseURL, params.Encode())
+
+	req, err := http.NewRequestWithContext(ctx, "GET", fullURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}

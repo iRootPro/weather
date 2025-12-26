@@ -86,7 +86,7 @@ func RenderDashboard(
 	content += sectionTitle.Render("🌡️  ТЕКУЩАЯ ПОГОДА") + " " +
 		secondaryText.Render(fmt.Sprintf("(данные на %s%s)", timeStr, ageStr)) + "\n\n"
 
-	// Temperature
+	// Temperature outdoor
 	if current.TempOutdoor != nil {
 		temp := float64(*current.TempOutdoor)
 		tempStr := fmt.Sprintf("%.1f°C", temp)
@@ -117,7 +117,30 @@ func RenderDashboard(
 		)
 	}
 
-	// Humidity
+	// Feels like temperature
+	if current.TempFeelsLike != nil {
+		feelsLike := float64(*current.TempFeelsLike)
+		feelsStr := fmt.Sprintf("%.1f°C", feelsLike)
+		feelsStyle := getTempStyle(feelsLike)
+
+		content += fmt.Sprintf("%s%s\n",
+			metricLabel.Render("🤚  Ощущается"),
+			feelsStyle.Render(feelsStr),
+		)
+	}
+
+	// Dew point
+	if current.DewPoint != nil {
+		dewPoint := float64(*current.DewPoint)
+		dewStr := fmt.Sprintf("%.1f°C", dewPoint)
+
+		content += fmt.Sprintf("%s%s\n",
+			metricLabel.Render("💦  Точка росы"),
+			metricValue.Render(dewStr),
+		)
+	}
+
+	// Humidity outdoor
 	if current.HumidityOutdoor != nil {
 		hum := int(*current.HumidityOutdoor)
 		humStr := fmt.Sprintf("%d%%", hum)
@@ -194,6 +217,17 @@ func RenderDashboard(
 			metricLabel.Render("☀️  UV индекс"),
 			metricValue.Render(uvStr),
 			secondaryText.Render(uvLevel),
+		)
+	}
+
+	// Solar radiation
+	if current.SolarRadiation != nil && *current.SolarRadiation > 0 {
+		solar := float64(*current.SolarRadiation)
+		solarStr := fmt.Sprintf("%.0f Вт/м²", solar)
+
+		content += fmt.Sprintf("%s%s\n",
+			metricLabel.Render("☀️  Солн. радиация"),
+			metricValue.Render(solarStr),
 		)
 	}
 
