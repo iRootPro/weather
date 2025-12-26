@@ -19,7 +19,6 @@ var excludeFields = map[string]bool{
 	"passkey":     true,
 	"runtime":     true,
 	"interval":    true,
-	"wh90batt":    true,
 	"batt1":       true,
 	"batt2":       true,
 	"ws90_ver":    true,
@@ -184,7 +183,7 @@ func (p *Parser) Parse(payload []byte) (*models.WeatherData, error) {
 	}
 
 	// Питание (вольты)
-	if v, ok := data["wh65batt"]; ok {
+	if v, ok := data["wh90batt"]; ok {
 		weather.WH65Batt = p.parseFloatPtr(v)
 	}
 	if v, ok := data["ws90cap_volt"]; ok {
