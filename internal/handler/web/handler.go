@@ -13,19 +13,24 @@ type Handler struct {
 	templatesDir   string
 	weatherService *service.WeatherService
 	sunService     *service.SunService
+	moonService    *service.MoonService
 }
 
-func NewHandler(templatesDir string, weatherService *service.WeatherService, sunService *service.SunService) (*Handler, error) {
+func NewHandler(templatesDir string, weatherService *service.WeatherService, sunService *service.SunService, moonService *service.MoonService) (*Handler, error) {
 	return &Handler{
 		templatesDir:   templatesDir,
 		weatherService: weatherService,
 		sunService:     sunService,
+		moonService:    moonService,
 	}, nil
 }
 
 var templateFuncs = template.FuncMap{
 	"mul": func(a, b float64) float64 {
 		return a * b
+	},
+	"sub": func(a, b float64) float64 {
+		return a - b
 	},
 }
 

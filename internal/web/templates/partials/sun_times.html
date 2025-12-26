@@ -1,109 +1,182 @@
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
     <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Солнце</h2>
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Солнце и Луна</h2>
         <span class="text-sm text-gray-500 dark:text-gray-400">{{.Date}}</span>
     </div>
 
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <!-- Dawn -->
-        <div class="text-center p-4 bg-gradient-to-br from-indigo-50 to-purple-100 dark:from-indigo-900/20 dark:to-purple-800/20 rounded-lg">
-            <div class="flex justify-center mb-2">
-                <svg class="w-8 h-8 text-indigo-400 dark:text-indigo-300" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 7a5 5 0 100 10 5 5 0 000-10zM2 13h2a1 1 0 100-2H2a1 1 0 100 2zm18 0h2a1 1 0 100-2h-2a1 1 0 100 2zM11 2v2a1 1 0 102 0V2a1 1 0 10-2 0zm0 18v2a1 1 0 102 0v-2a1 1 0 10-2 0z" opacity="0.4"/>
-                    <path d="M5.99 4.58a1 1 0 00-1.41 1.41l1.06 1.06a1 1 0 001.41-1.41L5.99 4.58zm12.37 12.37a1 1 0 00-1.41 1.41l1.06 1.06a1 1 0 001.41-1.41l-1.06-1.06zm1.06-12.37a1 1 0 00-1.41 0l-1.06 1.06a1 1 0 001.41 1.41l1.06-1.06a1 1 0 000-1.41zM5.99 19.42a1 1 0 001.41 0l1.06-1.06a1 1 0 00-1.41-1.41l-1.06 1.06a1 1 0 000 1.41z" opacity="0.4"/>
-                    <path d="M4 19h16v2H4z"/>
-                </svg>
+    <!-- Two column layout for Sun and Moon -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Sun Column -->
+        <div class="space-y-4">
+            <h3 class="text-md font-semibold text-gray-800 dark:text-gray-200 flex items-center">
+                <span class="text-2xl mr-2">☀️</span>
+                Солнце
+            </h3>
+
+            <!-- Sun times grid -->
+            <div class="grid grid-cols-2 gap-3">
+                <!-- Dawn -->
+                <div class="text-center p-3 bg-gradient-to-br from-indigo-50 to-purple-100 dark:from-indigo-900/20 dark:to-purple-800/20 rounded-lg">
+                    <div class="flex justify-center mb-1">
+                        <svg class="w-6 h-6 text-indigo-400 dark:text-indigo-300" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 7a5 5 0 100 10 5 5 0 000-10zM2 13h2a1 1 0 100-2H2a1 1 0 100 2zm18 0h2a1 1 0 100-2h-2a1 1 0 100 2z" opacity="0.4"/>
+                            <path d="M4 19h16v2H4z"/>
+                        </svg>
+                    </div>
+                    <div class="text-xl font-bold text-indigo-600 dark:text-indigo-400">{{.Dawn}}</div>
+                    <div class="text-xs text-gray-600 dark:text-gray-300 mt-1">Рассвет</div>
+                </div>
+
+                <!-- Sunrise -->
+                <div class="text-center p-3 bg-gradient-to-br from-orange-50 to-yellow-100 dark:from-orange-900/20 dark:to-yellow-800/20 rounded-lg">
+                    <div class="flex justify-center mb-1">
+                        <svg class="w-6 h-6 text-orange-500 dark:text-orange-400" fill="currentColor" viewBox="0 0 24 24">
+                            <circle cx="12" cy="14" r="4" fill="currentColor"/>
+                            <path d="M12 2v3m0 0a5 5 0 015 5H7a5 5 0 015-5z"/>
+                        </svg>
+                    </div>
+                    <div class="text-xl font-bold text-orange-600 dark:text-orange-400">{{.Sunrise}}</div>
+                    <div class="text-xs text-gray-600 dark:text-gray-300 mt-1">Восход</div>
+                </div>
+
+                <!-- Sunset -->
+                <div class="text-center p-3 bg-gradient-to-br from-orange-100 to-red-100 dark:from-orange-900/20 dark:to-red-900/20 rounded-lg">
+                    <div class="flex justify-center mb-1">
+                        <svg class="w-6 h-6 text-orange-600 dark:text-orange-500" fill="currentColor" viewBox="0 0 24 24">
+                            <circle cx="12" cy="14" r="4" fill="currentColor"/>
+                            <path d="M12 10v3m0 0a5 5 0 01-5 5h10a5 5 0 01-5-5z"/>
+                        </svg>
+                    </div>
+                    <div class="text-xl font-bold text-orange-700 dark:text-orange-400">{{.Sunset}}</div>
+                    <div class="text-xs text-gray-600 dark:text-gray-300 mt-1">Закат</div>
+                </div>
+
+                <!-- Dusk -->
+                <div class="text-center p-3 bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-lg">
+                    <div class="flex justify-center mb-1">
+                        <svg class="w-6 h-6 text-purple-500 dark:text-purple-400" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 7a5 5 0 100 10 5 5 0 000-10z" opacity="0.4"/>
+                            <path d="M4 19h16v2H4z"/>
+                        </svg>
+                    </div>
+                    <div class="text-xl font-bold text-purple-600 dark:text-purple-400">{{.Dusk}}</div>
+                    <div class="text-xs text-gray-600 dark:text-gray-300 mt-1">Сумерки</div>
+                </div>
             </div>
-            <div class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{{.Dawn}}</div>
-            <div class="text-sm text-gray-600 dark:text-gray-300 mt-1">Рассвет</div>
+
+            <!-- Day length info -->
+            <div class="space-y-2">
+                <!-- Day Length -->
+                <div class="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-lg p-3">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-xs font-medium text-gray-700 dark:text-gray-300">Световой день</span>
+                        <span class="text-md font-bold {{if .DayChangePositive}}text-green-600 dark:text-green-400{{else}}text-orange-600 dark:text-orange-400{{end}}">{{.DayLength}}</span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-1 text-xs">
+                        <div class="text-center">
+                            <div class="text-gray-400 dark:text-gray-500 text-xs">вчера</div>
+                            <div class="font-medium {{if .DayChangePositive}}text-green-600 dark:text-green-400{{else}}text-orange-600 dark:text-orange-400{{end}}">{{.DayChangeDay}}</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-gray-400 dark:text-gray-500 text-xs">неделя</div>
+                            <div class="font-medium {{if .DayChangePositive}}text-green-600 dark:text-green-400{{else}}text-orange-600 dark:text-orange-400{{end}}">{{.DayChangeWeek}}</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-gray-400 dark:text-gray-500 text-xs">месяц</div>
+                            <div class="font-medium {{if .DayChangePositive}}text-green-600 dark:text-green-400{{else}}text-orange-600 dark:text-orange-400{{end}}">{{.DayChangeMonth}}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Light Length -->
+                <div class="bg-gradient-to-br from-sky-50 to-indigo-50 dark:from-sky-900/20 dark:to-indigo-900/20 rounded-lg p-3">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-xs font-medium text-gray-700 dark:text-gray-300">Светлое время</span>
+                        <span class="text-md font-bold {{if .LightChangePositive}}text-green-600 dark:text-green-400{{else}}text-indigo-600 dark:text-indigo-400{{end}}">{{.LightLength}}</span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-1 text-xs">
+                        <div class="text-center">
+                            <div class="text-gray-400 dark:text-gray-500 text-xs">вчера</div>
+                            <div class="font-medium {{if .LightChangePositive}}text-green-600 dark:text-green-400{{else}}text-indigo-600 dark:text-indigo-400{{end}}">{{.LightChangeDay}}</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-gray-400 dark:text-gray-500 text-xs">неделя</div>
+                            <div class="font-medium {{if .LightChangePositive}}text-green-600 dark:text-green-400{{else}}text-indigo-600 dark:text-indigo-400{{end}}">{{.LightChangeWeek}}</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-gray-400 dark:text-gray-500 text-xs">месяц</div>
+                            <div class="font-medium {{if .LightChangePositive}}text-green-600 dark:text-green-400{{else}}text-indigo-600 dark:text-indigo-400{{end}}">{{.LightChangeMonth}}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- Sunrise -->
-        <div class="text-center p-4 bg-gradient-to-br from-orange-50 to-yellow-100 dark:from-orange-900/20 dark:to-yellow-800/20 rounded-lg">
-            <div class="flex justify-center mb-2">
-                <svg class="w-8 h-8 text-orange-500 dark:text-orange-400" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2v3m0 0a5 5 0 015 5H7a5 5 0 015-5z"/>
-                    <path d="M4.22 10.22l1.42 1.42M18.36 11.64l1.42-1.42M1 18h22M4 22h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
-                    <circle cx="12" cy="14" r="4" fill="currentColor"/>
-                </svg>
-            </div>
-            <div class="text-2xl font-bold text-orange-600 dark:text-orange-400">{{.Sunrise}}</div>
-            <div class="text-sm text-gray-600 dark:text-gray-300 mt-1">Восход</div>
-        </div>
+        <!-- Moon Column -->
+        {{if .HasMoonData}}
+        <div class="space-y-4 border-l border-gray-200 dark:border-gray-700 pl-6 lg:border-l-0 lg:pl-0 lg:border-t-0 pt-6 lg:pt-0">
+            <h3 class="text-md font-semibold text-gray-800 dark:text-gray-200 flex items-center">
+                <span class="text-2xl mr-2">🌙</span>
+                Луна
+            </h3>
 
-        <!-- Sunset -->
-        <div class="text-center p-4 bg-gradient-to-br from-orange-100 to-red-100 dark:from-orange-900/20 dark:to-red-900/20 rounded-lg">
-            <div class="flex justify-center mb-2">
-                <svg class="w-8 h-8 text-orange-600 dark:text-orange-500" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 10v3m0 0a5 5 0 01-5 5h10a5 5 0 01-5-5z"/>
-                    <path d="M4.22 10.22l1.42 1.42M18.36 11.64l1.42-1.42M1 18h22M4 22h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
-                    <circle cx="12" cy="14" r="4" fill="currentColor"/>
-                </svg>
-            </div>
-            <div class="text-2xl font-bold text-orange-700 dark:text-orange-400">{{.Sunset}}</div>
-            <div class="text-sm text-gray-600 dark:text-gray-300 mt-1">Закат</div>
-        </div>
-
-        <!-- Dusk -->
-        <div class="text-center p-4 bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-lg">
-            <div class="flex justify-center mb-2">
-                <svg class="w-8 h-8 text-purple-500 dark:text-purple-400" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 7a5 5 0 100 10 5 5 0 000-10z" opacity="0.4"/>
-                    <path d="M4 19h16v2H4z"/>
-                    <path d="M2 13h2M20 13h2M11 2v2M11 20v2M5.99 4.58l1.06 1.06M16.95 16.95l1.06 1.06M19.42 5.99l-1.06 1.06M7.05 16.95l-1.06 1.06" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.4"/>
-                </svg>
-            </div>
-            <div class="text-2xl font-bold text-purple-600 dark:text-purple-400">{{.Dusk}}</div>
-            <div class="text-sm text-gray-600 dark:text-gray-300 mt-1">Сумерки</div>
-        </div>
-    </div>
-
-    <!-- Day length info with comparisons -->
-    <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- Day Length -->
-            <div class="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-lg p-4">
+            <!-- Moon Phase with Icon -->
+            <div class="bg-gradient-to-br from-indigo-50 to-blue-100 dark:from-indigo-900/20 dark:to-blue-900/20 rounded-lg p-4">
                 <div class="flex items-center justify-between mb-2">
-                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Световой день</span>
-                    <span class="text-lg font-bold {{if .DayChangePositive}}text-green-600 dark:text-green-400{{else}}text-orange-600 dark:text-orange-400{{end}}">{{.DayLength}}</span>
-                </div>
-                <div class="grid grid-cols-3 gap-2 text-xs">
-                    <div class="text-center">
-                        <div class="text-gray-400 dark:text-gray-500">вчера</div>
-                        <div class="font-medium {{if .DayChangePositive}}text-green-600 dark:text-green-400{{else}}text-orange-600 dark:text-orange-400{{end}}">{{.DayChangeDay}}</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-gray-400 dark:text-gray-500">неделя</div>
-                        <div class="font-medium {{if .DayChangePositive}}text-green-600 dark:text-green-400{{else}}text-orange-600 dark:text-orange-400{{end}}">{{.DayChangeWeek}}</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-gray-400 dark:text-gray-500">месяц</div>
-                        <div class="font-medium {{if .DayChangePositive}}text-green-600 dark:text-green-400{{else}}text-orange-600 dark:text-orange-400{{end}}">{{.DayChangeMonth}}</div>
+                    <span class="text-5xl">{{.MoonPhaseIcon}}</span>
+                    <div class="text-right">
+                        <div class="text-sm font-medium text-gray-700 dark:text-gray-300">Фаза</div>
+                        <div class="text-lg font-bold text-indigo-600 dark:text-indigo-400">{{.MoonPhase}}</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Light Length -->
-            <div class="bg-gradient-to-br from-sky-50 to-indigo-50 dark:from-sky-900/20 dark:to-indigo-900/20 rounded-lg p-4">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Светлое время</span>
-                    <span class="text-lg font-bold {{if .LightChangePositive}}text-green-600 dark:text-green-400{{else}}text-indigo-600 dark:text-indigo-400{{end}}">{{.LightLength}}</span>
+            <!-- Moon data grid -->
+            <div class="grid grid-cols-2 gap-3">
+                <!-- Illumination -->
+                <div class="text-center p-3 bg-gradient-to-br from-yellow-50 to-amber-100 dark:from-yellow-900/20 dark:to-amber-900/20 rounded-lg">
+                    <div class="text-xs text-gray-600 dark:text-gray-300 mb-1">Освещённость</div>
+                    <div class="text-xl font-bold text-amber-600 dark:text-amber-400">{{printf "%.0f" .MoonIllumination}}%</div>
                 </div>
-                <div class="grid grid-cols-3 gap-2 text-xs">
-                    <div class="text-center">
-                        <div class="text-gray-400 dark:text-gray-500">вчера</div>
-                        <div class="font-medium {{if .LightChangePositive}}text-green-600 dark:text-green-400{{else}}text-indigo-600 dark:text-indigo-400{{end}}">{{.LightChangeDay}}</div>
+
+                <!-- Moon Age -->
+                <div class="text-center p-3 bg-gradient-to-br from-slate-50 to-gray-100 dark:from-slate-900/20 dark:to-gray-900/20 rounded-lg">
+                    <div class="text-xs text-gray-600 dark:text-gray-300 mb-1">Возраст</div>
+                    <div class="text-xl font-bold text-gray-600 dark:text-gray-400">{{printf "%.1f" .MoonAge}} дн</div>
+                </div>
+
+                <!-- Moonrise -->
+                <div class="text-center p-3 bg-gradient-to-br from-blue-50 to-cyan-100 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-lg">
+                    <div class="flex justify-center mb-1">
+                        <svg class="w-6 h-6 text-blue-500 dark:text-blue-400" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2C9.24 2 7 4.24 7 7c0 2.76 2.24 5 5 5s5-2.24 5-5c0-2.76-2.24-5-5-5zM12 10c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z" opacity="0.7"/>
+                            <path d="M19 14h-2v2h-2v2h2v2h2v-2h2v-2h-2v-2zM5 14H3v2h2v2h2v-2h2v-2H7v-2H5v2z" opacity="0.4"/>
+                        </svg>
                     </div>
-                    <div class="text-center">
-                        <div class="text-gray-400 dark:text-gray-500">неделя</div>
-                        <div class="font-medium {{if .LightChangePositive}}text-green-600 dark:text-green-400{{else}}text-indigo-600 dark:text-indigo-400{{end}}">{{.LightChangeWeek}}</div>
+                    <div class="text-xl font-bold text-blue-600 dark:text-blue-400">{{.Moonrise}}</div>
+                    <div class="text-xs text-gray-600 dark:text-gray-300 mt-1">Восход</div>
+                </div>
+
+                <!-- Moonset -->
+                <div class="text-center p-3 bg-gradient-to-br from-indigo-50 to-purple-100 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-lg">
+                    <div class="flex justify-center mb-1">
+                        <svg class="w-6 h-6 text-indigo-500 dark:text-indigo-400" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2C9.24 2 7 4.24 7 7c0 2.76 2.24 5 5 5s5-2.24 5-5c0-2.76-2.24-5-5-5zM12 10c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z" opacity="0.7"/>
+                        </svg>
                     </div>
-                    <div class="text-center">
-                        <div class="text-gray-400 dark:text-gray-500">месяц</div>
-                        <div class="font-medium {{if .LightChangePositive}}text-green-600 dark:text-green-400{{else}}text-indigo-600 dark:text-indigo-400{{end}}">{{.LightChangeMonth}}</div>
-                    </div>
+                    <div class="text-xl font-bold text-indigo-600 dark:text-indigo-400">{{.Moonset}}</div>
+                    <div class="text-xs text-gray-600 dark:text-gray-300 mt-1">Закат</div>
+                </div>
+            </div>
+
+            <!-- Additional moon info -->
+            <div class="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg p-3">
+                <div class="text-center">
+                    <div class="text-xs text-gray-600 dark:text-gray-300">Следующее новолуние через</div>
+                    <div class="text-md font-bold text-purple-600 dark:text-purple-400">{{printf "%.0f" (sub 29.53 .MoonAge)}} дней</div>
                 </div>
             </div>
         </div>
+        {{end}}
     </div>
 </div>

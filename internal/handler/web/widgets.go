@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/iRootPro/weather/internal/models"
+	"github.com/iRootPro/weather/internal/service"
 )
 
 // degreesToDirection converts wind direction in degrees to compass direction
@@ -300,7 +301,7 @@ func formatDurationChange(d time.Duration) string {
 	return fmt.Sprintf("%s%dмин %dсек", sign, int(d.Minutes()), seconds)
 }
 
-// SunTimesWidget renders the sun times widget
+// SunTimesWidget renders the sun and moon times widget
 func (h *Handler) SunTimesWidget(w http.ResponseWriter, r *http.Request) {
 	if h.sunService == nil {
 		http.Error(w, "Sun service not configured", http.StatusInternalServerError)
@@ -308,6 +309,12 @@ func (h *Handler) SunTimesWidget(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sunTimes := h.sunService.GetTodaySunTimesWithComparison()
+
+	// Get moon data if moon service is available
+	var moonData *service.MoonData
+	if h.moonService != nil {
+		moonData = h.moonService.GetTodayMoonData()
+	}
 
 	templateData := struct {
 		Date             string
@@ -326,6 +333,14 @@ func (h *Handler) SunTimesWidget(w http.ResponseWriter, r *http.Request) {
 		// For CSS classes (positive = growing day)
 		DayChangePositive   bool
 		LightChangePositive bool
+		// Moon data
+		HasMoonData      bool
+		MoonPhase        string
+		MoonPhaseIcon    string
+		MoonIllumination float64
+		MoonAge          float64
+		Moonrise         string
+		Moonset          string
 	}{
 		Date:                time.Now().Format("2 января"),
 		Dawn:                sunTimes.Dawn.Format("15:04"),
@@ -342,6 +357,17 @@ func (h *Handler) SunTimesWidget(w http.ResponseWriter, r *http.Request) {
 		LightChangeMonth:    formatDurationChange(sunTimes.LightChangeMonth),
 		DayChangePositive:   sunTimes.DayChangeDay >= 0,
 		LightChangePositive: sunTimes.LightChangeDay >= 0,
+		HasMoonData:         moonData != nil,
+	}
+
+	// Add moon data if available
+	if moonData != nil {
+		templateData.MoonPhase = moonData.PhaseName
+		templateData.MoonPhaseIcon = moonData.PhaseIcon
+		templateData.MoonIllumination = moonData.Illumination
+		templateData.MoonAge = moonData.Age
+		templateData.Moonrise = moonData.Moonrise.Format("15:04")
+		templateData.Moonset = moonData.Moonset.Format("15:04")
 	}
 
 	tmpl, err := h.parsePartial("sun_times.html")

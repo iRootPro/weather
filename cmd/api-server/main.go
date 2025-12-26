@@ -62,6 +62,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to create sun service: %v", err)
 	}
+	moonService, err := service.NewMoonService(cfg.Location.Latitude, cfg.Location.Longitude, cfg.Location.Timezone)
+	if err != nil {
+		log.Fatalf("failed to create moon service: %v", err)
+	}
 
 	// Инициализация хендлеров
 	weatherHandler := api.NewWeatherHandler(weatherService)
@@ -75,7 +79,7 @@ func main() {
 		staticDir = "internal/web/static"
 	}
 
-	webHandler, err := web.NewHandler(templatesDir, weatherService, sunService)
+	webHandler, err := web.NewHandler(templatesDir, weatherService, sunService, moonService)
 	if err != nil {
 		log.Fatalf("failed to create web handler: %v", err)
 	}
