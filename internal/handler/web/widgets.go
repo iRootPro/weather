@@ -28,7 +28,7 @@ func degreesToDirection(degrees int16) string {
 
 func (h *Handler) parsePartial(name string) (*template.Template, error) {
 	partialPath := filepath.Join(h.templatesDir, "partials", name)
-	return template.ParseFiles(partialPath)
+	return template.New(name).Funcs(templateFuncs).ParseFiles(partialPath)
 }
 
 // CurrentWeatherWidget renders the current weather widget
