@@ -114,35 +114,27 @@
 
         <!-- Moon Column -->
         {{if .HasMoonData}}
-        <div class="space-y-4 border-l border-gray-200 dark:border-gray-700 pl-6 lg:border-l-0 lg:pl-0 lg:border-t-0 pt-6 lg:pt-0">
+        <div class="space-y-4">
             <h3 class="text-md font-semibold text-gray-800 dark:text-gray-200 flex items-center">
                 <span class="text-2xl mr-2">🌙</span>
                 Луна
             </h3>
 
-            <!-- Moon Phase with Icon -->
-            <div class="bg-gradient-to-br from-indigo-50 to-blue-100 dark:from-indigo-900/20 dark:to-blue-900/20 rounded-lg p-4">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-5xl">{{.MoonPhaseIcon}}</span>
-                    <div class="text-right">
-                        <div class="text-sm font-medium text-gray-700 dark:text-gray-300">Фаза</div>
-                        <div class="text-lg font-bold text-indigo-600 dark:text-indigo-400">{{.MoonPhase}}</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Moon data grid -->
+            <!-- Moon data grid - 4 items like sun -->
             <div class="grid grid-cols-2 gap-3">
-                <!-- Illumination -->
-                <div class="text-center p-3 bg-gradient-to-br from-yellow-50 to-amber-100 dark:from-yellow-900/20 dark:to-amber-900/20 rounded-lg">
-                    <div class="text-xs text-gray-600 dark:text-gray-300 mb-1">Освещённость</div>
-                    <div class="text-xl font-bold text-amber-600 dark:text-amber-400">{{printf "%.0f" .MoonIllumination}}%</div>
-                </div>
-
-                <!-- Moon Age -->
-                <div class="text-center p-3 bg-gradient-to-br from-slate-50 to-gray-100 dark:from-slate-900/20 dark:to-gray-900/20 rounded-lg">
-                    <div class="text-xs text-gray-600 dark:text-gray-300 mb-1">Возраст</div>
-                    <div class="text-xl font-bold text-gray-600 dark:text-gray-400">{{printf "%.1f" .MoonAge}} дн</div>
+                <!-- Moon Phase -->
+                <div class="text-center p-3 bg-gradient-to-br from-indigo-50 to-blue-100 dark:from-indigo-900/20 dark:to-blue-900/20 rounded-lg col-span-2">
+                    <div class="flex items-center justify-center gap-3">
+                        <span class="text-3xl">{{.MoonPhaseIcon}}</span>
+                        <div>
+                            <div class="text-xs text-gray-600 dark:text-gray-300">Фаза</div>
+                            <div class="text-lg font-bold text-indigo-600 dark:text-indigo-400">{{.MoonPhase}}</div>
+                        </div>
+                        <div class="ml-auto">
+                            <div class="text-xs text-gray-600 dark:text-gray-300">Освещённость</div>
+                            <div class="text-lg font-bold text-amber-600 dark:text-amber-400">{{printf "%.0f" .MoonIllumination}}%</div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Moonrise -->
@@ -169,11 +161,20 @@
                 </div>
             </div>
 
-            <!-- Additional moon info -->
-            <div class="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg p-3">
-                <div class="text-center">
-                    <div class="text-xs text-gray-600 dark:text-gray-300">Следующее новолуние через</div>
-                    <div class="text-md font-bold text-purple-600 dark:text-purple-400">{{printf "%.0f" (sub 29.53 .MoonAge)}} дней</div>
+            <!-- Moon info - 2 items like sun stats -->
+            <div class="space-y-2">
+                <div class="bg-gradient-to-br from-slate-50 to-gray-100 dark:from-slate-900/20 dark:to-gray-900/20 rounded-lg p-3">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-xs font-medium text-gray-700 dark:text-gray-300">Возраст луны</span>
+                        <span class="text-md font-bold text-gray-600 dark:text-gray-400">{{printf "%.1f" .MoonAge}} дней</span>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg p-3">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-xs font-medium text-gray-700 dark:text-gray-300">До новолуния</span>
+                        <span class="text-md font-bold text-purple-600 dark:text-purple-400">{{printf "%.0f" (sub 29.53 .MoonAge)}} дней</span>
+                    </div>
                 </div>
             </div>
         </div>
