@@ -6,7 +6,7 @@ let currentInterval = '1h';
 function getThemeColors() {
     const isDark = document.documentElement.classList.contains('dark');
     return {
-        gridColor: isDark ? '#374151' : '#f3f4f6',
+        gridColor: isDark ? '#1f2937' : '#f3f4f6', // Much darker grid in dark mode
         textColor: isDark ? '#9ca3af' : '#6b7280'
     };
 }
