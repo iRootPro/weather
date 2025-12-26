@@ -28,10 +28,11 @@ func (r *weatherRepository) Save(ctx context.Context, data *models.WeatherData) 
 			rain_rate, rain_daily, rain_weekly, rain_monthly, rain_yearly,
 			uv_index, solar_radiation,
 			temp_feels_like, dew_point,
+			wh65batt, ws90cap_volt,
 			raw_data
 		) VALUES (
 			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-			$11, $12, $13, $14, $15, $16, $17, $18, $19, $20
+			$11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22
 		)`
 
 	_, err := r.pool.Exec(ctx, query,
@@ -42,6 +43,7 @@ func (r *weatherRepository) Save(ctx context.Context, data *models.WeatherData) 
 		data.RainRate, data.RainDaily, data.RainWeekly, data.RainMonthly, data.RainYearly,
 		data.UVIndex, data.SolarRadiation,
 		data.TempFeelsLike, data.DewPoint,
+		data.WH65Batt, data.WS90CapVolt,
 		data.RawData,
 	)
 	if err != nil {
@@ -60,6 +62,7 @@ func (r *weatherRepository) GetLatest(ctx context.Context) (*models.WeatherData,
 			rain_rate, rain_daily, rain_weekly, rain_monthly, rain_yearly,
 			uv_index, solar_radiation,
 			temp_feels_like, dew_point,
+			wh65batt, ws90cap_volt,
 			raw_data
 		FROM weather_data
 		ORDER BY time DESC
@@ -74,6 +77,7 @@ func (r *weatherRepository) GetLatest(ctx context.Context) (*models.WeatherData,
 		&data.RainRate, &data.RainDaily, &data.RainWeekly, &data.RainMonthly, &data.RainYearly,
 		&data.UVIndex, &data.SolarRadiation,
 		&data.TempFeelsLike, &data.DewPoint,
+		&data.WH65Batt, &data.WS90CapVolt,
 		&data.RawData,
 	)
 	if err != nil {
@@ -92,6 +96,7 @@ func (r *weatherRepository) GetByTimeRange(ctx context.Context, from, to time.Ti
 			rain_rate, rain_daily, rain_weekly, rain_monthly, rain_yearly,
 			uv_index, solar_radiation,
 			temp_feels_like, dew_point,
+			wh65batt, ws90cap_volt,
 			raw_data
 		FROM weather_data
 		WHERE time >= $1 AND time <= $2
@@ -114,6 +119,7 @@ func (r *weatherRepository) GetByTimeRange(ctx context.Context, from, to time.Ti
 			&data.RainRate, &data.RainDaily, &data.RainWeekly, &data.RainMonthly, &data.RainYearly,
 			&data.UVIndex, &data.SolarRadiation,
 			&data.TempFeelsLike, &data.DewPoint,
+			&data.WH65Batt, &data.WS90CapVolt,
 			&data.RawData,
 		)
 		if err != nil {
@@ -282,6 +288,7 @@ func (r *weatherRepository) GetDataNearTime(ctx context.Context, targetTime time
 			rain_rate, rain_daily, rain_weekly, rain_monthly, rain_yearly,
 			uv_index, solar_radiation,
 			temp_feels_like, dew_point,
+			wh65batt, ws90cap_volt,
 			raw_data
 		FROM weather_data
 		WHERE time BETWEEN $1 AND $2
@@ -301,6 +308,7 @@ func (r *weatherRepository) GetDataNearTime(ctx context.Context, targetTime time
 		&data.RainRate, &data.RainDaily, &data.RainWeekly, &data.RainMonthly, &data.RainYearly,
 		&data.UVIndex, &data.SolarRadiation,
 		&data.TempFeelsLike, &data.DewPoint,
+		&data.WH65Batt, &data.WS90CapVolt,
 		&data.RawData,
 	)
 	if err != nil {
