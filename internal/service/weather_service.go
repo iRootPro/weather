@@ -142,3 +142,8 @@ func (s *WeatherService) GetCurrentWithHourlyChange(ctx context.Context) (curren
 
 	return current, hourAgo, dailyMinMax, nil
 }
+
+// GetDataAt returns weather data closest to the specified time
+func (s *WeatherService) GetDataAt(ctx context.Context, targetTime time.Time) (*models.WeatherData, error) {
+	return s.repo.GetDataNearTime(ctx, targetTime)
+}

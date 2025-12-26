@@ -110,6 +110,9 @@ func main() {
 	mux.HandleFunc("GET /records", webHandler.Records)
 	mux.HandleFunc("GET /help", webHandler.Help)
 
+	// Detail pages
+	mux.HandleFunc("GET /detail/temperature", webHandler.DetailTemperature)
+
 	// HTMX widgets
 	mux.HandleFunc("GET /widgets/current", webHandler.CurrentWeatherWidget)
 	mux.HandleFunc("GET /widgets/stats", webHandler.StatsWidget)
