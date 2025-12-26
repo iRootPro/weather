@@ -77,9 +77,10 @@
                         {{end}}
                     </div>
                     {{if .Current.WS90CapVolt}}
+                    {{$voltage := deref .Current.WS90CapVolt}}
                     <div class="flex items-baseline">
-                        <span class="text-3xl font-bold {{$v := deref .Current.WS90CapVolt}}{{if lt $v 3.0}}text-red-600 dark:text-red-400{{else}}text-green-600 dark:text-green-400{{end}}">
-                            {{printf "%.2f" .Current.WS90CapVolt}}
+                        <span class="text-3xl font-bold {{if lt $voltage 3.0}}text-red-600 dark:text-red-400{{else}}text-green-600 dark:text-green-400{{end}}">
+                            {{printf "%.2f" $voltage}}
                         </span>
                         <span class="ml-1 text-sm text-gray-600 dark:text-gray-400">V</span>
                     </div>
@@ -111,9 +112,10 @@
                         {{end}}
                     </div>
                     {{if .Current.WH65Batt}}
+                    {{$voltage := deref .Current.WH65Batt}}
                     <div class="flex items-baseline">
-                        <span class="text-3xl font-bold {{$v := deref .Current.WH65Batt}}{{if lt $v 2.4}}text-red-600 dark:text-red-400{{else if lt $v 2.7}}text-yellow-600 dark:text-yellow-400{{else}}text-green-600 dark:text-green-400{{end}}">
-                            {{printf "%.2f" .Current.WH65Batt}}
+                        <span class="text-3xl font-bold {{if lt $voltage 2.4}}text-red-600 dark:text-red-400{{else if lt $voltage 2.7}}text-yellow-600 dark:text-yellow-400{{else}}text-green-600 dark:text-green-400{{end}}">
+                            {{printf "%.2f" $voltage}}
                         </span>
                         <span class="ml-1 text-sm text-gray-600 dark:text-gray-400">V</span>
                     </div>
