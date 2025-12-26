@@ -68,7 +68,7 @@ func (m *MoonService) GetMoonData(date time.Time) *MoonData {
 		Age:            age,
 		Moonrise:       moonrise,
 		Moonset:        moonset,
-		IsAboveHorizon: m.isMoonAboveHorizon(date),
+		IsAboveHorizon: m.isMoonAboveHorizon(date, moonrise, moonset),
 	}
 }
 
@@ -249,16 +249,13 @@ func (m *MoonService) calcMoonTime(year, month, day int, isRise bool) time.Time 
 }
 
 // isMoonAboveHorizon checks if moon is currently above horizon
-func (m *MoonService) isMoonAboveHorizon(date time.Time) bool {
-	data := m.GetMoonData(date)
-	now := date
-
+func (m *MoonService) isMoonAboveHorizon(date time.Time, moonrise time.Time, moonset time.Time) bool {
 	// Simple check: is current time between moonrise and moonset
-	if data.Moonrise.Before(data.Moonset) {
-		return now.After(data.Moonrise) && now.Before(data.Moonset)
+	if moonrise.Before(moonset) {
+		return date.After(moonrise) && date.Before(moonset)
 	}
 	// Moonset is before moonrise (moon is up during midnight)
-	return now.After(data.Moonrise) || now.Before(data.Moonset)
+	return date.After(moonrise) || date.Before(moonset)
 }
 
 // julianDay calculates Julian Day number (reuse from sun service logic)
