@@ -5,9 +5,9 @@
     </div>
 
     <!-- Two column layout for Sun and Moon -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:items-stretch">
         <!-- Sun Column -->
-        <div class="space-y-4">
+        <div class="flex flex-col space-y-4">
             <h3 class="text-md font-semibold text-gray-800 dark:text-gray-200 flex items-center">
                 <span class="text-2xl mr-2">☀️</span>
                 Солнце
@@ -116,7 +116,7 @@
 
         <!-- Moon Column -->
         {{if .HasMoonData}}
-        <div class="space-y-4">
+        <div class="flex flex-col space-y-4">
             <h3 class="text-md font-semibold text-gray-800 dark:text-gray-200 flex items-center">
                 <span class="text-2xl mr-2">🌙</span>
                 Луна
