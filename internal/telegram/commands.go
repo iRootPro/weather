@@ -6,7 +6,6 @@ const (
 	CmdHelp        = "help"
 	CmdWeather     = "weather"
 	CmdCurrent     = "current"
-	CmdImage       = "image"
 	CmdStats       = "stats"
 	CmdRecords     = "records"
 	CmdHistory     = "history"

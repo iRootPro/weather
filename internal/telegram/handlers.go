@@ -37,8 +37,6 @@ func (h *BotHandler) handleCommand(ctx context.Context, msg *tgbotapi.Message) {
 		h.handleHelp(ctx, msg)
 	case CmdWeather, CmdCurrent:
 		h.handleCurrentWeather(ctx, msg)
-	case CmdImage:
-		h.handleWeatherImage(ctx, msg)
 	case CmdStats:
 		h.handleStats(ctx, msg)
 	case CmdRecords:
@@ -80,8 +78,7 @@ func (h *BotHandler) handleHelp(ctx context.Context, msg *tgbotapi.Message) {
 	text := `📖 *Справка по командам*
 
 *Основные:*
-/weather - текущая погода (текст)
-/image - погода в виде картинки
+/weather - текущая погода
 /stats - статистика за период
 /records - рекорды за всё время
 /history - история данных
@@ -270,35 +267,6 @@ func (h *BotHandler) handleCallbackQuery(ctx context.Context, callback *tgbotapi
 			Text: "/stats " + period,
 		}
 		h.handleStats(ctx, msg)
-	}
-}
-
-func (h *BotHandler) handleWeatherImage(ctx context.Context, msg *tgbotapi.Message) {
-	current, hourAgo, dailyMinMax, err := h.weatherSvc.GetCurrentWithHourlyChange(ctx)
-	if err != nil {
-		h.sendMessage(msg.Chat.ID, "❌ Ошибка получения данных о погоде")
-		h.logger.Error("failed to get current weather", "error", err)
-		return
-	}
-
-	// Генерируем изображение
-	imageData, err := GenerateWeatherImage(current, hourAgo, dailyMinMax)
-	if err != nil {
-		h.sendMessage(msg.Chat.ID, "❌ Ошибка генерации изображения")
-		h.logger.Error("failed to generate weather image", "error", err)
-		return
-	}
-
-	// Отправляем изображение
-	photo := tgbotapi.NewPhoto(msg.Chat.ID, tgbotapi.FileBytes{
-		Name:  "weather.png",
-		Bytes: imageData,
-	})
-	photo.Caption = "🌦️ Текущая погода в Армавире"
-
-	_, err = h.bot.Send(photo)
-	if err != nil {
-		h.logger.Error("failed to send weather image", "error", err)
 	}
 }
 
