@@ -407,6 +407,8 @@ func (h *BotHandler) handleMessage(ctx context.Context, msg *tgbotapi.Message) {
 		h.handleSubscribe(ctx, msg)
 	case "👥 Пользователи":
 		h.handleUsers(ctx, msg)
+	case "📖 Помощь":
+		h.handleHelp(ctx, msg)
 	default:
 		h.sendMessage(msg.Chat.ID, "Используйте кнопки ниже или /help для списка команд")
 	}

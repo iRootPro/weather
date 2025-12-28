@@ -19,6 +19,9 @@ func GetReplyKeyboard() tgbotapi.ReplyKeyboardMarkup {
 			tgbotapi.NewKeyboardButton("🌙 Луна"),
 			tgbotapi.NewKeyboardButton("🔔 Подписки"),
 		),
+		tgbotapi.NewKeyboardButtonRow(
+			tgbotapi.NewKeyboardButton("📖 Помощь"),
+		),
 	)
 }
 
@@ -39,6 +42,7 @@ func GetAdminReplyKeyboard() tgbotapi.ReplyKeyboardMarkup {
 		),
 		tgbotapi.NewKeyboardButtonRow(
 			tgbotapi.NewKeyboardButton("👥 Пользователи"),
+			tgbotapi.NewKeyboardButton("📖 Помощь"),
 		),
 	)
 }
