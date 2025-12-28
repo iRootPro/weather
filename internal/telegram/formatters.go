@@ -15,7 +15,13 @@ func FormatCurrentWeather(current *models.WeatherData, hourAgo *models.WeatherDa
 		return "❌ Нет данных о погоде"
 	}
 
-	text := "🌦️ *Текущая погода*\n\n"
+	// Форматируем дату
+	months := []string{"", "января", "февраля", "марта", "апреля", "мая", "июня",
+		"июля", "августа", "сентября", "октября", "ноября", "декабря"}
+	day := current.Time.Day()
+	month := months[current.Time.Month()]
+
+	text := fmt.Sprintf("🌦️ *Текущая погода · %d %s*\n\n", day, month)
 
 	// Температура
 	if current.TempOutdoor != nil {
@@ -33,7 +39,7 @@ func FormatCurrentWeather(current *models.WeatherData, hourAgo *models.WeatherDa
 
 		// Мин/Макс за день
 		if dailyMinMax != nil && dailyMinMax.TempMin != nil && dailyMinMax.TempMax != nil {
-			text += fmt.Sprintf("\n   Сегодня: %.1f...%.1f°C", *dailyMinMax.TempMin, *dailyMinMax.TempMax)
+			text += fmt.Sprintf(" · 📊 %.1f...%.1f°C", *dailyMinMax.TempMin, *dailyMinMax.TempMax)
 		}
 		text += "\n"
 	}
@@ -80,11 +86,11 @@ func FormatCurrentWeather(current *models.WeatherData, hourAgo *models.WeatherDa
 			text += fmt.Sprintf("%.1f м/с", *current.WindSpeed)
 		}
 		if current.WindGust != nil {
-			text += fmt.Sprintf(" (порывы до %.1f)", *current.WindGust)
+			text += fmt.Sprintf(", порывы до %.1f м/с", *current.WindGust)
 		}
 		if current.WindDirection != nil {
 			direction := getWindDirection(*current.WindDirection)
-			text += fmt.Sprintf(" %s", direction)
+			text += fmt.Sprintf(", %s", direction)
 		}
 		text += "\n"
 	}
@@ -107,7 +113,7 @@ func FormatCurrentWeather(current *models.WeatherData, hourAgo *models.WeatherDa
 	}
 
 	// Время обновления
-	text += fmt.Sprintf("\n🕐 Обновлено: %s", current.Time.Format("15:04:05"))
+	text += fmt.Sprintf("\n🕐 Обновлено: %s", current.Time.Format("15:04"))
 
 	return text
 }
@@ -360,7 +366,8 @@ func GetEventTypeName(eventType string) string {
 
 // getWindDirection возвращает направление ветра по градусам
 func getWindDirection(degrees int16) string {
-	directions := []string{"С", "СВ", "В", "ЮВ", "Ю", "ЮЗ", "З", "СЗ"}
+	directions := []string{"Север", "Северо-Восток", "Восток", "Юго-Восток",
+		"Юг", "Юго-Запад", "Запад", "Северо-Запад"}
 	index := int((float64(degrees) + 22.5) / 45.0)
 	return directions[index%8]
 }
