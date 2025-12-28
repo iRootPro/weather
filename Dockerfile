@@ -43,7 +43,7 @@ CMD ["/app/migrator", "up"]
 
 # Telegram Bot
 FROM alpine:3.20 AS telegram-bot
-RUN apk --no-cache add ca-certificates tzdata
+RUN apk --no-cache add ca-certificates tzdata ttf-dejavu
 WORKDIR /app
 COPY --from=builder /bin/telegram-bot /app/telegram-bot
 CMD ["/app/telegram-bot"]
