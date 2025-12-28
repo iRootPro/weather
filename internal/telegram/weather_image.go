@@ -237,17 +237,19 @@ func findFont(bold bool) string {
 
 	if bold {
 		paths = []string{
-			"/System/Library/Fonts/Supplemental/Arial Bold.ttf",           // macOS
+			"/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf",                 // Alpine Linux (ttf-dejavu)
+			"/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",        // Debian/Ubuntu
 			"/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf", // Linux (Liberation)
-			"/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",        // Linux (DejaVu)
 			"/usr/share/fonts/TTF/DejaVuSans-Bold.ttf",                     // Arch Linux
+			"/System/Library/Fonts/Supplemental/Arial Bold.ttf",           // macOS
 		}
 	} else {
 		paths = []string{
-			"/System/Library/Fonts/Supplemental/Arial.ttf",           // macOS
+			"/usr/share/fonts/dejavu/DejaVuSans.ttf",                      // Alpine Linux (ttf-dejavu)
+			"/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",            // Debian/Ubuntu
 			"/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf", // Linux (Liberation)
-			"/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",        // Linux (DejaVu)
-			"/usr/share/fonts/TTF/DejaVuSans.ttf",                     // Arch Linux
+			"/usr/share/fonts/TTF/DejaVuSans.ttf",                         // Arch Linux
+			"/System/Library/Fonts/Supplemental/Arial.ttf",               // macOS
 		}
 	}
 
@@ -258,6 +260,9 @@ func findFont(bold bool) string {
 		}
 	}
 
-	// Если ничего не нашли, возвращаем первый путь (LoadFontFace выдаст ошибку)
-	return paths[0]
+	// Если ничего не нашли, возвращаем путь для Alpine (где точно должны быть после apk add ttf-dejavu)
+	if bold {
+		return "/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf"
+	}
+	return "/usr/share/fonts/dejavu/DejaVuSans.ttf"
 }
