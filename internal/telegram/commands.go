@@ -21,9 +21,10 @@ const (
 
 // Типы событий для подписок
 const (
-	EventAll         = "all"
-	EventRain        = "rain"
-	EventTemperature = "temperature"
-	EventWind        = "wind"
-	EventPressure    = "pressure"
+	EventAll          = "all"
+	EventRain         = "rain"
+	EventTemperature  = "temperature"
+	EventWind         = "wind"
+	EventPressure     = "pressure"
+	EventDailySummary = "daily_summary" // Ежедневная утренняя сводка
 )

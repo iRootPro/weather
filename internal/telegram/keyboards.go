@@ -89,6 +89,9 @@ func GetStatsKeyboard() tgbotapi.InlineKeyboardMarkup {
 func GetSubscriptionKeyboard() tgbotapi.InlineKeyboardMarkup {
 	return tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("🌅 Утренняя сводка", "sub_daily_summary"),
+		),
+		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("🔔 Все события", "sub_all"),
 		),
 		tgbotapi.NewInlineKeyboardRow(

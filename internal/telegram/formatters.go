@@ -352,11 +352,12 @@ func FormatEventNotification(event models.WeatherEvent) string {
 // GetEventTypeName возвращает название типа события на русском
 func GetEventTypeName(eventType string) string {
 	names := map[string]string{
-		"all":         "Все события",
-		"rain":        "Дождь",
-		"temperature": "Изменения температуры",
-		"wind":        "Сильный ветер",
-		"pressure":    "Изменения давления",
+		"all":           "Все события",
+		"rain":          "Дождь",
+		"temperature":   "Изменения температуры",
+		"wind":          "Сильный ветер",
+		"pressure":      "Изменения давления",
+		"daily_summary": "Утренняя сводка",
 	}
 	if name, ok := names[eventType]; ok {
 		return name
@@ -453,6 +454,112 @@ func FormatUsersList(users []models.TelegramUser) string {
 	}
 
 	text += "\n✅ - активный, ⏸️ - неактивный"
+
+	return text
+}
+
+// FormatDailySummary форматирует утреннюю сводку погоды
+func FormatDailySummary(current, yesterdaySame *models.WeatherData, nightMinMax, dailyMinMax *repository.DailyMinMax, sunData *service.SunTimesWithComparison) string {
+	// Форматируем дату
+	months := []string{"", "января", "февраля", "марта", "апреля", "мая", "июня",
+		"июля", "августа", "сентября", "октября", "ноября", "декабря"}
+	day := current.Time.Day()
+	month := months[current.Time.Month()]
+
+	text := "🌅 *Доброе утро! Сводка погоды*\n\n"
+	text += fmt.Sprintf("📍 Армавир · %d %s\n\n", day, month)
+
+	// СЕЙЧАС
+	text += "🌡️ *СЕЙЧАС*\n"
+	if current.TempOutdoor != nil {
+		text += fmt.Sprintf("Температура: %.1f°C", *current.TempOutdoor)
+		if current.TempFeelsLike != nil {
+			text += fmt.Sprintf(" (ощущается %.1f°C)", *current.TempFeelsLike)
+		}
+		text += "\n"
+	}
+	if current.HumidityOutdoor != nil {
+		text += fmt.Sprintf("Влажность: %d%%", *current.HumidityOutdoor)
+	}
+	if current.PressureRelative != nil {
+		text += fmt.Sprintf(" · Давление: %.0f мм", *current.PressureRelative)
+	}
+	text += "\n\n"
+
+	// ЗА НОЧЬ
+	if nightMinMax != nil && nightMinMax.TempMin != nil && nightMinMax.TempMax != nil {
+		text += "🌙 *ЗА НОЧЬ* (00:00 - 07:00)\n"
+		text += fmt.Sprintf("Температура: %.1f°C ... %.1f°C\n", *nightMinMax.TempMin, *nightMinMax.TempMax)
+		if current.WindGust != nil {
+			text += fmt.Sprintf("Ветер до %.1f м/с\n", *current.WindGust)
+		}
+		text += "\n"
+	}
+
+	// СОЛНЦЕ
+	if sunData != nil {
+		text += "☀️ *СОЛНЦЕ*\n"
+		text += fmt.Sprintf("Восход: %s · Закат: %s\n",
+			sunData.Sunrise.Format("15:04"),
+			sunData.Sunset.Format("15:04"))
+
+		if sunData.DayChangeDay != 0 {
+			changeText := formatDurationChange(sunData.DayChangeDay)
+			if sunData.DayChangeDay > 0 {
+				text += fmt.Sprintf("Световой день: %s (+%s к вчера)\n", formatDurationChange(sunData.DayLength), changeText)
+			} else {
+				text += fmt.Sprintf("Световой день: %s (-%s к вчера)\n", formatDurationChange(sunData.DayLength), changeText)
+			}
+		} else {
+			text += fmt.Sprintf("Световой день: %s\n", formatDurationChange(sunData.DayLength))
+		}
+		text += "\n"
+	}
+
+	// СРАВНЕНИЕ С ВЧЕРА
+	if yesterdaySame != nil {
+		text += "📊 *СРАВНЕНИЕ С ВЧЕРА*\n"
+		if current.TempOutdoor != nil && yesterdaySame.TempOutdoor != nil {
+			diff := *current.TempOutdoor - *yesterdaySame.TempOutdoor
+			if diff > 0 {
+				text += fmt.Sprintf("Температура: +%.1f°C теплее\n", diff)
+			} else if diff < 0 {
+				text += fmt.Sprintf("Температура: %.1f°C холоднее\n", diff)
+			} else {
+				text += "Температура: без изменений\n"
+			}
+		}
+		if current.PressureRelative != nil && yesterdaySame.PressureRelative != nil {
+			diff := *current.PressureRelative - *yesterdaySame.PressureRelative
+			if diff > 0 {
+				text += fmt.Sprintf("Давление: +%.0f мм выше\n", diff)
+			} else if diff < 0 {
+				text += fmt.Sprintf("Давление: %.0f мм ниже\n", diff)
+			} else {
+				text += "Давление: без изменений\n"
+			}
+		}
+		text += "\n"
+	}
+
+	// Пожелание
+	greetings := []string{
+		"Хорошего дня! ☀️",
+		"Отличного дня! 🌟",
+		"Прекрасного дня! 🌈",
+		"Удачного дня! ✨",
+		"Замечательного дня! 🌺",
+	}
+	// Выбираем пожелание на основе дня месяца
+	greeting := greetings[day%len(greetings)]
+	text += greeting
+	text += "\n\n"
+
+	// Справка по управлению подписками
+	text += "─────────────────\n"
+	text += "ℹ️ *Управление подписками*\n"
+	text += "• /subscribe - выбрать типы уведомлений\n"
+	text += "• /unsubscribe - отписаться от всех уведомлений"
 
 	return text
 }

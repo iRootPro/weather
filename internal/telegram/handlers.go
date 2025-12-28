@@ -20,8 +20,26 @@ func (h *BotHandler) handleCommand(ctx context.Context, msg *tgbotapi.Message) {
 		IsBot:        msg.From.IsBot,
 	}
 
+	// Проверяем, новый ли пользователь
+	existingUser, _ := h.userRepo.GetByChatID(ctx, msg.Chat.ID)
+	isNewUser := existingUser == nil
+
 	if err := h.userRepo.Create(ctx, user); err != nil {
 		h.logger.Error("failed to create/update user", "error", err)
+	}
+
+	// Если это новый пользователь, автоматически подписываем на утреннюю сводку
+	if isNewUser {
+		subscription := &models.TelegramSubscription{
+			UserID:    user.ID,
+			EventType: EventDailySummary,
+			IsActive:  true,
+		}
+		if err := h.subRepo.Create(ctx, subscription); err != nil {
+			h.logger.Error("failed to create default subscription", "error", err)
+		} else {
+			h.logger.Info("auto-subscribed new user to daily summary", "chat_id", msg.Chat.ID)
+		}
 	}
 
 	h.logger.Info("command received",

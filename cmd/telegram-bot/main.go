@@ -106,12 +106,26 @@ func main() {
 		logger,
 	)
 
+	// Создание daily summary service
+	dailySummary := telegram.NewDailySummaryService(
+		bot,
+		weatherService,
+		sunService,
+		subRepo,
+		userRepo,
+		cfg.Telegram.DailySummaryTime,
+		logger,
+	)
+
 	// Контекст с поддержкой отмены
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	// Запуск notifier в фоне
 	go notifier.Start(ctx)
+
+	// Запуск daily summary service в фоне
+	go dailySummary.Start(ctx)
 
 	// Настройка Long Polling
 	u := tgbotapi.NewUpdate(0)

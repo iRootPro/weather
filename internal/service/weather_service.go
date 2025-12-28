@@ -467,3 +467,32 @@ func abs(x float64) float64 {
 	}
 	return x
 }
+
+// GetLatest возвращает последние данные о погоде
+func (s *WeatherService) GetLatest(ctx context.Context) (*models.WeatherData, error) {
+	return s.repo.GetLatest(ctx)
+}
+
+// GetDataNearTime возвращает данные о погоде около указанного времени
+func (s *WeatherService) GetDataNearTime(ctx context.Context, targetTime time.Time) (*models.WeatherData, error) {
+	return s.repo.GetDataNearTime(ctx, targetTime)
+}
+
+// GetMinMaxInRange возвращает минимальную и максимальную температуру в указанном диапазоне
+func (s *WeatherService) GetMinMaxInRange(ctx context.Context, from, to time.Time) (*repository.DailyMinMax, error) {
+	// Получаем статистику за период
+	stats, err := s.repo.GetStats(ctx, from, to)
+	if err != nil {
+		return nil, err
+	}
+
+	return &repository.DailyMinMax{
+		TempMin: stats.TempOutdoorMin,
+		TempMax: stats.TempOutdoorMax,
+	}, nil
+}
+
+// GetDailyMinMax возвращает минимальную и максимальную температуру за сегодня
+func (s *WeatherService) GetDailyMinMax(ctx context.Context) (*repository.DailyMinMax, error) {
+	return s.repo.GetDailyMinMax(ctx)
+}
