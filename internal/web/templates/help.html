@@ -312,6 +312,135 @@
         </div>
     </div>
 
+    <!-- Weather Events -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+            <svg class="w-5 h-5 mr-2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Погодные события
+        </h2>
+
+        <p class="text-sm text-gray-600 dark:text-gray-300 mb-6">
+            Система автоматически определяет значимые погодные события, анализируя данные с интервалом 5 минут.
+            События отображаются на главной странице и в TUI приложении.
+        </p>
+
+        <div class="space-y-6">
+            <!-- Rain Events -->
+            <div class="border-l-4 border-cyan-400 pl-4">
+                <h3 class="font-medium text-gray-900 dark:text-white flex items-center">
+                    <span class="mr-2">🌧️</span>
+                    Начало и окончание дождя
+                </h3>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                    Дождь регистрируется, когда интенсивность осадков превышает пороговое значение,
+                    и отслеживается до полного прекращения.
+                </p>
+                <div class="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                    <div class="bg-cyan-50 dark:bg-cyan-900/20 rounded p-3">
+                        <div class="font-medium text-cyan-800 dark:text-cyan-200">Порог начала дождя</div>
+                        <div class="text-xs text-cyan-600 dark:text-cyan-400 mt-1">≥ 0.1 мм/ч</div>
+                    </div>
+                    <div class="bg-cyan-50 dark:bg-cyan-900/20 rounded p-3">
+                        <div class="font-medium text-cyan-800 dark:text-cyan-200">Отображение</div>
+                        <div class="text-xs text-cyan-600 dark:text-cyan-400 mt-1">☀️ "Дождь прошёл (2ч 15м)"</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Temperature Changes -->
+            <div class="border-l-4 border-orange-400 pl-4">
+                <h3 class="font-medium text-gray-900 dark:text-white flex items-center">
+                    <span class="mr-2">🌡️</span>
+                    Резкие изменения температуры
+                </h3>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                    Фиксируются значительные потепления или похолодания за короткий период времени.
+                </p>
+                <div class="mt-2 grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
+                    <div class="bg-orange-50 dark:bg-orange-900/20 rounded p-3">
+                        <div class="font-medium text-orange-800 dark:text-orange-200">Порог изменения</div>
+                        <div class="text-xs text-orange-600 dark:text-orange-400 mt-1">≥ 3.0°C за час</div>
+                    </div>
+                    <div class="bg-red-50 dark:bg-red-900/20 rounded p-3">
+                        <div class="font-medium text-red-800 dark:text-red-200">Похолодание</div>
+                        <div class="text-xs text-red-600 dark:text-red-400 mt-1">🥶 "15.2 → 11.0°C"</div>
+                    </div>
+                    <div class="bg-amber-50 dark:bg-amber-900/20 rounded p-3">
+                        <div class="font-medium text-amber-800 dark:text-amber-200">Потепление</div>
+                        <div class="text-xs text-amber-600 dark:text-amber-400 mt-1">🌡️ "10.5 → 14.2°C"</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Wind Gusts -->
+            <div class="border-l-4 border-teal-400 pl-4">
+                <h3 class="font-medium text-gray-900 dark:text-white flex items-center">
+                    <span class="mr-2">💨</span>
+                    Порывы ветра
+                </h3>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                    Регистрируются сильные порывы ветра. Близкие порывы (в пределах 30 минут) группируются,
+                    отображается максимальное значение.
+                </p>
+                <div class="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                    <div class="bg-teal-50 dark:bg-teal-900/20 rounded p-3">
+                        <div class="font-medium text-teal-800 dark:text-teal-200">Порог порыва</div>
+                        <div class="text-xs text-teal-600 dark:text-teal-400 mt-1">≥ 10.0 м/с</div>
+                    </div>
+                    <div class="bg-teal-50 dark:bg-teal-900/20 rounded p-3">
+                        <div class="font-medium text-teal-800 dark:text-teal-200">Группировка</div>
+                        <div class="text-xs text-teal-600 dark:text-teal-400 mt-1">30 минут → макс. значение</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pressure Changes -->
+            <div class="border-l-4 border-purple-400 pl-4">
+                <h3 class="font-medium text-gray-900 dark:text-white flex items-center">
+                    <span class="mr-2">📊</span>
+                    Изменения атмосферного давления
+                </h3>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                    Отслеживаются резкие падения и подъёмы давления, которые могут предвещать изменения погоды.
+                    Падение давления часто связано с ухудшением погоды, рост — с улучшением.
+                </p>
+                <div class="mt-2 grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
+                    <div class="bg-purple-50 dark:bg-purple-900/20 rounded p-3">
+                        <div class="font-medium text-purple-800 dark:text-purple-200">Порог изменения</div>
+                        <div class="text-xs text-purple-600 dark:text-purple-400 mt-1">≥ 3.0 мм рт.ст. за 3 часа</div>
+                    </div>
+                    <div class="bg-blue-50 dark:bg-blue-900/20 rounded p-3">
+                        <div class="font-medium text-blue-800 dark:text-blue-200">Падение</div>
+                        <div class="text-xs text-blue-600 dark:text-blue-400 mt-1">⬇️ "755 → 752 мм"</div>
+                    </div>
+                    <div class="bg-green-50 dark:bg-green-900/20 rounded p-3">
+                        <div class="font-medium text-green-800 dark:text-green-200">Рост</div>
+                        <div class="text-xs text-green-600 dark:text-green-400 mt-1">⬆️ "750 → 753 мм"</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Event Detection Info -->
+            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                <h4 class="font-medium text-blue-900 dark:text-blue-100 flex items-center mb-2">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Особенности определения событий
+                </h4>
+                <ul class="text-sm text-blue-800 dark:text-blue-200 space-y-1 ml-6 list-disc">
+                    <li>События анализируются на основе данных с интервалом 5 минут</li>
+                    <li>На главной странице отображаются последние 7 событий за 24 часа</li>
+                    <li>Температура и давление сравниваются с историческими данными (1 и 3 часа соответственно)</li>
+                    <li>Одновременные однотипные события группируются для избежания дублирования</li>
+                    <li>События сортируются по времени от новых к старым</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
     <!-- Sun Calculations -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">

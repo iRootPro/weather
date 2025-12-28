@@ -251,6 +251,11 @@ func generateTimeLabels(data []models.WeatherData, count int) string {
 		return ""
 	}
 
+	// Protect against invalid count values
+	if count <= 1 {
+		count = 2
+	}
+
 	// Generate evenly spaced labels
 	step := len(data) / (count - 1)
 	if step == 0 {
@@ -271,6 +276,11 @@ func generateTimeLabels(data []models.WeatherData, count int) string {
 			format = "15:04"
 		}
 		labels = append(labels, t.Format(format))
+	}
+
+	// Ensure we have exactly count labels by padding if necessary
+	for len(labels) < count {
+		labels = append(labels, "")
 	}
 
 	// Pad labels to align with chart width

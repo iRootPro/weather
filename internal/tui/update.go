@@ -6,6 +6,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/bubbles/spinner"
+	"github.com/iRootPro/weather/internal/models"
 	"github.com/iRootPro/weather/internal/service"
 )
 
@@ -219,6 +220,11 @@ func fetchChartData(svc WeatherServiceInterface, period string) tea.Cmd {
 		data, err := svc.GetHistory(ctx, from, now, interval)
 		if err != nil {
 			return errMsg{err: err}
+		}
+
+		// Ensure data is not nil
+		if data == nil {
+			data = []models.WeatherData{}
 		}
 
 		return chartDataMsg{data: data}
