@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/iRootPro/weather/internal/models"
@@ -73,6 +74,8 @@ func (h *BotHandler) handleCommand(ctx context.Context, msg *tgbotapi.Message) {
 		h.handleUsers(ctx, msg)
 	case CmdMyID:
 		h.handleMyID(ctx, msg)
+	case CmdTestSummary:
+		h.handleTestSummary(ctx, msg)
 	default:
 		h.sendMessage(msg.Chat.ID, "Неизвестная команда. Используйте /help для списка команд.")
 	}
@@ -326,6 +329,58 @@ func (h *BotHandler) handleUsers(ctx context.Context, msg *tgbotapi.Message) {
 func (h *BotHandler) handleMyID(ctx context.Context, msg *tgbotapi.Message) {
 	text := fmt.Sprintf("🆔 *Ваш Chat ID:* `%d`\n\nИспользуйте этот ID для настройки админских прав в переменной окружения TELEGRAM_ADMIN_IDS", msg.Chat.ID)
 	h.sendMessage(msg.Chat.ID, text)
+}
+
+func (h *BotHandler) handleTestSummary(ctx context.Context, msg *tgbotapi.Message) {
+	// Проверка прав админа
+	if !h.isAdmin(msg.Chat.ID) {
+		h.sendMessage(msg.Chat.ID, "❌ У вас нет доступа к этой команде")
+		return
+	}
+
+	// Получаем текущие данные о погоде
+	current, err := h.weatherSvc.GetLatest(ctx)
+	if err != nil {
+		h.sendMessage(msg.Chat.ID, "❌ Ошибка получения данных о погоде")
+		h.logger.Error("failed to get current weather", "error", err)
+		return
+	}
+
+	// Получаем данные за вчера в это же время
+	yesterdaySame, err := h.weatherSvc.GetDataNearTime(ctx, current.Time.Add(-24*time.Hour))
+	if err != nil {
+		h.logger.Warn("failed to get yesterday weather", "error", err)
+	}
+
+	// Получаем min/max за ночь (00:00 - 07:00 сегодня)
+	now := time.Now()
+	nightStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	nightEnd := time.Date(now.Year(), now.Month(), now.Day(), 7, 0, 0, 0, now.Location())
+	nightMinMax, err := h.weatherSvc.GetMinMaxInRange(ctx, nightStart, nightEnd)
+	if err != nil {
+		h.logger.Warn("failed to get night min/max", "error", err)
+	}
+
+	// Получаем min/max за сегодня
+	dailyMinMax, err := h.weatherSvc.GetDailyMinMax(ctx)
+	if err != nil {
+		h.logger.Warn("failed to get daily min/max", "error", err)
+	}
+
+	// Получаем данные о солнце
+	sunData := h.sunSvc.GetTodaySunTimesWithComparison()
+
+	// Форматируем сообщение
+	text := FormatDailySummary(current, yesterdaySame, nightMinMax, dailyMinMax, sunData)
+
+	// Добавляем пометку о тестовой рассылке
+	testNote := "\n\n🧪 *Тестовая рассылка* (только для админа)"
+
+	reply := tgbotapi.NewMessage(msg.Chat.ID, text+testNote)
+	reply.ParseMode = "Markdown"
+	h.bot.Send(reply)
+
+	h.logger.Info("test summary sent", "chat_id", msg.Chat.ID)
 }
 
 func (h *BotHandler) handleMessage(ctx context.Context, msg *tgbotapi.Message) {
