@@ -1,4 +1,4 @@
-.PHONY: build run-consumer run-api run-tui test lint migrate-up migrate-down docker-up docker-down tidy deploy deploy-logs deploy-status deploy-stop deploy-init
+.PHONY: build build-consumer build-api build-migrator build-tui build-bot run-consumer run-api run-tui run-bot test lint migrate-up migrate-down docker-up docker-down tidy deploy deploy-logs deploy-status deploy-stop deploy-init
 
 # Сборка
 build:
@@ -6,6 +6,7 @@ build:
 	go build -o bin/api-server ./cmd/api-server
 	go build -o bin/migrator ./cmd/migrator
 	go build -o bin/weather-tui ./cmd/weather-tui
+	go build -o bin/telegram-bot ./cmd/telegram-bot
 
 build-consumer:
 	go build -o bin/mqtt-consumer ./cmd/mqtt-consumer
@@ -19,6 +20,9 @@ build-migrator:
 build-tui:
 	go build -o bin/weather-tui ./cmd/weather-tui
 
+build-bot:
+	go build -o bin/telegram-bot ./cmd/telegram-bot
+
 # Запуск
 run-consumer:
 	go run ./cmd/mqtt-consumer
@@ -28,6 +32,9 @@ run-api:
 
 run-tui:
 	go run ./cmd/weather-tui
+
+run-bot:
+	go run ./cmd/telegram-bot
 
 # Тесты
 test:

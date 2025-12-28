@@ -68,5 +68,22 @@ services:
       - .env
     restart: unless-stopped
 
+  telegram-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: telegram-bot
+    container_name: weather-telegram-bot
+    environment:
+      TZ: Europe/Moscow
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrator:
+        condition: service_completed_successfully
+    env_file:
+      - .env
+    restart: unless-stopped
+
 volumes:
   postgres_data:

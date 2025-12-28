@@ -15,6 +15,7 @@ type Config struct {
 	API      APIConfig      `yaml:"api"`
 	Log      LogConfig      `yaml:"log"`
 	Location LocationConfig `yaml:"location"`
+	Telegram TelegramConfig `yaml:"telegram"`
 }
 
 type LocationConfig struct {
@@ -68,6 +69,14 @@ type APIConfig struct {
 type LogConfig struct {
 	Level  string `env:"LOG_LEVEL" env-default:"info"`
 	Format string `env:"LOG_FORMAT" env-default:"text"`
+}
+
+type TelegramConfig struct {
+	Token          string `env:"TELEGRAM_TOKEN"`
+	Debug          bool   `env:"TELEGRAM_DEBUG" env-default:"false"`
+	UpdateTimeout  int    `env:"TELEGRAM_UPDATE_TIMEOUT" env-default:"60"`
+	NotifyInterval int    `env:"TELEGRAM_NOTIFY_INTERVAL" env-default:"300"` // секунды
+	MaxRetries     int    `env:"TELEGRAM_MAX_RETRIES" env-default:"3"`
 }
 
 func Load() (*Config, error) {

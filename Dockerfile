@@ -14,6 +14,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/mqtt-consumer ./cmd/mqtt-consumer
 RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/api-server ./cmd/api-server
 RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/migrator ./cmd/migrator
+RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/telegram-bot ./cmd/telegram-bot
 
 # MQTT Consumer
 FROM alpine:3.20 AS mqtt-consumer
@@ -39,3 +40,10 @@ WORKDIR /app
 COPY --from=builder /bin/migrator /app/migrator
 COPY --from=builder /app/migrations /app/migrations
 CMD ["/app/migrator", "up"]
+
+# Telegram Bot
+FROM alpine:3.20 AS telegram-bot
+RUN apk --no-cache add ca-certificates tzdata
+WORKDIR /app
+COPY --from=builder /bin/telegram-bot /app/telegram-bot
+CMD ["/app/telegram-bot"]
