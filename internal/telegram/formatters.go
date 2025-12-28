@@ -405,3 +405,54 @@ func formatDurationChange(d time.Duration) string {
 	}
 	return fmt.Sprintf("%dм", minutes)
 }
+
+// FormatUsersList форматирует список пользователей бота
+func FormatUsersList(users []models.TelegramUser) string {
+	if len(users) == 0 {
+		return "📊 *Пользователи бота*\n\nПока нет зарегистрированных пользователей."
+	}
+
+	text := fmt.Sprintf("📊 *Пользователи бота: %d*\n\n", len(users))
+
+	for i, user := range users {
+		if i >= 50 { // Ограничение для длинных списков
+			text += fmt.Sprintf("\n... и еще %d пользователей", len(users)-50)
+			break
+		}
+
+		// Имя пользователя
+		name := ""
+		if user.FirstName != nil && *user.FirstName != "" {
+			name = *user.FirstName
+			if user.LastName != nil && *user.LastName != "" {
+				name += " " + *user.LastName
+			}
+		} else if user.Username != nil && *user.Username != "" {
+			name = "@" + *user.Username
+		} else {
+			name = fmt.Sprintf("ID: %d", user.ChatID)
+		}
+
+		// Username если есть
+		username := ""
+		if user.Username != nil && *user.Username != "" {
+			username = fmt.Sprintf(" (@%s)", *user.Username)
+		}
+
+		// Статус
+		status := "✅"
+		if !user.IsActive {
+			status = "⏸️"
+		}
+
+		// Дата регистрации
+		date := user.CreatedAt.Format("02.01.2006")
+
+		text += fmt.Sprintf("%d. %s *%s*%s\n   Регистрация: %s\n\n",
+			i+1, status, name, username, date)
+	}
+
+	text += "\n✅ - активный, ⏸️ - неактивный"
+
+	return text
+}

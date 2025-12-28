@@ -27,6 +27,7 @@ type SensorRepository interface {
 type TelegramUserRepository interface {
 	Create(ctx context.Context, user *models.TelegramUser) error
 	GetByChatID(ctx context.Context, chatID int64) (*models.TelegramUser, error)
+	GetAll(ctx context.Context) ([]models.TelegramUser, error)
 	GetAllActive(ctx context.Context) ([]models.TelegramUser, error)
 	UpdateActivity(ctx context.Context, chatID int64, isActive bool) error
 }

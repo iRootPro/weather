@@ -15,6 +15,8 @@ const (
 	CmdSubscribe   = "subscribe"
 	CmdUnsubscribe = "unsubscribe"
 	CmdSettings    = "settings"
+	CmdUsers       = "users" // Админская команда
+	CmdMyID        = "myid"  // Показать свой chat_id
 )
 
 // Типы событий для подписок

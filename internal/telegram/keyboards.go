@@ -22,6 +22,27 @@ func GetReplyKeyboard() tgbotapi.ReplyKeyboardMarkup {
 	)
 }
 
+// GetAdminReplyKeyboard возвращает клавиатуру для админов с дополнительными командами
+func GetAdminReplyKeyboard() tgbotapi.ReplyKeyboardMarkup {
+	return tgbotapi.NewReplyKeyboard(
+		tgbotapi.NewKeyboardButtonRow(
+			tgbotapi.NewKeyboardButton("🌦️ Погода"),
+			tgbotapi.NewKeyboardButton("📈 Статистика"),
+		),
+		tgbotapi.NewKeyboardButtonRow(
+			tgbotapi.NewKeyboardButton("🏆 Рекорды"),
+			tgbotapi.NewKeyboardButton("☀️ Солнце"),
+		),
+		tgbotapi.NewKeyboardButtonRow(
+			tgbotapi.NewKeyboardButton("🌙 Луна"),
+			tgbotapi.NewKeyboardButton("🔔 Подписки"),
+		),
+		tgbotapi.NewKeyboardButtonRow(
+			tgbotapi.NewKeyboardButton("👥 Пользователи"),
+		),
+	)
+}
+
 // GetMainKeyboard возвращает главную клавиатуру
 func GetMainKeyboard() tgbotapi.InlineKeyboardMarkup {
 	return tgbotapi.NewInlineKeyboardMarkup(

@@ -55,6 +55,36 @@ func (r *telegramUserRepository) GetByChatID(ctx context.Context, chatID int64) 
 	return &user, nil
 }
 
+func (r *telegramUserRepository) GetAll(ctx context.Context) ([]models.TelegramUser, error) {
+	query := `
+		SELECT id, chat_id, username, first_name, last_name, language_code,
+		       is_bot, is_active, created_at, updated_at
+		FROM telegram_users
+		ORDER BY created_at DESC
+	`
+
+	rows, err := r.pool.Query(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get all users: %w", err)
+	}
+	defer rows.Close()
+
+	var users []models.TelegramUser
+	for rows.Next() {
+		var user models.TelegramUser
+		err := rows.Scan(
+			&user.ID, &user.ChatID, &user.Username, &user.FirstName, &user.LastName,
+			&user.LanguageCode, &user.IsBot, &user.IsActive, &user.CreatedAt, &user.UpdatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan user: %w", err)
+		}
+		users = append(users, user)
+	}
+
+	return users, nil
+}
+
 func (r *telegramUserRepository) GetAllActive(ctx context.Context) ([]models.TelegramUser, error) {
 	query := `
 		SELECT id, chat_id, username, first_name, last_name, language_code,

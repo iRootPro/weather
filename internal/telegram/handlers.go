@@ -51,6 +51,10 @@ func (h *BotHandler) handleCommand(ctx context.Context, msg *tgbotapi.Message) {
 		h.handleSubscribe(ctx, msg)
 	case CmdUnsubscribe:
 		h.handleUnsubscribe(ctx, msg)
+	case CmdUsers:
+		h.handleUsers(ctx, msg)
+	case CmdMyID:
+		h.handleMyID(ctx, msg)
 	default:
 		h.sendMessage(msg.Chat.ID, "Неизвестная команда. Используйте /help для списка команд.")
 	}
@@ -70,7 +74,14 @@ func (h *BotHandler) handleStart(ctx context.Context, msg *tgbotapi.Message) {
 
 	reply := tgbotapi.NewMessage(msg.Chat.ID, text)
 	reply.ParseMode = "Markdown"
-	reply.ReplyMarkup = GetReplyKeyboard()
+
+	// Показываем разные клавиатуры для админов и обычных пользователей
+	if h.isAdmin(msg.Chat.ID) {
+		reply.ReplyMarkup = GetAdminReplyKeyboard()
+	} else {
+		reply.ReplyMarkup = GetReplyKeyboard()
+	}
+
 	h.bot.Send(reply)
 }
 
@@ -273,6 +284,32 @@ func (h *BotHandler) handleCallbackQuery(ctx context.Context, callback *tgbotapi
 	}
 }
 
+func (h *BotHandler) handleUsers(ctx context.Context, msg *tgbotapi.Message) {
+	// Проверка прав админа
+	if !h.isAdmin(msg.Chat.ID) {
+		h.sendMessage(msg.Chat.ID, "❌ У вас нет доступа к этой команде")
+		return
+	}
+
+	users, err := h.userRepo.GetAll(ctx)
+	if err != nil {
+		h.sendMessage(msg.Chat.ID, "❌ Ошибка получения списка пользователей")
+		h.logger.Error("failed to get users", "error", err)
+		return
+	}
+
+	text := FormatUsersList(users)
+
+	reply := tgbotapi.NewMessage(msg.Chat.ID, text)
+	reply.ParseMode = "Markdown"
+	h.bot.Send(reply)
+}
+
+func (h *BotHandler) handleMyID(ctx context.Context, msg *tgbotapi.Message) {
+	text := fmt.Sprintf("🆔 *Ваш Chat ID:* `%d`\n\nИспользуйте этот ID для настройки админских прав в переменной окружения TELEGRAM_ADMIN_IDS", msg.Chat.ID)
+	h.sendMessage(msg.Chat.ID, text)
+}
+
 func (h *BotHandler) handleMessage(ctx context.Context, msg *tgbotapi.Message) {
 	// Обработка нажатий на кнопки постоянной клавиатуры
 	switch msg.Text {
@@ -288,6 +325,8 @@ func (h *BotHandler) handleMessage(ctx context.Context, msg *tgbotapi.Message) {
 		h.handleMoon(ctx, msg)
 	case "🔔 Подписки":
 		h.handleSubscribe(ctx, msg)
+	case "👥 Пользователи":
+		h.handleUsers(ctx, msg)
 	default:
 		h.sendMessage(msg.Chat.ID, "Используйте кнопки ниже или /help для списка команд")
 	}

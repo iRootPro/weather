@@ -17,6 +17,7 @@ type BotHandler struct {
 	userRepo   repository.TelegramUserRepository
 	subRepo    repository.TelegramSubscriptionRepository
 	notifRepo  repository.TelegramNotificationRepository
+	adminIDs   []int64
 	logger     *slog.Logger
 }
 
@@ -28,6 +29,7 @@ func NewBotHandler(
 	userRepo repository.TelegramUserRepository,
 	subRepo repository.TelegramSubscriptionRepository,
 	notifRepo repository.TelegramNotificationRepository,
+	adminIDs []int64,
 	logger *slog.Logger,
 ) *BotHandler {
 	return &BotHandler{
@@ -38,6 +40,7 @@ func NewBotHandler(
 		userRepo:   userRepo,
 		subRepo:    subRepo,
 		notifRepo:  notifRepo,
+		adminIDs:   adminIDs,
 		logger:     logger,
 	}
 }
@@ -65,4 +68,14 @@ func (h *BotHandler) sendMessage(chatID int64, text string) {
 	msg := tgbotapi.NewMessage(chatID, text)
 	msg.ParseMode = "Markdown"
 	h.bot.Send(msg)
+}
+
+// isAdmin проверяет, является ли пользователь админом
+func (h *BotHandler) isAdmin(chatID int64) bool {
+	for _, adminID := range h.adminIDs {
+		if adminID == chatID {
+			return true
+		}
+	}
+	return false
 }

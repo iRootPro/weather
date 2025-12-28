@@ -91,6 +91,7 @@ func main() {
 		userRepo,
 		subRepo,
 		notifRepo,
+		cfg.Telegram.AdminIDs,
 		logger,
 	)
 
