@@ -61,16 +61,16 @@ func (h *BotHandler) handleStart(ctx context.Context, msg *tgbotapi.Message) {
 
 Я могу предоставить вам актуальную информацию о погоде и отправлять уведомления о важных изменениях.
 
-Основные команды:
+Используйте кнопки ниже для быстрого доступа к информации или команды:
 /weather - текущая погода
 /stats - статистика
 /subscribe - подписаться на уведомления
 
-Используйте /help для полного списка команд.`
+Для полного списка команд используйте /help`
 
 	reply := tgbotapi.NewMessage(msg.Chat.ID, text)
 	reply.ParseMode = "Markdown"
-	reply.ReplyMarkup = GetMainKeyboard()
+	reply.ReplyMarkup = GetReplyKeyboard()
 	h.bot.Send(reply)
 }
 
@@ -91,11 +91,11 @@ func (h *BotHandler) handleHelp(ctx context.Context, msg *tgbotapi.Message) {
 /subscribe - подписаться на события
 /unsubscribe - отписаться
 
-Используйте кнопки ниже для быстрого доступа!`
+Используйте кнопки внизу экрана для быстрого доступа!`
 
 	reply := tgbotapi.NewMessage(msg.Chat.ID, text)
 	reply.ParseMode = "Markdown"
-	reply.ReplyMarkup = GetMainKeyboard()
+	reply.ReplyMarkup = GetReplyKeyboard()
 	h.bot.Send(reply)
 }
 
@@ -274,5 +274,21 @@ func (h *BotHandler) handleCallbackQuery(ctx context.Context, callback *tgbotapi
 }
 
 func (h *BotHandler) handleMessage(ctx context.Context, msg *tgbotapi.Message) {
-	h.sendMessage(msg.Chat.ID, "Используйте /help для списка команд")
+	// Обработка нажатий на кнопки постоянной клавиатуры
+	switch msg.Text {
+	case "🌦️ Погода":
+		h.handleCurrentWeather(ctx, msg)
+	case "📈 Статистика":
+		h.handleStats(ctx, msg)
+	case "🏆 Рекорды":
+		h.handleRecords(ctx, msg)
+	case "☀️ Солнце":
+		h.handleSun(ctx, msg)
+	case "🌙 Луна":
+		h.handleMoon(ctx, msg)
+	case "🔔 Подписки":
+		h.handleSubscribe(ctx, msg)
+	default:
+		h.sendMessage(msg.Chat.ID, "Используйте кнопки ниже или /help для списка команд")
+	}
 }

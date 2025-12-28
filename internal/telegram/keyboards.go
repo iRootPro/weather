@@ -4,6 +4,24 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
+// GetReplyKeyboard возвращает постоянную клавиатуру с основными командами
+func GetReplyKeyboard() tgbotapi.ReplyKeyboardMarkup {
+	return tgbotapi.NewReplyKeyboard(
+		tgbotapi.NewKeyboardButtonRow(
+			tgbotapi.NewKeyboardButton("🌦️ Погода"),
+			tgbotapi.NewKeyboardButton("📈 Статистика"),
+		),
+		tgbotapi.NewKeyboardButtonRow(
+			tgbotapi.NewKeyboardButton("🏆 Рекорды"),
+			tgbotapi.NewKeyboardButton("☀️ Солнце"),
+		),
+		tgbotapi.NewKeyboardButtonRow(
+			tgbotapi.NewKeyboardButton("🌙 Луна"),
+			tgbotapi.NewKeyboardButton("🔔 Подписки"),
+		),
+	)
+}
+
 // GetMainKeyboard возвращает главную клавиатуру
 func GetMainKeyboard() tgbotapi.InlineKeyboardMarkup {
 	return tgbotapi.NewInlineKeyboardMarkup(
