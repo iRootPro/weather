@@ -149,6 +149,7 @@ func (h *BotHandler) handleRecords(ctx context.Context, msg *tgbotapi.Message) {
 
 	reply := tgbotapi.NewMessage(msg.Chat.ID, text)
 	reply.ParseMode = "Markdown"
+	reply.ReplyMarkup = GetMainKeyboard()
 	h.bot.Send(reply)
 }
 
@@ -163,6 +164,7 @@ func (h *BotHandler) handleSun(ctx context.Context, msg *tgbotapi.Message) {
 
 	reply := tgbotapi.NewMessage(msg.Chat.ID, text)
 	reply.ParseMode = "Markdown"
+	reply.ReplyMarkup = GetMainKeyboard()
 	h.bot.Send(reply)
 }
 
@@ -173,6 +175,7 @@ func (h *BotHandler) handleMoon(ctx context.Context, msg *tgbotapi.Message) {
 
 	reply := tgbotapi.NewMessage(msg.Chat.ID, text)
 	reply.ParseMode = "Markdown"
+	reply.ReplyMarkup = GetMainKeyboard()
 	h.bot.Send(reply)
 }
 
