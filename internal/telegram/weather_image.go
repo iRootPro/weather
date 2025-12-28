@@ -237,6 +237,7 @@ func findFont(bold bool) string {
 
 	if bold {
 		paths = []string{
+			"/usr/share/fonts/jetbrains/JetBrainsMonoNerdFont-Bold.ttf",   // JetBrains Mono Nerd Font (Docker)
 			"/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf",                 // Alpine Linux (ttf-dejavu)
 			"/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",        // Debian/Ubuntu
 			"/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf", // Linux (Liberation)
@@ -245,6 +246,7 @@ func findFont(bold bool) string {
 		}
 	} else {
 		paths = []string{
+			"/usr/share/fonts/jetbrains/JetBrainsMonoNerdFont-Regular.ttf", // JetBrains Mono Nerd Font (Docker)
 			"/usr/share/fonts/dejavu/DejaVuSans.ttf",                      // Alpine Linux (ttf-dejavu)
 			"/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",            // Debian/Ubuntu
 			"/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf", // Linux (Liberation)
@@ -260,9 +262,9 @@ func findFont(bold bool) string {
 		}
 	}
 
-	// Если ничего не нашли, возвращаем путь для Alpine (где точно должны быть после apk add ttf-dejavu)
+	// Если ничего не нашли, возвращаем путь для JetBrains Mono (приоритетный) или DejaVu
 	if bold {
-		return "/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf"
+		return "/usr/share/fonts/jetbrains/JetBrainsMonoNerdFont-Bold.ttf"
 	}
-	return "/usr/share/fonts/dejavu/DejaVuSans.ttf"
+	return "/usr/share/fonts/jetbrains/JetBrainsMonoNerdFont-Regular.ttf"
 }

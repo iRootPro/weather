@@ -43,7 +43,15 @@ CMD ["/app/migrator", "up"]
 
 # Telegram Bot
 FROM alpine:3.20 AS telegram-bot
-RUN apk --no-cache add ca-certificates tzdata ttf-dejavu
+RUN apk --no-cache add ca-certificates tzdata wget unzip && \
+    # Скачиваем и устанавливаем JetBrains Mono Nerd Font
+    wget -q https://github.com/ryanoasis/nerd-fonts/releases/download/v3.1.1/JetBrainsMono.zip && \
+    unzip -q JetBrainsMono.zip -d /usr/share/fonts/jetbrains && \
+    rm JetBrainsMono.zip && \
+    # Обновляем кеш шрифтов
+    fc-cache -f && \
+    # Удаляем временные пакеты
+    apk del wget unzip
 WORKDIR /app
 COPY --from=builder /bin/telegram-bot /app/telegram-bot
 CMD ["/app/telegram-bot"]
