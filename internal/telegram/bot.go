@@ -74,7 +74,7 @@ func (h *BotHandler) HandleUpdate(ctx context.Context, update tgbotapi.Update) {
 	if update.Message != nil && update.Message.Document != nil {
 		// Проверяем что это изображение
 		mimeType := update.Message.Document.MimeType
-		if mimeType == "image/jpeg" || mimeType == "image/jpg" || mimeType == "image/png" {
+		if isImageMimeType(mimeType) {
 			h.handlePhotoDocument(ctx, update.Message)
 			return
 		}
@@ -96,6 +96,32 @@ func (h *BotHandler) sendMessage(chatID int64, text string) {
 func (h *BotHandler) isAdmin(chatID int64) bool {
 	for _, adminID := range h.adminIDs {
 		if adminID == chatID {
+			return true
+		}
+	}
+	return false
+}
+
+// isImageMimeType проверяет, является ли MIME тип изображением
+func isImageMimeType(mimeType string) bool {
+	supportedTypes := []string{
+		"image/jpeg",
+		"image/jpg",
+		"image/png",
+		"image/heic",  // iPhone (High Efficiency Image Container)
+		"image/heif",  // iPhone альтернативный формат
+		"image/webp",  // Android/Google формат
+		"image/avif",  // Новый формат (Android 12+)
+		"image/bmp",   // Windows Bitmap
+		"image/gif",   // GIF анимация
+		"image/tiff",  // TIFF формат
+		"image/x-canon-cr2", // Canon RAW
+		"image/x-nikon-nef", // Nikon RAW
+		"image/x-sony-arw",  // Sony RAW
+	}
+
+	for _, supportedType := range supportedTypes {
+		if mimeType == supportedType {
 			return true
 		}
 	}

@@ -554,11 +554,8 @@ func (h *BotHandler) handlePhotoDocument(ctx context.Context, msg *tgbotapi.Mess
 		h.logger.Warn("failed to get weather for photo time", "error", err, "taken_at", exifData.TakenAt)
 	}
 
-	// Определяем расширение файла
-	ext := ".jpg"
-	if document.MimeType == "image/png" {
-		ext = ".png"
-	}
+	// Определяем расширение файла на основе MIME типа
+	ext := getFileExtension(document.MimeType, document.FileName)
 
 	// Сохраняем фото на диск
 	filename := fmt.Sprintf("%d_%s%s", time.Now().Unix(), document.FileUniqueID, ext)
@@ -892,4 +889,41 @@ func formatWeatherDescription(w *models.WeatherData) string {
 	}
 
 	return desc
+}
+
+// getFileExtension определяет расширение файла на основе MIME типа
+func getFileExtension(mimeType, fileName string) string {
+	// Маппинг MIME типов на расширения
+	mimeToExt := map[string]string{
+		"image/jpeg":         ".jpg",
+		"image/jpg":          ".jpg",
+		"image/png":          ".png",
+		"image/heic":         ".heic",
+		"image/heif":         ".heic",
+		"image/webp":         ".webp",
+		"image/avif":         ".avif",
+		"image/bmp":          ".bmp",
+		"image/gif":          ".gif",
+		"image/tiff":         ".tiff",
+		"image/x-canon-cr2":  ".cr2",
+		"image/x-nikon-nef":  ".nef",
+		"image/x-sony-arw":   ".arw",
+	}
+
+	// Сначала пробуем по MIME типу
+	if ext, ok := mimeToExt[mimeType]; ok {
+		return ext
+	}
+
+	// Если не нашли, пробуем извлечь из имени файла
+	if fileName != "" {
+		for i := len(fileName) - 1; i >= 0; i-- {
+			if fileName[i] == '.' {
+				return fileName[i:]
+			}
+		}
+	}
+
+	// По умолчанию JPEG
+	return ".jpg"
 }
