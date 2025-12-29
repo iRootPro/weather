@@ -35,6 +35,26 @@ func (r *telegramUserRepository) Create(ctx context.Context, user *models.Telegr
 	).Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt, &user.IsActive)
 }
 
+func (r *telegramUserRepository) GetByID(ctx context.Context, id int64) (*models.TelegramUser, error) {
+	query := `
+		SELECT id, chat_id, username, first_name, last_name, language_code,
+		       is_bot, is_active, created_at, updated_at
+		FROM telegram_users
+		WHERE id = $1
+	`
+
+	var user models.TelegramUser
+	err := r.pool.QueryRow(ctx, query, id).Scan(
+		&user.ID, &user.ChatID, &user.Username, &user.FirstName, &user.LastName,
+		&user.LanguageCode, &user.IsBot, &user.IsActive, &user.CreatedAt, &user.UpdatedAt,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user by id: %w", err)
+	}
+
+	return &user, nil
+}
+
 func (r *telegramUserRepository) GetByChatID(ctx context.Context, chatID int64) (*models.TelegramUser, error) {
 	query := `
 		SELECT id, chat_id, username, first_name, last_name, language_code,

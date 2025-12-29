@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"time"
 
@@ -317,6 +318,18 @@ func (h *BotHandler) handleCallbackQuery(ctx context.Context, callback *tgbotapi
 		return
 	}
 
+	// Обработка модерации фото - одобрение
+	if strings.HasPrefix(data, "approve_photo_") {
+		h.handlePhotoApproval(ctx, callback, data)
+		return
+	}
+
+	// Обработка модерации фото - отклонение
+	if strings.HasPrefix(data, "reject_photo_") {
+		h.handlePhotoRejection(ctx, callback, data)
+		return
+	}
+
 	// Обработка команд через кнопки
 	switch data {
 	case "cmd_weather":
@@ -486,12 +499,6 @@ func (h *BotHandler) handleMessage(ctx context.Context, msg *tgbotapi.Message) {
 
 // handlePhotoDocument обрабатывает фото отправленное как документ (без сжатия)
 func (h *BotHandler) handlePhotoDocument(ctx context.Context, msg *tgbotapi.Message) {
-	// Проверяем, что пользователь админ
-	if !h.isAdmin(msg.Chat.ID) {
-		h.sendMessage(msg.Chat.ID, "❌ Только админы могут загружать фотографии")
-		return
-	}
-
 	// Получаем пользователя
 	user, err := h.userRepo.GetByChatID(ctx, msg.Chat.ID)
 	if err != nil {
@@ -648,7 +655,7 @@ func (h *BotHandler) handlePhotoDocument(ctx context.Context, msg *tgbotapi.Mess
 		CameraModel:    exifData.CameraModel,
 		TelegramFileID: document.FileID,
 		TelegramUserID: &user.ID,
-		IsVisible:      true,
+		IsVisible:      false, // Фото скрыто до модерации
 	}
 
 	// Добавляем погодные данные если есть
@@ -696,35 +703,20 @@ func (h *BotHandler) handlePhotoDocument(ctx context.Context, msg *tgbotapi.Mess
 	deleteMsg := tgbotapi.NewDeleteMessage(msg.Chat.ID, sentMsg.MessageID)
 	h.bot.Send(deleteMsg)
 
-	// Формируем подтверждающее сообщение
-	confirmText := "✅ *Фотография добавлена!*\n\n"
-	confirmText += fmt.Sprintf("📅 Дата съемки: %s\n", exifData.TakenAt.Format("02.01.2006 15:04"))
-
-	if exifData.CameraMake != "" || exifData.CameraModel != "" {
-		confirmText += fmt.Sprintf("📷 Камера: %s %s\n", exifData.CameraMake, exifData.CameraModel)
-	}
-
-	if weather != nil {
-		confirmText += fmt.Sprintf("\n🌡️ Погода на момент съемки:\n")
-		if weather.TempOutdoor != nil {
-			confirmText += fmt.Sprintf("Температура: %.1f°C\n", *weather.TempOutdoor)
-		}
-		if weather.HumidityOutdoor != nil {
-			confirmText += fmt.Sprintf("Влажность: %d%%\n", *weather.HumidityOutdoor)
-		}
-		if weather.PressureRelative != nil {
-			confirmText += fmt.Sprintf("Давление: %.0f мм рт.ст.\n", *weather.PressureRelative)
-		}
-		if weather.RainRate != nil && *weather.RainRate > 0 {
-			confirmText += fmt.Sprintf("Дождь: %.1f мм/ч\n", *weather.RainRate)
-		}
-	}
+	// Отправляем подтверждение пользователю о модерации
+	confirmText := "✅ *Фотография получена!*\n\n"
+	confirmText += "📋 Ваша фотография отправлена на модерацию.\n"
+	confirmText += "⏳ Модератор рассмотрит её в ближайшее время.\n\n"
+	confirmText += "📬 Вы получите уведомление о результате проверки."
 
 	reply := tgbotapi.NewMessage(msg.Chat.ID, confirmText)
 	reply.ParseMode = "Markdown"
 	h.bot.Send(reply)
 
-	h.logger.Info("photo uploaded", "chat_id", msg.Chat.ID, "photo_id", photoModel.ID, "taken_at", exifData.TakenAt)
+	// Отправляем уведомление админам для модерации
+	h.sendPhotoModerationToAdmins(ctx, photoModel, exifData, weather, finalFilepath)
+
+	h.logger.Info("photo uploaded and sent for moderation", "chat_id", msg.Chat.ID, "photo_id", photoModel.ID, "taken_at", exifData.TakenAt)
 }
 
 func (h *BotHandler) handlePhoto(ctx context.Context, msg *tgbotapi.Message) {
@@ -815,4 +807,215 @@ func getFileExtension(mimeType, fileName string) string {
 
 	// По умолчанию JPEG
 	return ".jpg"
+}
+
+// sendPhotoModerationToAdmins отправляет уведомление админам для модерации фото
+func (h *BotHandler) sendPhotoModerationToAdmins(ctx context.Context, photo *models.Photo, exif *ExifData, weather *models.WeatherData, filePath string) {
+	// Формируем текст уведомления
+	moderationText := "🔔 *Новое фото на модерацию*\n\n"
+
+	// Получаем информацию об авторе
+	if photo.TelegramUserID != nil {
+		user, err := h.userRepo.GetByID(ctx, *photo.TelegramUserID)
+		if err == nil {
+			authorName := ""
+			if user.FirstName != nil {
+				authorName = *user.FirstName
+			}
+			if user.LastName != nil {
+				authorName += " " + *user.LastName
+			}
+			if user.Username != nil {
+				moderationText += fmt.Sprintf("👤 Автор: %s (@%s)\n", authorName, *user.Username)
+			} else {
+				moderationText += fmt.Sprintf("👤 Автор: %s\n", authorName)
+			}
+		}
+	}
+
+	moderationText += fmt.Sprintf("📅 Дата съемки: %s\n", exif.TakenAt.Format("02.01.2006 15:04"))
+
+	if exif.CameraMake != "" || exif.CameraModel != "" {
+		moderationText += fmt.Sprintf("📷 Камера: %s %s\n", exif.CameraMake, exif.CameraModel)
+	}
+
+	if photo.Caption != "" {
+		moderationText += fmt.Sprintf("\n💬 Описание: %s\n", photo.Caption)
+	}
+
+	if weather != nil {
+		moderationText += "\n🌡️ Погода на момент съемки:\n"
+		if weather.TempOutdoor != nil {
+			moderationText += fmt.Sprintf("• Температура: %.1f°C\n", *weather.TempOutdoor)
+		}
+		if weather.HumidityOutdoor != nil {
+			moderationText += fmt.Sprintf("• Влажность: %d%%\n", *weather.HumidityOutdoor)
+		}
+		if weather.PressureRelative != nil {
+			moderationText += fmt.Sprintf("• Давление: %.0f мм рт.ст.\n", *weather.PressureRelative)
+		}
+	}
+
+	// Создаем инлайн-клавиатуру с кнопками модерации
+	keyboard := tgbotapi.NewInlineKeyboardMarkup(
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("✅ Одобрить", fmt.Sprintf("approve_photo_%d", photo.ID)),
+			tgbotapi.NewInlineKeyboardButtonData("❌ Отклонить", fmt.Sprintf("reject_photo_%d", photo.ID)),
+		),
+	)
+
+	// Отправляем уведомление всем админам
+	for _, adminID := range h.adminIDs {
+		// Открываем файл для отправки
+		photoFile, err := os.Open(filePath)
+		if err != nil {
+			h.logger.Error("failed to open photo for moderation", "error", err, "filepath", filePath)
+			continue
+		}
+
+		photoBytes := tgbotapi.FileBytes{
+			Name:  photo.Filename,
+			Bytes: func() []byte {
+				defer photoFile.Close()
+				data, _ := io.ReadAll(photoFile)
+				return data
+			}(),
+		}
+
+		photoMsg := tgbotapi.NewPhoto(adminID, photoBytes)
+		photoMsg.Caption = moderationText
+		photoMsg.ParseMode = "Markdown"
+		photoMsg.ReplyMarkup = keyboard
+
+		if _, err := h.bot.Send(photoMsg); err != nil {
+			h.logger.Error("failed to send moderation message to admin", "error", err, "admin_id", adminID)
+		}
+	}
+
+	h.logger.Info("moderation request sent to admins", "photo_id", photo.ID, "admins_count", len(h.adminIDs))
+}
+
+// handlePhotoApproval обрабатывает одобрение фото админом
+func (h *BotHandler) handlePhotoApproval(ctx context.Context, callback *tgbotapi.CallbackQuery, data string) {
+	// Проверяем права админа
+	if !h.isAdmin(callback.Message.Chat.ID) {
+		h.bot.Request(tgbotapi.NewCallback(callback.ID, "❌ У вас нет прав для модерации"))
+		return
+	}
+
+	// Извлекаем ID фото из callback data
+	photoIDStr := strings.TrimPrefix(data, "approve_photo_")
+	photoID, err := strconv.ParseInt(photoIDStr, 10, 64)
+	if err != nil {
+		h.logger.Error("failed to parse photo ID", "error", err, "data", data)
+		h.bot.Request(tgbotapi.NewCallback(callback.ID, "❌ Ошибка обработки"))
+		return
+	}
+
+	// Получаем фото из БД
+	photo, err := h.photoRepo.GetByID(ctx, photoID)
+	if err != nil {
+		h.logger.Error("failed to get photo", "error", err, "photo_id", photoID)
+		h.bot.Request(tgbotapi.NewCallback(callback.ID, "❌ Фото не найдено"))
+		return
+	}
+
+	// Одобряем фото (делаем видимым)
+	if err := h.photoRepo.UpdateVisibility(ctx, photoID, true); err != nil {
+		h.logger.Error("failed to approve photo", "error", err, "photo_id", photoID)
+		h.bot.Request(tgbotapi.NewCallback(callback.ID, "❌ Ошибка одобрения"))
+		return
+	}
+
+	// Отправляем уведомление пользователю
+	if photo.TelegramUserID != nil {
+		user, err := h.userRepo.GetByID(ctx, *photo.TelegramUserID)
+		if err == nil {
+			approvalText := "✅ *Ваше фото одобрено!*\n\n"
+			approvalText += "Фотография появится в галерее на сайте.\n"
+			approvalText += fmt.Sprintf("📅 Дата съемки: %s", photo.TakenAt.Format("02.01.2006 15:04"))
+
+			approvalMsg := tgbotapi.NewMessage(user.ChatID, approvalText)
+			approvalMsg.ParseMode = "Markdown"
+			h.bot.Send(approvalMsg)
+		}
+	}
+
+	// Редактируем сообщение админа (убираем кнопки)
+	editText := callback.Message.Caption + "\n\n✅ *Фото одобрено*"
+	editMsg := tgbotapi.NewEditMessageCaption(callback.Message.Chat.ID, callback.Message.MessageID, editText)
+	editMsg.ParseMode = "Markdown"
+	h.bot.Send(editMsg)
+
+	// Подтверждаем callback
+	h.bot.Request(tgbotapi.NewCallback(callback.ID, "✅ Фото одобрено"))
+
+	h.logger.Info("photo approved", "photo_id", photoID, "admin_id", callback.Message.Chat.ID)
+}
+
+// handlePhotoRejection обрабатывает отклонение фото админом
+func (h *BotHandler) handlePhotoRejection(ctx context.Context, callback *tgbotapi.CallbackQuery, data string) {
+	// Проверяем права админа
+	if !h.isAdmin(callback.Message.Chat.ID) {
+		h.bot.Request(tgbotapi.NewCallback(callback.ID, "❌ У вас нет прав для модерации"))
+		return
+	}
+
+	// Извлекаем ID фото из callback data
+	photoIDStr := strings.TrimPrefix(data, "reject_photo_")
+	photoID, err := strconv.ParseInt(photoIDStr, 10, 64)
+	if err != nil {
+		h.logger.Error("failed to parse photo ID", "error", err, "data", data)
+		h.bot.Request(tgbotapi.NewCallback(callback.ID, "❌ Ошибка обработки"))
+		return
+	}
+
+	// Получаем фото из БД
+	photo, err := h.photoRepo.GetByID(ctx, photoID)
+	if err != nil {
+		h.logger.Error("failed to get photo", "error", err, "photo_id", photoID)
+		h.bot.Request(tgbotapi.NewCallback(callback.ID, "❌ Фото не найдено"))
+		return
+	}
+
+	// Удаляем файл с диска
+	if err := os.Remove(photo.FilePath); err != nil {
+		h.logger.Warn("failed to delete photo file", "error", err, "filepath", photo.FilePath)
+	}
+
+	// Удаляем фото из БД
+	if err := h.photoRepo.Delete(ctx, photoID); err != nil {
+		h.logger.Error("failed to delete photo from db", "error", err, "photo_id", photoID)
+		h.bot.Request(tgbotapi.NewCallback(callback.ID, "❌ Ошибка удаления"))
+		return
+	}
+
+	// Отправляем уведомление пользователю
+	if photo.TelegramUserID != nil {
+		user, err := h.userRepo.GetByID(ctx, *photo.TelegramUserID)
+		if err == nil {
+			rejectionText := "❌ *Ваше фото отклонено*\n\n"
+			rejectionText += "К сожалению, модератор не одобрил вашу фотографию.\n"
+			rejectionText += "Возможные причины:\n"
+			rejectionText += "• Неподходящий контент\n"
+			rejectionText += "• Низкое качество изображения\n"
+			rejectionText += "• Не относится к погоде\n\n"
+			rejectionText += "Вы можете отправить другое фото."
+
+			rejectionMsg := tgbotapi.NewMessage(user.ChatID, rejectionText)
+			rejectionMsg.ParseMode = "Markdown"
+			h.bot.Send(rejectionMsg)
+		}
+	}
+
+	// Редактируем сообщение админа (убираем кнопки)
+	editText := callback.Message.Caption + "\n\n❌ *Фото отклонено и удалено*"
+	editMsg := tgbotapi.NewEditMessageCaption(callback.Message.Chat.ID, callback.Message.MessageID, editText)
+	editMsg.ParseMode = "Markdown"
+	h.bot.Send(editMsg)
+
+	// Подтверждаем callback
+	h.bot.Request(tgbotapi.NewCallback(callback.ID, "❌ Фото отклонено"))
+
+	h.logger.Info("photo rejected and deleted", "photo_id", photoID, "admin_id", callback.Message.Chat.ID)
 }
