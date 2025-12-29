@@ -546,11 +546,11 @@ func FormatDailySummary(current, yesterdaySame *models.WeatherData, nightMinMax,
 	if len(todayForecast) > 0 {
 		text += "🔮 *ПРОГНОЗ НА СЕГОДНЯ*\n"
 		for _, f := range todayForecast {
-			text += fmt.Sprintf("%s %02d:00 – %.0f°C", f.Icon, f.Hour, f.Temperature)
+			text += fmt.Sprintf("%s В %02d:00 → %.0f°C", f.Icon, f.Hour, f.Temperature)
 			if f.PrecipitationProbability > 0 {
-				text += fmt.Sprintf(" 💧%d%%", f.PrecipitationProbability)
+				text += fmt.Sprintf(" · 💧%d%%", f.PrecipitationProbability)
 			}
-			text += fmt.Sprintf(" (%s)\n", f.WeatherDescription)
+			text += fmt.Sprintf(" · %s\n", f.WeatherDescription)
 		}
 		text += "\n"
 	}
