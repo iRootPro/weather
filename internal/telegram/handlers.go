@@ -595,9 +595,9 @@ func (h *BotHandler) handlePhotoDocument(ctx context.Context, msg *tgbotapi.Mess
 
 		h.logger.Info("converting HEIC to JPEG", "input", tempFilepath, "output", finalFilepath)
 
-		// Используем heif-convert для конвертации
-		// heif-convert input.heic output.jpg
-		convertCmd := exec.Command("heif-convert", tempFilepath, finalFilepath)
+		// Используем ffmpeg для конвертации (надежнее работает с проблемными файлами)
+		// ffmpeg -i input.heic -q:v 2 output.jpg
+		convertCmd := exec.Command("ffmpeg", "-i", tempFilepath, "-q:v", "2", "-y", finalFilepath)
 		convertOutput, err := convertCmd.CombinedOutput()
 		if err != nil {
 			h.logger.Error("failed to convert HEIC to JPEG", "error", err, "output", string(convertOutput))
