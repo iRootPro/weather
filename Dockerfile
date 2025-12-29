@@ -44,7 +44,7 @@ CMD ["/app/migrator", "up"]
 
 # Telegram Bot
 FROM alpine:3.20 AS telegram-bot
-RUN apk --no-cache add ca-certificates tzdata exiftool ffmpeg
+RUN apk --no-cache add ca-certificates tzdata exiftool
 WORKDIR /app
 COPY --from=builder /bin/telegram-bot /app/telegram-bot
 CMD ["/app/telegram-bot"]

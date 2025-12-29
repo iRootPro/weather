@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"os/exec"
 	"strings"
 	"time"
 
@@ -605,27 +604,61 @@ func (h *BotHandler) handlePhotoDocument(ctx context.Context, msg *tgbotapi.Mess
 	var finalFilepath string
 
 	if isHEIC {
-		// Конвертируем HEIC в JPEG
-		finalFilename = fmt.Sprintf("%d_%s.jpg", time.Now().Unix(), document.FileUniqueID)
-		finalFilepath = fmt.Sprintf("photos/%s", finalFilename)
-
-		h.logger.Info("converting HEIC to JPEG", "input", tempFilepath, "output", finalFilepath)
-
-		// Используем ffmpeg для конвертации (надежнее работает с проблемными файлами)
-		// ffmpeg -i input.heic -q:v 2 output.jpg
-		convertCmd := exec.Command("ffmpeg", "-i", tempFilepath, "-q:v", "2", "-y", finalFilepath)
-		convertOutput, err := convertCmd.CombinedOutput()
-		if err != nil {
-			h.logger.Error("failed to convert HEIC to JPEG", "error", err, "output", string(convertOutput))
-			h.sendMessage(msg.Chat.ID, "❌ Ошибка при конвертации HEIC в JPEG")
-			// Удаляем временный файл
+		// Для HEIC используем превью (Thumb) от Telegram в формате JPEG
+		if document.Thumbnail == nil {
+			h.logger.Error("HEIC document has no thumbnail")
+			h.sendMessage(msg.Chat.ID, "❌ Не удалось получить превью для HEIC фото")
 			os.Remove(tempFilepath)
 			return
 		}
 
-		// Удаляем временный HEIC файл после конвертации
+		h.logger.Info("downloading JPEG thumbnail for HEIC", "thumb_file_id", document.Thumbnail.FileID, "thumb_size", document.Thumbnail.FileSize)
+
+		// Скачиваем превью
+		thumbConfig := tgbotapi.FileConfig{FileID: document.Thumbnail.FileID}
+		thumbFile, err := h.bot.GetFile(thumbConfig)
+		if err != nil {
+			h.logger.Error("failed to get thumbnail file", "error", err)
+			h.sendMessage(msg.Chat.ID, "❌ Ошибка при скачивании превью")
+			os.Remove(tempFilepath)
+			return
+		}
+
+		thumbURL := thumbFile.Link(h.bot.Token)
+		thumbResp, err := http.Get(thumbURL)
+		if err != nil {
+			h.logger.Error("failed to download thumbnail", "error", err)
+			h.sendMessage(msg.Chat.ID, "❌ Ошибка при скачивании превью")
+			os.Remove(tempFilepath)
+			return
+		}
+		defer thumbResp.Body.Close()
+
+		// Сохраняем превью как финальный файл
+		finalFilename = fmt.Sprintf("%d_%s.jpg", time.Now().Unix(), document.FileUniqueID)
+		finalFilepath = fmt.Sprintf("photos/%s", finalFilename)
+
+		finalFile, err := os.Create(finalFilepath)
+		if err != nil {
+			h.logger.Error("failed to create thumbnail file", "error", err)
+			h.sendMessage(msg.Chat.ID, "❌ Ошибка при сохранении превью")
+			os.Remove(tempFilepath)
+			return
+		}
+
+		thumbBytes, err := io.Copy(finalFile, thumbResp.Body)
+		finalFile.Close()
+		if err != nil {
+			h.logger.Error("failed to write thumbnail", "error", err)
+			h.sendMessage(msg.Chat.ID, "❌ Ошибка при записи превью")
+			os.Remove(tempFilepath)
+			return
+		}
+
+		h.logger.Info("thumbnail saved", "filepath", finalFilepath, "bytes", thumbBytes)
+
+		// Удаляем временный HEIC файл
 		os.Remove(tempFilepath)
-		h.logger.Info("HEIC converted to JPEG", "filepath", finalFilepath)
 	} else {
 		// Для других форматов просто используем временный файл как финальный
 		finalFilename = tempFilename
