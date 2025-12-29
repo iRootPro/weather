@@ -91,6 +91,12 @@ func main() {
 	}
 	slog.Info("web handler created successfully")
 
+	// Создаем директорию для фотографий
+	if err := os.MkdirAll("photos", 0755); err != nil {
+		log.Fatalf("failed to create photos directory: %v", err)
+	}
+	slog.Info("photos directory ready")
+
 	// Настройка роутера
 	mux := http.NewServeMux()
 

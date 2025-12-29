@@ -38,11 +38,29 @@ var templateFuncs = template.FuncMap{
 	"sub": func(a, b float64) float64 {
 		return a - b
 	},
-	"deref": func(ptr *float32) float64 {
+	"deref": func(ptr interface{}) float64 {
 		if ptr == nil {
 			return 0
 		}
-		return float64(*ptr)
+		switch v := ptr.(type) {
+		case *float32:
+			if v == nil {
+				return 0
+			}
+			return float64(*v)
+		case *float64:
+			if v == nil {
+				return 0
+			}
+			return *v
+		case *int16:
+			if v == nil {
+				return 0
+			}
+			return float64(*v)
+		default:
+			return 0
+		}
 	},
 }
 

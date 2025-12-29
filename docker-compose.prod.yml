@@ -59,6 +59,8 @@ services:
       TZ: Europe/Moscow
     ports:
       - "${HTTP_PORT:-8080}:8080"
+    volumes:
+      - photos_data:/app/photos
     depends_on:
       postgres:
         condition: service_healthy
@@ -76,6 +78,8 @@ services:
     container_name: weather-telegram-bot
     environment:
       TZ: Europe/Moscow
+    volumes:
+      - photos_data:/app/photos
     depends_on:
       postgres:
         condition: service_healthy
@@ -104,3 +108,4 @@ services:
 
 volumes:
   postgres_data:
+  photos_data:

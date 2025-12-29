@@ -44,11 +44,11 @@
                 {{if .Temperature}}
                 <div class="flex items-center gap-3 text-sm">
                     <span class="text-gray-600 dark:text-gray-300">
-                        🌡️ {{printf "%.1f" .Temperature}}°C
+                        🌡️ {{printf "%.1f" (deref .Temperature)}}°C
                     </span>
                     {{if .Humidity}}
                     <span class="text-gray-600 dark:text-gray-300">
-                        💧 {{printf "%.0f" .Humidity}}%
+                        💧 {{printf "%.0f" (deref .Humidity)}}%
                     </span>
                     {{end}}
                 </div>
