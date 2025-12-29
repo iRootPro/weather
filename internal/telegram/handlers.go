@@ -507,6 +507,13 @@ func (h *BotHandler) handlePhotoDocument(ctx context.Context, msg *tgbotapi.Mess
 
 	document := msg.Document
 
+	// Логируем информацию о документе
+	h.logger.Info("received document",
+		"mime_type", document.MimeType,
+		"file_name", document.FileName,
+		"file_size", document.FileSize,
+		"file_id", document.FileID)
+
 	// Скачиваем документ
 	fileConfig := tgbotapi.FileConfig{FileID: document.FileID}
 	file, err := h.bot.GetFile(fileConfig)
@@ -571,6 +578,15 @@ func (h *BotHandler) handlePhotoDocument(ctx context.Context, msg *tgbotapi.Mess
 	}
 
 	h.logger.Info("temp file saved", "filepath", tempFilepath, "bytes", bytesWritten)
+
+	// Проверяем что файл существует и имеет размер
+	fileInfo, err := os.Stat(tempFilepath)
+	if err != nil {
+		h.logger.Error("failed to stat temp file", "error", err, "filepath", tempFilepath)
+		h.sendMessage(msg.Chat.ID, "❌ Ошибка при проверке файла")
+		return
+	}
+	h.logger.Info("temp file verified", "size", fileInfo.Size(), "name", fileInfo.Name())
 
 	// Извлекаем EXIF данные из временного файла
 	exifData, err := ExtractExifDataFromFile(tempFilepath)
