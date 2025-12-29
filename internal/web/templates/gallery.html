@@ -116,7 +116,7 @@ function openPhotoModal(photoId) {
     const content = document.getElementById('modalContent');
 
     let html = `
-        <img src="/photos/${photo.filename}" alt="${photo.caption || ''}" class="w-full rounded-lg mb-4">
+        <img src="/photos/${photo.filename}" alt="${photo.caption || ''}" class="max-w-full max-h-[70vh] object-contain rounded-lg mb-4 mx-auto">
 
         ${photo.caption ? `<h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">${photo.caption}</h3>` : ''}
 
