@@ -446,17 +446,17 @@ func (h *Handler) ForecastWidget(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Получаем дневной прогноз на 5 дней
-	forecast, err := h.forecastService.GetDailyForecast(r.Context(), 5)
+	// Получаем дневной прогноз на 6 дней
+	forecast, err := h.forecastService.GetDailyForecast(r.Context(), 6)
 	if err != nil {
 		slog.Error("failed to get forecast", "error", err)
 		http.Error(w, "Failed to load forecast", http.StatusInternalServerError)
 		return
 	}
 
-	// Ограничиваем до 5 дней
-	if len(forecast) > 5 {
-		forecast = forecast[:5]
+	// Ограничиваем до 6 дней
+	if len(forecast) > 6 {
+		forecast = forecast[:6]
 	}
 
 	// Форматируем данные для шаблона
