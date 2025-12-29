@@ -27,7 +27,14 @@
     </div>
 
     <!-- Telegram Bot -->
-    <div class="bg-gradient-to-br from-blue-50 to-sky-100 dark:from-blue-900/20 dark:to-sky-800/20 rounded-lg shadow p-6 transition-colors border-2 border-blue-200 dark:border-blue-800">
+    <div id="telegram-bot-card" class="bg-gradient-to-br from-blue-50 to-sky-100 dark:from-blue-900/20 dark:to-sky-800/20 rounded-lg shadow p-6 transition-colors border-2 border-blue-200 dark:border-blue-800 relative">
+        <!-- Close Button -->
+        <button onclick="closeTelegramCard()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+
         <div class="flex flex-col md:flex-row items-center gap-6">
             <!-- Telegram Icon -->
             <div class="flex-shrink-0">
@@ -181,6 +188,28 @@
     document.addEventListener('DOMContentLoaded', function() {
         initCharts();
         loadChartData('5m');
+
+        // Check if telegram card was closed
+        if (localStorage.getItem('telegramCardClosed') === 'true') {
+            const card = document.getElementById('telegram-bot-card');
+            if (card) {
+                card.style.display = 'none';
+            }
+        }
     });
+
+    function closeTelegramCard() {
+        const card = document.getElementById('telegram-bot-card');
+        if (card) {
+            card.style.transition = 'opacity 0.3s ease-out, transform 0.3s ease-out';
+            card.style.opacity = '0';
+            card.style.transform = 'scale(0.95)';
+
+            setTimeout(() => {
+                card.style.display = 'none';
+                localStorage.setItem('telegramCardClosed', 'true');
+            }, 300);
+        }
+    }
 </script>
 {{end}}

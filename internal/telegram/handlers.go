@@ -155,6 +155,24 @@ func (h *BotHandler) handleCurrentWeather(ctx context.Context, msg *tgbotapi.Mes
 
 	text := FormatCurrentWeather(current, hourAgo, dailyMinMax)
 
+	// Добавляем прогноз на ближайшее время
+	if h.forecastSvc != nil {
+		forecast, err := h.forecastSvc.GetTodayForecast(ctx)
+		if err == nil && len(forecast) > 0 {
+			todayForecast := formatTodayForecast(forecast)
+			if len(todayForecast) > 0 {
+				text += "\n\n🔮 *ПРОГНОЗ НА СЕГОДНЯ*\n"
+				for _, f := range todayForecast {
+					text += fmt.Sprintf("%s В %02d:00: %.0f°C", f.Icon, f.Hour, f.Temperature)
+					if f.PrecipitationProbability > 0 {
+						text += fmt.Sprintf(" · 💧%d%%", f.PrecipitationProbability)
+					}
+					text += fmt.Sprintf(" · %s\n", f.WeatherDescription)
+				}
+			}
+		}
+	}
+
 	reply := tgbotapi.NewMessage(msg.Chat.ID, text)
 	reply.ParseMode = "Markdown"
 	reply.ReplyMarkup = GetWeatherDetailKeyboard()
