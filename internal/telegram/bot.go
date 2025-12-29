@@ -64,10 +64,20 @@ func (h *BotHandler) HandleUpdate(ctx context.Context, update tgbotapi.Update) {
 		return
 	}
 
-	// Обработка фотографий
+	// Обработка фотографий (сжатые фото)
 	if update.Message != nil && update.Message.Photo != nil {
 		h.handlePhoto(ctx, update.Message)
 		return
+	}
+
+	// Обработка документов (фото как файл)
+	if update.Message != nil && update.Message.Document != nil {
+		// Проверяем что это изображение
+		mimeType := update.Message.Document.MimeType
+		if mimeType == "image/jpeg" || mimeType == "image/jpg" || mimeType == "image/png" {
+			h.handlePhotoDocument(ctx, update.Message)
+			return
+		}
 	}
 
 	// Обработка обычных сообщений
