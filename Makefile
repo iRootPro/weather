@@ -1,4 +1,4 @@
-.PHONY: build build-consumer build-api build-migrator build-tui build-bot build-forecast run-consumer run-api run-tui run-bot run-forecast test lint migrate-up migrate-down docker-up docker-down tidy deploy deploy-logs deploy-status deploy-stop deploy-init
+.PHONY: build build-consumer build-api build-migrator build-tui build-bot build-forecast run-consumer run-api run-tui run-bot run-forecast test lint migrate-up migrate-down docker-up docker-down tidy deploy deploy-logs deploy-status deploy-stop deploy-init deploy-check deploy-db-size deploy-clean deploy-clean-logs deploy-clean-all
 
 # Сборка
 build:
@@ -123,3 +123,39 @@ deploy-restart:
 # Проверить данные в БД
 deploy-check:
 	$(SSH_CMD) "cd $(DEPLOY_PATH) && docker exec weather-postgres psql -U weather -d weather -c 'SELECT COUNT(*) as total, MAX(time) as last_update FROM weather_data;'"
+
+# Проверить размер базы данных
+deploy-db-size:
+	@echo "=== Размер базы данных ==="
+	$(SSH_CMD) "docker exec weather-postgres psql -U weather -d weather -c \"SELECT pg_size_pretty(pg_database_size('weather')) as db_size;\""
+	@echo ""
+	@echo "=== Размер таблиц (топ-10) ==="
+	$(SSH_CMD) "docker exec weather-postgres psql -U weather -d weather -c \"SELECT schemaname, tablename, pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) AS size, pg_total_relation_size(schemaname||'.'||tablename) as bytes FROM pg_tables WHERE schemaname NOT IN ('pg_catalog', 'information_schema') ORDER BY bytes DESC LIMIT 10;\""
+	@echo ""
+	@echo "=== Количество записей в основных таблицах ==="
+	$(SSH_CMD) "docker exec weather-postgres psql -U weather -d weather -c \"SELECT 'weather_data' as table_name, COUNT(*) as rows FROM weather_data UNION ALL SELECT 'forecasts', COUNT(*) FROM forecasts UNION ALL SELECT 'photos', COUNT(*) FROM photos;\""
+
+# Очистка Docker (удаление неиспользуемых образов и кеша)
+deploy-clean:
+	@echo "=== Статистика Docker ДО очистки ==="
+	$(SSH_CMD) "docker system df"
+	@echo ""
+	@echo "=== Удаление неиспользуемых образов ==="
+	$(SSH_CMD) "docker image prune -a -f"
+	@echo ""
+	@echo "=== Удаление build cache ==="
+	$(SSH_CMD) "docker builder prune -a -f"
+	@echo ""
+	@echo "=== Статистика Docker ПОСЛЕ очистки ==="
+	$(SSH_CMD) "docker system df"
+	@echo ""
+	@echo "✅ Очистка завершена!"
+
+# Очистка Docker логов
+deploy-clean-logs:
+	@echo "=== Очистка логов контейнеров ==="
+	$(SSH_CMD) "truncate -s 0 /var/lib/docker/containers/*/*-json.log && echo 'Логи очищены'"
+
+# Полная очистка (образы + кеш + логи)
+deploy-clean-all: deploy-clean deploy-clean-logs
+	@echo "✅ Полная очистка завершена!"
