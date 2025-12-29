@@ -13,13 +13,14 @@ func GetReplyKeyboard() tgbotapi.ReplyKeyboardMarkup {
 		),
 		tgbotapi.NewKeyboardButtonRow(
 			tgbotapi.NewKeyboardButton("🏆 Рекорды"),
+			tgbotapi.NewKeyboardButton("📊 Прогноз"),
+		),
+		tgbotapi.NewKeyboardButtonRow(
 			tgbotapi.NewKeyboardButton("☀️ Солнце"),
-		),
-		tgbotapi.NewKeyboardButtonRow(
 			tgbotapi.NewKeyboardButton("🌙 Луна"),
-			tgbotapi.NewKeyboardButton("🔔 Подписки"),
 		),
 		tgbotapi.NewKeyboardButtonRow(
+			tgbotapi.NewKeyboardButton("🔔 Подписки"),
 			tgbotapi.NewKeyboardButton("📖 Помощь"),
 		),
 	)
@@ -34,14 +35,17 @@ func GetAdminReplyKeyboard() tgbotapi.ReplyKeyboardMarkup {
 		),
 		tgbotapi.NewKeyboardButtonRow(
 			tgbotapi.NewKeyboardButton("🏆 Рекорды"),
+			tgbotapi.NewKeyboardButton("📊 Прогноз"),
+		),
+		tgbotapi.NewKeyboardButtonRow(
 			tgbotapi.NewKeyboardButton("☀️ Солнце"),
-		),
-		tgbotapi.NewKeyboardButtonRow(
 			tgbotapi.NewKeyboardButton("🌙 Луна"),
-			tgbotapi.NewKeyboardButton("🔔 Подписки"),
 		),
 		tgbotapi.NewKeyboardButtonRow(
+			tgbotapi.NewKeyboardButton("🔔 Подписки"),
 			tgbotapi.NewKeyboardButton("👥 Пользователи"),
+		),
+		tgbotapi.NewKeyboardButtonRow(
 			tgbotapi.NewKeyboardButton("📖 Помощь"),
 		),
 	)

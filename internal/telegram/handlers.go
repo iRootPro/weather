@@ -115,7 +115,7 @@ func (h *BotHandler) handleHelp(ctx context.Context, msg *tgbotapi.Message) {
 
 *Основные:*
 /weather - текущая погода
-/forecast - прогноз на 5 дней
+/forecast - прогноз на 6 дней
 /stats - статистика за период
 /records - рекорды за всё время
 /history - история данных
@@ -429,6 +429,8 @@ func (h *BotHandler) handleMessage(ctx context.Context, msg *tgbotapi.Message) {
 		h.handleStats(ctx, msg)
 	case "🏆 Рекорды":
 		h.handleRecords(ctx, msg)
+	case "📊 Прогноз":
+		h.handleForecast(ctx, msg)
 	case "☀️ Солнце":
 		h.handleSun(ctx, msg)
 	case "🌙 Луна":
