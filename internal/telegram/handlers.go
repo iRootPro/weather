@@ -734,187 +734,25 @@ func (h *BotHandler) handlePhoto(ctx context.Context, msg *tgbotapi.Message) {
 		return
 	}
 
-	// Получаем пользователя
-	user, err := h.userRepo.GetByChatID(ctx, msg.Chat.ID)
-	if err != nil {
-		h.logger.Error("failed to get user", "error", err)
-		h.sendMessage(msg.Chat.ID, "❌ Ошибка при обработке фотографии")
-		return
-	}
+	// Сжатые фото не содержат EXIF данных, поэтому мы не можем получить реальное время съемки
+	// Инструктируем пользователя отправлять как документ
+	instructionText := `❌ *Фото не добавлено*
 
-	// Отправляем уведомление о начале обработки
-	processingMsg := tgbotapi.NewMessage(msg.Chat.ID, "⏳ Обрабатываю фотографию...")
-	processingMsg.ParseMode = "Markdown"
-	sentMsg, _ := h.bot.Send(processingMsg)
+Сжатые фото не содержат информацию о времени съемки (EXIF), поэтому не могут быть добавлены в галерею.
 
-	// Получаем самое большое фото (лучшее качество)
-	photo := msg.Photo[len(msg.Photo)-1]
+📎 *Как правильно загрузить фото:*
+1. Нажмите на скрепку 📎
+2. Выберите "Файл" или "Document"
+3. Выберите фото из галереи
+4. Отправьте как файл (не сжимая)
 
-	// Скачиваем фото
-	fileConfig := tgbotapi.FileConfig{FileID: photo.FileID}
-	file, err := h.bot.GetFile(fileConfig)
-	if err != nil {
-		h.logger.Error("failed to get file", "error", err)
-		h.sendMessage(msg.Chat.ID, "❌ Ошибка при скачивании фотографии")
-		return
-	}
+Так будет сохранена информация о времени съемки и погода будет привязана корректно! 📸`
 
-	// Получаем URL файла
-	fileURL := file.Link(h.bot.Token)
-
-	// Скачиваем файл через http.Get
-	httpResp, err := http.Get(fileURL)
-	if err != nil {
-		h.logger.Error("failed to download file", "error", err)
-		h.sendMessage(msg.Chat.ID, "❌ Ошибка при скачивании фотографии")
-		return
-	}
-	defer httpResp.Body.Close()
-
-	// Читаем данные в буфер для повторного использования
-	fileData := new(bytes.Buffer)
-	_, err = io.Copy(fileData, httpResp.Body)
-	if err != nil {
-		h.logger.Error("failed to read file data", "error", err)
-		h.sendMessage(msg.Chat.ID, "❌ Ошибка при чтении фотографии")
-		return
-	}
-
-	// Сохраняем фото на диск
-	filename := fmt.Sprintf("%d_%s.jpg", time.Now().Unix(), photo.FileUniqueID)
-	filepath := fmt.Sprintf("photos/%s", filename)
-
-	// Создаем директорию если её нет
-	if err := os.MkdirAll("photos", 0755); err != nil {
-		h.logger.Error("failed to create photos directory", "error", err)
-		h.sendMessage(msg.Chat.ID, "❌ Ошибка при создании директории для фото")
-		return
-	}
-
-	h.logger.Info("saving photo to disk", "filename", filename, "filepath", filepath)
-
-	// Сохраняем файл
-	photoFile, err := os.Create(filepath)
-	if err != nil {
-		h.logger.Error("failed to create photo file", "error", err, "filepath", filepath)
-		h.sendMessage(msg.Chat.ID, "❌ Ошибка при сохранении фотографии")
-		return
-	}
-
-	bytesWritten, err := io.Copy(photoFile, bytes.NewReader(fileData.Bytes()))
-	photoFile.Close()
-	if err != nil {
-		h.logger.Error("failed to write photo file", "error", err)
-		h.sendMessage(msg.Chat.ID, "❌ Ошибка при сохранении фотографии")
-		return
-	}
-
-	h.logger.Info("photo saved to disk", "filepath", filepath, "bytes", bytesWritten)
-
-	// Извлекаем EXIF данные из файла
-	exifData, err := ExtractExifDataFromFile(filepath)
-	if err != nil {
-		h.logger.Warn("failed to extract exif from compressed photo", "error", err)
-		h.logger.Info("telegram strips EXIF from compressed photos - send as document for EXIF preservation")
-		// Продолжаем без EXIF данных
-		exifData = &ExifData{
-			TakenAt: time.Now(),
-		}
-	}
-
-	// Получаем погоду на момент съемки
-	weather, err := h.photoRepo.GetWeatherForTime(ctx, exifData.TakenAt)
-	if err != nil {
-		h.logger.Warn("failed to get weather for photo time", "error", err, "taken_at", exifData.TakenAt)
-	}
-
-	// Создаем запись в БД
-	photoModel := &models.Photo{
-		Filename:       filename,
-		FilePath:       filepath,
-		Caption:        msg.Caption,
-		TakenAt:        exifData.TakenAt,
-		CameraMake:     exifData.CameraMake,
-		CameraModel:    exifData.CameraModel,
-		TelegramFileID: photo.FileID,
-		TelegramUserID: &user.ID,
-		IsVisible:      true,
-	}
-
-	// Добавляем погодные данные если есть
-	if weather != nil {
-		if weather.TempOutdoor != nil {
-			temp := float64(*weather.TempOutdoor)
-			photoModel.Temperature = &temp
-		}
-		if weather.HumidityOutdoor != nil {
-			humidity := float64(*weather.HumidityOutdoor)
-			photoModel.Humidity = &humidity
-		}
-		if weather.PressureRelative != nil {
-			pressure := float64(*weather.PressureRelative)
-			photoModel.Pressure = &pressure
-		}
-		if weather.WindSpeed != nil {
-			windSpeed := float64(*weather.WindSpeed)
-			photoModel.WindSpeed = &windSpeed
-		}
-		if weather.WindDirection != nil {
-			windDir := int(*weather.WindDirection)
-			photoModel.WindDirection = &windDir
-		}
-		if weather.RainRate != nil {
-			rainRate := float64(*weather.RainRate)
-			photoModel.RainRate = &rainRate
-		}
-		if weather.SolarRadiation != nil {
-			solarRad := float64(*weather.SolarRadiation)
-			photoModel.SolarRadiation = &solarRad
-		}
-		photoModel.WeatherDescription = formatWeatherDescription(weather)
-	}
-
-	// Сохраняем в БД
-	err = h.photoRepo.Create(ctx, photoModel)
-	if err != nil {
-		h.logger.Error("failed to save photo to db", "error", err)
-		h.sendMessage(msg.Chat.ID, "❌ Ошибка при сохранении фотографии в базу данных")
-		return
-	}
-
-	// Удаляем сообщение о обработке
-	deleteMsg := tgbotapi.NewDeleteMessage(msg.Chat.ID, sentMsg.MessageID)
-	h.bot.Send(deleteMsg)
-
-	// Формируем подтверждающее сообщение
-	confirmText := "✅ *Фотография добавлена!*\n\n"
-	confirmText += fmt.Sprintf("📅 Дата съемки: %s\n", exifData.TakenAt.Format("02.01.2006 15:04"))
-
-	if exifData.CameraMake != "" || exifData.CameraModel != "" {
-		confirmText += fmt.Sprintf("📷 Камера: %s %s\n", exifData.CameraMake, exifData.CameraModel)
-	}
-
-	if weather != nil {
-		confirmText += fmt.Sprintf("\n🌡️ Погода на момент съемки:\n")
-		if weather.TempOutdoor != nil {
-			confirmText += fmt.Sprintf("Температура: %.1f°C\n", *weather.TempOutdoor)
-		}
-		if weather.HumidityOutdoor != nil {
-			confirmText += fmt.Sprintf("Влажность: %d%%\n", *weather.HumidityOutdoor)
-		}
-		if weather.PressureRelative != nil {
-			confirmText += fmt.Sprintf("Давление: %.0f мм рт.ст.\n", *weather.PressureRelative)
-		}
-		if weather.RainRate != nil && *weather.RainRate > 0 {
-			confirmText += fmt.Sprintf("Дождь: %.1f мм/ч\n", *weather.RainRate)
-		}
-	}
-
-	reply := tgbotapi.NewMessage(msg.Chat.ID, confirmText)
+	reply := tgbotapi.NewMessage(msg.Chat.ID, instructionText)
 	reply.ParseMode = "Markdown"
 	h.bot.Send(reply)
 
-	h.logger.Info("photo uploaded", "chat_id", msg.Chat.ID, "photo_id", photoModel.ID, "taken_at", exifData.TakenAt)
+	h.logger.Info("rejected compressed photo upload", "chat_id", msg.Chat.ID, "username", msg.From.UserName)
 }
 
 // formatWeatherDescription формирует описание погоды
