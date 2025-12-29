@@ -380,8 +380,19 @@ func (h *BotHandler) handleTestSummary(ctx context.Context, msg *tgbotapi.Messag
 	// Получаем данные о солнце
 	sunData := h.sunSvc.GetTodaySunTimesWithComparison()
 
-	// Форматируем сообщение (без прогноза для тестовой команды)
-	text := FormatDailySummary(current, yesterdaySame, nightMinMax, dailyMinMax, sunData, nil)
+	// Получаем прогноз на сегодня
+	var todayForecast []DayForecastInfo
+	if h.forecastSvc != nil {
+		forecast, err := h.forecastSvc.GetTodayForecast(ctx)
+		if err != nil {
+			h.logger.Warn("failed to get today forecast", "error", err)
+		} else if len(forecast) > 0 {
+			todayForecast = formatTodayForecast(forecast)
+		}
+	}
+
+	// Форматируем сообщение
+	text := FormatDailySummary(current, yesterdaySame, nightMinMax, dailyMinMax, sunData, todayForecast)
 
 	// Добавляем пометку о тестовой рассылке
 	testNote := "\n\n🧪 *Тестовая рассылка* (только для админа)"
