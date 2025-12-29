@@ -20,6 +20,7 @@ type BotHandler struct {
 	notifRepo   repository.TelegramNotificationRepository
 	photoRepo   repository.PhotoRepository
 	adminIDs    []int64
+	websiteURL  string
 	logger      *slog.Logger
 }
 
@@ -34,6 +35,7 @@ func NewBotHandler(
 	notifRepo repository.TelegramNotificationRepository,
 	photoRepo repository.PhotoRepository,
 	adminIDs []int64,
+	websiteURL string,
 	logger *slog.Logger,
 ) *BotHandler {
 	return &BotHandler{
@@ -47,6 +49,7 @@ func NewBotHandler(
 		notifRepo:   notifRepo,
 		photoRepo:   photoRepo,
 		adminIDs:    adminIDs,
+		websiteURL:  websiteURL,
 		logger:      logger,
 	}
 }

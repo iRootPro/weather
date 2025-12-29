@@ -97,6 +97,7 @@ func main() {
 		notifRepo,
 		photoRepo,
 		cfg.Telegram.AdminIDs,
+		cfg.API.URL,
 		logger,
 	)
 

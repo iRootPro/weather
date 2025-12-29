@@ -963,12 +963,13 @@ func (h *BotHandler) handlePhotoApproval(ctx context.Context, callback *tgbotapi
 	if photo.TelegramUserID != nil {
 		user, err := h.userRepo.GetByID(ctx, *photo.TelegramUserID)
 		if err == nil {
-			approvalText := "✅ *Ваше фото одобрено!*\n\n"
-			approvalText += "Фотография появится в галерее на сайте.\n"
-			approvalText += fmt.Sprintf("📅 Дата съемки: %s", photo.TakenAt.Format("02.01.2006 15:04"))
+			approvalText := "✅ *Ваше фото одобрено и добавлено в галерею!*\n\n"
+			approvalText += fmt.Sprintf("📅 Дата съемки: %s\n\n", photo.TakenAt.Format("02.01.2006 15:04"))
+			approvalText += fmt.Sprintf("🖼️ Посмотреть в галерее:\n%s/gallery", h.websiteURL)
 
 			approvalMsg := tgbotapi.NewMessage(user.ChatID, approvalText)
 			approvalMsg.ParseMode = "Markdown"
+			approvalMsg.DisableWebPagePreview = false
 			h.bot.Send(approvalMsg)
 		}
 	}
