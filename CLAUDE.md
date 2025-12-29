@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Язык общения
+
+**ВАЖНО**: Все ответы должны быть на русском языке. Весь текст коммуникации с пользователем должен быть на русском.
+
 ## Описание проекта
 
 Система сбора и визуализации данных с метеостанции EcoWitt. Собирает данные о погоде через MQTT, хранит в PostgreSQL/TimescaleDB, предоставляет веб-интерфейс на HTMX.
