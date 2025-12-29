@@ -80,6 +80,7 @@ type TelegramConfig struct {
 	MaxRetries        int     `env:"TELEGRAM_MAX_RETRIES" env-default:"3"`
 	AdminIDs          []int64 `env:"TELEGRAM_ADMIN_IDS" env-separator:","` // chat_id админов через запятую
 	DailySummaryTime  string  `env:"TELEGRAM_DAILY_SUMMARY_TIME" env-default:"07:00"` // Время отправки ежедневной сводки
+	WebsiteURL        string  `env:"WEBSITE_URL" env-default:"https://example.com"` // Публичный URL сайта
 }
 
 type ForecastConfig struct {

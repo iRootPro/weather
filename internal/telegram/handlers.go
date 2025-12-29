@@ -752,12 +752,6 @@ func (h *BotHandler) handlePhotoDocument(ctx context.Context, msg *tgbotapi.Mess
 }
 
 func (h *BotHandler) handlePhoto(ctx context.Context, msg *tgbotapi.Message) {
-	// Проверяем, что пользователь админ
-	if !h.isAdmin(msg.Chat.ID) {
-		h.sendMessage(msg.Chat.ID, "❌ Только админы могут загружать фотографии")
-		return
-	}
-
 	// Сжатые фото не содержат EXIF данных, поэтому мы не можем получить реальное время съемки
 	// Инструктируем пользователя отправлять как документ
 	instructionText := `❌ *Фото не добавлено*
