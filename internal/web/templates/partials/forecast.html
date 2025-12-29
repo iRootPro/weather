@@ -29,7 +29,7 @@
                 </div>
                 {{end}}
 
-                {{if gt .WindSpeed 0}}
+                {{if gt .WindSpeed 0.0}}
                 <div class="flex items-center text-sm text-gray-600 dark:text-gray-400">
                     <span class="mr-1">💨</span>
                     <span>{{printf "%.0f м/с %s" .WindSpeed .WindDirection}}</span>
