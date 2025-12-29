@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 	"strings"
 	"time"
 
@@ -527,7 +528,7 @@ func (h *BotHandler) handlePhotoDocument(ctx context.Context, msg *tgbotapi.Mess
 	}
 	defer httpResp.Body.Close()
 
-	// Читаем данные в буфер для повторного использования
+	// Читаем данные в буфер
 	fileData := new(bytes.Buffer)
 	_, err = io.Copy(fileData, httpResp.Body)
 	if err != nil {
@@ -536,30 +537,13 @@ func (h *BotHandler) handlePhotoDocument(ctx context.Context, msg *tgbotapi.Mess
 		return
 	}
 
-	// Извлекаем EXIF данные
-	exifData, err := ExtractExifData(bytes.NewReader(fileData.Bytes()))
-	if err != nil {
-		h.logger.Warn("failed to extract exif", "error", err)
-		// Продолжаем без EXIF данных
-		exifData = &ExifData{
-			TakenAt: time.Now(),
-		}
-	} else {
-		h.logger.Info("exif extracted successfully", "taken_at", exifData.TakenAt, "camera", exifData.CameraMake+" "+exifData.CameraModel)
-	}
-
-	// Получаем погоду на момент съемки
-	weather, err := h.photoRepo.GetWeatherForTime(ctx, exifData.TakenAt)
-	if err != nil {
-		h.logger.Warn("failed to get weather for photo time", "error", err, "taken_at", exifData.TakenAt)
-	}
-
 	// Определяем расширение файла на основе MIME типа
-	ext := getFileExtension(document.MimeType, document.FileName)
+	originalExt := getFileExtension(document.MimeType, document.FileName)
+	isHEIC := document.MimeType == "image/heic" || document.MimeType == "image/heif"
 
-	// Сохраняем фото на диск
-	filename := fmt.Sprintf("%d_%s%s", time.Now().Unix(), document.FileUniqueID, ext)
-	filepath := fmt.Sprintf("photos/%s", filename)
+	// Создаем временный файл для оригинала
+	tempFilename := fmt.Sprintf("%d_%s%s", time.Now().Unix(), document.FileUniqueID, originalExt)
+	tempFilepath := fmt.Sprintf("photos/%s", tempFilename)
 
 	// Создаем директорию если её нет
 	if err := os.MkdirAll("photos", 0755); err != nil {
@@ -568,30 +552,80 @@ func (h *BotHandler) handlePhotoDocument(ctx context.Context, msg *tgbotapi.Mess
 		return
 	}
 
-	h.logger.Info("saving photo to disk", "filename", filename, "filepath", filepath)
+	h.logger.Info("saving temporary file to disk", "filename", tempFilename, "filepath", tempFilepath)
 
-	// Сохраняем файл
-	photoFile, err := os.Create(filepath)
+	// Сохраняем временный файл
+	tempFile, err := os.Create(tempFilepath)
 	if err != nil {
-		h.logger.Error("failed to create photo file", "error", err, "filepath", filepath)
-		h.sendMessage(msg.Chat.ID, "❌ Ошибка при сохранении фотографии")
-		return
-	}
-	defer photoFile.Close()
-
-	bytesWritten, err := io.Copy(photoFile, bytes.NewReader(fileData.Bytes()))
-	if err != nil {
-		h.logger.Error("failed to write photo file", "error", err)
+		h.logger.Error("failed to create temp file", "error", err, "filepath", tempFilepath)
 		h.sendMessage(msg.Chat.ID, "❌ Ошибка при сохранении фотографии")
 		return
 	}
 
-	h.logger.Info("photo saved to disk", "filepath", filepath, "bytes", bytesWritten)
+	bytesWritten, err := io.Copy(tempFile, bytes.NewReader(fileData.Bytes()))
+	tempFile.Close()
+	if err != nil {
+		h.logger.Error("failed to write temp file", "error", err)
+		h.sendMessage(msg.Chat.ID, "❌ Ошибка при сохранении фотографии")
+		return
+	}
+
+	h.logger.Info("temp file saved", "filepath", tempFilepath, "bytes", bytesWritten)
+
+	// Извлекаем EXIF данные из временного файла
+	exifData, err := ExtractExifDataFromFile(tempFilepath)
+	if err != nil {
+		h.logger.Warn("failed to extract exif from file", "error", err, "filepath", tempFilepath)
+		// Продолжаем без EXIF данных
+		exifData = &ExifData{
+			TakenAt: time.Now(),
+		}
+	}
+
+	h.logger.Info("exif extracted", "taken_at", exifData.TakenAt, "camera", fmt.Sprintf("%s %s", exifData.CameraMake, exifData.CameraModel))
+
+	// Определяем финальное имя файла (для веба нужен JPEG)
+	var finalFilename string
+	var finalFilepath string
+
+	if isHEIC {
+		// Конвертируем HEIC в JPEG
+		finalFilename = fmt.Sprintf("%d_%s.jpg", time.Now().Unix(), document.FileUniqueID)
+		finalFilepath = fmt.Sprintf("photos/%s", finalFilename)
+
+		h.logger.Info("converting HEIC to JPEG", "input", tempFilepath, "output", finalFilepath)
+
+		// Используем ImageMagick для конвертации
+		// magick convert input.heic output.jpg
+		convertCmd := exec.Command("magick", "convert", tempFilepath, finalFilepath)
+		convertOutput, err := convertCmd.CombinedOutput()
+		if err != nil {
+			h.logger.Error("failed to convert HEIC to JPEG", "error", err, "output", string(convertOutput))
+			h.sendMessage(msg.Chat.ID, "❌ Ошибка при конвертации HEIC в JPEG")
+			// Удаляем временный файл
+			os.Remove(tempFilepath)
+			return
+		}
+
+		// Удаляем временный HEIC файл после конвертации
+		os.Remove(tempFilepath)
+		h.logger.Info("HEIC converted to JPEG", "filepath", finalFilepath)
+	} else {
+		// Для других форматов просто используем временный файл как финальный
+		finalFilename = tempFilename
+		finalFilepath = tempFilepath
+	}
+
+	// Получаем погоду на момент съемки
+	weather, err := h.photoRepo.GetWeatherForTime(ctx, exifData.TakenAt)
+	if err != nil {
+		h.logger.Warn("failed to get weather for photo time", "error", err, "taken_at", exifData.TakenAt)
+	}
 
 	// Создаем запись в БД
 	photoModel := &models.Photo{
-		Filename:       filename,
-		FilePath:       filepath,
+		Filename:       finalFilename,
+		FilePath:       finalFilepath,
 		Caption:        msg.Caption,
 		TakenAt:        exifData.TakenAt,
 		CameraMake:     exifData.CameraMake,
@@ -730,22 +764,6 @@ func (h *BotHandler) handlePhoto(ctx context.Context, msg *tgbotapi.Message) {
 		return
 	}
 
-	// Извлекаем EXIF данные
-	exifData, err := ExtractExifData(bytes.NewReader(fileData.Bytes()))
-	if err != nil {
-		h.logger.Warn("failed to extract exif", "error", err)
-		// Продолжаем без EXIF данных
-		exifData = &ExifData{
-			TakenAt: time.Now(),
-		}
-	}
-
-	// Получаем погоду на момент съемки
-	weather, err := h.photoRepo.GetWeatherForTime(ctx, exifData.TakenAt)
-	if err != nil {
-		h.logger.Warn("failed to get weather for photo time", "error", err, "taken_at", exifData.TakenAt)
-	}
-
 	// Сохраняем фото на диск
 	filename := fmt.Sprintf("%d_%s.jpg", time.Now().Unix(), photo.FileUniqueID)
 	filepath := fmt.Sprintf("photos/%s", filename)
@@ -766,9 +784,9 @@ func (h *BotHandler) handlePhoto(ctx context.Context, msg *tgbotapi.Message) {
 		h.sendMessage(msg.Chat.ID, "❌ Ошибка при сохранении фотографии")
 		return
 	}
-	defer photoFile.Close()
 
 	bytesWritten, err := io.Copy(photoFile, bytes.NewReader(fileData.Bytes()))
+	photoFile.Close()
 	if err != nil {
 		h.logger.Error("failed to write photo file", "error", err)
 		h.sendMessage(msg.Chat.ID, "❌ Ошибка при сохранении фотографии")
@@ -776,6 +794,23 @@ func (h *BotHandler) handlePhoto(ctx context.Context, msg *tgbotapi.Message) {
 	}
 
 	h.logger.Info("photo saved to disk", "filepath", filepath, "bytes", bytesWritten)
+
+	// Извлекаем EXIF данные из файла
+	exifData, err := ExtractExifDataFromFile(filepath)
+	if err != nil {
+		h.logger.Warn("failed to extract exif from compressed photo", "error", err)
+		h.logger.Info("telegram strips EXIF from compressed photos - send as document for EXIF preservation")
+		// Продолжаем без EXIF данных
+		exifData = &ExifData{
+			TakenAt: time.Now(),
+		}
+	}
+
+	// Получаем погоду на момент съемки
+	weather, err := h.photoRepo.GetWeatherForTime(ctx, exifData.TakenAt)
+	if err != nil {
+		h.logger.Warn("failed to get weather for photo time", "error", err, "taken_at", exifData.TakenAt)
+	}
 
 	// Создаем запись в БД
 	photoModel := &models.Photo{
