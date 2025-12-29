@@ -64,6 +64,7 @@ type Photo struct {
 	// Telegram метаданные
 	TelegramFileID string  `json:"telegram_file_id,omitempty" db:"telegram_file_id"`
 	TelegramUserID *int64  `json:"telegram_user_id,omitempty" db:"telegram_user_id"`
+	AuthorName     string  `json:"author_name,omitempty" db:"author_name"`
 
 	IsVisible bool      `json:"is_visible" db:"is_visible"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`

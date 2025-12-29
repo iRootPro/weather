@@ -40,6 +40,14 @@
                     </svg>
                     {{.TakenAt.Format "02.01.2006 15:04"}}
                 </div>
+                {{if .AuthorName}}
+                <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-2">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                    {{.AuthorName}}
+                </div>
+                {{end}}
 
                 {{if .Temperature}}
                 <div class="flex items-center gap-3 text-sm">
@@ -96,6 +104,7 @@ const photosData = [
         filename: "{{.Filename}}",
         caption: {{if .Caption}}"{{.Caption}}"{{else}}""{{end}},
         takenAt: "{{.TakenAt.Format "02.01.2006 15:04"}}",
+        {{if .AuthorName}}authorName: "{{.AuthorName}}",{{end}}
         {{if .Temperature}}temperature: {{.Temperature}},{{end}}
         {{if .Humidity}}humidity: {{.Humidity}},{{end}}
         {{if .Pressure}}pressure: {{.Pressure}},{{end}}
@@ -143,6 +152,14 @@ function openPhotoModal(photoId) {
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
                         </svg>
                         ${photo.cameraMake || ''} ${photo.cameraModel || ''}
+                    </div>
+                    ` : ''}
+                    ${photo.authorName ? `
+                    <div class="flex items-center text-gray-600 dark:text-gray-300">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                        ${photo.authorName}
                     </div>
                     ` : ''}
                 </div>

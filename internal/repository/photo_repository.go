@@ -93,15 +93,17 @@ func (r *photoRepository) GetAll(ctx context.Context, limit, offset int) ([]mode
 
 func (r *photoRepository) GetVisible(ctx context.Context, limit, offset int) ([]models.Photo, error) {
 	query := `
-		SELECT id, filename, file_path, caption, taken_at, uploaded_at,
-		       temperature, humidity, pressure, wind_speed, wind_direction,
-		       rain_rate, solar_radiation, weather_description,
-		       camera_make, camera_model,
-		       telegram_file_id, telegram_user_id,
-		       is_visible, created_at, updated_at
-		FROM photos
-		WHERE is_visible = true
-		ORDER BY taken_at DESC
+		SELECT p.id, p.filename, p.file_path, p.caption, p.taken_at, p.uploaded_at,
+		       p.temperature, p.humidity, p.pressure, p.wind_speed, p.wind_direction,
+		       p.rain_rate, p.solar_radiation, p.weather_description,
+		       p.camera_make, p.camera_model,
+		       p.telegram_file_id, p.telegram_user_id,
+		       COALESCE(u.first_name, '') as author_name,
+		       p.is_visible, p.created_at, p.updated_at
+		FROM photos p
+		LEFT JOIN telegram_users u ON p.telegram_user_id = u.id
+		WHERE p.is_visible = true
+		ORDER BY p.taken_at DESC
 		LIMIT $1 OFFSET $2
 	`
 
@@ -205,7 +207,7 @@ func (r *photoRepository) scanPhotos(rows interface{
 			&photo.Temperature, &photo.Humidity, &photo.Pressure, &photo.WindSpeed, &photo.WindDirection,
 			&photo.RainRate, &photo.SolarRadiation, &photo.WeatherDescription,
 			&photo.CameraMake, &photo.CameraModel,
-			&photo.TelegramFileID, &photo.TelegramUserID,
+			&photo.TelegramFileID, &photo.TelegramUserID, &photo.AuthorName,
 			&photo.IsVisible, &photo.CreatedAt, &photo.UpdatedAt,
 		)
 		if err != nil {
