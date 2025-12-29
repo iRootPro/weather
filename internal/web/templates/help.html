@@ -582,6 +582,105 @@
         </div>
     </div>
 
+    <!-- Weather Forecast -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+            <svg class="w-5 h-5 mr-2 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
+            </svg>
+            Прогноз погоды
+        </h2>
+
+        <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">
+            Прогноз погоды предоставляется сервисом <strong>Open-Meteo</strong> — бесплатной метеорологической платформой с открытым исходным кодом.
+        </p>
+
+        <div class="space-y-4">
+            <!-- Data Source -->
+            <div class="border-l-4 border-sky-400 pl-4">
+                <h3 class="font-medium text-gray-900 dark:text-white">Источник данных</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                    Open-Meteo использует модели прогнозирования ведущих мировых метеослужб:
+                </p>
+                <div class="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                    <div class="bg-sky-50 dark:bg-sky-900/20 rounded p-3">
+                        <div class="font-medium text-sky-800 dark:text-sky-200">NOAA</div>
+                        <div class="text-xs text-sky-600 dark:text-sky-400 mt-1">Национальная метеослужба США</div>
+                    </div>
+                    <div class="bg-sky-50 dark:bg-sky-900/20 rounded p-3">
+                        <div class="font-medium text-sky-800 dark:text-sky-200">DWD</div>
+                        <div class="text-xs text-sky-600 dark:text-sky-400 mt-1">Немецкая метеослужба</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Update Frequency -->
+            <div class="border-l-4 border-blue-400 pl-4">
+                <h3 class="font-medium text-gray-900 dark:text-white">Обновление данных</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                    Прогноз автоматически обновляется <strong>каждый час</strong> и включает:
+                </p>
+                <div class="mt-2 space-y-2 text-sm">
+                    <div class="flex items-start">
+                        <span class="inline-block w-2 h-2 bg-blue-400 rounded-full mt-1.5 mr-3 flex-shrink-0"></span>
+                        <span class="text-gray-600 dark:text-gray-300">Почасовой прогноз на 48 часов вперёд</span>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="inline-block w-2 h-2 bg-blue-400 rounded-full mt-1.5 mr-3 flex-shrink-0"></span>
+                        <span class="text-gray-600 dark:text-gray-300">Дневной прогноз на 6 дней</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Forecast Parameters -->
+            <div class="border-l-4 border-indigo-400 pl-4">
+                <h3 class="font-medium text-gray-900 dark:text-white">Параметры прогноза</h3>
+                <div class="mt-2 grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded p-2">
+                        <div class="text-xs text-gray-500 dark:text-gray-400">Температура</div>
+                        <div class="font-medium text-gray-900 dark:text-white">°C</div>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded p-2">
+                        <div class="text-xs text-gray-500 dark:text-gray-400">Вероятность осадков</div>
+                        <div class="font-medium text-gray-900 dark:text-white">%</div>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded p-2">
+                        <div class="text-xs text-gray-500 dark:text-gray-400">Ветер</div>
+                        <div class="font-medium text-gray-900 dark:text-white">м/с</div>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded p-2">
+                        <div class="text-xs text-gray-500 dark:text-gray-400">Давление</div>
+                        <div class="font-medium text-gray-900 dark:text-white">мм рт.ст.</div>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded p-2">
+                        <div class="text-xs text-gray-500 dark:text-gray-400">Облачность</div>
+                        <div class="font-medium text-gray-900 dark:text-white">%</div>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded p-2">
+                        <div class="text-xs text-gray-500 dark:text-gray-400">UV индекс</div>
+                        <div class="font-medium text-gray-900 dark:text-white">0-15</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Why Open-Meteo -->
+            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                <h4 class="font-medium text-blue-900 dark:text-blue-100 flex items-center mb-2">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Почему Open-Meteo?
+                </h4>
+                <ul class="text-sm text-blue-800 dark:text-blue-200 space-y-1 ml-6 list-disc">
+                    <li>Бесплатный доступ без регистрации и API ключей</li>
+                    <li>Открытый исходный код и прозрачные алгоритмы</li>
+                    <li>Высокая точность благодаря использованию данных ведущих метеослужб</li>
+                    <li>Регулярные обновления и актуальные данные</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
     <!-- Data Collection -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
