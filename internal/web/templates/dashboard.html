@@ -27,7 +27,64 @@
     </div>
 
     <!-- Telegram Bot -->
-    {{template "partials/telegram_bot.html"}}
+    <div class="bg-gradient-to-br from-blue-50 to-sky-100 dark:from-blue-900/20 dark:to-sky-800/20 rounded-lg shadow p-6 transition-colors border-2 border-blue-200 dark:border-blue-800">
+        <div class="flex flex-col md:flex-row items-center gap-6">
+            <!-- Telegram Icon -->
+            <div class="flex-shrink-0">
+                <div class="w-24 h-24 bg-blue-500 rounded-full flex items-center justify-center shadow-lg">
+                    <svg class="w-14 h-14 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.658-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.941z"/>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div class="flex-1 text-center md:text-left">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                    📱 Telegram бот
+                </h2>
+                <p class="text-gray-700 dark:text-gray-300 mb-4">
+                    Получайте уведомления о погоде прямо в мессенджере!
+                </p>
+
+                <!-- Features -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4 text-sm">
+                    <div class="flex items-start">
+                        <span class="text-green-500 mr-2">✓</span>
+                        <span class="text-gray-600 dark:text-gray-300">Утренняя сводка погоды</span>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="text-green-500 mr-2">✓</span>
+                        <span class="text-gray-600 dark:text-gray-300">Уведомления о событиях</span>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="text-green-500 mr-2">✓</span>
+                        <span class="text-gray-600 dark:text-gray-300">Прогноз на 6 дней</span>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="text-green-500 mr-2">✓</span>
+                        <span class="text-gray-600 dark:text-gray-300">Статистика и рекорды</span>
+                    </div>
+                </div>
+
+                <!-- Button -->
+                <div class="flex flex-col sm:flex-row gap-3 items-center justify-center md:justify-start">
+                    <a href="https://t.me/ArmavirMeteoBot"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       class="inline-flex items-center px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.658-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.941z"/>
+                        </svg>
+                        Открыть бот
+                    </a>
+                    <span class="text-sm text-gray-500 dark:text-gray-400 font-mono">
+                        @ArmavirMeteoBot
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Sun Times -->
     <div id="sun-times"
