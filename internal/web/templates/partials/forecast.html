@@ -1,38 +1,38 @@
-<div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
-    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Прогноз погоды</h2>
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 transition-colors">
+    <h2 class="text-base font-semibold text-gray-900 dark:text-white mb-3">Прогноз погоды</h2>
 
     {{if .NoForecast}}
-    <div class="text-center py-8 text-gray-500 dark:text-gray-400">
-        <p>Прогноз пока недоступен</p>
-        <p class="text-sm mt-2">Данные обновляются каждый час</p>
+    <div class="text-center py-6 text-gray-500 dark:text-gray-400">
+        <p class="text-sm">Прогноз пока недоступен</p>
+        <p class="text-xs mt-1">Данные обновляются каждый час</p>
     </div>
     {{else}}
-    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+    <div class="grid grid-cols-5 gap-2">
         {{range .Days}}
-        <div class="bg-gradient-to-br from-sky-50 to-blue-50 dark:from-gray-700 dark:to-gray-750 rounded-lg p-4 transition-colors">
-            <div class="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">{{.DayName}}</div>
-            <div class="text-xs text-gray-500 dark:text-gray-400 mb-3">{{.Date}}</div>
+        <div class="bg-gradient-to-br from-sky-50 to-blue-50 dark:from-gray-700 dark:to-gray-750 rounded-lg p-2 transition-colors">
+            <div class="text-xs font-medium text-gray-600 dark:text-gray-300 mb-0.5 truncate">{{.DayName}}</div>
+            <div class="text-[10px] text-gray-500 dark:text-gray-400 mb-2">{{.Date}}</div>
 
-            <div class="text-4xl mb-2 text-center">{{.Icon}}</div>
-            <div class="text-xs text-gray-600 dark:text-gray-300 text-center mb-3 h-8">{{.Description}}</div>
+            <div class="text-3xl mb-1 text-center">{{.Icon}}</div>
+            <div class="text-[10px] text-gray-600 dark:text-gray-300 text-center mb-2 h-6 leading-tight">{{.Description}}</div>
 
-            <div class="space-y-2">
+            <div class="space-y-1">
                 <div class="flex justify-between items-center">
-                    <span class="text-2xl font-bold text-gray-900 dark:text-white">{{printf "%.0f°" .TempMax}}</span>
-                    <span class="text-lg text-gray-500 dark:text-gray-400">{{printf "%.0f°" .TempMin}}</span>
+                    <span class="text-xl font-bold text-gray-900 dark:text-white">{{printf "%.0f°" .TempMax}}</span>
+                    <span class="text-sm text-gray-500 dark:text-gray-400">{{printf "%.0f°" .TempMin}}</span>
                 </div>
 
                 {{if gt .PrecipitationProbability 0}}
-                <div class="flex items-center text-sm text-blue-600 dark:text-blue-400">
-                    <span class="mr-1">💧</span>
+                <div class="flex items-center text-xs text-blue-600 dark:text-blue-400">
+                    <span class="mr-0.5">💧</span>
                     <span>{{.PrecipitationProbability}}%</span>
                 </div>
                 {{end}}
 
                 {{if gt .WindSpeed 0.0}}
-                <div class="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                    <span class="mr-1">💨</span>
-                    <span>{{printf "%.0f м/с %s" .WindSpeed .WindDirection}}</span>
+                <div class="flex items-center text-xs text-gray-600 dark:text-gray-400">
+                    <span class="mr-0.5">💨</span>
+                    <span>{{printf "%.0f" .WindSpeed}}</span>
                 </div>
                 {{end}}
             </div>
@@ -41,7 +41,7 @@
     </div>
     {{end}}
 
-    <div class="mt-4 text-xs text-gray-500 dark:text-gray-400 text-center">
-        Данные прогноза от Open-Meteo
+    <div class="mt-2 text-[10px] text-gray-500 dark:text-gray-400 text-center">
+        Данные от Open-Meteo
     </div>
 </div>
