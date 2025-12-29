@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 	"path/filepath"
+	"time"
 
 	"github.com/iRootPro/weather/internal/models"
 	"github.com/iRootPro/weather/internal/repository"
@@ -60,6 +61,16 @@ var templateFuncs = template.FuncMap{
 			return float64(*v)
 		default:
 			return 0
+		}
+	},
+	"formatTime": func(t interface{}, format string) string {
+		// Форматируем время в UTC, чтобы избежать смещения часового пояса
+		// EXIF время уже в локальном формате, храним как UTC
+		switch v := t.(type) {
+		case time.Time:
+			return v.UTC().Format(format)
+		default:
+			return ""
 		}
 	},
 }
