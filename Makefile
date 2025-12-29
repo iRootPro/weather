@@ -128,12 +128,6 @@ deploy-check:
 deploy-db-size:
 	@echo "=== Размер базы данных ==="
 	$(SSH_CMD) "docker exec weather-postgres psql -U weather -d weather -c \"SELECT pg_size_pretty(pg_database_size('weather')) as db_size;\""
-	@echo ""
-	@echo "=== Размер таблиц (топ-10) ==="
-	$(SSH_CMD) "docker exec weather-postgres psql -U weather -d weather -c \"SELECT schemaname, tablename, pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) AS size, pg_total_relation_size(schemaname||'.'||tablename) as bytes FROM pg_tables WHERE schemaname NOT IN ('pg_catalog', 'information_schema') ORDER BY bytes DESC LIMIT 10;\""
-	@echo ""
-	@echo "=== Количество записей в таблицах ==="
-	$(SSH_CMD) "docker exec weather-postgres psql -U weather -d weather -c \"SELECT tablename as table_name, n_live_tup as approx_rows FROM pg_stat_user_tables ORDER BY n_live_tup DESC;\""
 
 # Очистка Docker (удаление неиспользуемых образов и кеша)
 deploy-clean:
