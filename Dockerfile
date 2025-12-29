@@ -44,9 +44,12 @@ CMD ["/app/migrator", "up"]
 
 # Telegram Bot
 FROM alpine:3.20 AS telegram-bot
-RUN apk --no-cache add ca-certificates tzdata exiftool
+RUN apk --no-cache add ca-certificates tzdata exiftool python3 py3-pip
+RUN pip3 install pillow-heif --break-system-packages
 WORKDIR /app
 COPY --from=builder /bin/telegram-bot /app/telegram-bot
+COPY scripts/convert_heic.py /app/convert_heic.py
+RUN chmod +x /app/convert_heic.py
 CMD ["/app/telegram-bot"]
 
 # Forecast Fetcher
