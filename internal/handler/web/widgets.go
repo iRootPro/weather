@@ -454,6 +454,11 @@ func (h *Handler) ForecastWidget(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Ограничиваем до 5 дней
+	if len(forecast) > 5 {
+		forecast = forecast[:5]
+	}
+
 	// Форматируем данные для шаблона
 	type DayForecast struct {
 		Date                     string
