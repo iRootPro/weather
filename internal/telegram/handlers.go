@@ -645,6 +645,9 @@ func (h *BotHandler) handlePhotoDocument(ctx context.Context, msg *tgbotapi.Mess
 		h.logger.Warn("failed to get weather for photo time", "error", err, "taken_at", exifData.TakenAt)
 	}
 
+	// Проверяем, является ли пользователь админом
+	isAdmin := h.isAdmin(msg.Chat.ID)
+
 	// Создаем запись в БД
 	photoModel := &models.Photo{
 		Filename:       finalFilename,
@@ -655,7 +658,7 @@ func (h *BotHandler) handlePhotoDocument(ctx context.Context, msg *tgbotapi.Mess
 		CameraModel:    exifData.CameraModel,
 		TelegramFileID: document.FileID,
 		TelegramUserID: &user.ID,
-		IsVisible:      false, // Фото скрыто до модерации
+		IsVisible:      isAdmin, // Админские фото сразу видны, остальные - на модерации
 	}
 
 	// Добавляем погодные данные если есть
@@ -703,20 +706,49 @@ func (h *BotHandler) handlePhotoDocument(ctx context.Context, msg *tgbotapi.Mess
 	deleteMsg := tgbotapi.NewDeleteMessage(msg.Chat.ID, sentMsg.MessageID)
 	h.bot.Send(deleteMsg)
 
-	// Отправляем подтверждение пользователю о модерации
-	confirmText := "✅ *Фотография получена!*\n\n"
-	confirmText += "📋 Ваша фотография отправлена на модерацию.\n"
-	confirmText += "⏳ Модератор рассмотрит её в ближайшее время.\n\n"
-	confirmText += "📬 Вы получите уведомление о результате проверки."
+	var confirmText string
+	if isAdmin {
+		// Подтверждение для админа - фото сразу добавлено
+		confirmText = "✅ *Фотография добавлена!*\n\n"
+		confirmText += fmt.Sprintf("📅 Дата съемки: %s\n", exifData.TakenAt.Format("02.01.2006 15:04"))
+
+		if exifData.CameraMake != "" || exifData.CameraModel != "" {
+			confirmText += fmt.Sprintf("📷 Камера: %s %s\n", exifData.CameraMake, exifData.CameraModel)
+		}
+
+		if weather != nil {
+			confirmText += "\n🌡️ Погода на момент съемки:\n"
+			if weather.TempOutdoor != nil {
+				confirmText += fmt.Sprintf("• Температура: %.1f°C\n", *weather.TempOutdoor)
+			}
+			if weather.HumidityOutdoor != nil {
+				confirmText += fmt.Sprintf("• Влажность: %d%%\n", *weather.HumidityOutdoor)
+			}
+			if weather.PressureRelative != nil {
+				confirmText += fmt.Sprintf("• Давление: %.0f мм рт.ст.\n", *weather.PressureRelative)
+			}
+			if weather.RainRate != nil && *weather.RainRate > 0 {
+				confirmText += fmt.Sprintf("• Дождь: %.1f мм/ч\n", *weather.RainRate)
+			}
+		}
+
+		h.logger.Info("admin photo uploaded directly", "chat_id", msg.Chat.ID, "photo_id", photoModel.ID, "taken_at", exifData.TakenAt)
+	} else {
+		// Подтверждение для обычного пользователя - отправлено на модерацию
+		confirmText = "✅ *Фотография получена!*\n\n"
+		confirmText += "📋 Ваша фотография отправлена на модерацию.\n"
+		confirmText += "⏳ Модератор рассмотрит её в ближайшее время.\n\n"
+		confirmText += "📬 Вы получите уведомление о результате проверки."
+
+		// Отправляем уведомление админам для модерации
+		h.sendPhotoModerationToAdmins(ctx, photoModel, exifData, weather, finalFilepath)
+
+		h.logger.Info("photo uploaded and sent for moderation", "chat_id", msg.Chat.ID, "photo_id", photoModel.ID, "taken_at", exifData.TakenAt)
+	}
 
 	reply := tgbotapi.NewMessage(msg.Chat.ID, confirmText)
 	reply.ParseMode = "Markdown"
 	h.bot.Send(reply)
-
-	// Отправляем уведомление админам для модерации
-	h.sendPhotoModerationToAdmins(ctx, photoModel, exifData, weather, finalFilepath)
-
-	h.logger.Info("photo uploaded and sent for moderation", "chat_id", msg.Chat.ID, "photo_id", photoModel.ID, "taken_at", exifData.TakenAt)
 }
 
 func (h *BotHandler) handlePhoto(ctx context.Context, msg *tgbotapi.Message) {
