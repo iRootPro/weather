@@ -437,3 +437,70 @@ func (h *Handler) WeatherEventsWidget(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }
+
+// ForecastWidget renders the weather forecast widget
+func (h *Handler) ForecastWidget(w http.ResponseWriter, r *http.Request) {
+	if h.forecastService == nil {
+		slog.Error("forecast service is nil")
+		http.Error(w, "Forecast service not configured", http.StatusInternalServerError)
+		return
+	}
+
+	// Получаем дневной прогноз на 5 дней
+	forecast, err := h.forecastService.GetDailyForecast(r.Context(), 5)
+	if err != nil {
+		slog.Error("failed to get forecast", "error", err)
+		http.Error(w, "Failed to load forecast", http.StatusInternalServerError)
+		return
+	}
+
+	// Форматируем данные для шаблона
+	type DayForecast struct {
+		Date                     string
+		DayName                  string
+		Icon                     string
+		Description              string
+		TempMin                  float32
+		TempMax                  float32
+		PrecipitationProbability int16
+		WindSpeed                float32
+		WindDirection            string
+	}
+
+	templateData := struct {
+		Days      []DayForecast
+		NoForecast bool
+	}{
+		Days:      make([]DayForecast, 0),
+		NoForecast: len(forecast) == 0,
+	}
+
+	daysOfWeek := []string{"Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"}
+
+	for _, day := range forecast {
+		df := DayForecast{
+			Date:                     day.Date.Format("2 января"),
+			DayName:                  daysOfWeek[day.Date.Weekday()],
+			Icon:                     day.Icon,
+			Description:              day.WeatherDescription,
+			TempMin:                  day.TemperatureMin,
+			TempMax:                  day.TemperatureMax,
+			PrecipitationProbability: day.PrecipitationProbability,
+			WindSpeed:                day.WindSpeedMax,
+			WindDirection:            degreesToDirection(day.WindDirection),
+		}
+		templateData.Days = append(templateData.Days, df)
+	}
+
+	tmpl, err := h.parsePartial("forecast.html")
+	if err != nil {
+		slog.Error("failed to parse forecast template", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	if err := tmpl.Execute(w, templateData); err != nil {
+		slog.Error("failed to render forecast widget", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}

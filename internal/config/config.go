@@ -16,6 +16,7 @@ type Config struct {
 	Log      LogConfig      `yaml:"log"`
 	Location LocationConfig `yaml:"location"`
 	Telegram TelegramConfig `yaml:"telegram"`
+	Forecast ForecastConfig `yaml:"forecast"`
 }
 
 type LocationConfig struct {
@@ -79,6 +80,13 @@ type TelegramConfig struct {
 	MaxRetries        int     `env:"TELEGRAM_MAX_RETRIES" env-default:"3"`
 	AdminIDs          []int64 `env:"TELEGRAM_ADMIN_IDS" env-separator:","` // chat_id админов через запятую
 	DailySummaryTime  string  `env:"TELEGRAM_DAILY_SUMMARY_TIME" env-default:"07:00"` // Время отправки ежедневной сводки
+}
+
+type ForecastConfig struct {
+	UpdateInterval int    `env:"FORECAST_UPDATE_INTERVAL" env-default:"3600"` // секунды (по умолчанию 1 час)
+	HourlyHours    int    `env:"FORECAST_HOURLY_HOURS" env-default:"48"`      // сколько часов вперед получать почасовой прогноз
+	DailyDays      int    `env:"FORECAST_DAILY_DAYS" env-default:"7"`         // сколько дней вперед получать дневной прогноз
+	APITimeout     int    `env:"FORECAST_API_TIMEOUT" env-default:"30"`       // таймаут API запросов в секундах
 }
 
 func Load() (*Config, error) {

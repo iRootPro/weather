@@ -10,15 +10,16 @@ import (
 )
 
 type BotHandler struct {
-	bot        *tgbotapi.BotAPI
-	weatherSvc *service.WeatherService
-	sunSvc     *service.SunService
-	moonSvc    *service.MoonService
-	userRepo   repository.TelegramUserRepository
-	subRepo    repository.TelegramSubscriptionRepository
-	notifRepo  repository.TelegramNotificationRepository
-	adminIDs   []int64
-	logger     *slog.Logger
+	bot         *tgbotapi.BotAPI
+	weatherSvc  *service.WeatherService
+	sunSvc      *service.SunService
+	moonSvc     *service.MoonService
+	forecastSvc *service.ForecastService
+	userRepo    repository.TelegramUserRepository
+	subRepo     repository.TelegramSubscriptionRepository
+	notifRepo   repository.TelegramNotificationRepository
+	adminIDs    []int64
+	logger      *slog.Logger
 }
 
 func NewBotHandler(
@@ -26,6 +27,7 @@ func NewBotHandler(
 	weatherSvc *service.WeatherService,
 	sunSvc *service.SunService,
 	moonSvc *service.MoonService,
+	forecastSvc *service.ForecastService,
 	userRepo repository.TelegramUserRepository,
 	subRepo repository.TelegramSubscriptionRepository,
 	notifRepo repository.TelegramNotificationRepository,
@@ -33,15 +35,16 @@ func NewBotHandler(
 	logger *slog.Logger,
 ) *BotHandler {
 	return &BotHandler{
-		bot:        bot,
-		weatherSvc: weatherSvc,
-		sunSvc:     sunSvc,
-		moonSvc:    moonSvc,
-		userRepo:   userRepo,
-		subRepo:    subRepo,
-		notifRepo:  notifRepo,
-		adminIDs:   adminIDs,
-		logger:     logger,
+		bot:         bot,
+		weatherSvc:  weatherSvc,
+		sunSvc:      sunSvc,
+		moonSvc:     moonSvc,
+		forecastSvc: forecastSvc,
+		userRepo:    userRepo,
+		subRepo:     subRepo,
+		notifRepo:   notifRepo,
+		adminIDs:    adminIDs,
+		logger:      logger,
 	}
 }
 

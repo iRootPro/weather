@@ -76,6 +76,8 @@ func (h *BotHandler) handleCommand(ctx context.Context, msg *tgbotapi.Message) {
 		h.handleMyID(ctx, msg)
 	case CmdTestSummary:
 		h.handleTestSummary(ctx, msg)
+	case CmdForecast:
+		h.handleForecast(ctx, msg)
 	default:
 		h.sendMessage(msg.Chat.ID, "Неизвестная команда. Используйте /help для списка команд.")
 	}
@@ -113,6 +115,7 @@ func (h *BotHandler) handleHelp(ctx context.Context, msg *tgbotapi.Message) {
 
 *Основные:*
 /weather - текущая погода
+/forecast - прогноз на 5 дней
 /stats - статистика за период
 /records - рекорды за всё время
 /history - история данных
@@ -377,8 +380,8 @@ func (h *BotHandler) handleTestSummary(ctx context.Context, msg *tgbotapi.Messag
 	// Получаем данные о солнце
 	sunData := h.sunSvc.GetTodaySunTimesWithComparison()
 
-	// Форматируем сообщение
-	text := FormatDailySummary(current, yesterdaySame, nightMinMax, dailyMinMax, sunData)
+	// Форматируем сообщение (без прогноза для тестовой команды)
+	text := FormatDailySummary(current, yesterdaySame, nightMinMax, dailyMinMax, sunData, nil)
 
 	// Добавляем пометку о тестовой рассылке
 	testNote := "\n\n🧪 *Тестовая рассылка* (только для админа)"
@@ -388,6 +391,33 @@ func (h *BotHandler) handleTestSummary(ctx context.Context, msg *tgbotapi.Messag
 	h.bot.Send(reply)
 
 	h.logger.Info("test summary sent", "chat_id", msg.Chat.ID)
+}
+
+func (h *BotHandler) handleForecast(ctx context.Context, msg *tgbotapi.Message) {
+	if h.forecastSvc == nil {
+		h.sendMessage(msg.Chat.ID, "❌ Прогноз погоды временно недоступен")
+		return
+	}
+
+	// Получаем прогноз на 5 дней
+	forecast, err := h.forecastSvc.GetDailyForecast(ctx, 5)
+	if err != nil {
+		h.sendMessage(msg.Chat.ID, "❌ Ошибка получения прогноза")
+		h.logger.Error("failed to get forecast", "error", err)
+		return
+	}
+
+	if len(forecast) == 0 {
+		h.sendMessage(msg.Chat.ID, "Прогноз пока недоступен. Данные обновляются каждый час.")
+		return
+	}
+
+	text := FormatForecast(forecast)
+
+	reply := tgbotapi.NewMessage(msg.Chat.ID, text)
+	reply.ParseMode = "Markdown"
+	reply.ReplyMarkup = GetMainKeyboard()
+	h.bot.Send(reply)
 }
 
 func (h *BotHandler) handleMessage(ctx context.Context, msg *tgbotapi.Message) {

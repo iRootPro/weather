@@ -459,7 +459,7 @@ func FormatUsersList(users []models.TelegramUser) string {
 }
 
 // FormatDailySummary форматирует утреннюю сводку погоды
-func FormatDailySummary(current, yesterdaySame *models.WeatherData, nightMinMax, dailyMinMax *repository.DailyMinMax, sunData *service.SunTimesWithComparison) string {
+func FormatDailySummary(current, yesterdaySame *models.WeatherData, nightMinMax, dailyMinMax *repository.DailyMinMax, sunData *service.SunTimesWithComparison, todayForecast []DayForecastInfo) string {
 	// Форматируем дату
 	months := []string{"", "января", "февраля", "марта", "апреля", "мая", "июня",
 		"июля", "августа", "сентября", "октября", "ноября", "декабря"}
@@ -542,6 +542,19 @@ func FormatDailySummary(current, yesterdaySame *models.WeatherData, nightMinMax,
 		text += "\n"
 	}
 
+	// ПРОГНОЗ НА СЕГОДНЯ
+	if len(todayForecast) > 0 {
+		text += "🔮 *ПРОГНОЗ НА СЕГОДНЯ*\n"
+		for _, f := range todayForecast {
+			text += fmt.Sprintf("%s %02d:00 – %.0f°C", f.Icon, f.Hour, f.Temperature)
+			if f.PrecipitationProbability > 0 {
+				text += fmt.Sprintf(" 💧%d%%", f.PrecipitationProbability)
+			}
+			text += fmt.Sprintf(" (%s)\n", f.WeatherDescription)
+		}
+		text += "\n"
+	}
+
 	// Пожелание
 	greetings := []string{
 		"Хорошего дня! ☀️",
@@ -560,6 +573,62 @@ func FormatDailySummary(current, yesterdaySame *models.WeatherData, nightMinMax,
 	text += "ℹ️ *Управление подписками*\n"
 	text += "• /subscribe - выбрать типы уведомлений\n"
 	text += "• /unsubscribe - отписаться от всех уведомлений"
+
+	return text
+}
+
+// FormatForecast форматирует прогноз погоды на несколько дней
+func FormatForecast(forecast []models.DailyForecast) string {
+	text := "🔮 *Прогноз погоды*\n\n"
+
+	daysOfWeek := []string{"Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"}
+	months := []string{"", "января", "февраля", "марта", "апреля", "мая", "июня",
+		"июля", "августа", "сентября", "октября", "ноября", "декабря"}
+
+	for i, day := range forecast {
+		// Разделитель между днями
+		if i > 0 {
+			text += "───────────\n"
+		}
+
+		// Дата
+		dayName := daysOfWeek[day.Date.Weekday()]
+		if i == 0 {
+			dayName = "Сегодня"
+		} else if i == 1 {
+			dayName = "Завтра"
+		}
+
+		dayNum := day.Date.Day()
+		month := months[day.Date.Month()]
+
+		text += fmt.Sprintf("*%s*, %d %s\n", dayName, dayNum, month)
+		text += fmt.Sprintf("%s %s\n\n", day.Icon, day.WeatherDescription)
+
+		// Температура
+		text += fmt.Sprintf("🌡️ %.0f°C ... %.0f°C\n", day.TemperatureMin, day.TemperatureMax)
+
+		// Осадки
+		if day.PrecipitationProbability > 0 {
+			text += fmt.Sprintf("💧 Осадки: %d%%", day.PrecipitationProbability)
+			if day.PrecipitationSum > 0 {
+				text += fmt.Sprintf(" (%.1f мм)", day.PrecipitationSum)
+			}
+			text += "\n"
+		}
+
+		// Ветер
+		if day.WindSpeedMax > 0 {
+			windDir := getWindDirection(day.WindDirection)
+			text += fmt.Sprintf("💨 Ветер: %.0f м/с %s\n", day.WindSpeedMax, windDir)
+		}
+
+		text += "\n"
+	}
+
+	text += "━━━━━━━━━━━━━━━\n"
+	text += "📡 Данные от Open-Meteo\n"
+	text += "🔄 Обновляется каждый час"
 
 	return text
 }

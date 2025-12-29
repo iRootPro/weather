@@ -11,18 +11,20 @@ import (
 )
 
 type Handler struct {
-	templatesDir   string
-	weatherService *service.WeatherService
-	sunService     *service.SunService
-	moonService    *service.MoonService
+	templatesDir    string
+	weatherService  *service.WeatherService
+	sunService      *service.SunService
+	moonService     *service.MoonService
+	forecastService *service.ForecastService
 }
 
-func NewHandler(templatesDir string, weatherService *service.WeatherService, sunService *service.SunService, moonService *service.MoonService) (*Handler, error) {
+func NewHandler(templatesDir string, weatherService *service.WeatherService, sunService *service.SunService, moonService *service.MoonService, forecastService *service.ForecastService) (*Handler, error) {
 	return &Handler{
-		templatesDir:   templatesDir,
-		weatherService: weatherService,
-		sunService:     sunService,
-		moonService:    moonService,
+		templatesDir:    templatesDir,
+		weatherService:  weatherService,
+		sunService:      sunService,
+		moonService:     moonService,
+		forecastService: forecastService,
 	}, nil
 }
 

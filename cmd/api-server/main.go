@@ -54,10 +54,12 @@ func main() {
 	// Инициализация репозиториев
 	weatherRepo := repository.NewWeatherRepository(pool)
 	sensorRepo := repository.NewSensorRepository(pool)
+	forecastRepo := repository.NewForecastRepository(pool)
 
 	// Инициализация сервисов
 	weatherService := service.NewWeatherService(weatherRepo)
 	sensorService := service.NewSensorService(sensorRepo)
+	forecastService := service.NewForecastService(forecastRepo)
 	sunService, err := service.NewSunService(cfg.Location.Latitude, cfg.Location.Longitude, cfg.Location.Timezone)
 	if err != nil {
 		log.Fatalf("failed to create sun service: %v", err)
@@ -82,7 +84,7 @@ func main() {
 	}
 
 	slog.Info("creating web handler", "templatesDir", templatesDir)
-	webHandler, err := web.NewHandler(templatesDir, weatherService, sunService, moonService)
+	webHandler, err := web.NewHandler(templatesDir, weatherService, sunService, moonService, forecastService)
 	if err != nil {
 		log.Fatalf("failed to create web handler: %v", err)
 	}
@@ -126,6 +128,7 @@ func main() {
 	mux.HandleFunc("GET /widgets/sun", webHandler.SunTimesWidget)
 	slog.Info("sun widget route registered")
 	mux.HandleFunc("GET /widgets/events", webHandler.WeatherEventsWidget)
+	mux.HandleFunc("GET /widgets/forecast", webHandler.ForecastWidget)
 
 	// Static files
 	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.Dir(staticDir))))

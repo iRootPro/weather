@@ -59,9 +59,11 @@ func main() {
 	userRepo := repository.NewTelegramUserRepository(pool)
 	subRepo := repository.NewTelegramSubscriptionRepository(pool)
 	notifRepo := repository.NewTelegramNotificationRepository(pool)
+	forecastRepo := repository.NewForecastRepository(pool)
 
 	// Инициализация сервисов
 	weatherService := service.NewWeatherService(weatherRepo)
+	forecastService := service.NewForecastService(forecastRepo)
 	sunService, err := service.NewSunService(cfg.Location.Latitude, cfg.Location.Longitude, cfg.Location.Timezone)
 	if err != nil {
 		log.Fatalf("failed to create sun service: %v", err)
@@ -88,6 +90,7 @@ func main() {
 		weatherService,
 		sunService,
 		moonService,
+		forecastService,
 		userRepo,
 		subRepo,
 		notifRepo,
@@ -111,6 +114,7 @@ func main() {
 		bot,
 		weatherService,
 		sunService,
+		forecastService,
 		subRepo,
 		userRepo,
 		cfg.Telegram.DailySummaryTime,

@@ -15,6 +15,17 @@
         </div>
     </div>
 
+    <!-- Forecast -->
+    <div id="forecast"
+         hx-get="/widgets/forecast"
+         hx-trigger="load, every 3600s"
+         hx-swap="innerHTML">
+        <div class="animate-pulse bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
+            <div class="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4"></div>
+            <div class="h-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
+        </div>
+    </div>
+
     <!-- Sun Times -->
     <div id="sun-times"
          hx-get="/widgets/sun"

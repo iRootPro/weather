@@ -45,3 +45,14 @@ type TelegramNotificationRepository interface {
 	Create(ctx context.Context, notification *models.TelegramNotification) error
 	WasRecentlySent(ctx context.Context, userID int64, eventType string, within time.Duration) (bool, error)
 }
+
+type ForecastRepository interface {
+	SaveHourly(ctx context.Context, data *models.ForecastData) error
+	SaveDaily(ctx context.Context, data *models.ForecastData) error
+	SaveBatch(ctx context.Context, data []models.ForecastData) error
+	GetHourlyForecast(ctx context.Context, from, to time.Time) ([]models.ForecastData, error)
+	GetDailyForecast(ctx context.Context, from, to time.Time) ([]models.ForecastData, error)
+	GetLatestHourly(ctx context.Context, hours int) ([]models.ForecastData, error)
+	GetLatestDaily(ctx context.Context, days int) ([]models.ForecastData, error)
+	DeleteOldForecasts(ctx context.Context, olderThan time.Time) error
+}

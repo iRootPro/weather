@@ -6,37 +6,41 @@ import (
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/iRootPro/weather/internal/models"
 	"github.com/iRootPro/weather/internal/repository"
 	"github.com/iRootPro/weather/internal/service"
 )
 
 type DailySummaryService struct {
-	bot        *tgbotapi.BotAPI
-	weatherSvc *service.WeatherService
-	sunSvc     *service.SunService
-	subRepo    repository.TelegramSubscriptionRepository
-	userRepo   repository.TelegramUserRepository
-	sendTime   string // Время отправки в формате "07:00"
-	logger     *slog.Logger
+	bot         *tgbotapi.BotAPI
+	weatherSvc  *service.WeatherService
+	sunSvc      *service.SunService
+	forecastSvc *service.ForecastService
+	subRepo     repository.TelegramSubscriptionRepository
+	userRepo    repository.TelegramUserRepository
+	sendTime    string // Время отправки в формате "07:00"
+	logger      *slog.Logger
 }
 
 func NewDailySummaryService(
 	bot *tgbotapi.BotAPI,
 	weatherSvc *service.WeatherService,
 	sunSvc *service.SunService,
+	forecastSvc *service.ForecastService,
 	subRepo repository.TelegramSubscriptionRepository,
 	userRepo repository.TelegramUserRepository,
 	sendTime string,
 	logger *slog.Logger,
 ) *DailySummaryService {
 	return &DailySummaryService{
-		bot:        bot,
-		weatherSvc: weatherSvc,
-		sunSvc:     sunSvc,
-		subRepo:    subRepo,
-		userRepo:   userRepo,
-		sendTime:   sendTime,
-		logger:     logger,
+		bot:         bot,
+		weatherSvc:  weatherSvc,
+		sunSvc:      sunSvc,
+		forecastSvc: forecastSvc,
+		subRepo:     subRepo,
+		userRepo:    userRepo,
+		sendTime:    sendTime,
+		logger:      logger,
 	}
 }
 
@@ -125,8 +129,19 @@ func (s *DailySummaryService) sendDailySummary(ctx context.Context) {
 	// Получаем данные о солнце
 	sunData := s.sunSvc.GetTodaySunTimesWithComparison()
 
+	// Получаем прогноз на сегодня
+	var todayForecast []DayForecastInfo
+	if s.forecastSvc != nil {
+		forecast, err := s.forecastSvc.GetTodayForecast(ctx)
+		if err != nil {
+			s.logger.Warn("failed to get today forecast", "error", err)
+		} else if len(forecast) > 0 {
+			todayForecast = formatTodayForecast(forecast)
+		}
+	}
+
 	// Форматируем сообщение
-	text := FormatDailySummary(current, yesterdaySame, nightMinMax, dailyMinMax, sunData)
+	text := FormatDailySummary(current, yesterdaySame, nightMinMax, dailyMinMax, sunData, todayForecast)
 
 	// Отправляем всем подписчикам
 	for _, chatID := range subscribers {
@@ -143,4 +158,51 @@ func (s *DailySummaryService) sendDailySummary(ctx context.Context) {
 	}
 
 	s.logger.Info("daily summary sent to all subscribers")
+}
+
+// DayForecastInfo содержит информацию о прогнозе на день
+type DayForecastInfo struct {
+	Hour                     int
+	Temperature              float32
+	PrecipitationProbability int16
+	WeatherDescription       string
+	Icon                     string
+}
+
+// formatTodayForecast форматирует почасовой прогноз на сегодня для утренней сводки
+func formatTodayForecast(forecast []models.HourlyForecast) []DayForecastInfo {
+	result := make([]DayForecastInfo, 0)
+
+	// Берем прогноз на ключевые часы дня: 9:00, 12:00, 15:00, 18:00, 21:00
+	keyHours := []int{9, 12, 15, 18, 21}
+	now := time.Now()
+
+	for _, f := range forecast {
+		// Пропускаем прошедшие часы
+		if f.Time.Before(now) {
+			continue
+		}
+
+		// Проверяем, является ли час ключевым
+		hour := f.Time.Hour()
+		isKeyHour := false
+		for _, kh := range keyHours {
+			if hour == kh {
+				isKeyHour = true
+				break
+			}
+		}
+
+		if isKeyHour {
+			result = append(result, DayForecastInfo{
+				Hour:                     hour,
+				Temperature:              f.Temperature,
+				PrecipitationProbability: f.PrecipitationProbability,
+				WeatherDescription:       f.WeatherDescription,
+				Icon:                     f.Icon,
+			})
+		}
+	}
+
+	return result
 }

@@ -15,6 +15,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/mqtt-consumer ./cmd/mqtt-consumer
 RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/api-server ./cmd/api-server
 RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/migrator ./cmd/migrator
 RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/telegram-bot ./cmd/telegram-bot
+RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/forecast-fetcher ./cmd/forecast-fetcher
 
 # MQTT Consumer
 FROM alpine:3.20 AS mqtt-consumer
@@ -47,3 +48,10 @@ RUN apk --no-cache add ca-certificates tzdata
 WORKDIR /app
 COPY --from=builder /bin/telegram-bot /app/telegram-bot
 CMD ["/app/telegram-bot"]
+
+# Forecast Fetcher
+FROM alpine:3.20 AS forecast-fetcher
+RUN apk --no-cache add ca-certificates tzdata
+WORKDIR /app
+COPY --from=builder /bin/forecast-fetcher /app/forecast-fetcher
+CMD ["/app/forecast-fetcher"]
