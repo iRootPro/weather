@@ -392,19 +392,25 @@ func getUVLevel(uv float32) string {
 // formatDurationChange форматирует изменение длительности
 func formatDurationChange(d time.Duration) string {
 	totalMinutes := int(d.Minutes())
+	totalSeconds := int(d.Seconds())
+
 	if totalMinutes < 0 {
 		totalMinutes = -totalMinutes
+		totalSeconds = -totalSeconds
 	}
 
 	hours := totalMinutes / 60
 	minutes := totalMinutes % 60
+	seconds := totalSeconds % 60
 
 	if hours > 0 && minutes > 0 {
-		return fmt.Sprintf("%dч %dм", hours, minutes)
+		return fmt.Sprintf("%d ч %d мин", hours, minutes)
 	} else if hours > 0 {
-		return fmt.Sprintf("%dч", hours)
+		return fmt.Sprintf("%d ч", hours)
+	} else if minutes > 0 {
+		return fmt.Sprintf("%d мин", minutes)
 	}
-	return fmt.Sprintf("%dм", minutes)
+	return fmt.Sprintf("%d сек", seconds)
 }
 
 // FormatUsersList форматирует список пользователей бота
@@ -546,7 +552,7 @@ func FormatDailySummary(current, yesterdaySame *models.WeatherData, nightMinMax,
 	if len(todayForecast) > 0 {
 		text += "🔮 *ПРОГНОЗ НА СЕГОДНЯ*\n"
 		for _, f := range todayForecast {
-			text += fmt.Sprintf("%s В %02d:00 → %.0f°C", f.Icon, f.Hour, f.Temperature)
+			text += fmt.Sprintf("%s В %02d:00: %.0f°C", f.Icon, f.Hour, f.Temperature)
 			if f.PrecipitationProbability > 0 {
 				text += fmt.Sprintf(" · 💧%d%%", f.PrecipitationProbability)
 			}
