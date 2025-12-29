@@ -60,6 +60,7 @@ func main() {
 	subRepo := repository.NewTelegramSubscriptionRepository(pool)
 	notifRepo := repository.NewTelegramNotificationRepository(pool)
 	forecastRepo := repository.NewForecastRepository(pool)
+	photoRepo := repository.NewPhotoRepository(pool)
 
 	// Инициализация сервисов
 	weatherService := service.NewWeatherService(weatherRepo)
@@ -94,6 +95,7 @@ func main() {
 		userRepo,
 		subRepo,
 		notifRepo,
+		photoRepo,
 		cfg.Telegram.AdminIDs,
 		logger,
 	)
@@ -145,8 +147,22 @@ func main() {
 
 	// Основной цикл обработки обновлений
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				slog.Error("panic in update handler", "panic", r)
+			}
+		}()
+
 		for update := range updates {
-			handler.HandleUpdate(ctx, update)
+			// Обрабатываем каждое обновление с recovery от паники
+			func() {
+				defer func() {
+					if r := recover(); r != nil {
+						slog.Error("panic handling update", "panic", r, "update_id", update.UpdateID)
+					}
+				}()
+				handler.HandleUpdate(ctx, update)
+			}()
 		}
 	}()
 

@@ -1,0 +1,197 @@
+{{template "base.html" .}}
+
+{{define "title"}}Фотогалерея - Метеостанция{{end}}
+
+{{define "content"}}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Фотогалерея</h2>
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+            Фотографии с привязкой к погодным условиям
+        </p>
+    </div>
+
+    {{if .Data}}
+    {{$photos := .Data}}
+    <!-- Photo Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {{range $photos}}
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden transition-all hover:shadow-xl cursor-pointer"
+             onclick="openPhotoModal({{.ID}})">
+            <!-- Image -->
+            <div class="relative aspect-w-16 aspect-h-12 bg-gray-100 dark:bg-gray-700">
+                <img src="/photos/{{.Filename}}"
+                     alt="{{.Caption}}"
+                     class="w-full h-64 object-cover"
+                     loading="lazy">
+                {{if .Caption}}
+                <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                    <p class="text-white text-sm font-medium line-clamp-2">{{.Caption}}</p>
+                </div>
+                {{end}}
+            </div>
+
+            <!-- Info -->
+            <div class="p-4">
+                <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-2">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    {{.TakenAt.Format "02.01.2006 15:04"}}
+                </div>
+
+                {{if .Temperature}}
+                <div class="flex items-center gap-3 text-sm">
+                    <span class="text-gray-600 dark:text-gray-300">
+                        🌡️ {{printf "%.1f" .Temperature}}°C
+                    </span>
+                    {{if .Humidity}}
+                    <span class="text-gray-600 dark:text-gray-300">
+                        💧 {{printf "%.0f" .Humidity}}%
+                    </span>
+                    {{end}}
+                </div>
+                {{end}}
+            </div>
+        </div>
+        {{end}}
+    </div>
+
+    {{else}}
+    <!-- Empty State -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-12 text-center">
+        <svg class="w-24 h-24 mx-auto text-gray-300 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+        </svg>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Фотографий пока нет</h3>
+        <p class="text-gray-500 dark:text-gray-400">
+            Отправьте фотографию в Telegram бот, и она появится здесь
+        </p>
+    </div>
+    {{end}}
+</div>
+
+<!-- Photo Modal -->
+<div id="photoModal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4" onclick="closePhotoModal()">
+    <div class="bg-white dark:bg-gray-800 rounded-lg max-w-5xl max-h-[90vh] overflow-auto" onclick="event.stopPropagation()">
+        <div id="modalContent" class="p-6">
+            <!-- Content loaded by JS -->
+        </div>
+        <div class="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-end">
+            <button onclick="closePhotoModal()" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                Закрыть
+            </button>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{define "scripts"}}
+<script>
+const photosData = [
+    {{range .Data}}
+    {
+        id: {{.ID}},
+        filename: "{{.Filename}}",
+        caption: {{if .Caption}}"{{.Caption}}"{{else}}""{{end}},
+        takenAt: "{{.TakenAt.Format "02.01.2006 15:04"}}",
+        {{if .Temperature}}temperature: {{.Temperature}},{{end}}
+        {{if .Humidity}}humidity: {{.Humidity}},{{end}}
+        {{if .Pressure}}pressure: {{.Pressure}},{{end}}
+        {{if .WindSpeed}}windSpeed: {{.WindSpeed}},{{end}}
+        {{if .RainRate}}rainRate: {{.RainRate}},{{end}}
+        {{if .WeatherDescription}}weatherDesc: "{{.WeatherDescription}}",{{end}}
+        {{if .CameraMake}}cameraMake: "{{.CameraMake}}",{{end}}
+        {{if .CameraModel}}cameraModel: "{{.CameraModel}}"{{end}}
+    },
+    {{end}}
+];
+
+function openPhotoModal(photoId) {
+    const photo = photosData.find(p => p.id === photoId);
+    if (!photo) return;
+
+    const modal = document.getElementById('photoModal');
+    const content = document.getElementById('modalContent');
+
+    let html = `
+        <img src="/photos/${photo.filename}" alt="${photo.caption || ''}" class="w-full rounded-lg mb-4">
+
+        ${photo.caption ? `<h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">${photo.caption}</h3>` : ''}
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Информация о фото</h4>
+                <div class="space-y-2 text-sm">
+                    <div class="flex items-center text-gray-600 dark:text-gray-300">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        ${photo.takenAt}
+                    </div>
+                    ${photo.cameraMake || photo.cameraModel ? `
+                    <div class="flex items-center text-gray-600 dark:text-gray-300">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        ${photo.cameraMake || ''} ${photo.cameraModel || ''}
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
+
+            ${photo.temperature !== undefined ? `
+            <div>
+                <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Погода на момент съемки</h4>
+                <div class="space-y-2 text-sm">
+                    ${photo.weatherDesc ? `<p class="text-gray-600 dark:text-gray-300 mb-3">${photo.weatherDesc}</p>` : ''}
+                    ${photo.temperature !== undefined ? `
+                    <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-400">Температура:</span>
+                        <span class="font-medium text-gray-900 dark:text-white">${photo.temperature.toFixed(1)}°C</span>
+                    </div>
+                    ` : ''}
+                    ${photo.humidity !== undefined ? `
+                    <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-400">Влажность:</span>
+                        <span class="font-medium text-gray-900 dark:text-white">${photo.humidity.toFixed(0)}%</span>
+                    </div>
+                    ` : ''}
+                    ${photo.pressure !== undefined ? `
+                    <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-400">Давление:</span>
+                        <span class="font-medium text-gray-900 dark:text-white">${photo.pressure.toFixed(0)} мм рт.ст.</span>
+                    </div>
+                    ` : ''}
+                    ${photo.windSpeed !== undefined ? `
+                    <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-400">Ветер:</span>
+                        <span class="font-medium text-gray-900 dark:text-white">${photo.windSpeed.toFixed(1)} м/с</span>
+                    </div>
+                    ` : ''}
+                    ${photo.rainRate !== undefined && photo.rainRate > 0 ? `
+                    <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-400">Дождь:</span>
+                        <span class="font-medium text-gray-900 dark:text-white">${photo.rainRate.toFixed(1)} мм/ч</span>
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
+            ` : ''}
+        </div>
+    `;
+
+    content.innerHTML = html;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closePhotoModal() {
+    const modal = document.getElementById('photoModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+</script>
+{{end}}

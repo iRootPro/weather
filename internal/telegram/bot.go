@@ -18,6 +18,7 @@ type BotHandler struct {
 	userRepo    repository.TelegramUserRepository
 	subRepo     repository.TelegramSubscriptionRepository
 	notifRepo   repository.TelegramNotificationRepository
+	photoRepo   repository.PhotoRepository
 	adminIDs    []int64
 	logger      *slog.Logger
 }
@@ -31,6 +32,7 @@ func NewBotHandler(
 	userRepo repository.TelegramUserRepository,
 	subRepo repository.TelegramSubscriptionRepository,
 	notifRepo repository.TelegramNotificationRepository,
+	photoRepo repository.PhotoRepository,
 	adminIDs []int64,
 	logger *slog.Logger,
 ) *BotHandler {
@@ -43,6 +45,7 @@ func NewBotHandler(
 		userRepo:    userRepo,
 		subRepo:     subRepo,
 		notifRepo:   notifRepo,
+		photoRepo:   photoRepo,
 		adminIDs:    adminIDs,
 		logger:      logger,
 	}
@@ -58,6 +61,12 @@ func (h *BotHandler) HandleUpdate(ctx context.Context, update tgbotapi.Update) {
 	// Обработка callback кнопок
 	if update.CallbackQuery != nil {
 		h.handleCallbackQuery(ctx, update.CallbackQuery)
+		return
+	}
+
+	// Обработка фотографий
+	if update.Message != nil && update.Message.Photo != nil {
+		h.handlePhoto(ctx, update.Message)
 		return
 	}
 

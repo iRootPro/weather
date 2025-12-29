@@ -55,6 +55,7 @@ func main() {
 	weatherRepo := repository.NewWeatherRepository(pool)
 	sensorRepo := repository.NewSensorRepository(pool)
 	forecastRepo := repository.NewForecastRepository(pool)
+	photoRepo := repository.NewPhotoRepository(pool)
 
 	// Инициализация сервисов
 	weatherService := service.NewWeatherService(weatherRepo)
@@ -84,7 +85,7 @@ func main() {
 	}
 
 	slog.Info("creating web handler", "templatesDir", templatesDir)
-	webHandler, err := web.NewHandler(templatesDir, weatherService, sunService, moonService, forecastService)
+	webHandler, err := web.NewHandler(templatesDir, weatherService, sunService, moonService, forecastService, photoRepo)
 	if err != nil {
 		log.Fatalf("failed to create web handler: %v", err)
 	}
@@ -112,6 +113,7 @@ func main() {
 	mux.HandleFunc("GET /history", webHandler.History)
 	mux.HandleFunc("GET /records", webHandler.Records)
 	mux.HandleFunc("GET /help", webHandler.Help)
+	mux.HandleFunc("GET /gallery", webHandler.Gallery)
 
 	// Detail pages
 	mux.HandleFunc("GET /detail/temperature", webHandler.DetailTemperature)
@@ -132,6 +134,7 @@ func main() {
 
 	// Static files
 	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.Dir(staticDir))))
+	mux.Handle("GET /photos/", http.StripPrefix("/photos/", http.FileServer(http.Dir("photos"))))
 
 	// Middleware
 	handler := corsMiddleware(loggingMiddleware(mux))

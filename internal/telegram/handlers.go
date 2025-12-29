@@ -1,8 +1,12 @@
 package telegram
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -477,4 +481,210 @@ func (h *BotHandler) handleMessage(ctx context.Context, msg *tgbotapi.Message) {
 	default:
 		h.sendMessage(msg.Chat.ID, "Используйте кнопки ниже или /help для списка команд")
 	}
+}
+
+func (h *BotHandler) handlePhoto(ctx context.Context, msg *tgbotapi.Message) {
+	// Проверяем, что пользователь админ
+	if !h.isAdmin(msg.Chat.ID) {
+		h.sendMessage(msg.Chat.ID, "❌ Только админы могут загружать фотографии")
+		return
+	}
+
+	// Получаем пользователя
+	user, err := h.userRepo.GetByChatID(ctx, msg.Chat.ID)
+	if err != nil {
+		h.logger.Error("failed to get user", "error", err)
+		h.sendMessage(msg.Chat.ID, "❌ Ошибка при обработке фотографии")
+		return
+	}
+
+	// Отправляем уведомление о начале обработки
+	processingMsg := tgbotapi.NewMessage(msg.Chat.ID, "⏳ Обрабатываю фотографию...")
+	processingMsg.ParseMode = "Markdown"
+	sentMsg, _ := h.bot.Send(processingMsg)
+
+	// Получаем самое большое фото (лучшее качество)
+	photo := msg.Photo[len(msg.Photo)-1]
+
+	// Скачиваем фото
+	fileConfig := tgbotapi.FileConfig{FileID: photo.FileID}
+	file, err := h.bot.GetFile(fileConfig)
+	if err != nil {
+		h.logger.Error("failed to get file", "error", err)
+		h.sendMessage(msg.Chat.ID, "❌ Ошибка при скачивании фотографии")
+		return
+	}
+
+	// Получаем URL файла
+	fileURL := file.Link(h.bot.Token)
+
+	// Скачиваем файл через http.Get
+	httpResp, err := http.Get(fileURL)
+	if err != nil {
+		h.logger.Error("failed to download file", "error", err)
+		h.sendMessage(msg.Chat.ID, "❌ Ошибка при скачивании фотографии")
+		return
+	}
+	defer httpResp.Body.Close()
+
+	// Читаем данные в буфер для повторного использования
+	fileData := new(bytes.Buffer)
+	_, err = io.Copy(fileData, httpResp.Body)
+	if err != nil {
+		h.logger.Error("failed to read file data", "error", err)
+		h.sendMessage(msg.Chat.ID, "❌ Ошибка при чтении фотографии")
+		return
+	}
+
+	// Извлекаем EXIF данные
+	exifData, err := ExtractExifData(bytes.NewReader(fileData.Bytes()))
+	if err != nil {
+		h.logger.Warn("failed to extract exif", "error", err)
+		// Продолжаем без EXIF данных
+		exifData = &ExifData{
+			TakenAt: time.Now(),
+		}
+	}
+
+	// Получаем погоду на момент съемки
+	weather, err := h.photoRepo.GetWeatherForTime(ctx, exifData.TakenAt)
+	if err != nil {
+		h.logger.Warn("failed to get weather for photo time", "error", err, "taken_at", exifData.TakenAt)
+	}
+
+	// Сохраняем фото на диск
+	filename := fmt.Sprintf("%d_%s.jpg", time.Now().Unix(), photo.FileUniqueID)
+	filepath := fmt.Sprintf("photos/%s", filename)
+
+	// Создаем директорию если её нет
+	os.MkdirAll("photos", 0755)
+
+	// Сохраняем файл
+	photoFile, err := os.Create(filepath)
+	if err != nil {
+		h.logger.Error("failed to create photo file", "error", err)
+		h.sendMessage(msg.Chat.ID, "❌ Ошибка при сохранении фотографии")
+		return
+	}
+	defer photoFile.Close()
+
+	_, err = io.Copy(photoFile, bytes.NewReader(fileData.Bytes()))
+	if err != nil {
+		h.logger.Error("failed to write photo file", "error", err)
+		h.sendMessage(msg.Chat.ID, "❌ Ошибка при сохранении фотографии")
+		return
+	}
+
+	// Создаем запись в БД
+	photoModel := &models.Photo{
+		Filename:       filename,
+		FilePath:       filepath,
+		Caption:        msg.Caption,
+		TakenAt:        exifData.TakenAt,
+		CameraMake:     exifData.CameraMake,
+		CameraModel:    exifData.CameraModel,
+		TelegramFileID: photo.FileID,
+		TelegramUserID: &user.ID,
+		IsVisible:      true,
+	}
+
+	// Добавляем погодные данные если есть
+	if weather != nil {
+		if weather.TempOutdoor != nil {
+			temp := float64(*weather.TempOutdoor)
+			photoModel.Temperature = &temp
+		}
+		if weather.HumidityOutdoor != nil {
+			humidity := float64(*weather.HumidityOutdoor)
+			photoModel.Humidity = &humidity
+		}
+		if weather.PressureRelative != nil {
+			pressure := float64(*weather.PressureRelative)
+			photoModel.Pressure = &pressure
+		}
+		if weather.WindSpeed != nil {
+			windSpeed := float64(*weather.WindSpeed)
+			photoModel.WindSpeed = &windSpeed
+		}
+		if weather.WindDirection != nil {
+			windDir := int(*weather.WindDirection)
+			photoModel.WindDirection = &windDir
+		}
+		if weather.RainRate != nil {
+			rainRate := float64(*weather.RainRate)
+			photoModel.RainRate = &rainRate
+		}
+		if weather.SolarRadiation != nil {
+			solarRad := float64(*weather.SolarRadiation)
+			photoModel.SolarRadiation = &solarRad
+		}
+		photoModel.WeatherDescription = formatWeatherDescription(weather)
+	}
+
+	// Сохраняем в БД
+	err = h.photoRepo.Create(ctx, photoModel)
+	if err != nil {
+		h.logger.Error("failed to save photo to db", "error", err)
+		h.sendMessage(msg.Chat.ID, "❌ Ошибка при сохранении фотографии в базу данных")
+		return
+	}
+
+	// Удаляем сообщение о обработке
+	deleteMsg := tgbotapi.NewDeleteMessage(msg.Chat.ID, sentMsg.MessageID)
+	h.bot.Send(deleteMsg)
+
+	// Формируем подтверждающее сообщение
+	confirmText := "✅ *Фотография добавлена!*\n\n"
+	confirmText += fmt.Sprintf("📅 Дата съемки: %s\n", exifData.TakenAt.Format("02.01.2006 15:04"))
+
+	if exifData.CameraMake != "" || exifData.CameraModel != "" {
+		confirmText += fmt.Sprintf("📷 Камера: %s %s\n", exifData.CameraMake, exifData.CameraModel)
+	}
+
+	if weather != nil {
+		confirmText += fmt.Sprintf("\n🌡️ Погода на момент съемки:\n")
+		if weather.TempOutdoor != nil {
+			confirmText += fmt.Sprintf("Температура: %.1f°C\n", *weather.TempOutdoor)
+		}
+		if weather.HumidityOutdoor != nil {
+			confirmText += fmt.Sprintf("Влажность: %d%%\n", *weather.HumidityOutdoor)
+		}
+		if weather.PressureRelative != nil {
+			confirmText += fmt.Sprintf("Давление: %.0f мм рт.ст.\n", *weather.PressureRelative)
+		}
+		if weather.RainRate != nil && *weather.RainRate > 0 {
+			confirmText += fmt.Sprintf("Дождь: %.1f мм/ч\n", *weather.RainRate)
+		}
+	}
+
+	reply := tgbotapi.NewMessage(msg.Chat.ID, confirmText)
+	reply.ParseMode = "Markdown"
+	h.bot.Send(reply)
+
+	h.logger.Info("photo uploaded", "chat_id", msg.Chat.ID, "photo_id", photoModel.ID, "taken_at", exifData.TakenAt)
+}
+
+// formatWeatherDescription формирует описание погоды
+func formatWeatherDescription(w *models.WeatherData) string {
+	desc := ""
+
+	if w.TempOutdoor != nil {
+		desc = fmt.Sprintf("%.1f°C", *w.TempOutdoor)
+	}
+
+	if w.RainRate != nil && *w.RainRate > 0.1 {
+		desc += ", дождь"
+	} else if w.HumidityOutdoor != nil {
+		if *w.HumidityOutdoor > 80 {
+			desc += ", влажно"
+		} else if *w.HumidityOutdoor < 30 {
+			desc += ", сухо"
+		}
+	}
+
+	if w.WindSpeed != nil && *w.WindSpeed > 5 {
+		desc += fmt.Sprintf(", ветер %.1f м/с", *w.WindSpeed)
+	}
+
+	return desc
 }

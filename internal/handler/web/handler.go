@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/iRootPro/weather/internal/models"
+	"github.com/iRootPro/weather/internal/repository"
 	"github.com/iRootPro/weather/internal/service"
 )
 
@@ -16,15 +17,17 @@ type Handler struct {
 	sunService      *service.SunService
 	moonService     *service.MoonService
 	forecastService *service.ForecastService
+	photoRepo       repository.PhotoRepository
 }
 
-func NewHandler(templatesDir string, weatherService *service.WeatherService, sunService *service.SunService, moonService *service.MoonService, forecastService *service.ForecastService) (*Handler, error) {
+func NewHandler(templatesDir string, weatherService *service.WeatherService, sunService *service.SunService, moonService *service.MoonService, forecastService *service.ForecastService, photoRepo repository.PhotoRepository) (*Handler, error) {
 	return &Handler{
 		templatesDir:    templatesDir,
 		weatherService:  weatherService,
 		sunService:      sunService,
 		moonService:     moonService,
 		forecastService: forecastService,
+		photoRepo:       photoRepo,
 	}, nil
 }
 
@@ -164,6 +167,34 @@ func (h *Handler) Help(w http.ResponseWriter, r *http.Request) {
 
 	if err := tmpl.Execute(w, data); err != nil {
 		slog.Error("failed to render help", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}
+
+// Gallery renders the photo gallery page
+func (h *Handler) Gallery(w http.ResponseWriter, r *http.Request) {
+	// Получаем видимые фотографии (лимит 50)
+	photos, err := h.photoRepo.GetVisible(r.Context(), 50, 0)
+	if err != nil {
+		slog.Error("failed to get photos", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	tmpl, err := h.parseTemplate("gallery.html")
+	if err != nil {
+		slog.Error("failed to parse gallery template", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	data := PageData{
+		ActivePage: "gallery",
+		Data:       photos,
+	}
+
+	if err := tmpl.Execute(w, data); err != nil {
+		slog.Error("failed to render gallery", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }

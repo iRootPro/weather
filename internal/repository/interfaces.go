@@ -56,3 +56,14 @@ type ForecastRepository interface {
 	GetLatestDaily(ctx context.Context, days int) ([]models.ForecastData, error)
 	DeleteOldForecasts(ctx context.Context, olderThan time.Time) error
 }
+
+type PhotoRepository interface {
+	Create(ctx context.Context, photo *models.Photo) error
+	GetByID(ctx context.Context, id int64) (*models.Photo, error)
+	GetAll(ctx context.Context, limit, offset int) ([]models.Photo, error)
+	GetVisible(ctx context.Context, limit, offset int) ([]models.Photo, error)
+	GetByUserID(ctx context.Context, userID int64) ([]models.Photo, error)
+	UpdateVisibility(ctx context.Context, id int64, isVisible bool) error
+	Delete(ctx context.Context, id int64) error
+	GetWeatherForTime(ctx context.Context, takenAt time.Time) (*models.WeatherData, error)
+}
