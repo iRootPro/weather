@@ -74,11 +74,11 @@
 
 <!-- Photo Modal -->
 <div id="photoModal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4" onclick="closePhotoModal()">
-    <div class="bg-white dark:bg-gray-800 rounded-lg max-w-5xl max-h-[90vh] overflow-auto" onclick="event.stopPropagation()">
-        <div id="modalContent" class="p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg max-w-6xl w-full max-h-[95vh] flex flex-col" onclick="event.stopPropagation()">
+        <div id="modalContent" class="p-6 overflow-y-auto flex-1">
             <!-- Content loaded by JS -->
         </div>
-        <div class="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-end">
+        <div class="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-end flex-shrink-0">
             <button onclick="closePhotoModal()" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
                 Закрыть
             </button>
@@ -116,11 +116,17 @@ function openPhotoModal(photoId) {
     const content = document.getElementById('modalContent');
 
     let html = `
-        <img src="/photos/${photo.filename}" alt="${photo.caption || ''}" class="max-w-full max-h-[70vh] object-contain rounded-lg mb-4 mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Photo -->
+            <div class="flex items-center justify-center">
+                <img src="/photos/${photo.filename}" alt="${photo.caption || ''}" class="max-w-full max-h-[75vh] lg:max-h-[80vh] object-contain rounded-lg">
+            </div>
 
-        ${photo.caption ? `<h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">${photo.caption}</h3>` : ''}
+            <!-- Info -->
+            <div class="space-y-4">
+                ${photo.caption ? `<h3 class="text-xl font-bold text-gray-900 dark:text-white">${photo.caption}</h3>` : ''}
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 gap-4">
             <div>
                 <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Информация о фото</h4>
                 <div class="space-y-2 text-sm">
@@ -180,6 +186,8 @@ function openPhotoModal(photoId) {
                 </div>
             </div>
             ` : ''}
+                </div>
+            </div>
         </div>
     `;
 
