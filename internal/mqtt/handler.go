@@ -49,11 +49,24 @@ func (h *Handler) HandleMessage() mqtt.MessageHandler {
 			return
 		}
 
-		h.logger.Info("weather data saved",
-			"time", weather.Time,
-			"temp_outdoor", weather.TempOutdoor,
-			"humidity_outdoor", weather.HumidityOutdoor,
-			"pressure", weather.PressureRelative,
-		)
+		// Форматируем значения для логов (разыменовываем указатели)
+		logAttrs := []any{"time", weather.Time}
+		if weather.TempOutdoor != nil {
+			logAttrs = append(logAttrs, "temp_outdoor", *weather.TempOutdoor)
+		}
+		if weather.HumidityOutdoor != nil {
+			logAttrs = append(logAttrs, "humidity_outdoor", *weather.HumidityOutdoor)
+		}
+		if weather.PressureRelative != nil {
+			logAttrs = append(logAttrs, "pressure", *weather.PressureRelative)
+		}
+		if weather.WindSpeed != nil {
+			logAttrs = append(logAttrs, "wind_speed", *weather.WindSpeed)
+		}
+		if weather.RainRate != nil && *weather.RainRate > 0 {
+			logAttrs = append(logAttrs, "rain_rate", *weather.RainRate)
+		}
+
+		h.logger.Info("weather data saved", logAttrs...)
 	}
 }
