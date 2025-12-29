@@ -16,7 +16,7 @@ type ExifData struct {
 }
 
 // ExtractExifDataFromFile извлекает EXIF метаданные из файла используя exiftool
-func ExtractExifDataFromFile(filePath string) (*ExifData, error) {
+func ExtractExifDataFromFile(filePath string, timezone string) (*ExifData, error) {
 	// Запускаем exiftool для извлечения метаданных в JSON формате
 	cmd := exec.Command("exiftool", "-j", "-DateTimeOriginal", "-CreateDate", "-Make", "-Model", filePath)
 	output, err := cmd.Output()
@@ -40,6 +40,8 @@ func ExtractExifDataFromFile(filePath string) (*ExifData, error) {
 	}
 
 	// Извлекаем время съемки - пробуем разные поля
+	// ВАЖНО: EXIF хранит локальное время камеры БЕЗ часового пояса
+	// Парсим как UTC (без сдвига), так как это уже локальное время
 	dateFormats := []string{
 		"2006:01:02 15:04:05",
 		"2006-01-02 15:04:05",

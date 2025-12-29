@@ -21,6 +21,7 @@ type BotHandler struct {
 	photoRepo   repository.PhotoRepository
 	adminIDs    []int64
 	websiteURL  string
+	timezone    string
 	logger      *slog.Logger
 }
 
@@ -36,6 +37,7 @@ func NewBotHandler(
 	photoRepo repository.PhotoRepository,
 	adminIDs []int64,
 	websiteURL string,
+	timezone string,
 	logger *slog.Logger,
 ) *BotHandler {
 	return &BotHandler{
@@ -50,6 +52,7 @@ func NewBotHandler(
 		photoRepo:   photoRepo,
 		adminIDs:    adminIDs,
 		websiteURL:  websiteURL,
+		timezone:    timezone,
 		logger:      logger,
 	}
 }

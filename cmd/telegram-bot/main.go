@@ -98,6 +98,7 @@ func main() {
 		photoRepo,
 		cfg.Telegram.AdminIDs,
 		cfg.Telegram.WebsiteURL,
+		cfg.Location.Timezone,
 		logger,
 	)
 

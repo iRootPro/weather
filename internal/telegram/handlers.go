@@ -596,10 +596,10 @@ func (h *BotHandler) handlePhotoDocument(ctx context.Context, msg *tgbotapi.Mess
 	h.logger.Info("temp file verified", "size", fileInfo.Size(), "name", fileInfo.Name())
 
 	// Извлекаем EXIF данные из временного файла
-	exifData, err := ExtractExifDataFromFile(tempFilepath)
+	exifData, err := ExtractExifDataFromFile(tempFilepath, h.timezone)
 	if err != nil {
 		h.logger.Warn("failed to extract exif from file", "error", err, "filepath", tempFilepath)
-		// Продолжаем без EXIF данных
+		// Продолжаем без EXIF данных - используем текущее время
 		exifData = &ExifData{
 			TakenAt: time.Now(),
 		}
