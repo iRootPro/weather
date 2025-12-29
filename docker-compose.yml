@@ -40,6 +40,8 @@ services:
         condition: service_healthy
     ports:
       - "${HTTP_PORT:-8080}:8080"
+    volumes:
+      - photos_data:/app/photos
     env_file:
       - .env
     restart: unless-stopped
@@ -53,9 +55,12 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    volumes:
+      - photos_data:/app/photos
     env_file:
       - .env
     restart: unless-stopped
 
 volumes:
   postgres_data:
+  photos_data:

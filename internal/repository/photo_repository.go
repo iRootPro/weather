@@ -162,9 +162,9 @@ func (r *photoRepository) GetWeatherForTime(ctx context.Context, takenAt time.Ti
 		       wind_speed, wind_direction, wind_gust, rain_rate,
 		       solar_radiation, uv_index, temp_feels_like
 		FROM weather_data
-		WHERE time >= $1 - INTERVAL '5 minutes'
-		  AND time <= $1 + INTERVAL '5 minutes'
-		ORDER BY ABS(EXTRACT(EPOCH FROM (time - $1)))
+		WHERE time BETWEEN $1::timestamptz - INTERVAL '5 minutes'
+		              AND $1::timestamptz + INTERVAL '5 minutes'
+		ORDER BY ABS(EXTRACT(EPOCH FROM (time - $1::timestamptz)))
 		LIMIT 1
 	`
 

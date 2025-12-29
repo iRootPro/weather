@@ -557,23 +557,31 @@ func (h *BotHandler) handlePhoto(ctx context.Context, msg *tgbotapi.Message) {
 	filepath := fmt.Sprintf("photos/%s", filename)
 
 	// Создаем директорию если её нет
-	os.MkdirAll("photos", 0755)
+	if err := os.MkdirAll("photos", 0755); err != nil {
+		h.logger.Error("failed to create photos directory", "error", err)
+		h.sendMessage(msg.Chat.ID, "❌ Ошибка при создании директории для фото")
+		return
+	}
+
+	h.logger.Info("saving photo to disk", "filename", filename, "filepath", filepath)
 
 	// Сохраняем файл
 	photoFile, err := os.Create(filepath)
 	if err != nil {
-		h.logger.Error("failed to create photo file", "error", err)
+		h.logger.Error("failed to create photo file", "error", err, "filepath", filepath)
 		h.sendMessage(msg.Chat.ID, "❌ Ошибка при сохранении фотографии")
 		return
 	}
 	defer photoFile.Close()
 
-	_, err = io.Copy(photoFile, bytes.NewReader(fileData.Bytes()))
+	bytesWritten, err := io.Copy(photoFile, bytes.NewReader(fileData.Bytes()))
 	if err != nil {
 		h.logger.Error("failed to write photo file", "error", err)
 		h.sendMessage(msg.Chat.ID, "❌ Ошибка при сохранении фотографии")
 		return
 	}
+
+	h.logger.Info("photo saved to disk", "filepath", filepath, "bytes", bytesWritten)
 
 	// Создаем запись в БД
 	photoModel := &models.Photo{
