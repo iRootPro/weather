@@ -372,11 +372,20 @@ func (h *BotHandler) handleUsers(ctx context.Context, msg *tgbotapi.Message) {
 		return
 	}
 
+	h.logger.Info("formatting users list", "count", len(users))
 	text := FormatUsersList(users)
+	h.logger.Debug("formatted text", "length", len(text))
 
 	reply := tgbotapi.NewMessage(msg.Chat.ID, text)
 	reply.ParseMode = "Markdown"
-	h.bot.Send(reply)
+
+	if _, err := h.bot.Send(reply); err != nil {
+		h.logger.Error("failed to send users list", "error", err, "text_length", len(text))
+		h.sendMessage(msg.Chat.ID, "❌ Ошибка отправки списка пользователей")
+		return
+	}
+
+	h.logger.Info("users list sent successfully", "count", len(users))
 }
 
 func (h *BotHandler) handleMyID(ctx context.Context, msg *tgbotapi.Message) {
