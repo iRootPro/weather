@@ -41,17 +41,24 @@ func ExtractExifDataFromFile(filePath string, timezone string) (*ExifData, error
 
 	// Извлекаем время съемки - пробуем разные поля
 	// ВАЖНО: EXIF хранит локальное время камеры БЕЗ часового пояса
-	// Парсим как UTC (без сдвига), так как это уже локальное время
+	// Нужно парсить с учетом локального timezone для корректного поиска погоды
 	dateFormats := []string{
 		"2006:01:02 15:04:05",
 		"2006-01-02 15:04:05",
 		time.RFC3339,
 	}
 
+	// Загружаем timezone локации
+	loc, err := time.LoadLocation(timezone)
+	if err != nil {
+		// Если не удалось загрузить - используем UTC
+		loc = time.UTC
+	}
+
 	// DateTimeOriginal - основное поле для времени съемки
 	if dateStr, ok := result["DateTimeOriginal"].(string); ok && dateStr != "" {
 		for _, format := range dateFormats {
-			if t, err := time.Parse(format, dateStr); err == nil {
+			if t, err := time.ParseInLocation(format, dateStr, loc); err == nil {
 				data.TakenAt = t
 				break
 			}
@@ -59,7 +66,7 @@ func ExtractExifDataFromFile(filePath string, timezone string) (*ExifData, error
 	} else if dateStr, ok := result["CreateDate"].(string); ok && dateStr != "" {
 		// CreateDate - альтернативное поле
 		for _, format := range dateFormats {
-			if t, err := time.Parse(format, dateStr); err == nil {
+			if t, err := time.ParseInLocation(format, dateStr, loc); err == nil {
 				data.TakenAt = t
 				break
 			}
