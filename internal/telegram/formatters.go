@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/iRootPro/weather/internal/models"
@@ -430,12 +431,12 @@ func FormatUsersList(users []models.TelegramUser) string {
 		// Имя пользователя
 		name := ""
 		if user.FirstName != nil && *user.FirstName != "" {
-			name = *user.FirstName
+			name = escapeMarkdown(*user.FirstName)
 			if user.LastName != nil && *user.LastName != "" {
-				name += " " + *user.LastName
+				name += " " + escapeMarkdown(*user.LastName)
 			}
 		} else if user.Username != nil && *user.Username != "" {
-			name = "@" + *user.Username
+			name = "@" + escapeMarkdown(*user.Username)
 		} else {
 			name = fmt.Sprintf("ID: %d", user.ChatID)
 		}
@@ -443,7 +444,7 @@ func FormatUsersList(users []models.TelegramUser) string {
 		// Username если есть
 		username := ""
 		if user.Username != nil && *user.Username != "" {
-			username = fmt.Sprintf(" (@%s)", *user.Username)
+			username = fmt.Sprintf(" (@%s)", escapeMarkdown(*user.Username))
 		}
 
 		// Статус
@@ -462,6 +463,32 @@ func FormatUsersList(users []models.TelegramUser) string {
 	text += "\n✅ - активный, ⏸️ - неактивный"
 
 	return text
+}
+
+// escapeMarkdown экранирует спецсимволы Markdown для Telegram
+func escapeMarkdown(s string) string {
+	// Экранируем спецсимволы Markdown V1 для Telegram
+	replacer := strings.NewReplacer(
+		"_", "\\_",
+		"*", "\\*",
+		"[", "\\[",
+		"]", "\\]",
+		"(", "\\(",
+		")", "\\)",
+		"~", "\\~",
+		"`", "\\`",
+		">", "\\>",
+		"#", "\\#",
+		"+", "\\+",
+		"-", "\\-",
+		"=", "\\=",
+		"|", "\\|",
+		"{", "\\{",
+		"}", "\\}",
+		".", "\\.",
+		"!", "\\!",
+	)
+	return replacer.Replace(s)
 }
 
 // FormatDailySummary форматирует утреннюю сводку погоды
