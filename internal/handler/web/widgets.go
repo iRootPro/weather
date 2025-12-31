@@ -491,10 +491,11 @@ func (h *Handler) ForecastWidget(w http.ResponseWriter, r *http.Request) {
 
 	cards := make([]ForecastCard, 0)
 
-	// Добавляем почасовые карточки (каждые 3 часа, максимум 4 карточки)
+	// Добавляем почасовые карточки (каждые 3 часа, максимум 3 карточки)
 	hourCount := 0
+	maxHours := 3
 	for i, hf := range hourlyForecast {
-		if hourCount >= 4 {
+		if hourCount >= maxHours {
 			break
 		}
 		// Берём первый час и далее каждые 3 часа
@@ -517,9 +518,15 @@ func (h *Handler) ForecastWidget(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Добавляем дневные карточки
+	// Добавляем дневные карточки (дополняем до 9 карточек)
 	daysOfWeekShort := []string{"Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"}
-	for _, df := range filteredDaily {
+	totalCards := 9
+	daysNeeded := totalCards - len(cards)
+
+	for i, df := range filteredDaily {
+		if i >= daysNeeded {
+			break
+		}
 		card := ForecastCard{
 			IsHourly:                 false,
 			Label:                    daysOfWeekShort[df.Date.Weekday()],
