@@ -472,9 +472,7 @@ func (h *Handler) ForecastWidget(w http.ResponseWriter, r *http.Request) {
 			filteredDaily = append(filteredDaily, df)
 		}
 	}
-	if len(filteredDaily) > 5 {
-		filteredDaily = filteredDaily[:5]
-	}
+	// Не ограничиваем количество дней - нужно столько, сколько нужно для 9 карточек
 
 	// Единый тип карточки для всех прогнозов
 	type ForecastCard struct {
