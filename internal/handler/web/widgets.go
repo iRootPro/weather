@@ -448,10 +448,8 @@ func (h *Handler) ForecastWidget(w http.ResponseWriter, r *http.Request) {
 
 	now := time.Now()
 
-	// Получаем почасовой прогноз на сегодня до конца дня
-	endOfDay := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 0, now.Location())
-	hoursUntilEndOfDay := int(endOfDay.Sub(now).Hours()) + 1
-	hourlyForecast, err := h.forecastService.GetHourlyForecast(r.Context(), hoursUntilEndOfDay)
+	// Получаем почасовой прогноз на следующие 12 часов (чтобы гарантированно было 3-4 карточки)
+	hourlyForecast, err := h.forecastService.GetHourlyForecast(r.Context(), 12)
 	if err != nil {
 		slog.Error("failed to get hourly forecast", "error", err)
 		http.Error(w, "Failed to load forecast", http.StatusInternalServerError)
