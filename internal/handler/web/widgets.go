@@ -446,20 +446,59 @@ func (h *Handler) ForecastWidget(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Получаем дневной прогноз на 6 дней
-	forecast, err := h.forecastService.GetDailyForecast(r.Context(), 6)
+	now := time.Now()
+
+	// Получаем почасовой прогноз на сегодня до конца дня
+	endOfDay := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 0, now.Location())
+	hoursUntilEndOfDay := int(endOfDay.Sub(now).Hours()) + 1
+	hourlyForecast, err := h.forecastService.GetHourlyForecast(r.Context(), hoursUntilEndOfDay)
 	if err != nil {
-		slog.Error("failed to get forecast", "error", err)
+		slog.Error("failed to get hourly forecast", "error", err)
 		http.Error(w, "Failed to load forecast", http.StatusInternalServerError)
 		return
 	}
 
-	// Ограничиваем до 6 дней
-	if len(forecast) > 6 {
-		forecast = forecast[:6]
+	// Фильтруем почасовой прогноз: берём каждые 3 часа
+	filteredHourly := make([]models.HourlyForecast, 0)
+	for i, hf := range hourlyForecast {
+		// Берём первый час и далее каждые 3 часа
+		if i == 0 || i%3 == 0 {
+			filteredHourly = append(filteredHourly, hf)
+		}
+	}
+
+	// Получаем дневной прогноз начиная с завтра на 5 дней
+	dailyForecast, err := h.forecastService.GetDailyForecast(r.Context(), 6)
+	if err != nil {
+		slog.Error("failed to get daily forecast", "error", err)
+		http.Error(w, "Failed to load forecast", http.StatusInternalServerError)
+		return
+	}
+
+	// Фильтруем дневной прогноз: исключаем сегодня, берём только будущие дни
+	tomorrow := time.Date(now.Year(), now.Month(), now.Day()+1, 0, 0, 0, 0, now.Location())
+	filteredDaily := make([]models.DailyForecast, 0)
+	for _, df := range dailyForecast {
+		if df.Date.After(tomorrow) || df.Date.Equal(tomorrow) {
+			filteredDaily = append(filteredDaily, df)
+		}
+	}
+
+	// Ограничиваем до 5 дней
+	if len(filteredDaily) > 5 {
+		filteredDaily = filteredDaily[:5]
 	}
 
 	// Форматируем данные для шаблона
+	type HourForecast struct {
+		Time                     string
+		Icon                     string
+		Description              string
+		Temperature              float32
+		FeelsLike                float32
+		PrecipitationProbability int16
+	}
+
 	type DayForecast struct {
 		Date                     string
 		DayName                  string
@@ -473,16 +512,31 @@ func (h *Handler) ForecastWidget(w http.ResponseWriter, r *http.Request) {
 	}
 
 	templateData := struct {
-		Days      []DayForecast
+		TodayHours []HourForecast
+		NextDays   []DayForecast
 		NoForecast bool
 	}{
-		Days:      make([]DayForecast, 0),
-		NoForecast: len(forecast) == 0,
+		TodayHours: make([]HourForecast, 0),
+		NextDays:   make([]DayForecast, 0),
+		NoForecast: len(filteredHourly) == 0 && len(filteredDaily) == 0,
 	}
 
-	daysOfWeek := []string{"Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"}
+	// Форматируем почасовой прогноз
+	for _, hf := range filteredHourly {
+		hour := HourForecast{
+			Time:                     hf.Time.Format("15:04"),
+			Icon:                     hf.Icon,
+			Description:              hf.WeatherDescription,
+			Temperature:              hf.Temperature,
+			FeelsLike:                hf.FeelsLike,
+			PrecipitationProbability: hf.PrecipitationProbability,
+		}
+		templateData.TodayHours = append(templateData.TodayHours, hour)
+	}
 
-	for _, day := range forecast {
+	// Форматируем дневной прогноз
+	daysOfWeek := []string{"Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"}
+	for _, day := range filteredDaily {
 		df := DayForecast{
 			Date:                     day.Date.Format("2 января"),
 			DayName:                  daysOfWeek[day.Date.Weekday()],
@@ -494,7 +548,7 @@ func (h *Handler) ForecastWidget(w http.ResponseWriter, r *http.Request) {
 			WindSpeed:                day.WindSpeedMax,
 			WindDirection:            degreesToDirection(day.WindDirection),
 		}
-		templateData.Days = append(templateData.Days, df)
+		templateData.NextDays = append(templateData.NextDays, df)
 	}
 
 	tmpl, err := h.parsePartial("forecast.html")
