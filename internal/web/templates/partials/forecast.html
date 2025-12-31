@@ -8,61 +8,39 @@
     </div>
     {{else}}
 
-    <!-- Сегодня: почасовой прогноз -->
-    {{if .TodayHours}}
-    <div class="mb-6">
-        <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Сегодня</h3>
-        <div class="flex gap-3 overflow-x-auto pb-2">
-            {{range .TodayHours}}
-            <div class="flex-shrink-0 text-center p-3 bg-gradient-to-br from-sky-50 to-blue-100 dark:from-sky-900/20 dark:to-blue-800/20 rounded-lg transition-colors min-w-[90px]">
-                <div class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-                    {{.Time}}
-                </div>
-                <div class="text-2xl mb-1">{{.Icon}}</div>
-                <div class="text-2xl font-bold text-sky-600 dark:text-sky-400">
-                    {{printf "%.0f°" .Temperature}}
-                </div>
-                <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    ощущ. {{printf "%.0f°" .FeelsLike}}
-                </div>
-                {{if gt .PrecipitationProbability 0}}
-                <div class="text-xs text-blue-500 dark:text-blue-400 mt-1">
-                    💧 {{.PrecipitationProbability}}%
-                </div>
-                {{end}}
+    <!-- Единая сетка карточек -->
+    <div class="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-3">
+        {{range .Cards}}
+        <div class="text-center p-3 bg-gradient-to-br from-sky-50 to-blue-100 dark:from-sky-900/20 dark:to-blue-800/20 rounded-lg transition-colors">
+            <!-- Метка: время или день недели -->
+            <div class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                {{.Label}}
             </div>
-            {{end}}
-        </div>
-    </div>
-    {{end}}
 
-    <!-- Ближайшие дни: дневной прогноз -->
-    {{if .NextDays}}
-    <div>
-        <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Ближайшие дни</h3>
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            {{range .NextDays}}
-            <div class="block text-center p-4 bg-gradient-to-br from-sky-50 to-blue-100 dark:from-sky-900/20 dark:to-blue-800/20 rounded-lg transition-colors">
-                <div class="text-3xl mb-1">{{.Icon}}</div>
-                <div class="text-3xl font-bold text-sky-600 dark:text-sky-400">
-                    {{printf "%.0f°" .TempMax}}
-                </div>
-                <div class="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                    {{.DayName}}
-                </div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">
-                    мин: {{printf "%.0f°" .TempMin}}
-                </div>
-                {{if gt .PrecipitationProbability 0}}
-                <div class="text-xs text-blue-500 dark:text-blue-400 mt-1">
-                    💧 {{.PrecipitationProbability}}%
-                </div>
-                {{end}}
+            <!-- Иконка погоды -->
+            <div class="text-3xl mb-2">{{.Icon}}</div>
+
+            <!-- Основная температура -->
+            <div class="text-xl font-bold text-sky-600 dark:text-sky-400 mb-1">
+                {{.TempMain}}
+            </div>
+
+            <!-- Дополнительная информация (ощущается как) -->
+            {{if .TempSecondary}}
+            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                {{.TempSecondary}}
+            </div>
+            {{end}}
+
+            <!-- Осадки -->
+            {{if .HasPrecipitation}}
+            <div class="text-xs text-blue-500 dark:text-blue-400">
+                💧 {{.PrecipitationProbability}}%
             </div>
             {{end}}
         </div>
+        {{end}}
     </div>
-    {{end}}
 
     {{end}}
 

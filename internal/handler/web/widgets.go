@@ -458,16 +458,7 @@ func (h *Handler) ForecastWidget(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Фильтруем почасовой прогноз: берём каждые 3 часа
-	filteredHourly := make([]models.HourlyForecast, 0)
-	for i, hf := range hourlyForecast {
-		// Берём первый час и далее каждые 3 часа
-		if i == 0 || i%3 == 0 {
-			filteredHourly = append(filteredHourly, hf)
-		}
-	}
-
-	// Получаем дневной прогноз начиная с завтра на 5 дней
+	// Получаем дневной прогноз начиная с завтра
 	dailyForecast, err := h.forecastService.GetDailyForecast(r.Context(), 6)
 	if err != nil {
 		slog.Error("failed to get daily forecast", "error", err)
@@ -475,7 +466,7 @@ func (h *Handler) ForecastWidget(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Фильтруем дневной прогноз: исключаем сегодня, берём только будущие дни
+	// Фильтруем дневной прогноз: исключаем сегодня
 	tomorrow := time.Date(now.Year(), now.Month(), now.Day()+1, 0, 0, 0, 0, now.Location())
 	filteredDaily := make([]models.DailyForecast, 0)
 	for _, df := range dailyForecast {
@@ -483,72 +474,70 @@ func (h *Handler) ForecastWidget(w http.ResponseWriter, r *http.Request) {
 			filteredDaily = append(filteredDaily, df)
 		}
 	}
-
-	// Ограничиваем до 5 дней
 	if len(filteredDaily) > 5 {
 		filteredDaily = filteredDaily[:5]
 	}
 
-	// Форматируем данные для шаблона
-	type HourForecast struct {
-		Time                     string
+	// Единый тип карточки для всех прогнозов
+	type ForecastCard struct {
+		IsHourly                 bool   // true = почасовой, false = дневной
+		Label                    string // "15:00" или "Пн"
 		Icon                     string
-		Description              string
-		Temperature              float32
-		FeelsLike                float32
+		TempMain                 string // "-3°" или "-8/-2°"
+		TempSecondary            string // "ощущ. -7°" для часов, пусто для дней
 		PrecipitationProbability int16
+		HasPrecipitation         bool
 	}
 
-	type DayForecast struct {
-		Date                     string
-		DayName                  string
-		Icon                     string
-		Description              string
-		TempMin                  float32
-		TempMax                  float32
-		PrecipitationProbability int16
-		WindSpeed                float32
-		WindDirection            string
+	cards := make([]ForecastCard, 0)
+
+	// Добавляем почасовые карточки (каждые 3 часа, максимум 4 карточки)
+	hourCount := 0
+	for i, hf := range hourlyForecast {
+		if hourCount >= 4 {
+			break
+		}
+		// Берём первый час и далее каждые 3 часа
+		if i == 0 || i%3 == 0 {
+			tempSecondary := ""
+			if hf.FeelsLike != hf.Temperature {
+				tempSecondary = fmt.Sprintf("ощущ. %.0f°", hf.FeelsLike)
+			}
+			card := ForecastCard{
+				IsHourly:                 true,
+				Label:                    hf.Time.Format("15:04"),
+				Icon:                     hf.Icon,
+				TempMain:                 fmt.Sprintf("%.0f°", hf.Temperature),
+				TempSecondary:            tempSecondary,
+				PrecipitationProbability: hf.PrecipitationProbability,
+				HasPrecipitation:         hf.PrecipitationProbability > 0,
+			}
+			cards = append(cards, card)
+			hourCount++
+		}
+	}
+
+	// Добавляем дневные карточки
+	daysOfWeekShort := []string{"Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"}
+	for _, df := range filteredDaily {
+		card := ForecastCard{
+			IsHourly:                 false,
+			Label:                    daysOfWeekShort[df.Date.Weekday()],
+			Icon:                     df.Icon,
+			TempMain:                 fmt.Sprintf("%.0f/%.0f°", df.TemperatureMin, df.TemperatureMax),
+			TempSecondary:            "",
+			PrecipitationProbability: df.PrecipitationProbability,
+			HasPrecipitation:         df.PrecipitationProbability > 0,
+		}
+		cards = append(cards, card)
 	}
 
 	templateData := struct {
-		TodayHours []HourForecast
-		NextDays   []DayForecast
+		Cards      []ForecastCard
 		NoForecast bool
 	}{
-		TodayHours: make([]HourForecast, 0),
-		NextDays:   make([]DayForecast, 0),
-		NoForecast: len(filteredHourly) == 0 && len(filteredDaily) == 0,
-	}
-
-	// Форматируем почасовой прогноз
-	for _, hf := range filteredHourly {
-		hour := HourForecast{
-			Time:                     hf.Time.Format("15:04"),
-			Icon:                     hf.Icon,
-			Description:              hf.WeatherDescription,
-			Temperature:              hf.Temperature,
-			FeelsLike:                hf.FeelsLike,
-			PrecipitationProbability: hf.PrecipitationProbability,
-		}
-		templateData.TodayHours = append(templateData.TodayHours, hour)
-	}
-
-	// Форматируем дневной прогноз
-	daysOfWeek := []string{"Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"}
-	for _, day := range filteredDaily {
-		df := DayForecast{
-			Date:                     day.Date.Format("2 января"),
-			DayName:                  daysOfWeek[day.Date.Weekday()],
-			Icon:                     day.Icon,
-			Description:              day.WeatherDescription,
-			TempMin:                  day.TemperatureMin,
-			TempMax:                  day.TemperatureMax,
-			PrecipitationProbability: day.PrecipitationProbability,
-			WindSpeed:                day.WindSpeedMax,
-			WindDirection:            degreesToDirection(day.WindDirection),
-		}
-		templateData.NextDays = append(templateData.NextDays, df)
+		Cards:      cards,
+		NoForecast: len(cards) == 0,
 	}
 
 	tmpl, err := h.parsePartial("forecast.html")
