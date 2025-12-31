@@ -481,6 +481,7 @@ func (h *Handler) ForecastWidget(w http.ResponseWriter, r *http.Request) {
 		Icon                     string
 		TempMain                 string // "-3°" или "-8/-2°"
 		TempSecondary            string // "ощущ. -7°" для часов, пусто для дней
+		WeatherDescription       string // "Снег", "Дождь", "Облачно" и т.д.
 		PrecipitationProbability int16
 		HasPrecipitation         bool
 	}
@@ -506,6 +507,7 @@ func (h *Handler) ForecastWidget(w http.ResponseWriter, r *http.Request) {
 				Icon:                     hf.Icon,
 				TempMain:                 fmt.Sprintf("%.0f°", hf.Temperature),
 				TempSecondary:            tempSecondary,
+				WeatherDescription:       hf.WeatherDescription,
 				PrecipitationProbability: hf.PrecipitationProbability,
 				HasPrecipitation:         hf.PrecipitationProbability > 0,
 			}
@@ -529,6 +531,7 @@ func (h *Handler) ForecastWidget(w http.ResponseWriter, r *http.Request) {
 			Icon:                     df.Icon,
 			TempMain:                 fmt.Sprintf("%.0f/%.0f°", df.TemperatureMin, df.TemperatureMax),
 			TempSecondary:            "",
+			WeatherDescription:       df.WeatherDescription,
 			PrecipitationProbability: df.PrecipitationProbability,
 			HasPrecipitation:         df.PrecipitationProbability > 0,
 		}
