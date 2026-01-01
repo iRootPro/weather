@@ -106,6 +106,23 @@ services:
       - .env
     restart: unless-stopped
 
+  narodmon-sender:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: narodmon-sender
+    container_name: weather-narodmon-sender
+    environment:
+      TZ: Europe/Moscow
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrator:
+        condition: service_completed_successfully
+    env_file:
+      - .env
+    restart: unless-stopped
+
 volumes:
   postgres_data:
   photos_data:

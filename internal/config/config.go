@@ -17,6 +17,7 @@ type Config struct {
 	Location LocationConfig `yaml:"location"`
 	Telegram TelegramConfig `yaml:"telegram"`
 	Forecast ForecastConfig `yaml:"forecast"`
+	Narodmon NarodmonConfig `yaml:"narodmon"`
 }
 
 type LocationConfig struct {
@@ -88,6 +89,15 @@ type ForecastConfig struct {
 	HourlyHours    int    `env:"FORECAST_HOURLY_HOURS" env-default:"48"`      // сколько часов вперед получать почасовой прогноз
 	DailyDays      int    `env:"FORECAST_DAILY_DAYS" env-default:"7"`         // сколько дней вперед получать дневной прогноз
 	APITimeout     int    `env:"FORECAST_API_TIMEOUT" env-default:"30"`       // таймаут API запросов в секундах
+}
+
+type NarodmonConfig struct {
+	Enabled    bool   `env:"NARODMON_ENABLED" env-default:"false"`                     // Включить/выключить отправку
+	MAC        string `env:"NARODMON_MAC" env-default:"AA:BB:CC:DD:EE:FF"`            // MAC-адрес устройства
+	DeviceName string `env:"NARODMON_DEVICE_NAME" env-default:"EcoWitt Weather"`      // Название устройства
+	Interval   int    `env:"NARODMON_INTERVAL" env-default:"300"`                     // Интервал отправки (секунды)
+	Server     string `env:"NARODMON_SERVER" env-default:"narodmon.ru:8283"`          // Адрес сервера
+	Timeout    int    `env:"NARODMON_TIMEOUT" env-default:"10"`                       // Таймаут подключения (секунды)
 }
 
 func Load() (*Config, error) {

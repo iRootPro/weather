@@ -16,6 +16,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/api-server ./cmd/api-server
 RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/migrator ./cmd/migrator
 RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/telegram-bot ./cmd/telegram-bot
 RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/forecast-fetcher ./cmd/forecast-fetcher
+RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/narodmon-sender ./cmd/narodmon-sender
 
 # MQTT Consumer
 FROM alpine:3.20 AS mqtt-consumer
@@ -58,3 +59,10 @@ RUN apk --no-cache add ca-certificates tzdata
 WORKDIR /app
 COPY --from=builder /bin/forecast-fetcher /app/forecast-fetcher
 CMD ["/app/forecast-fetcher"]
+
+# Narodmon Sender
+FROM alpine:3.20 AS narodmon-sender
+RUN apk --no-cache add ca-certificates tzdata
+WORKDIR /app
+COPY --from=builder /bin/narodmon-sender /app/narodmon-sender
+CMD ["/app/narodmon-sender"]
