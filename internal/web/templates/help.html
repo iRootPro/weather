@@ -681,6 +681,111 @@
         </div>
     </div>
 
+    <!-- Narodmon Integration -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+            <svg class="w-5 h-5 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+            </svg>
+            Народный мониторинг
+        </h2>
+
+        <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">
+            Данные нашей метеостанции автоматически передаются в <a href="https://narodmon.ru/" target="_blank" rel="noopener noreferrer" class="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 underline">Народный Мониторинг</a> —
+            крупнейшую открытую сеть метеостанций и датчиков в России и СНГ.
+        </p>
+
+        <div class="space-y-4">
+            <!-- What is Narodmon -->
+            <div class="border-l-4 border-green-400 pl-4">
+                <h3 class="font-medium text-gray-900 dark:text-white">Что это такое?</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                    Народный мониторинг — это общедоступная сеть метеостанций и датчиков, объединяющая тысячи устройств по всему миру.
+                    Это позволяет:
+                </p>
+                <div class="mt-2 space-y-2 text-sm">
+                    <div class="flex items-start">
+                        <span class="inline-block w-2 h-2 bg-green-400 rounded-full mt-1.5 mr-3 flex-shrink-0"></span>
+                        <span class="text-gray-600 dark:text-gray-300">Получать доступ к данным других станций в вашем регионе</span>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="inline-block w-2 h-2 bg-green-400 rounded-full mt-1.5 mr-3 flex-shrink-0"></span>
+                        <span class="text-gray-600 dark:text-gray-300">Сравнивать показатели с соседними станциями</span>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="inline-block w-2 h-2 bg-green-400 rounded-full mt-1.5 mr-3 flex-shrink-0"></span>
+                        <span class="text-gray-600 dark:text-gray-300">Участвовать в формировании климатической карты региона</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transmitted Data -->
+            <div class="border-l-4 border-blue-400 pl-4">
+                <h3 class="font-medium text-gray-900 dark:text-white">Какие данные передаются</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mt-1 mb-3">
+                    В Народный мониторинг отправляются следующие показатели с нашей метеостанции:
+                </p>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                    <div class="bg-orange-50 dark:bg-orange-900/20 rounded p-2 text-center">
+                        <div class="text-xs text-orange-600 dark:text-orange-400 mb-1">🌡️</div>
+                        <div class="font-medium text-gray-900 dark:text-white text-xs">Температура</div>
+                    </div>
+                    <div class="bg-blue-50 dark:bg-blue-900/20 rounded p-2 text-center">
+                        <div class="text-xs text-blue-600 dark:text-blue-400 mb-1">💧</div>
+                        <div class="font-medium text-gray-900 dark:text-white text-xs">Влажность</div>
+                    </div>
+                    <div class="bg-purple-50 dark:bg-purple-900/20 rounded p-2 text-center">
+                        <div class="text-xs text-purple-600 dark:text-purple-400 mb-1">🎚️</div>
+                        <div class="font-medium text-gray-900 dark:text-white text-xs">Давление</div>
+                    </div>
+                    <div class="bg-teal-50 dark:bg-teal-900/20 rounded p-2 text-center">
+                        <div class="text-xs text-teal-600 dark:text-teal-400 mb-1">💨</div>
+                        <div class="font-medium text-gray-900 dark:text-white text-xs">Ветер</div>
+                    </div>
+                    <div class="bg-cyan-50 dark:bg-cyan-900/20 rounded p-2 text-center">
+                        <div class="text-xs text-cyan-600 dark:text-cyan-400 mb-1">🌧️</div>
+                        <div class="font-medium text-gray-900 dark:text-white text-xs">Осадки</div>
+                    </div>
+                    <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded p-2 text-center">
+                        <div class="text-xs text-yellow-600 dark:text-yellow-400 mb-1">☀️</div>
+                        <div class="font-medium text-gray-900 dark:text-white text-xs">Освещённость</div>
+                    </div>
+                    <div class="bg-amber-50 dark:bg-amber-900/20 rounded p-2 text-center">
+                        <div class="text-xs text-amber-600 dark:text-amber-400 mb-1">☢️</div>
+                        <div class="font-medium text-gray-900 dark:text-white text-xs">UV индекс</div>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded p-2 text-center">
+                        <div class="text-xs text-gray-600 dark:text-gray-400 mb-1">🧭</div>
+                        <div class="font-medium text-gray-900 dark:text-white text-xs">Направление</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Update Frequency -->
+            <div class="border-l-4 border-indigo-400 pl-4">
+                <h3 class="font-medium text-gray-900 dark:text-white">Частота обновления</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                    Данные отправляются автоматически <strong>каждые 5 минут</strong> в режиме реального времени.
+                    Статус последней передачи отображается в футере сайта.
+                </p>
+            </div>
+
+            <!-- Link -->
+            <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                <h4 class="font-medium text-green-900 dark:text-green-100 flex items-center mb-2">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                    </svg>
+                    Просмотр данных
+                </h4>
+                <p class="text-sm text-green-800 dark:text-green-200">
+                    Вы можете посмотреть данные нашей станции и других станций в регионе на сайте
+                    <a href="https://narodmon.ru/" target="_blank" rel="noopener noreferrer" class="font-medium underline hover:no-underline">narodmon.ru</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
     <!-- Data Collection -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">

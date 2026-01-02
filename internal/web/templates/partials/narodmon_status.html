@@ -1,23 +1,23 @@
-<div class="flex items-center gap-2" title="{{if .Success}}Последняя отправка успешна{{else}}Ошибка отправки: {{.ErrorMessage}}{{end}}">
+<div class="flex items-center gap-2" title="{{if .Success}}Последняя отправка успешна: {{.TimeAgo}}{{else}}Ошибка отправки: {{.ErrorMessage}}{{end}}">
     <!-- Статус иконка -->
     {{if .Success}}
-    <div class="flex items-center gap-1 px-2 py-1 rounded-lg bg-green-50 dark:bg-green-900/20">
+    <div class="flex items-center gap-1 p-2 rounded-lg bg-green-50 dark:bg-green-900/20">
         <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
         </svg>
-        <span class="text-xs text-green-600 dark:text-green-400">Narodmon</span>
+        <span class="hidden sm:inline text-xs text-green-600 dark:text-green-400">Narodmon</span>
     </div>
     {{else}}
-    <div class="flex items-center gap-1 px-2 py-1 rounded-lg bg-red-50 dark:bg-red-900/20">
+    <div class="flex items-center gap-1 p-2 rounded-lg bg-red-50 dark:bg-red-900/20">
         <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
         </svg>
-        <span class="text-xs text-red-600 dark:text-red-400">Ошибка</span>
+        <span class="hidden sm:inline text-xs text-red-600 dark:text-red-400">Ошибка</span>
     </div>
     {{end}}
 
-    <!-- Время -->
-    <span class="text-xs text-gray-500 dark:text-gray-400">{{.TimeAgo}}</span>
+    <!-- Время (только на desktop) -->
+    <span class="hidden sm:inline text-xs text-gray-500 dark:text-gray-400">{{.TimeAgo}}</span>
 
     <!-- Ссылка на narodmon -->
     <a href="{{.DeviceURL}}" target="_blank" rel="noopener noreferrer"

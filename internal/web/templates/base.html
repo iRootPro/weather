@@ -133,18 +133,15 @@
     <!-- Footer -->
     <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-auto transition-colors duration-200">
         <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <!-- Contact -->
-                <div class="flex items-center gap-2">
-                    <span class="text-sm text-gray-600 dark:text-gray-400">Для связи:</span>
-                    <a href="https://t.me/iRootPro" target="_blank" rel="noopener noreferrer"
-                       class="inline-flex items-center gap-2 p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
-                       title="Написать в Telegram">
-                        <svg class="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.658-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.941z"/>
-                        </svg>
-                    </a>
-                </div>
+            <div class="flex items-center justify-center sm:justify-between gap-3">
+                <!-- Contact (Telegram only) -->
+                <a href="https://t.me/iRootPro" target="_blank" rel="noopener noreferrer"
+                   class="inline-flex items-center p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+                   title="Написать в Telegram">
+                    <svg class="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.658-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.941z"/>
+                    </svg>
+                </a>
 
                 <!-- Narodmon Status -->
                 <div id="narodmon-status"
@@ -155,7 +152,7 @@
 
                 <!-- Theme Toggle -->
                 <button onclick="toggleTheme()"
-                        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                        class="inline-flex items-center gap-2 p-2 sm:px-4 sm:py-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                         title="Переключить тему">
                     <!-- Sun icon (shown in dark mode) -->
                     <svg class="w-5 h-5 text-yellow-500 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -165,7 +162,7 @@
                     <svg class="w-5 h-5 text-gray-700 dark:text-gray-300 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
                     </svg>
-                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <span class="hidden sm:inline text-sm font-medium text-gray-700 dark:text-gray-300">
                         <span class="hidden dark:inline">Светлая</span>
                         <span class="inline dark:hidden">Темная</span>
                     </span>
