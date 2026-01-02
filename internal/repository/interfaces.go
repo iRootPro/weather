@@ -68,3 +68,10 @@ type PhotoRepository interface {
 	Delete(ctx context.Context, id int64) error
 	GetWeatherForTime(ctx context.Context, takenAt time.Time) (*models.WeatherData, error)
 }
+
+type NarodmonLogRepository interface {
+	Create(ctx context.Context, log *models.NarodmonLog) error
+	GetLatest(ctx context.Context) (*models.NarodmonLog, error)
+	GetRecent(ctx context.Context, limit int) ([]models.NarodmonLog, error)
+	DeleteOld(ctx context.Context, olderThan time.Time) error
+}

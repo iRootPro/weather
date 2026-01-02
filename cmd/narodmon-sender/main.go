@@ -64,16 +64,18 @@ func main() {
 
 	// Репозиторий
 	weatherRepo := repository.NewWeatherRepository(pool)
+	narodmonLogRepo := repository.NewNarodmonLogRepository(pool)
 
 	// Клиент Narodmon
 	narodmonClient := narodmon.NewClient(cfg.Narodmon.Server, cfg.Narodmon.Timeout)
 
 	// Создаём sender
 	sender := &Sender{
-		logger:         logger,
-		weatherRepo:    weatherRepo,
-		narodmonClient: narodmonClient,
-		config:         cfg.Narodmon,
+		logger:          logger,
+		weatherRepo:     weatherRepo,
+		narodmonClient:  narodmonClient,
+		narodmonLogRepo: narodmonLogRepo,
+		config:          cfg.Narodmon,
 	}
 
 	// Выполняем первую отправку сразу при старте
@@ -112,16 +114,18 @@ func main() {
 }
 
 type Sender struct {
-	logger         *slog.Logger
-	weatherRepo    repository.WeatherRepository
-	narodmonClient *narodmon.Client
-	config         config.NarodmonConfig
+	logger          *slog.Logger
+	weatherRepo     repository.WeatherRepository
+	narodmonClient  *narodmon.Client
+	narodmonLogRepo repository.NarodmonLogRepository
+	config          config.NarodmonConfig
 }
 
 func (s *Sender) SendData(ctx context.Context) error {
 	// Получаем последние данные из БД
 	latestData, err := s.weatherRepo.GetLatest(ctx)
 	if err != nil {
+		s.saveLog(ctx, false, 0, err.Error())
 		return err
 	}
 
@@ -139,8 +143,11 @@ func (s *Sender) SendData(ctx context.Context) error {
 		s.config.DeviceName,
 		sensors,
 	); err != nil {
+		s.saveLog(ctx, false, len(sensors), err.Error())
 		return err
 	}
+
+	s.saveLog(ctx, true, len(sensors), "")
 
 	s.logger.Info("data sent successfully",
 		"sensors_count", len(sensors),
@@ -148,6 +155,22 @@ func (s *Sender) SendData(ctx context.Context) error {
 	)
 
 	return nil
+}
+
+func (s *Sender) saveLog(ctx context.Context, success bool, sensorsCount int, errorMsg string) {
+	log := &models.NarodmonLog{
+		SentAt:       time.Now(),
+		Success:      success,
+		SensorsCount: sensorsCount,
+	}
+	if errorMsg != "" {
+		log.ErrorMessage = &errorMsg
+	}
+
+	if err := s.narodmonLogRepo.Create(ctx, log); err != nil {
+		s.logger.Error("failed to save narodmon log", "error", err)
+		// Не возвращаем ошибку - лог не критичен
+	}
 }
 
 func (s *Sender) buildSensors(data *models.WeatherData) []narodmon.Sensor {

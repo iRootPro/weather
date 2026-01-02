@@ -558,3 +558,75 @@ func (h *Handler) ForecastWidget(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }
+
+// NarodmonStatusWidget renders the narodmon status widget
+func (h *Handler) NarodmonStatusWidget(w http.ResponseWriter, r *http.Request) {
+	// Если сервис не настроен - не показываем виджет
+	if h.narodmonService == nil {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	status, err := h.narodmonService.GetStatus(r.Context())
+	if err != nil {
+		slog.Error("failed to get narodmon status", "error", err)
+		http.Error(w, "Failed to load status", http.StatusInternalServerError)
+		return
+	}
+
+	// Если нет отправок - не показываем виджет
+	if status == nil {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	// Форматируем время
+	timeAgo := formatTimeAgo(status.LastSentAt)
+
+	templateData := struct {
+		Success      bool
+		TimeAgo      string
+		SensorsCount int
+		ErrorMessage string
+		DeviceURL    string
+	}{
+		Success:      status.Success,
+		TimeAgo:      timeAgo,
+		SensorsCount: status.SensorsCount,
+		ErrorMessage: status.ErrorMessage,
+		DeviceURL:    h.narodmonURL,
+	}
+
+	tmpl, err := h.parsePartial("narodmon_status.html")
+	if err != nil {
+		slog.Error("failed to parse narodmon status template", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	if err := tmpl.Execute(w, templateData); err != nil {
+		slog.Error("failed to render narodmon status widget", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}
+
+func formatTimeAgo(t *time.Time) string {
+	if t == nil {
+		return ""
+	}
+
+	duration := time.Since(*t)
+
+	if duration < time.Minute {
+		return "только что"
+	} else if duration < time.Hour {
+		mins := int(duration.Minutes())
+		return fmt.Sprintf("%d мин назад", mins)
+	} else if duration < 24*time.Hour {
+		hours := int(duration.Hours())
+		return fmt.Sprintf("%d ч назад", hours)
+	} else {
+		days := int(duration.Hours() / 24)
+		return fmt.Sprintf("%d дн назад", days)
+	}
+}

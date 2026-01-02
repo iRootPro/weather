@@ -98,6 +98,7 @@ type NarodmonConfig struct {
 	Interval   int    `env:"NARODMON_INTERVAL" env-default:"300"`                     // Интервал отправки (секунды)
 	Server     string `env:"NARODMON_SERVER" env-default:"narodmon.ru:8283"`          // Адрес сервера
 	Timeout    int    `env:"NARODMON_TIMEOUT" env-default:"10"`                       // Таймаут подключения (секунды)
+	DeviceURL  string `env:"NARODMON_DEVICE_URL" env-default:"https://narodmon.ru/"` // URL страницы устройства
 }
 
 func Load() (*Config, error) {

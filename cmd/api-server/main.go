@@ -56,6 +56,7 @@ func main() {
 	sensorRepo := repository.NewSensorRepository(pool)
 	forecastRepo := repository.NewForecastRepository(pool)
 	photoRepo := repository.NewPhotoRepository(pool)
+	narodmonLogRepo := repository.NewNarodmonLogRepository(pool)
 
 	// Инициализация сервисов
 	weatherService := service.NewWeatherService(weatherRepo)
@@ -72,6 +73,13 @@ func main() {
 	}
 	slog.Info("moon service created successfully")
 
+	// Narodmon сервис (опционально, только если включен)
+	var narodmonService *service.NarodmonService
+	if cfg.Narodmon.Enabled {
+		narodmonService = service.NewNarodmonService(narodmonLogRepo)
+		slog.Info("narodmon service created")
+	}
+
 	// Инициализация хендлеров
 	weatherHandler := api.NewWeatherHandler(weatherService)
 	sensorHandler := api.NewSensorHandler(sensorService)
@@ -85,7 +93,7 @@ func main() {
 	}
 
 	slog.Info("creating web handler", "templatesDir", templatesDir)
-	webHandler, err := web.NewHandler(templatesDir, weatherService, sunService, moonService, forecastService, photoRepo)
+	webHandler, err := web.NewHandler(templatesDir, weatherService, sunService, moonService, forecastService, photoRepo, narodmonService, cfg.Narodmon.DeviceURL)
 	if err != nil {
 		log.Fatalf("failed to create web handler: %v", err)
 	}
@@ -137,6 +145,7 @@ func main() {
 	slog.Info("sun widget route registered")
 	mux.HandleFunc("GET /widgets/events", webHandler.WeatherEventsWidget)
 	mux.HandleFunc("GET /widgets/forecast", webHandler.ForecastWidget)
+	mux.HandleFunc("GET /widgets/narodmon-status", webHandler.NarodmonStatusWidget)
 
 	// Static files
 	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.Dir(staticDir))))
