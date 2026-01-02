@@ -39,6 +39,50 @@
 
     <style>
         [x-cloak] { display: none !important; }
+
+        /* Pull to refresh */
+        .pull-to-refresh-indicator {
+            position: fixed;
+            top: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: top 0.3s ease;
+            z-index: 9999;
+        }
+
+        .dark .pull-to-refresh-indicator {
+            background: #1f2937;
+        }
+
+        .pull-to-refresh-indicator.visible {
+            top: 20px;
+        }
+
+        .pull-to-refresh-spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid #e5e7eb;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .dark .pull-to-refresh-spinner {
+            border-color: #374151;
+            border-top-color: #60a5fa;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 
     <script>
@@ -56,6 +100,11 @@
     </script>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 min-h-screen transition-colors duration-200">
+    <!-- Pull to Refresh Indicator -->
+    <div id="pull-to-refresh-indicator" class="pull-to-refresh-indicator">
+        <div class="pull-to-refresh-spinner"></div>
+    </div>
+
     <!-- Header (sticky) -->
     <header class="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-50 transition-colors duration-200">
         <div class="max-w-7xl mx-auto px-4 py-3 sm:px-6 lg:px-8">
@@ -201,6 +250,90 @@
                 window.dispatchEvent(new CustomEvent('themeChanged'));
             }
         });
+
+        // Pull to Refresh
+        (function() {
+            let startY = 0;
+            let currentY = 0;
+            let pulling = false;
+            const threshold = 80; // Порог для активации обновления
+            const indicator = document.getElementById('pull-to-refresh-indicator');
+
+            // Проверяем что мы на мобильном устройстве или touch-экране
+            const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+            if (!isTouchDevice) return;
+
+            document.addEventListener('touchstart', (e) => {
+                // Проверяем что страница прокручена в самый верх
+                if (window.scrollY === 0) {
+                    startY = e.touches[0].pageY;
+                    pulling = true;
+                }
+            }, { passive: true });
+
+            document.addEventListener('touchmove', (e) => {
+                if (!pulling) return;
+
+                currentY = e.touches[0].pageY;
+                const pullDistance = currentY - startY;
+
+                // Показываем индикатор только если тянем вниз
+                if (pullDistance > 0 && pullDistance < threshold * 2) {
+                    // Показываем индикатор пропорционально расстоянию
+                    const progress = Math.min(pullDistance / threshold, 1);
+                    indicator.style.top = `${-60 + (80 * progress)}px`;
+                }
+            }, { passive: true });
+
+            document.addEventListener('touchend', async (e) => {
+                if (!pulling) return;
+
+                const pullDistance = currentY - startY;
+                pulling = false;
+
+                // Если потянули достаточно далеко - обновляем
+                if (pullDistance > threshold) {
+                    // Показываем индикатор загрузки
+                    indicator.classList.add('visible');
+
+                    // Обновляем все HTMX элементы на странице
+                    const htmxElements = document.querySelectorAll('[hx-get]');
+                    let refreshPromises = [];
+
+                    htmxElements.forEach(el => {
+                        const url = el.getAttribute('hx-get');
+                        const swap = el.getAttribute('hx-swap') || 'innerHTML';
+
+                        if (url) {
+                            // Используем HTMX API для загрузки данных
+                            const promise = new Promise((resolve) => {
+                                el.addEventListener('htmx:afterSwap', resolve, { once: true });
+                                htmx.ajax('GET', url, { target: el, swap: swap });
+                            });
+                            refreshPromises.push(promise);
+                        }
+                    });
+
+                    // Ждем завершения всех обновлений или минимум 800мс
+                    await Promise.race([
+                        Promise.all(refreshPromises),
+                        new Promise(resolve => setTimeout(resolve, 800))
+                    ]);
+
+                    // Скрываем индикатор
+                    indicator.classList.remove('visible');
+                } else {
+                    // Скрываем индикатор с анимацией
+                    indicator.style.top = '-60px';
+                }
+
+                // Сбрасываем позицию
+                setTimeout(() => {
+                    indicator.style.top = '-60px';
+                }, 300);
+            }, { passive: true });
+        })();
     </script>
 
     {{block "scripts" .}}{{end}}
