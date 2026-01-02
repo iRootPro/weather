@@ -40,6 +40,24 @@
     <style>
         [x-cloak] { display: none !important; }
 
+        /* Mobile touch improvements */
+        a, button {
+            -webkit-tap-highlight-color: rgba(59, 130, 246, 0.3);
+            -webkit-touch-callout: none;
+            touch-action: manipulation;
+        }
+
+        /* Mobile navigation - larger tap targets */
+        @media (max-width: 640px) {
+            nav a {
+                min-width: 44px;
+                min-height: 44px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+        }
+
         /* Pull to refresh */
         .pull-to-refresh-indicator {
             position: fixed;
@@ -134,37 +152,37 @@
                     </a>
                 </nav>
                 <!-- Mobile nav -->
-                <nav class="flex sm:hidden space-x-1">
-                        <a href="/" class="px-3 py-2 rounded-md text-sm font-medium {{if eq .ActivePage "dashboard"}}bg-blue-500 text-white{{else}}text-gray-600 dark:text-gray-300{{end}}">
+                <nav class="flex sm:hidden gap-1">
+                        <a href="/" class="p-3 rounded-md text-sm font-medium {{if eq .ActivePage "dashboard"}}bg-blue-500 text-white{{else}}text-gray-600 dark:text-gray-300{{end}}">
                             <!-- Cloud with sun icon -->
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
                                 <circle cx="17" cy="7" r="2" stroke-width="1.5" opacity="0.6"/>
                                 <path d="M17 5v-.5M19 7h.5M17 9v.5M15 7h-.5" stroke-width="1.5" opacity="0.6"/>
                             </svg>
                         </a>
-                        <a href="/history" class="px-3 py-2 rounded-md text-sm font-medium {{if eq .ActivePage "history"}}bg-blue-500 text-white{{else}}text-gray-600 dark:text-gray-300{{end}}">
+                        <a href="/history" class="p-3 rounded-md text-sm font-medium {{if eq .ActivePage "history"}}bg-blue-500 text-white{{else}}text-gray-600 dark:text-gray-300{{end}}">
                             <!-- Trending up / Line chart icon -->
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
                             </svg>
                         </a>
-                        <a href="/records" class="px-3 py-2 rounded-md text-sm font-medium {{if eq .ActivePage "records"}}bg-blue-500 text-white{{else}}text-gray-600 dark:text-gray-300{{end}}">
+                        <a href="/records" class="p-3 rounded-md text-sm font-medium {{if eq .ActivePage "records"}}bg-blue-500 text-white{{else}}text-gray-600 dark:text-gray-300{{end}}">
                             <!-- Trophy icon -->
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
                             </svg>
                         </a>
-                        <a href="/gallery" class="px-3 py-2 rounded-md text-sm font-medium {{if eq .ActivePage "gallery"}}bg-blue-500 text-white{{else}}text-gray-600 dark:text-gray-300{{end}}">
+                        <a href="/gallery" class="p-3 rounded-md text-sm font-medium {{if eq .ActivePage "gallery"}}bg-blue-500 text-white{{else}}text-gray-600 dark:text-gray-300{{end}}">
                             <!-- Camera icon -->
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
                             </svg>
                         </a>
-                        <a href="/help" class="px-3 py-2 rounded-md text-sm font-medium {{if eq .ActivePage "help"}}bg-blue-500 text-white{{else}}text-gray-600 dark:text-gray-300{{end}}">
+                        <a href="/help" class="p-3 rounded-md text-sm font-medium {{if eq .ActivePage "help"}}bg-blue-500 text-white{{else}}text-gray-600 dark:text-gray-300{{end}}">
                             <!-- Info circle icon -->
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
                         </a>
@@ -265,6 +283,12 @@
             if (!isTouchDevice) return;
 
             document.addEventListener('touchstart', (e) => {
+                // Игнорируем тачи на header и footer (навигация)
+                const target = e.target;
+                if (target.closest('header') || target.closest('footer') || target.closest('nav') || target.closest('a') || target.closest('button')) {
+                    return;
+                }
+
                 // Проверяем что страница прокручена в самый верх
                 if (window.scrollY === 0) {
                     startY = e.touches[0].pageY;
