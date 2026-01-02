@@ -248,12 +248,12 @@ func (s *Sender) buildSensors(data *models.WeatherData) []narodmon.Sensor {
 		})
 	}
 
-	// Солнечная радиация
+	// Солнечная радиация (конвертируем в люксы)
 	if data.SolarRadiation != nil {
 		sensors = append(sensors, narodmon.Sensor{
 			ID:    "LUX",
-			Value: float64(*data.SolarRadiation),
-			Name:  "Солнечная радиация",
+			Value: float64(*data.SolarRadiation) * 120, // W/m² -> lux
+			Name:  "Освещенность",
 		})
 	}
 
