@@ -222,17 +222,19 @@ func (s *SunService) julianDay(year, month, day int) float64 {
 // GetSolarElevation calculates the sun's elevation angle above the horizon in degrees
 // Returns negative values when sun is below horizon (night)
 func (s *SunService) GetSolarElevation(t time.Time) float64 {
-	// Convert to configured timezone
-	t = t.In(s.timezone)
-
 	// Helper functions
 	rad := func(deg float64) float64 { return deg * math.Pi / 180 }
 	deg := func(r float64) float64 { return r * 180 / math.Pi }
 
-	year, month, day := t.Date()
-	hour, min, sec := t.Clock()
+	// Use local timezone for date
+	localTime := t.In(s.timezone)
+	year, month, day := localTime.Date()
 
-	// Calculate decimal hour
+	// Use UTC time for solar calculations
+	utcTime := t.UTC()
+	hour, min, sec := utcTime.Clock()
+
+	// Calculate decimal hour (in UTC)
 	decimalHour := float64(hour) + float64(min)/60.0 + float64(sec)/3600.0
 
 	// Calculate Julian Day
