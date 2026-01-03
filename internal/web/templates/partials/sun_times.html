@@ -171,9 +171,16 @@
                         <span class="text-md font-bold text-gray-600 dark:text-gray-400">{{printf "%.1f" .MoonAge}} дней</span>
                     </div>
 
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-medium text-gray-700 dark:text-gray-300">{{.NextPhaseName}}</span>
-                        <span class="text-md font-bold text-purple-600 dark:text-purple-400">{{printf "%.0f" .DaysToNextPhase}} дней</span>
+                    <div class="flex flex-col items-end justify-center">
+                        {{if eq .DaysToNextPhase 0.0}}
+                            <!-- Major phase is today -->
+                            <span class="text-md font-bold text-purple-600 dark:text-purple-400">{{.NextPhaseName}}</span>
+                            <span class="text-xs text-gray-500 dark:text-gray-400">сегодня</span>
+                        {{else}}
+                            <!-- Days until next phase -->
+                            <span class="text-xs font-medium text-gray-700 dark:text-gray-300">{{.NextPhaseName}}</span>
+                            <span class="text-md font-bold text-purple-600 dark:text-purple-400">{{printf "%.0f" .DaysToNextPhase}} дней</span>
+                        {{end}}
                     </div>
                 </div>
             </div>

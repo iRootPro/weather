@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"log/slog"
+	"math"
 	"net/http"
 	"path/filepath"
 	"time"
@@ -378,19 +379,87 @@ func (h *Handler) SunTimesWidget(w http.ResponseWriter, r *http.Request) {
 		templateData.Moonrise = moonData.Moonrise.Format("15:04")
 		templateData.Moonset = moonData.Moonset.Format("15:04")
 
-		// Determine next major phase (full moon or new moon)
-		// Synodic month is 29.53 days, full moon is at ~14.765 days
-		const fullMoonAge = 14.765
+		// Determine next major phase
+		// Key lunar phase ages (in days):
+		const newMoonAge = 0.0
+		const firstQuarterAge = 7.3825      // ~29.53/4
+		const fullMoonAge = 14.765          // ~29.53/2
+		const lastQuarterAge = 22.1475      // ~29.53*3/4
 		const synodicMonth = 29.53
+		const phaseThreshold = 0.5          // if within 0.5 days, it's "today"
 
-		if moonData.Age < fullMoonAge {
-			// Waxing moon - show days to full moon
-			templateData.DaysToNextPhase = fullMoonAge - moonData.Age
-			templateData.NextPhaseName = "До полнолуния"
+		// Find the next phase and calculate days to it
+		age := moonData.Age
+		var daysToPhase float64
+		var phaseName string
+		var isToday bool
+
+		// Check all four major phases and find the next one
+		phases := []struct {
+			age  float64
+			name string
+		}{
+			{firstQuarterAge, "первой четверти"},
+			{fullMoonAge, "полнолуния"},
+			{lastQuarterAge, "последней четверти"},
+			{synodicMonth, "новолуния"}, // new moon at the end of cycle
+		}
+
+		for _, phase := range phases {
+			if age < phase.age {
+				daysToPhase = phase.age - age
+				phaseName = phase.name
+				break
+			}
+		}
+
+		// If we didn't find a phase (age > last quarter), next is new moon
+		if phaseName == "" {
+			daysToPhase = synodicMonth - age
+			phaseName = "новолуния"
+		}
+
+		// Check if it's today (within threshold)
+		if daysToPhase < phaseThreshold {
+			isToday = true
+		}
+
+		// Also check if we just passed a phase (within threshold behind)
+		if age < phaseThreshold {
+			// Just passed new moon
+			isToday = true
+			phaseName = "новолуния"
+			daysToPhase = 0
+		} else if math.Abs(age-firstQuarterAge) < phaseThreshold {
+			isToday = true
+			phaseName = "первой четверти"
+			daysToPhase = 0
+		} else if math.Abs(age-fullMoonAge) < phaseThreshold {
+			isToday = true
+			phaseName = "полнолуния"
+			daysToPhase = 0
+		} else if math.Abs(age-lastQuarterAge) < phaseThreshold {
+			isToday = true
+			phaseName = "последней четверти"
+			daysToPhase = 0
+		}
+
+		templateData.DaysToNextPhase = daysToPhase
+		if isToday {
+			// Capitalize first letter for "today" display
+			switch phaseName {
+			case "новолуния":
+				templateData.NextPhaseName = "Новолуние"
+			case "первой четверти":
+				templateData.NextPhaseName = "Первая четверть"
+			case "полнолуния":
+				templateData.NextPhaseName = "Полнолуние"
+			case "последней четверти":
+				templateData.NextPhaseName = "Последняя четверть"
+			}
 		} else {
-			// Waning moon - show days to new moon
-			templateData.DaysToNextPhase = synodicMonth - moonData.Age
-			templateData.NextPhaseName = "До новолуния"
+			// Use "до..." format
+			templateData.NextPhaseName = "До " + phaseName
 		}
 	}
 
