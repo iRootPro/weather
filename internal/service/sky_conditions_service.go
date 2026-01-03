@@ -64,31 +64,33 @@ func (s *SkyConditionsService) calculateTheoreticalLux(elevation float64) float6
 		return 0
 	}
 
-	// Максимальная освещенность в ясный день (lux)
-	// На экваторе в полдень: ~120,000 lux
-	// Учитываем атмосферное поглощение
-	maxLux := 120000.0
+	// Максимальная освещенность при солнце в зените (lux)
+	// Учитываем возможное отражение от поверхности (снег, облака)
+	maxDirectLux := 110000.0
 
-	// Формула: Lux = MaxLux * sin(elevation) * atmospheric_transmission
-	// Atmospheric transmission зависит от высоты солнца
-	// При малых углах - больше поглощение
-
-	// Air mass (сколько атмосферы проходит свет)
+	// Air mass (оптическая толща атмосферы)
 	var airMass float64
 	if elevation >= 10 {
 		airMass = 1.0 / math.Sin(elevation*math.Pi/180.0)
 	} else {
-		// При малых углах используем более точную формулу
+		// При малых углах используем формулу Kasten-Young
 		airMass = 1.0 / (math.Sin(elevation*math.Pi/180.0) + 0.50572*math.Pow(elevation+6.07995, -1.6364))
 	}
 
-	// Transmission через атмосферу (упрощенная модель)
-	transmission := math.Pow(0.7, math.Pow(airMass, 0.678))
+	// Прямая освещенность с учетом атмосферного поглощения
+	// Используем более мягкую формулу чем раньше
+	transmission := math.Pow(0.75, math.Pow(airMass, 0.5))
+	directLux := maxDirectLux * math.Sin(elevation*math.Pi/180.0) * transmission
 
-	// Рассчитываем теоретическую освещенность
-	lux := maxLux * math.Sin(elevation*math.Pi/180.0) * transmission
+	// Рассеянная освещенность от неба (примерно 15-30% от прямой)
+	// При низких углах солнца процент рассеянного света выше
+	diffuseRatio := 0.15 + (1.0-math.Sin(elevation*math.Pi/180.0))*0.15
+	diffuseLux := directLux * diffuseRatio
 
-	return lux
+	// Общая теоретическая освещенность
+	totalLux := directLux + diffuseLux
+
+	return totalLux
 }
 
 // classifyConditions классифицирует условия на основе данных
