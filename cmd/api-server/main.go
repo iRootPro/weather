@@ -73,6 +73,10 @@ func main() {
 	}
 	slog.Info("moon service created successfully")
 
+	// SkyConditions сервис для определения условий неба
+	skyConditionsService := service.NewSkyConditionsService(sunService)
+	slog.Info("sky conditions service created")
+
 	// Narodmon сервис (опционально, только если включен)
 	var narodmonService *service.NarodmonService
 	if cfg.Narodmon.Enabled {
@@ -93,7 +97,7 @@ func main() {
 	}
 
 	slog.Info("creating web handler", "templatesDir", templatesDir)
-	webHandler, err := web.NewHandler(templatesDir, weatherService, sunService, moonService, forecastService, photoRepo, narodmonService, cfg.Narodmon.DeviceURL)
+	webHandler, err := web.NewHandler(templatesDir, weatherService, sunService, moonService, forecastService, photoRepo, narodmonService, cfg.Narodmon.DeviceURL, skyConditionsService)
 	if err != nil {
 		log.Fatalf("failed to create web handler: %v", err)
 	}

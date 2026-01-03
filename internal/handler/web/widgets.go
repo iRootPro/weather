@@ -40,6 +40,12 @@ func (h *Handler) CurrentWeatherWidget(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Определяем условия неба
+	var skyCondition *models.SkyConditionInfo
+	if h.skyConditionsService != nil {
+		skyCondition = h.skyConditionsService.DetermineSkyConditions(data.Time, data.SolarRadiation)
+	}
+
 	// Convert pointer values for template
 	templateData := struct {
 		Time             string
@@ -78,6 +84,11 @@ func (h *Handler) CurrentWeatherWidget(w http.ResponseWriter, r *http.Request) {
 		WindMax        float32
 		WindGustMax    float32
 		HasDailyData   bool
+		// Sky conditions
+		HasSkyCondition bool
+		SkyIcon         string
+		SkyDescription  string
+		CloudCover      float64
 	}{
 		Time: "Данные на " + data.Time.Format("15:04"),
 	}
@@ -86,6 +97,14 @@ func (h *Handler) CurrentWeatherWidget(w http.ResponseWriter, r *http.Request) {
 	templateData.HasHourlyData = hourAgo != nil
 	// Check if we have daily min/max data
 	templateData.HasDailyData = dailyMinMax != nil
+
+	// Sky condition data
+	if skyCondition != nil {
+		templateData.HasSkyCondition = true
+		templateData.SkyIcon = skyCondition.Icon
+		templateData.SkyDescription = skyCondition.Description
+		templateData.CloudCover = skyCondition.CloudCoverEstimate
+	}
 
 	if data.TempOutdoor != nil {
 		templateData.TempOutdoor = *data.TempOutdoor

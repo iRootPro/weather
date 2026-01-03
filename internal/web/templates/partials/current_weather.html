@@ -4,8 +4,17 @@
         <span class="text-sm text-gray-500 dark:text-gray-400">{{.Time}}</span>
     </div>
 
-    {{if or .IsRaining .IsFoggy .IsWindy}}
+    {{if or .IsRaining .IsFoggy .IsWindy .HasSkyCondition}}
     <div class="mb-4 flex flex-wrap gap-2">
+        {{if .HasSkyCondition}}
+        <div class="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-sky-50 to-indigo-50 dark:from-sky-900/30 dark:to-indigo-900/30 border border-sky-200 dark:border-sky-800 rounded-full">
+            <span class="text-lg mr-1.5">{{.SkyIcon}}</span>
+            <span class="text-sm font-medium text-sky-700 dark:text-sky-300">{{.SkyDescription}}</span>
+            {{if gt .CloudCover 0.0}}
+            <span class="text-xs text-sky-500 dark:text-sky-400 ml-1.5">(☁️ {{printf "%.0f" .CloudCover}}%)</span>
+            {{end}}
+        </div>
+        {{end}}
         {{if .IsRaining}}
         <div class="inline-flex items-center px-3 py-1.5 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-full">
             <svg class="w-4 h-4 text-blue-500 mr-1.5" fill="currentColor" viewBox="0 0 24 24">
