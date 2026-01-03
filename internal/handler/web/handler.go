@@ -13,28 +13,26 @@ import (
 )
 
 type Handler struct {
-	templatesDir         string
-	weatherService       *service.WeatherService
-	sunService           *service.SunService
-	moonService          *service.MoonService
-	forecastService      *service.ForecastService
-	photoRepo            repository.PhotoRepository
-	narodmonService      *service.NarodmonService
-	narodmonURL          string
-	skyConditionsService *service.SkyConditionsService
+	templatesDir    string
+	weatherService  *service.WeatherService
+	sunService      *service.SunService
+	moonService     *service.MoonService
+	forecastService *service.ForecastService
+	photoRepo       repository.PhotoRepository
+	narodmonService *service.NarodmonService
+	narodmonURL     string
 }
 
-func NewHandler(templatesDir string, weatherService *service.WeatherService, sunService *service.SunService, moonService *service.MoonService, forecastService *service.ForecastService, photoRepo repository.PhotoRepository, narodmonService *service.NarodmonService, narodmonURL string, skyConditionsService *service.SkyConditionsService) (*Handler, error) {
+func NewHandler(templatesDir string, weatherService *service.WeatherService, sunService *service.SunService, moonService *service.MoonService, forecastService *service.ForecastService, photoRepo repository.PhotoRepository, narodmonService *service.NarodmonService, narodmonURL string) (*Handler, error) {
 	return &Handler{
-		templatesDir:         templatesDir,
-		weatherService:       weatherService,
-		sunService:           sunService,
-		moonService:          moonService,
-		forecastService:      forecastService,
-		photoRepo:            photoRepo,
-		narodmonService:      narodmonService,
-		narodmonURL:          narodmonURL,
-		skyConditionsService: skyConditionsService,
+		templatesDir:    templatesDir,
+		weatherService:  weatherService,
+		sunService:      sunService,
+		moonService:     moonService,
+		forecastService: forecastService,
+		photoRepo:       photoRepo,
+		narodmonService: narodmonService,
+		narodmonURL:     narodmonURL,
 	}, nil
 }
 
