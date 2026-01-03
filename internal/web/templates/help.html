@@ -821,14 +821,21 @@
                         <span class="text-sky-600 dark:text-sky-400">Фактическая освещенность</span> = Солнечная радиация × 120 (W/m² → lux)
                     </div>
                     <div class="text-gray-700 dark:text-gray-300">
-                        <span class="text-amber-600 dark:text-amber-400">Теоретическая освещенность</span> = 120,000 × sin(угол солнца) × атмосферное пропускание
+                        <span class="text-amber-600 dark:text-amber-400">Прямая освещенность</span> = 110,000 × sin(угол) × пропускание
+                    </div>
+                    <div class="text-gray-700 dark:text-gray-300">
+                        <span class="text-purple-600 dark:text-purple-400">Рассеянный свет</span> = Прямая × (15-30%)
+                    </div>
+                    <div class="text-gray-700 dark:text-gray-300">
+                        <span class="text-emerald-600 dark:text-emerald-400">Теоретическая</span> = Прямая + Рассеянный
                     </div>
                     <div class="text-gray-700 dark:text-gray-300">
                         <span class="text-indigo-600 dark:text-indigo-400">Облачность</span> = (1 - Фактическая/Теоретическая) × 100%
                     </div>
                 </div>
                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                    Для расчета угла солнца используется алгоритм NOAA с учетом координат станции и атмосферной рефракции.
+                    Расчет учитывает: алгоритм NOAA для угла солнца, атмосферное поглощение по формуле Kasten-Young,
+                    рассеянный свет от неба и возможное отражение от поверхности (снег, облака).
                 </p>
             </div>
 

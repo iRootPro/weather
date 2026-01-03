@@ -1,7 +1,6 @@
 package service
 
 import (
-	"log"
 	"math"
 	"time"
 
@@ -35,10 +34,6 @@ func (s *SkyConditionsService) DetermineSkyConditions(
 		// Конвертируем W/m² в lux (приблизительно 120 lux на 1 W/m²)
 		actualLux = float64(*solarRadiation) * 120.0
 	}
-
-	// DEBUG: временное логирование
-	log.Printf("Sky conditions: elevation=%.2f°, theoretical=%.0f lux, actual=%.0f lux, ratio=%.3f",
-		elevation, theoreticalLux, actualLux, actualLux/theoreticalLux)
 
 	// Определяем тип условий
 	condition := s.classifyConditions(elevation, theoreticalLux, actualLux)
