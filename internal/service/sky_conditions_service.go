@@ -99,14 +99,14 @@ func (s *SkyConditionsService) classifyConditions(
 		return models.SkyNight
 	}
 
-	// Сумерки
+	// Сумерки (солнце за горизонтом или очень низко)
 	if elevation < 0 {
 		return models.SkyTwilight
 	}
 
-	// День - классифицируем по облачности
-	if theoreticalLux < 100 {
-		// Очень низкое солнце - возвращаем сумерки
+	// Утро/вечер - солнце низко над горизонтом (< 10°)
+	// При таких углах оценка облачности ненадёжна
+	if elevation < 10.0 {
 		return models.SkyTwilight
 	}
 
