@@ -185,6 +185,15 @@ func (s *Sender) buildSensors(data *models.WeatherData) []narodmon.Sensor {
 		})
 	}
 
+	// Ощущаемая температура
+	if data.TempFeelsLike != nil {
+		sensors = append(sensors, narodmon.Sensor{
+			ID:    "TEMPFEEL",
+			Value: float64(*data.TempFeelsLike),
+			Name:  "Ощущается как",
+		})
+	}
+
 	// Влажность улица
 	if data.HumidityOutdoor != nil {
 		sensors = append(sensors, narodmon.Sensor{
