@@ -194,6 +194,15 @@ func (s *Sender) buildSensors(data *models.WeatherData) []narodmon.Sensor {
 		})
 	}
 
+	// Точка росы
+	if data.DewPoint != nil {
+		sensors = append(sensors, narodmon.Sensor{
+			ID:    "DEWPOINT",
+			Value: float64(*data.DewPoint),
+			Name:  "Точка росы",
+		})
+	}
+
 	// Влажность улица
 	if data.HumidityOutdoor != nil {
 		sensors = append(sensors, narodmon.Sensor{
