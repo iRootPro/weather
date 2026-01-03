@@ -99,23 +99,45 @@ func (m *MoonService) calcMoonAge(date time.Time) float64 {
 
 // calcMoonPhase determines the moon phase based on age
 func (m *MoonService) calcMoonPhase(age float64) MoonPhase {
-	// Divide the lunar cycle into 8 phases
-	phaseLength := 29.53058867 / 8.0
+	// Key lunar phases centered around critical points:
+	// New Moon: 0 days
+	// First Quarter: 7.38 days (1/4 of cycle)
+	// Full Moon: 14.765 days (1/2 of cycle)
+	// Last Quarter: 22.14 days (3/4 of cycle)
+
+	const synodicMonth = 29.53058867
+	const phaseLength = synodicMonth / 8.0  // ~3.69 days each phase
+
+	// Center each major phase around its key moment
+	// Each phase extends ±half phaseLength from center
+	const halfPhase = phaseLength / 2.0
+
+	const newMoonCenter = 0.0
+	const firstQuarterCenter = synodicMonth / 4.0      // ~7.38
+	const fullMoonCenter = synodicMonth / 2.0          // ~14.765
+	const lastQuarterCenter = synodicMonth * 3.0 / 4.0 // ~22.14
+
+	// Normalize age for end-of-cycle wrap-around
+	normalizedAge := age
+	if age > synodicMonth - halfPhase {
+		// Near end of cycle, treat as near new moon
+		normalizedAge = age - synodicMonth
+	}
 
 	switch {
-	case age < phaseLength:
+	case math.Abs(normalizedAge-newMoonCenter) <= halfPhase:
 		return NewMoon
-	case age < phaseLength*2:
+	case age < firstQuarterCenter-halfPhase:
 		return WaxingCrescent
-	case age < phaseLength*3:
+	case math.Abs(age-firstQuarterCenter) <= halfPhase:
 		return FirstQuarter
-	case age < phaseLength*4:
+	case age < fullMoonCenter-halfPhase:
 		return WaxingGibbous
-	case age < phaseLength*5:
+	case math.Abs(age-fullMoonCenter) <= halfPhase:
 		return FullMoon
-	case age < phaseLength*6:
+	case age < lastQuarterCenter-halfPhase:
 		return WaningGibbous
-	case age < phaseLength*7:
+	case math.Abs(age-lastQuarterCenter) <= halfPhase:
 		return LastQuarter
 	default:
 		return WaningCrescent
