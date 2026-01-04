@@ -394,7 +394,7 @@ func (h *Handler) SunTimesWidget(w http.ResponseWriter, r *http.Request) {
 		const fullMoonAge = 14.765          // ~29.53/2
 		const lastQuarterAge = 22.1475      // ~29.53*3/4
 		const synodicMonth = 29.53
-		const phaseThreshold = 0.5          // if within 0.5 days, it's "today"
+		const phaseThreshold = 0.25         // if within 0.25 days (6 hours), it's "today"
 
 		// Find the next phase and calculate days to it
 		age := moonData.Age
