@@ -1,14 +1,20 @@
 package service
 
 import (
+	"context"
+	"fmt"
+	"log/slog"
 	"math"
 	"time"
+
+	"github.com/iRootPro/weather/pkg/ipgeolocation"
 )
 
 type MoonService struct {
-	latitude  float64
-	longitude float64
-	timezone  *time.Location
+	latitude       float64
+	longitude      float64
+	timezone       *time.Location
+	astronomyClient *ipgeolocation.Client
 }
 
 type MoonPhase int
@@ -35,29 +41,29 @@ type MoonData struct {
 	IsAboveHorizon bool
 }
 
-func NewMoonService(latitude, longitude float64, timezone string) (*MoonService, error) {
+func NewMoonService(latitude, longitude float64, timezone string, astronomyClient *ipgeolocation.Client) (*MoonService, error) {
 	loc, err := time.LoadLocation(timezone)
 	if err != nil {
 		return nil, err
 	}
 	return &MoonService{
-		latitude:  latitude,
-		longitude: longitude,
-		timezone:  loc,
+		latitude:        latitude,
+		longitude:       longitude,
+		timezone:        loc,
+		astronomyClient: astronomyClient,
 	}, nil
 }
 
 func (m *MoonService) GetMoonData(date time.Time) *MoonData {
 	date = date.In(m.timezone)
 
-	// Calculate moon age and phase
+	// Calculate moon age and phase (our calculations are accurate)
 	age := m.calcMoonAge(date)
 	phase := m.calcMoonPhase(age)
 	illumination := m.calcIllumination(age)
 
-	// Calculate moonrise and moonset
-	year, month, day := date.Date()
-	moonrise, moonset := m.calcMoonriseMoonset(year, int(month), day, age)
+	// Get moonrise and moonset from API
+	moonrise, moonset := m.getMoonriseMoonsetFromAPI(date)
 
 	return &MoonData{
 		Phase:          phase,
@@ -155,7 +161,70 @@ func (m *MoonService) calcIllumination(age float64) float64 {
 	return illumination * 100.0
 }
 
-// calcMoonriseMoonset calculates moonrise and moonset times
+// getMoonriseMoonsetFromAPI получает точные времена восхода и захода луны из IPGeolocation API
+func (m *MoonService) getMoonriseMoonsetFromAPI(date time.Time) (time.Time, time.Time) {
+	// Если клиент не настроен, используем fallback расчёты
+	if m.astronomyClient == nil {
+		year, month, day := date.Date()
+		age := m.calcMoonAge(date)
+		return m.calcMoonriseMoonset(year, int(month), day, age)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	resp, err := m.astronomyClient.GetAstronomy(ctx, ipgeolocation.AstronomyRequest{
+		Latitude:  m.latitude,
+		Longitude: m.longitude,
+		Date:      date,
+	})
+
+	if err != nil {
+		slog.Error("failed to get astronomy data from API, using fallback calculations",
+			"error", err,
+			"date", date.Format("2006-01-02"))
+
+		// Fallback to our calculations
+		year, month, day := date.Date()
+		age := m.calcMoonAge(date)
+		return m.calcMoonriseMoonset(year, int(month), day, age)
+	}
+
+	// Parse moonrise and moonset times
+	year, month, day := date.Date()
+
+	moonrise, err := m.parseTimeInDate(resp.Moonrise, year, int(month), day)
+	if err != nil {
+		slog.Warn("failed to parse moonrise time", "time", resp.Moonrise, "error", err)
+		moonrise = time.Date(year, time.Month(month), day, 0, 0, 0, 0, m.timezone)
+	}
+
+	moonset, err := m.parseTimeInDate(resp.Moonset, year, int(month), day)
+	if err != nil {
+		slog.Warn("failed to parse moonset time", "time", resp.Moonset, "error", err)
+		moonset = time.Date(year, time.Month(month), day, 23, 59, 59, 0, m.timezone)
+	}
+
+	return moonrise, moonset
+}
+
+// parseTimeInDate парсит время в формате "HH:MM" и создаёт time.Time для указанной даты
+func (m *MoonService) parseTimeInDate(timeStr string, year, month, day int) (time.Time, error) {
+	if timeStr == "" || timeStr == "-" {
+		return time.Time{}, fmt.Errorf("empty or invalid time string")
+	}
+
+	// Parse time in format "HH:MM"
+	t, err := time.Parse("15:04", timeStr)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("failed to parse time: %w", err)
+	}
+
+	// Create time with the given date in the configured timezone
+	return time.Date(year, time.Month(month), day, t.Hour(), t.Minute(), 0, 0, m.timezone), nil
+}
+
+// calcMoonriseMoonset calculates moonrise and moonset times (fallback method)
 func (m *MoonService) calcMoonriseMoonset(year, month, day int, age float64) (time.Time, time.Time) {
 	// Moon's orbital position calculation
 	const synodicMonth = 29.53058867

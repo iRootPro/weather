@@ -9,15 +9,16 @@ import (
 )
 
 type Config struct {
-	DB       DBConfig       `yaml:"db"`
-	MQTT     MQTTConfig     `yaml:"mqtt"`
-	HTTP     HTTPConfig     `yaml:"http"`
-	API      APIConfig      `yaml:"api"`
-	Log      LogConfig      `yaml:"log"`
-	Location LocationConfig `yaml:"location"`
-	Telegram TelegramConfig `yaml:"telegram"`
-	Forecast ForecastConfig `yaml:"forecast"`
-	Narodmon NarodmonConfig `yaml:"narodmon"`
+	DB        DBConfig        `yaml:"db"`
+	MQTT      MQTTConfig      `yaml:"mqtt"`
+	HTTP      HTTPConfig      `yaml:"http"`
+	API       APIConfig       `yaml:"api"`
+	Log       LogConfig       `yaml:"log"`
+	Location  LocationConfig  `yaml:"location"`
+	Telegram  TelegramConfig  `yaml:"telegram"`
+	Forecast  ForecastConfig  `yaml:"forecast"`
+	Narodmon  NarodmonConfig  `yaml:"narodmon"`
+	Astronomy AstronomyConfig `yaml:"astronomy"`
 }
 
 type LocationConfig struct {
@@ -99,6 +100,11 @@ type NarodmonConfig struct {
 	Server     string `env:"NARODMON_SERVER" env-default:"narodmon.ru:8283"`          // Адрес сервера
 	Timeout    int    `env:"NARODMON_TIMEOUT" env-default:"10"`                       // Таймаут подключения (секунды)
 	DeviceURL  string `env:"NARODMON_DEVICE_URL" env-default:"https://narodmon.ru/"` // URL страницы устройства
+}
+
+type AstronomyConfig struct {
+	APIKey  string `env:"ASTRONOMY_API_KEY" env-default:""` // IPGeolocation.io API ключ
+	Timeout int    `env:"ASTRONOMY_API_TIMEOUT" env-default:"10"` // Таймаут API запросов (секунды)
 }
 
 func Load() (*Config, error) {

@@ -17,6 +17,7 @@ import (
 	"github.com/iRootPro/weather/internal/repository"
 	"github.com/iRootPro/weather/internal/service"
 	"github.com/iRootPro/weather/pkg/database"
+	"github.com/iRootPro/weather/pkg/ipgeolocation"
 )
 
 func main() {
@@ -66,8 +67,18 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to create sun service: %v", err)
 	}
+
+	// IPGeolocation client для точных данных о луне
+	var astronomyClient *ipgeolocation.Client
+	if cfg.Astronomy.APIKey != "" {
+		astronomyClient = ipgeolocation.NewClient(cfg.Astronomy.APIKey, time.Duration(cfg.Astronomy.Timeout)*time.Second)
+		slog.Info("astronomy API client created", "api", "ipgeolocation.io")
+	} else {
+		slog.Warn("astronomy API key not configured, will use fallback moon calculations")
+	}
+
 	slog.Info("creating moon service", "latitude", cfg.Location.Latitude, "longitude", cfg.Location.Longitude, "timezone", cfg.Location.Timezone)
-	moonService, err := service.NewMoonService(cfg.Location.Latitude, cfg.Location.Longitude, cfg.Location.Timezone)
+	moonService, err := service.NewMoonService(cfg.Location.Latitude, cfg.Location.Longitude, cfg.Location.Timezone, astronomyClient)
 	if err != nil {
 		log.Fatalf("failed to create moon service: %v", err)
 	}
