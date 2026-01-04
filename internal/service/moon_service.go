@@ -78,9 +78,9 @@ func (m *MoonService) GetTodayMoonData() *MoonData {
 // calcMoonAge calculates the age of the moon in days (0-29.53)
 // Uses a verified known new moon as reference
 func (m *MoonService) calcMoonAge(date time.Time) float64 {
-	// Known new moon: January 18, 2026, 19:52 UTC (verified from astronomical tables)
-	// This is more accurate than the 2000 reference
-	knownNewMoon := time.Date(2026, 1, 18, 19, 52, 0, 0, time.UTC)
+	// Known new moon: December 20, 2025, 01:43 UTC (verified from astronomical tables)
+	// This new moon was BEFORE the full moon on January 3, 2026
+	knownNewMoon := time.Date(2025, 12, 20, 1, 43, 0, 0, time.UTC)
 
 	// Synodic month (average time between new moons)
 	const synodicMonth = 29.53058867
