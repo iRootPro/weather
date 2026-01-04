@@ -26,7 +26,7 @@ type AstronomyRequest struct {
 }
 
 type AstronomyResponse struct {
-	Location            string  `json:"location"`
+	// Location is an object, we don't need it so we ignore it
 	Date                string  `json:"date"`
 	CurrentTime         string  `json:"current_time"`
 	Sunrise             string  `json:"sunrise"`
