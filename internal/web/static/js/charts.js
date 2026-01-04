@@ -340,32 +340,36 @@ function initCharts() {
             type: 'line',
             data: {
                 labels: [],
-                datasets: [{
-                    label: 'Осадки',
-                    data: [],
-                    borderColor: '#06b6d4',
-                    backgroundColor: 'rgba(6, 182, 212, 0.1)',
-                    fill: true
-                }]
+                datasets: [
+                    {
+                        label: 'Дневные осадки (мм)',
+                        data: [],
+                        borderColor: 'rgb(6, 182, 212)',
+                        backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: 'Интенсивность (мм/ч)',
+                        data: [],
+                        borderColor: 'rgb(59, 130, 246)',
+                        borderDash: [5, 5],
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: false
+                    }
+                ]
             },
             options: {
                 ...commonOptions,
-                plugins: {
-                    ...commonOptions.plugins,
-                    tooltip: {
-                        ...commonOptions.plugins.tooltip,
-                        callbacks: {
-                            label: (ctx) => ctx.dataset.label + ': ' + ctx.raw.toFixed(2) + ' мм/ч'
-                        }
-                    }
-                },
                 scales: {
                     ...commonOptions.scales,
                     y: {
                         ...commonOptions.scales.y,
                         min: 0,
                         ticks: {
-                            callback: (value) => value.toFixed(1) + ' мм',
+                            callback: (value) => value.toFixed(1),
                             font: { size: 10 }
                         }
                     }
@@ -401,7 +405,7 @@ async function loadChartData(interval) {
 
     try {
         const response = await fetch(
-            `/api/weather/chart?from=${fromStr}&to=${toStr}&interval=${interval}&fields=temp_outdoor,humidity_outdoor,pressure_relative,wind_speed,wind_gust,solar_radiation,rain_rate`
+            `/api/weather/chart?from=${fromStr}&to=${toStr}&interval=${interval}&fields=temp_outdoor,humidity_outdoor,pressure_relative,wind_speed,wind_gust,solar_radiation,rain_rate,rain_daily`
         );
         const data = await response.json();
 
@@ -442,11 +446,16 @@ async function loadChartData(interval) {
         // Update rain chart
         if (charts.rain) {
             charts.rain.data.labels = labels;
-            charts.rain.data.datasets[0].data = data.datasets.rain_rate;
+            charts.rain.data.datasets[0].data = data.datasets.rain_daily || [];
+            charts.rain.data.datasets[1].data = data.datasets.rain_rate || [];
 
             // Динамическое масштабирование для малых значений
-            const rainValues = data.datasets.rain_rate || [];
-            const maxRain = Math.max(...rainValues.filter(v => v != null), 0);
+            // Учитываем оба dataset'а для определения масштаба
+            const rainDailyValues = data.datasets.rain_daily || [];
+            const rainRateValues = data.datasets.rain_rate || [];
+            const maxDaily = Math.max(...rainDailyValues.filter(v => v != null), 0);
+            const maxRate = Math.max(...rainRateValues.filter(v => v != null), 0);
+            const maxRain = Math.max(maxDaily, maxRate);
 
             // Если максимальное значение очень маленькое, установим меньший масштаб
             if (maxRain < 0.5) {
