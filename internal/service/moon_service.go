@@ -99,48 +99,54 @@ func (m *MoonService) calcMoonAge(date time.Time) float64 {
 
 // calcMoonPhase determines the moon phase based on age
 func (m *MoonService) calcMoonPhase(age float64) MoonPhase {
-	// Key lunar phases centered around critical points:
-	// New Moon: 0 days
+	// Key lunar phases are specific moments, not long periods:
+	// New Moon: 0 days (new moon moment)
 	// First Quarter: 7.38 days (1/4 of cycle)
 	// Full Moon: 14.765 days (1/2 of cycle)
 	// Last Quarter: 22.14 days (3/4 of cycle)
+	//
+	// We use narrow windows around these key moments for the named phases,
+	// and transitional phases (Crescent/Gibbous) for the periods between.
 
 	const synodicMonth = 29.53058867
-	const phaseLength = synodicMonth / 8.0  // ~3.69 days each phase
-
-	// Center each major phase around its key moment
-	// Each phase extends ±half phaseLength from center
-	const halfPhase = phaseLength / 2.0
-
 	const newMoonCenter = 0.0
 	const firstQuarterCenter = synodicMonth / 4.0      // ~7.38
 	const fullMoonCenter = synodicMonth / 2.0          // ~14.765
 	const lastQuarterCenter = synodicMonth * 3.0 / 4.0 // ~22.14
 
+	// Narrow window for key phases (±1 day around the exact moment)
+	// This ensures we only show "Full Moon" etc. very close to the actual event
+	const keyPhaseWindow = 1.0
+
 	// Normalize age for end-of-cycle wrap-around
 	normalizedAge := age
-	if age > synodicMonth - halfPhase {
+	if age > synodicMonth-keyPhaseWindow {
 		// Near end of cycle, treat as near new moon
 		normalizedAge = age - synodicMonth
 	}
 
+	// Check key phases first (in narrow windows)
 	switch {
-	case math.Abs(normalizedAge-newMoonCenter) <= halfPhase:
+	case math.Abs(normalizedAge-newMoonCenter) <= keyPhaseWindow:
 		return NewMoon
-	case age < firstQuarterCenter-halfPhase:
-		return WaxingCrescent
-	case math.Abs(age-firstQuarterCenter) <= halfPhase:
+	case math.Abs(age-firstQuarterCenter) <= keyPhaseWindow:
 		return FirstQuarter
-	case age < fullMoonCenter-halfPhase:
-		return WaxingGibbous
-	case math.Abs(age-fullMoonCenter) <= halfPhase:
+	case math.Abs(age-fullMoonCenter) <= keyPhaseWindow:
 		return FullMoon
-	case age < lastQuarterCenter-halfPhase:
-		return WaningGibbous
-	case math.Abs(age-lastQuarterCenter) <= halfPhase:
+	case math.Abs(age-lastQuarterCenter) <= keyPhaseWindow:
 		return LastQuarter
+	}
+
+	// Transitional phases between key moments
+	switch {
+	case age < firstQuarterCenter:
+		return WaxingCrescent // 0-7.38 days (excluding new moon window)
+	case age < fullMoonCenter:
+		return WaxingGibbous // 7.38-14.765 days (excluding first quarter window)
+	case age < lastQuarterCenter:
+		return WaningGibbous // 14.765-22.14 days (excluding full moon window)
 	default:
-		return WaningCrescent
+		return WaningCrescent // 22.14-29.53 days (excluding last quarter window)
 	}
 }
 

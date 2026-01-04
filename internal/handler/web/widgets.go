@@ -322,6 +322,14 @@ func (h *Handler) SunTimesWidget(w http.ResponseWriter, r *http.Request) {
 	var moonData *service.MoonData
 	if h.moonService != nil {
 		moonData = h.moonService.GetTodayMoonData()
+		if moonData != nil {
+			slog.Info("Moon data calculated",
+				"age", moonData.Age,
+				"phase", moonData.PhaseName,
+				"illumination", moonData.Illumination,
+				"moonrise", moonData.Moonrise.Format("15:04"),
+				"moonset", moonData.Moonset.Format("15:04"))
+		}
 	}
 
 	templateData := struct {
