@@ -223,7 +223,7 @@ func detectRainEvents(data []models.WeatherData) []models.WeatherEvent {
 				Time:        d.Time,
 				Value:       0,
 				Change:      duration.Hours(),
-				Description: formatDuration(duration),
+				Description: fmt.Sprintf("Дождь прошёл (%s)", formatRainDuration(duration)),
 				Icon:        "☀️",
 			})
 			isRaining = false
@@ -238,7 +238,7 @@ func detectRainEvents(data []models.WeatherData) []models.WeatherEvent {
 			Time:        rainStartTime,
 			Value:       0,
 			Change:      duration.Hours(),
-			Description: "Дождь идёт " + formatDuration(duration),
+			Description: fmt.Sprintf("Дождь идёт (%s)", formatRainDuration(duration)),
 			Icon:        "🌧️",
 		})
 	}
@@ -367,19 +367,19 @@ func detectPressureChanges(data []models.WeatherData) []models.WeatherEvent {
 	return groupSimilarEvents(events, 60*time.Minute)
 }
 
-// formatDuration форматирует длительность дождя
-func formatDuration(d time.Duration) string {
+// formatRainDuration форматирует длительность дождя (только время, без текста)
+func formatRainDuration(d time.Duration) string {
 	hours := int(d.Hours())
 	minutes := int(d.Minutes()) % 60
 
 	if hours > 0 && minutes > 0 {
-		return fmt.Sprintf("Дождь прошёл (%dч %dм)", hours, minutes)
+		return fmt.Sprintf("%dч %dм", hours, minutes)
 	} else if hours > 0 {
-		return fmt.Sprintf("Дождь прошёл (%dч)", hours)
+		return fmt.Sprintf("%dч", hours)
 	} else if minutes > 0 {
-		return fmt.Sprintf("Дождь прошёл (%dм)", minutes)
+		return fmt.Sprintf("%dм", minutes)
 	}
-	return "Дождь прошёл"
+	return "менее минуты"
 }
 
 // groupSimilarEvents группирует похожие события, оставляя самое значимое
