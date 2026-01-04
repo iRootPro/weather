@@ -11,10 +11,14 @@ import (
 )
 
 type MoonService struct {
-	latitude       float64
-	longitude      float64
-	timezone       *time.Location
+	latitude        float64
+	longitude       float64
+	timezone        *time.Location
 	astronomyClient *ipgeolocation.Client
+	// Cache для API результатов
+	cachedMoonrise time.Time
+	cachedMoonset  time.Time
+	cacheDate      string // YYYY-MM-DD формат
 }
 
 type MoonPhase int
@@ -170,6 +174,15 @@ func (m *MoonService) getMoonriseMoonsetFromAPI(date time.Time) (time.Time, time
 		return m.calcMoonriseMoonset(year, int(month), day, age)
 	}
 
+	// Проверяем кеш - если данные для этой даты уже есть, возвращаем их
+	dateStr := date.Format("2006-01-02")
+	if m.cacheDate == dateStr && !m.cachedMoonrise.IsZero() && !m.cachedMoonset.IsZero() {
+		slog.Debug("using cached moon rise/set times", "date", dateStr)
+		return m.cachedMoonrise, m.cachedMoonset
+	}
+
+	slog.Info("fetching moon rise/set times from API", "date", dateStr)
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -204,6 +217,11 @@ func (m *MoonService) getMoonriseMoonsetFromAPI(date time.Time) (time.Time, time
 		slog.Warn("failed to parse moonset time", "time", resp.Moonset, "error", err)
 		moonset = time.Date(year, time.Month(month), day, 23, 59, 59, 0, m.timezone)
 	}
+
+	// Сохраняем в кеш для повторного использования
+	m.cacheDate = dateStr
+	m.cachedMoonrise = moonrise
+	m.cachedMoonset = moonset
 
 	return moonrise, moonset
 }
