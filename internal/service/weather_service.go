@@ -107,6 +107,10 @@ func (s *WeatherService) GetChartData(ctx context.Context, from, to time.Time, i
 				if d.RainDaily != nil {
 					val = float64(*d.RainDaily)
 				}
+			case "rain_rate":
+				if d.RainRate != nil {
+					val = float64(*d.RainRate)
+				}
 			case "uv_index":
 				if d.UVIndex != nil {
 					val = float64(*d.UVIndex)
