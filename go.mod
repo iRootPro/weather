@@ -13,6 +13,8 @@ require (
 	github.com/jackc/pgx/v5 v5.7.6
 	github.com/joho/godotenv v1.5.1
 	github.com/pressly/goose/v3 v3.26.0
+	github.com/soniakeys/meeus/v3 v3.0.1
+	github.com/soniakeys/sexagesimal v1.0.0
 	github.com/wcharczuk/go-chart/v2 v2.1.2
 )
 
@@ -39,8 +41,8 @@ require (
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
-	github.com/rwcarlsen/goexif v0.0.0-20190401172101-9e8deecbddbd // indirect
 	github.com/sethvargo/go-retry v0.3.0 // indirect
+	github.com/soniakeys/unit v1.0.0 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.42.0 // indirect

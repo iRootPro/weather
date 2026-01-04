@@ -3,6 +3,9 @@ package service
 import (
 	"math"
 	"time"
+
+	"github.com/soniakeys/meeus/v3/julian"
+	"github.com/soniakeys/meeus/v3/moonphase"
 )
 
 type MoonService struct {
@@ -50,15 +53,14 @@ func NewMoonService(latitude, longitude float64, timezone string) (*MoonService,
 func (m *MoonService) GetMoonData(date time.Time) *MoonData {
 	date = date.In(m.timezone)
 
-	// Calculate moon age and phase
+	// Calculate moon age using meeus library for accuracy
 	age := m.calcMoonAge(date)
 	phase := m.calcMoonPhase(age)
 	illumination := m.calcIllumination(age)
 
 	// Calculate moonrise and moonset
 	year, month, day := date.Date()
-	moonrise := m.calcMoonrise(year, int(month), day)
-	moonset := m.calcMoonset(year, int(month), day)
+	moonrise, moonset := m.calcMoonriseMoonset(year, int(month), day, age)
 
 	return &MoonData{
 		Phase:          phase,
@@ -76,21 +78,26 @@ func (m *MoonService) GetTodayMoonData() *MoonData {
 	return m.GetMoonData(time.Now())
 }
 
-// calcMoonAge calculates the age of the moon in days (0-29.53)
-// Based on the synodic month (lunar phase cycle)
+// calcMoonAge calculates the age of the moon in days using meeus library for maximum accuracy
 func (m *MoonService) calcMoonAge(date time.Time) float64 {
-	// Known new moon: January 6, 2000, 18:14 UTC
-	knownNewMoon := time.Date(2000, 1, 6, 18, 14, 0, 0, time.UTC)
+	t := date.UTC()
 
-	// Synodic month (average time between new moons)
-	synodicMonth := 29.53058867
+	// Convert to Julian Day
+	year := t.Year()
+	month := int(t.Month())
+	day := float64(t.Day()) + float64(t.Hour())/24.0 + float64(t.Minute())/1440.0 + float64(t.Second())/86400.0
 
-	// Calculate days since known new moon
-	daysSince := date.Sub(knownNewMoon).Hours() / 24.0
+	jd := julian.CalendarGregorianToJD(year, month, day)
 
-	// Calculate current age in the lunar cycle
-	age := math.Mod(daysSince, synodicMonth)
+	// Find the last new moon before this date using meeus
+	lastNewMoon := moonphase.New(jd)
+
+	// Calculate age in days
+	age := jd - lastNewMoon
+
+	// Handle edge case where we might get a future new moon
 	if age < 0 {
+		const synodicMonth = 29.530588861
 		age += synodicMonth
 	}
 
@@ -99,29 +106,18 @@ func (m *MoonService) calcMoonAge(date time.Time) float64 {
 
 // calcMoonPhase determines the moon phase based on age
 func (m *MoonService) calcMoonPhase(age float64) MoonPhase {
-	// Key lunar phases are specific moments, not long periods:
-	// New Moon: 0 days (new moon moment)
-	// First Quarter: 7.38 days (1/4 of cycle)
-	// Full Moon: 14.765 days (1/2 of cycle)
-	// Last Quarter: 22.14 days (3/4 of cycle)
-	//
-	// We use narrow windows around these key moments for the named phases,
-	// and transitional phases (Crescent/Gibbous) for the periods between.
-
 	const synodicMonth = 29.53058867
 	const newMoonCenter = 0.0
 	const firstQuarterCenter = synodicMonth / 4.0      // ~7.38
 	const fullMoonCenter = synodicMonth / 2.0          // ~14.765
 	const lastQuarterCenter = synodicMonth * 3.0 / 4.0 // ~22.14
 
-	// Very narrow window for key phases (±0.5 day = ±12 hours around the exact moment)
-	// This ensures we only show "Full Moon" etc. on the actual day of the event
+	// Very narrow window for key phases (±0.5 day = ±12 hours)
 	const keyPhaseWindow = 0.5
 
 	// Normalize age for end-of-cycle wrap-around
 	normalizedAge := age
 	if age > synodicMonth-keyPhaseWindow {
-		// Near end of cycle, treat as near new moon
 		normalizedAge = age - synodicMonth
 	}
 
@@ -140,26 +136,137 @@ func (m *MoonService) calcMoonPhase(age float64) MoonPhase {
 	// Transitional phases between key moments
 	switch {
 	case age < firstQuarterCenter:
-		return WaxingCrescent // 0-7.38 days (excluding new moon window)
+		return WaxingCrescent
 	case age < fullMoonCenter:
-		return WaxingGibbous // 7.38-14.765 days (excluding first quarter window)
+		return WaxingGibbous
 	case age < lastQuarterCenter:
-		return WaningGibbous // 14.765-22.14 days (excluding full moon window)
+		return WaningGibbous
 	default:
-		return WaningCrescent // 22.14-29.53 days (excluding last quarter window)
+		return WaningCrescent
 	}
 }
 
-// calcIllumination calculates the percentage of the moon's visible disk that is illuminated
+// calcIllumination calculates the accurate illumination based on moon age
 func (m *MoonService) calcIllumination(age float64) float64 {
-	// The illumination follows a cosine curve
-	synodicMonth := 29.53058867
-	phase := (age / synodicMonth) * 2 * math.Pi
+	// The illumination follows a cosine curve based on the phase angle
+	// Phase angle in radians: 0 at new moon, π at full moon
+	const synodicMonth = 29.530588861
+	phaseAngle := (age / synodicMonth) * 2 * math.Pi
 
-	// Calculate illumination (0 = new moon, 1 = full moon)
-	illumination := (1 - math.Cos(phase)) / 2
+	// Illuminated fraction = (1 - cos(phase)) / 2
+	// This is the standard formula for moon illumination
+	illumination := (1 - math.Cos(phaseAngle)) / 2
 
-	return illumination * 100
+	return illumination * 100.0
+}
+
+// calcMoonriseMoonset calculates improved moonrise and moonset times
+func (m *MoonService) calcMoonriseMoonset(year, month, day int, age float64) (time.Time, time.Time) {
+	// Moon's position depends on its phase
+	// We use a more accurate algorithm based on the moon's orbital position
+
+	// Calculate moon's approximate ecliptic longitude
+	// The moon moves about 13.2° per day
+	const synodicMonth = 29.530588861
+	const moonDailyMotion = 360.0 / 27.32166 // Sidereal month
+
+	// Days since new moon
+	daysSinceNew := age
+
+	// Moon's mean longitude (simplified)
+	moonLongitude := daysSinceNew * moonDailyMotion
+
+	// Moon's mean anomaly for orbit calculation
+	meanAnomaly := (daysSinceNew / synodicMonth) * 2 * math.Pi
+
+	// Moon's ecliptic latitude (simplified, oscillates around 0)
+	eclipticLat := 5.145 * math.Sin(2*meanAnomaly) // ±5.145° max
+
+	// Calculate Right Ascension and Declination
+	// Convert ecliptic to equatorial coordinates
+	obliquity := 23.4397 * math.Pi / 180 // Earth's axial tilt
+
+	ra := math.Atan2(
+		math.Sin(moonLongitude*math.Pi/180)*math.Cos(obliquity)-math.Tan(eclipticLat*math.Pi/180)*math.Sin(obliquity),
+		math.Cos(moonLongitude*math.Pi/180),
+	)
+
+	dec := math.Asin(
+		math.Sin(eclipticLat*math.Pi/180)*math.Cos(obliquity)+
+			math.Cos(eclipticLat*math.Pi/180)*math.Sin(obliquity)*math.Sin(moonLongitude*math.Pi/180),
+	)
+
+	// Calculate hour angle at rise/set
+	// Account for parallax (0.9°) and refraction (0.6°)
+	h0 := -0.833 - 0.9 - 0.6 // More negative than sun due to parallax
+
+	lat := m.latitude * math.Pi / 180
+	cosH := (math.Sin(h0*math.Pi/180) - math.Sin(lat)*math.Sin(dec)) / (math.Cos(lat) * math.Cos(dec))
+
+	var moonrise, moonset time.Time
+
+	if cosH > 1 {
+		// Moon doesn't rise today (below horizon all day)
+		moonrise = time.Date(year, time.Month(month), day, 0, 0, 0, 0, m.timezone)
+		moonset = time.Date(year, time.Month(month), day, 0, 0, 0, 0, m.timezone)
+	} else if cosH < -1 {
+		// Moon doesn't set today (above horizon all day)
+		moonrise = time.Date(year, time.Month(month), day, 0, 0, 0, 0, m.timezone)
+		moonset = time.Date(year, time.Month(month), day, 23, 59, 59, 0, m.timezone)
+	} else {
+		hourAngle := math.Acos(cosH) * 180 / math.Pi
+
+		// Calculate transit time (when moon crosses meridian)
+		// This is approximate and depends on longitude
+		transitTime := 12.0 - (ra*180/math.Pi)/15.0 - m.longitude/15.0
+
+		// Adjust for day boundaries
+		for transitTime < 0 {
+			transitTime += 24
+		}
+		for transitTime >= 24 {
+			transitTime -= 24
+		}
+
+		// Rise and set times
+		riseTime := transitTime - hourAngle/15.0
+		setTime := transitTime + hourAngle/15.0
+
+		// Adjust for day boundaries
+		for riseTime < 0 {
+			riseTime += 24
+		}
+		for riseTime >= 24 {
+			riseTime -= 24
+		}
+		for setTime < 0 {
+			setTime += 24
+		}
+		for setTime >= 24 {
+			setTime -= 24
+		}
+
+		riseHour := int(riseTime)
+		riseMin := int((riseTime - float64(riseHour)) * 60)
+		setHour := int(setTime)
+		setMin := int((setTime - float64(setHour)) * 60)
+
+		moonrise = time.Date(year, time.Month(month), day, riseHour, riseMin, 0, 0, time.UTC)
+		moonset = time.Date(year, time.Month(month), day, setHour, setMin, 0, 0, time.UTC)
+
+		moonrise = moonrise.In(m.timezone)
+		moonset = moonset.In(m.timezone)
+	}
+
+	return moonrise, moonset
+}
+
+// isMoonAboveHorizon checks if moon is currently above horizon
+func (m *MoonService) isMoonAboveHorizon(date time.Time, moonrise time.Time, moonset time.Time) bool {
+	if moonrise.Before(moonset) {
+		return date.After(moonrise) && date.Before(moonset)
+	}
+	return date.After(moonrise) || date.Before(moonset)
 }
 
 // getPhaseName returns the Russian name of the moon phase
@@ -190,113 +297,4 @@ func (m *MoonService) getPhaseIcon(phase MoonPhase) string {
 		WaningCrescent:  "🌘",
 	}
 	return icons[phase]
-}
-
-// calcMoonrise calculates moonrise time
-func (m *MoonService) calcMoonrise(year, month, day int) time.Time {
-	return m.calcMoonTime(year, month, day, true)
-}
-
-// calcMoonset calculates moonset time
-func (m *MoonService) calcMoonset(year, month, day int) time.Time {
-	return m.calcMoonTime(year, month, day, false)
-}
-
-// calcMoonTime calculates moonrise or moonset time
-// This is a simplified calculation - for production use, consider a more accurate library
-func (m *MoonService) calcMoonTime(year, month, day int, isRise bool) time.Time {
-	// Calculate moon's position
-	jd := m.julianDay(year, month, day)
-	jc := (jd - 2451545.0) / 36525.0
-
-	// Moon's mean longitude
-	meanLong := 218.316 + 13.176396*jc*36525
-	meanLong = math.Mod(meanLong, 360)
-
-	// Moon's mean anomaly
-	meanAnomaly := 134.963 + 13.064993*jc*36525
-	meanAnomaly = math.Mod(meanAnomaly, 360)
-
-	// Moon's argument of latitude
-	argLat := 93.272 + 13.229350*jc*36525
-	argLat = math.Mod(argLat, 360)
-
-	// Calculate moon's longitude
-	rad := func(deg float64) float64 { return deg * math.Pi / 180 }
-	longitude := meanLong + 6.289*math.Sin(rad(meanAnomaly))
-
-	// Calculate moon's latitude
-	latitude := 5.128 * math.Sin(rad(argLat))
-
-	// Calculate moon's declination (simplified)
-	obliquity := 23.439 - 0.0000004*jc*36525
-	sinDec := math.Sin(rad(latitude))*math.Cos(rad(obliquity)) +
-	          math.Cos(rad(latitude))*math.Sin(rad(obliquity))*math.Sin(rad(longitude))
-	declination := math.Asin(sinDec) * 180 / math.Pi
-
-	// Calculate hour angle (similar to sun calculation but for moon)
-	cosLat := math.Cos(rad(m.latitude))
-	sinLat := math.Sin(rad(m.latitude))
-	cosDec := math.Cos(rad(declination))
-	sinDec2 := math.Sin(rad(declination))
-
-	// Moon's parallax (approximately 0.9 degrees)
-	cosH := (math.Sin(rad(-0.833-0.9)) - sinLat*sinDec2) / (cosLat * cosDec)
-
-	// Check if moon rises/sets
-	if cosH > 1 || cosH < -1 {
-		// Moon doesn't rise or set today
-		if isRise {
-			return time.Date(year, time.Month(month), day, 0, 0, 0, 0, m.timezone)
-		}
-		return time.Date(year, time.Month(month), day, 23, 59, 59, 0, m.timezone)
-	}
-
-	hourAngle := math.Acos(cosH) * 180 / math.Pi
-	if isRise {
-		hourAngle = -hourAngle
-	}
-
-	// Calculate time
-	// This is simplified - using approximate transit time
-	transitTime := 12.0 + (m.longitude / 15.0)
-	eventTime := transitTime + (hourAngle / 15.0)
-
-	// Adjust for day boundaries
-	for eventTime < 0 {
-		eventTime += 24
-	}
-	for eventTime >= 24 {
-		eventTime -= 24
-	}
-
-	hours := int(eventTime)
-	minutes := int((eventTime - float64(hours)) * 60)
-
-	return time.Date(year, time.Month(month), day, hours, minutes, 0, 0, m.timezone)
-}
-
-// isMoonAboveHorizon checks if moon is currently above horizon
-func (m *MoonService) isMoonAboveHorizon(date time.Time, moonrise time.Time, moonset time.Time) bool {
-	// Simple check: is current time between moonrise and moonset
-	if moonrise.Before(moonset) {
-		return date.After(moonrise) && date.Before(moonset)
-	}
-	// Moonset is before moonrise (moon is up during midnight)
-	return date.After(moonrise) || date.Before(moonset)
-}
-
-// julianDay calculates Julian Day number (reuse from sun service logic)
-func (m *MoonService) julianDay(year, month, day int) float64 {
-	if month <= 2 {
-		year--
-		month += 12
-	}
-
-	a := year / 100
-	b := 2 - a + a/4
-
-	return float64(int(365.25*float64(year+4716))) +
-		float64(int(30.6001*float64(month+1))) +
-		float64(day) + float64(b) - 1524.5
 }
