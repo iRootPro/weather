@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/iRootPro/weather/internal/config"
@@ -14,6 +15,7 @@ import (
 	"github.com/iRootPro/weather/internal/service"
 	"github.com/iRootPro/weather/internal/telegram"
 	"github.com/iRootPro/weather/pkg/database"
+	"github.com/iRootPro/weather/pkg/ipgeolocation"
 )
 
 func main() {
@@ -69,7 +71,15 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to create sun service: %v", err)
 	}
-	moonService, err := service.NewMoonService(cfg.Location.Latitude, cfg.Location.Longitude, cfg.Location.Timezone)
+
+	// IPGeolocation client для точных данных о луне
+	var astronomyClient *ipgeolocation.Client
+	if cfg.Astronomy.APIKey != "" {
+		astronomyClient = ipgeolocation.NewClient(cfg.Astronomy.APIKey, time.Duration(cfg.Astronomy.Timeout)*time.Second)
+		slog.Info("astronomy API client created for telegram bot", "api", "ipgeolocation.io")
+	}
+
+	moonService, err := service.NewMoonService(cfg.Location.Latitude, cfg.Location.Longitude, cfg.Location.Timezone, astronomyClient)
 	if err != nil {
 		log.Fatalf("failed to create moon service: %v", err)
 	}
