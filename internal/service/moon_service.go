@@ -61,6 +61,10 @@ func NewMoonService(latitude, longitude float64, timezone string, astronomyClien
 func (m *MoonService) GetMoonData(date time.Time) *MoonData {
 	date = date.In(m.timezone)
 
+	slog.Info("GetMoonData called",
+		"date", date.Format("2006-01-02"),
+		"has_astronomy_client", m.astronomyClient != nil)
+
 	// Calculate moon age and phase (our calculations are accurate)
 	age := m.calcMoonAge(date)
 	phase := m.calcMoonPhase(age)
@@ -68,6 +72,10 @@ func (m *MoonService) GetMoonData(date time.Time) *MoonData {
 
 	// Get moonrise and moonset from API
 	moonrise, moonset := m.getMoonriseMoonsetFromAPI(date)
+
+	slog.Info("Moon data calculated",
+		"moonrise", moonrise.Format("15:04"),
+		"moonset", moonset.Format("15:04"))
 
 	return &MoonData{
 		Phase:          phase,
