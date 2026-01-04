@@ -337,15 +337,15 @@ function initCharts() {
     const rainCanvas = document.getElementById('rainChart');
     if (rainCanvas) {
         charts.rain = new Chart(rainCanvas, {
-            type: 'bar',
+            type: 'line',
             data: {
                 labels: [],
                 datasets: [{
                     label: 'Осадки',
                     data: [],
-                    backgroundColor: 'rgba(6, 182, 212, 0.7)',
                     borderColor: '#06b6d4',
-                    borderWidth: 1
+                    backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                    fill: true
                 }]
             },
             options: {
