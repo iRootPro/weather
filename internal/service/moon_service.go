@@ -114,9 +114,9 @@ func (m *MoonService) calcMoonPhase(age float64) MoonPhase {
 	const fullMoonCenter = synodicMonth / 2.0          // ~14.765
 	const lastQuarterCenter = synodicMonth * 3.0 / 4.0 // ~22.14
 
-	// Narrow window for key phases (±1 day around the exact moment)
-	// This ensures we only show "Full Moon" etc. very close to the actual event
-	const keyPhaseWindow = 1.0
+	// Very narrow window for key phases (±0.5 day = ±12 hours around the exact moment)
+	// This ensures we only show "Full Moon" etc. on the actual day of the event
+	const keyPhaseWindow = 0.5
 
 	// Normalize age for end-of-cycle wrap-around
 	normalizedAge := age
