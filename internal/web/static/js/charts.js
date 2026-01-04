@@ -443,6 +443,20 @@ async function loadChartData(interval) {
         if (charts.rain) {
             charts.rain.data.labels = labels;
             charts.rain.data.datasets[0].data = data.datasets.rain_rate;
+
+            // Динамическое масштабирование для малых значений
+            const rainValues = data.datasets.rain_rate || [];
+            const maxRain = Math.max(...rainValues.filter(v => v != null), 0);
+
+            // Если максимальное значение очень маленькое, установим меньший масштаб
+            if (maxRain < 0.5) {
+                charts.rain.options.scales.y.suggestedMax = 0.5;
+            } else if (maxRain < 2) {
+                charts.rain.options.scales.y.suggestedMax = 2;
+            } else {
+                charts.rain.options.scales.y.suggestedMax = undefined;
+            }
+
             charts.rain.update();
         }
 
