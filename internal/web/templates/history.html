@@ -84,39 +84,8 @@
 <script>
   let historyCharts = {};
   // sharedTooltipIndex уже объявлен в charts.js
-
-  // Get theme-specific colors for history charts
-  function getHistoryThemeColors() {
-    const isDark = document.documentElement.classList.contains('dark');
-    return {
-      gridColor: isDark ? 'rgba(156, 163, 175, 0.15)' : '#f3f4f6', // Barely visible gray grid in dark mode
-      textColor: isDark ? '#9ca3af' : '#6b7280',
-      crosshairColor: isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.2)'
-    };
-  }
-
-  // Crosshair plugin to draw vertical line
-  const crosshairPlugin = {
-    id: 'crosshair',
-    afterDraw: (chart) => {
-      if (sharedTooltipIndex !== null && chart.tooltip?._active?.length) {
-        const ctx = chart.ctx;
-        const x = chart.tooltip._active[0].element.x;
-        const topY = chart.scales.y.top;
-        const bottomY = chart.scales.y.bottom;
-
-        ctx.save();
-        ctx.beginPath();
-        ctx.moveTo(x, topY);
-        ctx.lineTo(x, bottomY);
-        ctx.lineWidth = 1;
-        ctx.strokeStyle = getHistoryThemeColors().crosshairColor;
-        ctx.setLineDash([5, 5]);
-        ctx.stroke();
-        ctx.restore();
-      }
-    }
-  };
+  // getThemeColors() уже объявлена в charts.js
+  // crosshairPlugin уже объявлен в charts.js
 
   // Sync tooltips across all charts
   function syncChartTooltips(sourceChart, dataIndex) {
@@ -155,7 +124,7 @@
   });
 
   function initHistoryCharts() {
-    const themeColors = getHistoryThemeColors();
+    const themeColors = getThemeColors();
 
     const commonOptions = {
       responsive: true,
@@ -303,7 +272,7 @@
 
   // Update chart colors when theme changes
   function updateHistoryChartColors() {
-    const themeColors = getHistoryThemeColors();
+    const themeColors = getThemeColors();
 
     Object.values(historyCharts).forEach(chart => {
       if (!chart) return;
