@@ -84,6 +84,8 @@ func (h *BotHandler) handleCommand(ctx context.Context, msg *tgbotapi.Message) {
 		h.handleTestSummary(ctx, msg)
 	case CmdForecast:
 		h.handleForecast(ctx, msg)
+	case CmdAnnounce:
+		h.handleAnnounce(ctx, msg)
 	default:
 		h.sendMessage(msg.Chat.ID, "Неизвестная команда. Используйте /help для списка команд.")
 	}
@@ -147,6 +149,20 @@ func (h *BotHandler) handleHelp(ctx context.Context, msg *tgbotapi.Message) {
 💡 *Обратная связь*
 Есть идеи для улучшения бота?
 Пишите @iRootPro`
+
+	// Добавляем админские команды для администраторов
+	if h.isAdmin(msg.Chat.ID) {
+		text += `
+
+──────────────
+🔧 *Админские команды:*
+/users - список пользователей
+/announce - массовая рассылка
+/test_summary - тест утренней сводки
+
+📢 Пример рассылки:
+/announce 🔥 Текст анонса`
+	}
 
 	reply := tgbotapi.NewMessage(msg.Chat.ID, text)
 	reply.ParseMode = "Markdown"
@@ -1057,4 +1073,92 @@ func (h *BotHandler) handlePhotoRejection(ctx context.Context, callback *tgbotap
 	h.bot.Request(tgbotapi.NewCallback(callback.ID, "❌ Фото отклонено"))
 
 	h.logger.Info("photo rejected and deleted", "photo_id", photoID, "admin_id", callback.Message.Chat.ID)
+}
+
+func (h *BotHandler) handleAnnounce(ctx context.Context, msg *tgbotapi.Message) {
+	// 1. Проверка прав
+	if !h.isAdmin(msg.Chat.ID) {
+		h.sendMessage(msg.Chat.ID, "❌ У вас нет доступа к этой команде")
+		return
+	}
+
+	// 2. Получение и валидация текста
+	announceText := msg.CommandArguments()
+	if announceText == "" {
+		h.sendMessage(msg.Chat.ID, "❌ Укажите текст анонса после команды\n\nПример:\n/announce 🔥 Новая функция доступна!")
+		return
+	}
+
+	if len(announceText) > 4096 {
+		h.sendMessage(msg.Chat.ID, "❌ Текст анонса слишком длинный (максимум 4096 символов)")
+		return
+	}
+
+	h.logger.Info("announcement requested",
+		"admin_id", msg.Chat.ID,
+		"text_length", len(announceText))
+
+	// 3. Получение пользователей
+	activeUsers, err := h.userRepo.GetAllActive(ctx)
+	if err != nil {
+		h.logger.Error("failed to get active users", "error", err)
+		h.sendMessage(msg.Chat.ID, "❌ Ошибка получения списка пользователей")
+		return
+	}
+
+	if len(activeUsers) == 0 {
+		h.sendMessage(msg.Chat.ID, "⚠️ Нет активных пользователей для рассылки")
+		return
+	}
+
+	// 4. Уведомление о начале
+	startMsg := fmt.Sprintf("📨 Начинаю рассылку анонса...\n👥 Пользователей: %d", len(activeUsers))
+	h.sendMessage(msg.Chat.ID, startMsg)
+
+	// 5. Массовая рассылка
+	successCount := 0
+	errorCount := 0
+
+	for _, user := range activeUsers {
+		message := tgbotapi.NewMessage(user.ChatID, announceText)
+		message.ParseMode = "Markdown"
+
+		if _, err := h.bot.Send(message); err != nil {
+			h.logger.Error("failed to send announcement",
+				"chat_id", user.ChatID,
+				"username", user.Username,
+				"error", err)
+			errorCount++
+
+			// Отметить неактивным если бот заблокирован
+			if strings.Contains(err.Error(), "bot was blocked") {
+				h.userRepo.UpdateActivity(ctx, user.ChatID, false)
+			}
+		} else {
+			h.logger.Debug("announcement sent", "chat_id", user.ChatID)
+			successCount++
+		}
+
+		// Rate limiting
+		time.Sleep(50 * time.Millisecond)
+	}
+
+	// 6. Отчёт
+	reportText := fmt.Sprintf("✅ *Рассылка завершена!*\n\n"+
+		"📊 *Статистика:*\n"+
+		"• Успешно: %d\n"+
+		"• Ошибки: %d\n"+
+		"• Всего: %d\n",
+		successCount, errorCount, len(activeUsers))
+
+	if errorCount > 0 {
+		reportText += "\n⚠️ Пользователи с ошибками могли заблокировать бота"
+	}
+
+	h.sendMessage(msg.Chat.ID, reportText)
+
+	h.logger.Info("announcement completed",
+		"total", len(activeUsers),
+		"success", successCount,
+		"errors", errorCount)
 }
