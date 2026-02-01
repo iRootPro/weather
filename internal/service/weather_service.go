@@ -157,9 +157,13 @@ func (s *WeatherService) GetDataAt(ctx context.Context, targetTime time.Time) (*
 const (
 	RAIN_THRESHOLD            = 0.1  // мм/ч - минимальная интенсивность для "дождя"
 	TEMP_CHANGE_THRESHOLD     = 3.0  // °C за час
-	WIND_GUST_THRESHOLD       = 10.0 // м/с
+	WIND_GUST_THRESHOLD       = 12.0 // м/с (было 10.0)
 	PRESSURE_CHANGE_THRESHOLD = 3.0  // мм рт.ст. за 3 часа
 	PRESSURE_PERIOD_HOURS     = 3    // период для анализа изменения давления
+
+	// Параметры фильтрации дождя
+	MIN_RAIN_DURATION_MINUTES = 15 // минимальная длительность дождя
+	MIN_RAIN_PAUSE_MINUTES    = 30 // минимальная пауза между дождями (паузы меньше игнорируются)
 )
 
 // GetRecentEvents returns detected weather events for the last N hours
@@ -206,48 +210,133 @@ func (s *WeatherService) GetRecentEvents(ctx context.Context, hours int) ([]mode
 	return events, nil
 }
 
-// detectRainEvents определяет начало и окончание дождя
+// rainPeriod представляет период дождя
+type rainPeriod struct {
+	start time.Time
+	end   time.Time
+}
+
+// detectRainEvents определяет начало и окончание дождя с фильтрацией коротких периодов
 func detectRainEvents(data []models.WeatherData) []models.WeatherEvent {
+	// 1. Найти все периоды дождя
+	rainPeriods := findRainPeriods(data)
+	if len(rainPeriods) == 0 {
+		return []models.WeatherEvent{}
+	}
+
+	// 2. Объединить периоды с короткими паузами
+	mergedPeriods := mergeRainPeriodsWithShortPauses(rainPeriods, MIN_RAIN_PAUSE_MINUTES)
+
+	// 3. Отфильтровать короткие дожди
+	significantPeriods := filterShortRains(mergedPeriods, MIN_RAIN_DURATION_MINUTES)
+
+	// 4. Создать события для начала и конца каждого периода
 	var events []models.WeatherEvent
-	var rainStartTime time.Time
-	var isRaining bool
+	for _, period := range significantPeriods {
+		// Определяем, идёт ли дождь сейчас
+		isOngoing := len(data) > 0 && period.end.Equal(data[len(data)-1].Time) && data[len(data)-1].RainRate != nil && *data[len(data)-1].RainRate >= RAIN_THRESHOLD
 
-	for i, d := range data {
-		currentRain := d.RainRate != nil && *d.RainRate >= RAIN_THRESHOLD
-
-		if currentRain && !isRaining {
-			// Начало дождя
-			rainStartTime = d.Time
-			isRaining = true
-		} else if !currentRain && isRaining && i > 0 {
-			// Конец дождя
-			duration := d.Time.Sub(rainStartTime)
+		if isOngoing {
+			// Дождь всё ещё идёт - показываем только событие начала
+			duration := period.end.Sub(period.start)
+			events = append(events, models.WeatherEvent{
+				Type:        "rain_start",
+				Time:        period.start,
+				Value:       0,
+				Change:      duration.Hours(),
+				Description: fmt.Sprintf("Дождь идёт (%s)", formatRainDuration(duration)),
+				Icon:        "🌧️",
+			})
+		} else {
+			// Дождь закончился - показываем событие конца
+			duration := period.end.Sub(period.start)
 			events = append(events, models.WeatherEvent{
 				Type:        "rain_end",
-				Time:        d.Time,
+				Time:        period.end,
 				Value:       0,
 				Change:      duration.Hours(),
 				Description: fmt.Sprintf("Дождь прошёл (%s)", formatRainDuration(duration)),
-				Icon:        "☀️",
+				Icon:        "☁️",
 			})
-			isRaining = false
 		}
 	}
 
-	// Если дождь все еще идет
-	if isRaining && len(data) > 0 {
-		duration := data[len(data)-1].Time.Sub(rainStartTime)
-		events = append(events, models.WeatherEvent{
-			Type:        "rain_start",
-			Time:        rainStartTime,
-			Value:       0,
-			Change:      duration.Hours(),
-			Description: fmt.Sprintf("Дождь идёт (%s)", formatRainDuration(duration)),
-			Icon:        "🌧️",
-		})
+	return events
+}
+
+// findRainPeriods находит все периоды с RainRate > RAIN_THRESHOLD
+func findRainPeriods(data []models.WeatherData) []rainPeriod {
+	var periods []rainPeriod
+	var currentPeriod *rainPeriod
+
+	for _, d := range data {
+		isRaining := d.RainRate != nil && *d.RainRate >= RAIN_THRESHOLD
+
+		if isRaining {
+			if currentPeriod == nil {
+				// Начало нового периода
+				currentPeriod = &rainPeriod{start: d.Time, end: d.Time}
+			} else {
+				// Продолжение периода
+				currentPeriod.end = d.Time
+			}
+		} else {
+			if currentPeriod != nil {
+				// Конец периода
+				periods = append(periods, *currentPeriod)
+				currentPeriod = nil
+			}
+		}
 	}
 
-	return events
+	// Если период не закончился
+	if currentPeriod != nil {
+		periods = append(periods, *currentPeriod)
+	}
+
+	return periods
+}
+
+// mergeRainPeriodsWithShortPauses объединяет периоды с паузами < minPauseMinutes
+func mergeRainPeriodsWithShortPauses(periods []rainPeriod, minPauseMinutes int) []rainPeriod {
+	if len(periods) <= 1 {
+		return periods
+	}
+
+	var merged []rainPeriod
+	current := periods[0]
+
+	for i := 1; i < len(periods); i++ {
+		pauseDuration := periods[i].start.Sub(current.end)
+
+		if pauseDuration < time.Duration(minPauseMinutes)*time.Minute {
+			// Пауза короткая - объединяем периоды
+			current.end = periods[i].end
+		} else {
+			// Пауза длинная - сохраняем текущий период и начинаем новый
+			merged = append(merged, current)
+			current = periods[i]
+		}
+	}
+
+	// Добавляем последний период
+	merged = append(merged, current)
+
+	return merged
+}
+
+// filterShortRains удаляет дожди длительностью < minDurationMinutes
+func filterShortRains(periods []rainPeriod, minDurationMinutes int) []rainPeriod {
+	var filtered []rainPeriod
+
+	for _, period := range periods {
+		duration := period.end.Sub(period.start)
+		if duration >= time.Duration(minDurationMinutes)*time.Minute {
+			filtered = append(filtered, period)
+		}
+	}
+
+	return filtered
 }
 
 // detectTemperatureChanges определяет резкие изменения температуры

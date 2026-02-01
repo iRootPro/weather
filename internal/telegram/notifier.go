@@ -152,9 +152,9 @@ func (n *Notifier) sendNotification(ctx context.Context, chatID int64, event mod
 		return
 	}
 
-	// Проверяем, не отправляли ли мы это уведомление недавно (за последние 30 минут)
+	// Проверяем, не отправляли ли мы это уведомление недавно (за последние 60 минут)
 	subscriptionType := getSubscriptionTypeForEvent(event.Type)
-	wasSent, err := n.notifRepo.WasRecentlySent(ctx, user.ID, subscriptionType, 30*time.Minute)
+	wasSent, err := n.notifRepo.WasRecentlySent(ctx, user.ID, subscriptionType, 60*time.Minute)
 	if err != nil {
 		n.logger.Error("failed to check recent notification", "user_id", user.ID, "error", err)
 		return
