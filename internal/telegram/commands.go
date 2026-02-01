@@ -19,7 +19,8 @@ const (
 	CmdMyID        = "myid"         // Показать свой chat_id
 	CmdTestSummary = "test_summary" // Админская команда - тест утренней сводки
 	CmdForecast    = "forecast"     // Прогноз погоды на несколько дней
-	CmdAnnounce    = "announce"     // Массовая рассылка анонса (только админы)
+	CmdAnnounce        = "announce"         // Массовая рассылка анонса (только админы)
+	CmdAnnouncePreview = "announce_preview" // Предпросмотр анонса (только админы)
 )
 
 // Типы событий для подписок

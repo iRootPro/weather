@@ -86,6 +86,8 @@ func (h *BotHandler) handleCommand(ctx context.Context, msg *tgbotapi.Message) {
 		h.handleForecast(ctx, msg)
 	case CmdAnnounce:
 		h.handleAnnounce(ctx, msg)
+	case CmdAnnouncePreview:
+		h.handleAnnouncePreview(ctx, msg)
 	default:
 		h.sendMessage(msg.Chat.ID, "Неизвестная команда. Используйте /help для списка команд.")
 	}
@@ -158,9 +160,11 @@ func (h *BotHandler) handleHelp(ctx context.Context, msg *tgbotapi.Message) {
 🔧 *Админские команды:*
 /users - список пользователей
 /announce - массовая рассылка
+/announce_preview - превью анонса
 /test_summary - тест утренней сводки
 
-📢 Пример рассылки:
+📢 Пример использования:
+/announce_preview 🔥 Текст анонса
 /announce 🔥 Текст анонса`
 	}
 
@@ -1161,4 +1165,50 @@ func (h *BotHandler) handleAnnounce(ctx context.Context, msg *tgbotapi.Message) 
 		"total", len(activeUsers),
 		"success", successCount,
 		"errors", errorCount)
+}
+
+func (h *BotHandler) handleAnnouncePreview(ctx context.Context, msg *tgbotapi.Message) {
+	// 1. Проверка прав
+	if !h.isAdmin(msg.Chat.ID) {
+		h.sendMessage(msg.Chat.ID, "❌ У вас нет доступа к этой команде")
+		return
+	}
+
+	// 2. Получение и валидация текста
+	announceText := msg.CommandArguments()
+	if announceText == "" {
+		h.sendMessage(msg.Chat.ID, "❌ Укажите текст анонса после команды\n\nПример:\n/announce_preview 🔥 Новая функция доступна!")
+		return
+	}
+
+	if len(announceText) > 4096 {
+		h.sendMessage(msg.Chat.ID, "❌ Текст анонса слишком длинный (максимум 4096 символов)")
+		return
+	}
+
+	h.logger.Info("announcement preview requested",
+		"admin_id", msg.Chat.ID,
+		"text_length", len(announceText))
+
+	// 3. Формируем превью с подсказкой
+	previewHeader := "👀 *ПРЕДПРОСМОТР АНОНСА*\n"
+	previewHeader += "━━━━━━━━━━━━━━━━━━━━\n\n"
+
+	previewFooter := "\n\n━━━━━━━━━━━━━━━━━━━━\n"
+	previewFooter += "💡 Для отправки всем пользователям используйте:\n"
+	previewFooter += "`/announce " + announceText + "`"
+
+	fullPreview := previewHeader + announceText + previewFooter
+
+	// 4. Отправляем превью
+	reply := tgbotapi.NewMessage(msg.Chat.ID, fullPreview)
+	reply.ParseMode = "Markdown"
+
+	if _, err := h.bot.Send(reply); err != nil {
+		h.logger.Error("failed to send preview", "error", err)
+		h.sendMessage(msg.Chat.ID, "❌ Ошибка отправки предпросмотра")
+		return
+	}
+
+	h.logger.Info("announcement preview sent", "admin_id", msg.Chat.ID)
 }
