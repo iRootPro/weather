@@ -1,6 +1,6 @@
 module github.com/iRootPro/weather
 
-go 1.24.4
+go 1.26
 
 require (
 	github.com/charmbracelet/bubbles v1.0.0

@@ -65,7 +65,7 @@ go test -run TestName ./path/to/package
 
 ## Технологический стек
 
-- Go 1.25+ со стандартной библиотекой для роутинга
+- Go 1.26+ со стандартной библиотекой для роутинга
 - PostgreSQL + TimescaleDB для хранения временных рядов
 - goose для миграций БД
 - Eclipse Paho для MQTT
