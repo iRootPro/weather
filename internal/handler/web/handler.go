@@ -1,6 +1,7 @@
 package web
 
 import (
+	"fmt"
 	"html/template"
 	"log/slog"
 	"net/http"
@@ -37,6 +38,18 @@ func NewHandler(templatesDir string, weatherService *service.WeatherService, sun
 }
 
 var templateFuncs = template.FuncMap{
+	"russianDate": func(t time.Time, format string) string {
+		months := []string{"", "января", "февраля", "марта", "апреля", "мая", "июня",
+			"июля", "августа", "сентября", "октября", "ноября", "декабря"}
+		switch format {
+		case "short":
+			return fmt.Sprintf("%d %s", t.Day(), months[t.Month()])
+		case "datetime":
+			return fmt.Sprintf("%d %s %d, %s", t.Day(), months[t.Month()], t.Year(), t.Format("15:04"))
+		default:
+			return fmt.Sprintf("%d %s %d", t.Day(), months[t.Month()], t.Year())
+		}
+	},
 	"mul": func(a, b float64) float64 {
 		return a * b
 	},

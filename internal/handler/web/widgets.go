@@ -360,7 +360,7 @@ func (h *Handler) SunTimesWidget(w http.ResponseWriter, r *http.Request) {
 		DaysToNextPhase     float64
 		NextPhaseName       string
 	}{
-		Date:                time.Now().Format("2 января"),
+		Date:                formatRussianDateShort(time.Now()),
 		Dawn:                sunTimes.Dawn.Format("15:04"),
 		Sunrise:             sunTimes.Sunrise.Format("15:04"),
 		Sunset:              sunTimes.Sunset.Format("15:04"),

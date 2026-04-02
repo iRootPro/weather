@@ -18,7 +18,7 @@
                 {{if .Details}}
                 <p class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">{{.Details}}</p>
                 {{end}}
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{.Time.Format "15:04, 2 января"}}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{.Time.Format "15:04"}}, {{russianDate .Time "short"}}</p>
             </div>
         </div>
         {{end}}

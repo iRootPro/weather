@@ -69,7 +69,9 @@ func RenderEvents(events []models.WeatherEvent, width int) string {
 		}
 
 		// Time
-		timeStr := event.Time.Format("15:04, 2 января")
+		months := []string{"", "января", "февраля", "марта", "апреля", "мая", "июня",
+			"июля", "августа", "сентября", "октября", "ноября", "декабря"}
+		timeStr := fmt.Sprintf("%s, %d %s", event.Time.Format("15:04"), event.Time.Day(), months[event.Time.Month()])
 		eventLine += "\n   " + eventTime.Render(timeStr)
 
 		// Style the event item

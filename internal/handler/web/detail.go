@@ -2,6 +2,7 @@ package web
 
 import (
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"log/slog"
 	"net/http"
@@ -76,7 +77,7 @@ func (h *Handler) DetailTemperature(w http.ResponseWriter, r *http.Request) {
 			"DewPoint":    getFloat32Value(current.DewPoint),
 			"IndoorTemp":  getFloat32Value(current.TempIndoor),
 			"UpdateTime":  current.Time.Format("15:04"),
-			"UpdateDate":  current.Time.Format("2 января 2006"),
+			"UpdateDate":  formatRussianDate(current.Time),
 
 			// Calculate differences
 			"IndoorDiff": calculateDiff(current.TempOutdoor, current.TempIndoor),
@@ -98,9 +99,9 @@ func (h *Handler) DetailTemperature(w http.ResponseWriter, r *http.Request) {
 
 			// Records
 			"RecordMax":     records.TempOutdoorMax.Value,
-			"RecordMaxTime": records.TempOutdoorMax.Time.Format("2 января 2006, 15:04"),
+			"RecordMaxTime": formatRussianDateTime(records.TempOutdoorMax.Time),
 			"RecordMin":     records.TempOutdoorMin.Value,
-			"RecordMinTime": records.TempOutdoorMin.Time.Format("2 января 2006, 15:04"),
+			"RecordMinTime": formatRussianDateTime(records.TempOutdoorMin.Time),
 
 			// Chart data (as JSON)
 			"Chart24h":  toJSON(prepareChartData(chart24h, "TempOutdoor")),
@@ -124,6 +125,23 @@ func (h *Handler) DetailTemperature(w http.ResponseWriter, r *http.Request) {
 }
 
 // Helper functions
+
+var russianMonths = []string{
+	"", "января", "февраля", "марта", "апреля", "мая", "июня",
+	"июля", "августа", "сентября", "октября", "ноября", "декабря",
+}
+
+func formatRussianDateShort(t time.Time) string {
+	return fmt.Sprintf("%d %s", t.Day(), russianMonths[t.Month()])
+}
+
+func formatRussianDate(t time.Time) string {
+	return fmt.Sprintf("%d %s %d", t.Day(), russianMonths[t.Month()], t.Year())
+}
+
+func formatRussianDateTime(t time.Time) string {
+	return fmt.Sprintf("%d %s %d, %s", t.Day(), russianMonths[t.Month()], t.Year(), t.Format("15:04"))
+}
 
 func getFloat32Value(ptr *float32) float32 {
 	if ptr == nil {
@@ -273,7 +291,7 @@ func (h *Handler) DetailHumidity(w http.ResponseWriter, r *http.Request) {
 			"Current":    getInt16Value(current.HumidityOutdoor),
 			"DewPoint":   getFloat32Value(current.DewPoint),
 			"UpdateTime": current.Time.Format("15:04"),
-			"UpdateDate": current.Time.Format("2 января 2006"),
+			"UpdateDate": formatRussianDate(current.Time),
 
 			// Changes
 			"ChangeHour": calculateHumidityChange(current.HumidityOutdoor, hourAgo),
@@ -292,9 +310,9 @@ func (h *Handler) DetailHumidity(w http.ResponseWriter, r *http.Request) {
 
 			// Records
 			"RecordMax":     records.HumidityOutdoorMax.Value,
-			"RecordMaxTime": records.HumidityOutdoorMax.Time.Format("2 января 2006, 15:04"),
+			"RecordMaxTime": formatRussianDateTime(records.HumidityOutdoorMax.Time),
 			"RecordMin":     records.HumidityOutdoorMin.Value,
-			"RecordMinTime": records.HumidityOutdoorMin.Time.Format("2 января 2006, 15:04"),
+			"RecordMinTime": formatRussianDateTime(records.HumidityOutdoorMin.Time),
 
 			// Chart data (as JSON)
 			"Chart24h":  toJSON(prepareHumidityChartData(chart24h)),
@@ -381,7 +399,7 @@ func (h *Handler) DetailPressure(w http.ResponseWriter, r *http.Request) {
 			"Current":    getFloat32Value(current.PressureRelative),
 			"Absolute":   getFloat32Value(current.PressureAbsolute),
 			"UpdateTime": current.Time.Format("15:04"),
-			"UpdateDate": current.Time.Format("2 января 2006"),
+			"UpdateDate": formatRussianDate(current.Time),
 
 			// Changes
 			"ChangeHour": calculatePressureChange(current.PressureRelative, hourAgo),
@@ -400,9 +418,9 @@ func (h *Handler) DetailPressure(w http.ResponseWriter, r *http.Request) {
 
 			// Records
 			"RecordMax":     records.PressureMax.Value,
-			"RecordMaxTime": records.PressureMax.Time.Format("2 января 2006, 15:04"),
+			"RecordMaxTime": formatRussianDateTime(records.PressureMax.Time),
 			"RecordMin":     records.PressureMin.Value,
-			"RecordMinTime": records.PressureMin.Time.Format("2 января 2006, 15:04"),
+			"RecordMinTime": formatRussianDateTime(records.PressureMin.Time),
 
 			// Chart data (as JSON)
 			"Chart24h":  toJSON(preparePressureChartData(chart24h)),
@@ -497,7 +515,7 @@ func (h *Handler) DetailWind(w http.ResponseWriter, r *http.Request) {
 			"Direction":        getInt16Value(current.WindDirection),
 			"DirectionStr":     windDir,
 			"UpdateTime":       current.Time.Format("15:04"),
-			"UpdateDate":       current.Time.Format("2 января 2006"),
+			"UpdateDate":       formatRussianDate(current.Time),
 
 			// Changes
 			"ChangeHour": calculateWindChange(current.WindSpeed, hourAgo),
@@ -514,9 +532,9 @@ func (h *Handler) DetailWind(w http.ResponseWriter, r *http.Request) {
 
 			// Records
 			"RecordSpeed":     records.WindSpeedMax.Value,
-			"RecordSpeedTime": records.WindSpeedMax.Time.Format("2 января 2006, 15:04"),
+			"RecordSpeedTime": formatRussianDateTime(records.WindSpeedMax.Time),
 			"RecordGust":      records.WindGustMax.Value,
-			"RecordGustTime":  records.WindGustMax.Time.Format("2 января 2006, 15:04"),
+			"RecordGustTime":  formatRussianDateTime(records.WindGustMax.Time),
 
 			// Chart data (as JSON)
 			"Chart24h":  toJSON(prepareWindChartData(chart24h)),
@@ -604,7 +622,7 @@ func (h *Handler) DetailRain(w http.ResponseWriter, r *http.Request) {
 			"Monthly":    getFloat32Value(current.RainMonthly),
 			"Rate":       getFloat32Value(current.RainRate),
 			"UpdateTime": current.Time.Format("15:04"),
-			"UpdateDate": current.Time.Format("2 января 2006"),
+			"UpdateDate": formatRussianDate(current.Time),
 
 			// Changes (for daily rain)
 			"ChangeHour": calculateRainChange(current.RainDaily, hourAgo),
@@ -619,7 +637,7 @@ func (h *Handler) DetailRain(w http.ResponseWriter, r *http.Request) {
 
 			// Records
 			"RecordRate":     records.RainDailyMax.Value,
-			"RecordRateTime": records.RainDailyMax.Time.Format("2 января 2006, 15:04"),
+			"RecordRateTime": formatRussianDateTime(records.RainDailyMax.Time),
 
 			// Chart data (as JSON)
 			"Chart24h":  toJSON(prepareRainChartData(chart24h)),
@@ -706,7 +724,7 @@ func (h *Handler) DetailSolar(w http.ResponseWriter, r *http.Request) {
 			"SolarRadiation": getFloat32Value(current.SolarRadiation),
 			"UVIndex":        getFloat32Value(current.UVIndex),
 			"UpdateTime":     current.Time.Format("15:04"),
-			"UpdateDate":     current.Time.Format("2 января 2006"),
+			"UpdateDate":     formatRussianDate(current.Time),
 
 			// Changes (for solar radiation)
 			"ChangeHour": calculateSolarChange(current.SolarRadiation, hourAgo),
@@ -721,9 +739,9 @@ func (h *Handler) DetailSolar(w http.ResponseWriter, r *http.Request) {
 
 			// Records
 			"RecordSolar":     records.SolarRadiationMax.Value,
-			"RecordSolarTime": records.SolarRadiationMax.Time.Format("2 января 2006, 15:04"),
+			"RecordSolarTime": formatRussianDateTime(records.SolarRadiationMax.Time),
 			"RecordUV":        records.UVIndexMax.Value,
-			"RecordUVTime":    records.UVIndexMax.Time.Format("2 января 2006, 15:04"),
+			"RecordUVTime":    formatRussianDateTime(records.UVIndexMax.Time),
 
 			// Chart data (as JSON)
 			"Chart24h":  toJSON(prepareSolarChartData(chart24h)),
