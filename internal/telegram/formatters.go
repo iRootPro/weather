@@ -97,7 +97,7 @@ func FormatCurrentWeather(current *models.WeatherData, hourAgo *models.WeatherDa
 	}
 
 	// Осадки
-	if current.RainRate != nil && *current.RainRate > 0 {
+	if current.RainRate != nil && *current.RainRate >= 0.1 {
 		text += fmt.Sprintf("🌧️ *Дождь:* %.1f мм/ч\n", *current.RainRate)
 	}
 	if current.RainDaily != nil && *current.RainDaily > 0 {

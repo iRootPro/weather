@@ -759,7 +759,7 @@ func (h *BotHandler) handlePhotoDocument(ctx context.Context, msg *tgbotapi.Mess
 			if weather.PressureRelative != nil {
 				confirmText += fmt.Sprintf("• Давление: %.0f мм рт.ст.\n", *weather.PressureRelative)
 			}
-			if weather.RainRate != nil && *weather.RainRate > 0 {
+			if weather.RainRate != nil && *weather.RainRate >= 0.1 {
 				confirmText += fmt.Sprintf("• Дождь: %.1f мм/ч\n", *weather.RainRate)
 			}
 		}

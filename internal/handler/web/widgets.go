@@ -131,7 +131,7 @@ func (h *Handler) CurrentWeatherWidget(w http.ResponseWriter, r *http.Request) {
 	if data.RainRate != nil {
 		templateData.RainRate = *data.RainRate
 		// Определяем интенсивность дождя
-		if *data.RainRate > 0 {
+		if *data.RainRate >= 0.1 {
 			templateData.IsRaining = true
 			switch {
 			case *data.RainRate >= 7.5:

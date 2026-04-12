@@ -63,7 +63,7 @@ func (h *Handler) HandleMessage() mqtt.MessageHandler {
 		if weather.WindSpeed != nil {
 			logAttrs = append(logAttrs, "wind_speed", *weather.WindSpeed)
 		}
-		if weather.RainRate != nil && *weather.RainRate > 0 {
+		if weather.RainRate != nil && *weather.RainRate >= 0.1 {
 			logAttrs = append(logAttrs, "rain_rate", *weather.RainRate)
 		}
 
