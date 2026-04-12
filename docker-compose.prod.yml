@@ -78,6 +78,9 @@ services:
     container_name: weather-telegram-bot
     environment:
       TZ: Europe/Moscow
+      HTTPS_PROXY: ${TELEGRAM_HTTPS_PROXY:-}
+      HTTP_PROXY: ${TELEGRAM_HTTP_PROXY:-}
+      NO_PROXY: localhost,127.0.0.1,postgres,weather-postgres
     volumes:
       - photos_data:/app/photos
     depends_on:
