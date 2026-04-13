@@ -225,10 +225,14 @@ func (n *Notifier) checkGeomagneticStorms(ctx context.Context) {
 	now := time.Now()
 
 	// 1. Буря прямо сейчас — текущий слот, не прогноз, Kp >= порога.
+	// GetCurrentKp отдаёт окно до 6ч назад (ради карточки дашборда), поэтому
+	// здесь дополнительно требуем чтобы слот был не старше 3ч — иначе мы
+	// рискуем «прокричать» о давно закончившейся буре.
 	current, err := n.geomagRepo.GetCurrentKp(ctx, now)
 	if err != nil {
 		n.logger.Error("failed to get current kp", "error", err)
-	} else if current != nil && !current.IsForecast && current.Kp >= n.geomagThreshold {
+	} else if current != nil && !current.IsForecast && current.Kp >= n.geomagThreshold &&
+		now.Sub(current.SlotTime) <= 3*time.Hour {
 		n.notifyGeomagAll(ctx, "now", current)
 	}
 

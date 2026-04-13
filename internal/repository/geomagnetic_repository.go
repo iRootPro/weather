@@ -84,14 +84,15 @@ func (r *geomagneticRepository) SaveDailyBatch(ctx context.Context, data []model
 	return nil
 }
 
-// GetCurrentKp возвращает последний слот в окне (now-3h .. now]. Если ничего
-// нет — nil без ошибки.
+// GetCurrentKp возвращает последний слот в окне (now-6h .. now]. Окно шире
+// интервала источника (3ч) с запасом: между публикациями новых данных
+// карточка не должна пропадать. Если ничего нет — nil без ошибки.
 func (r *geomagneticRepository) GetCurrentKp(ctx context.Context, now time.Time) (*models.GeomagneticKp, error) {
 	query := `
 		SELECT slot_time, kp, source, is_forecast, fetched_at
 		FROM geomagnetic_kp
 		WHERE slot_time <= $1
-			AND slot_time > $1 - INTERVAL '3 hours'
+			AND slot_time > $1 - INTERVAL '6 hours'
 		ORDER BY slot_time DESC
 		LIMIT 1`
 
