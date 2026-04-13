@@ -91,22 +91,10 @@ func (h *Handler) DetailGeomagnetic(w http.ResponseWriter, r *http.Request) {
 	}
 	points := make([]chartPoint, 0, len(detail.Kp))
 	for _, slot := range detail.Kp {
-		status := models.ClassifyKp(slot.Kp)
-		var color string
-		switch status {
-		case models.KpSevereStorm:
-			color = "#dc2626" // red-600
-		case models.KpStorm:
-			color = "#ea580c" // orange-600
-		case models.KpUnsettled:
-			color = "#ca8a04" // yellow-600
-		default:
-			color = "#16a34a" // green-600
-		}
 		points = append(points, chartPoint{
 			Time:  slot.SlotTime.UTC().Format(time.RFC3339),
 			Kp:    slot.Kp,
-			Color: color,
+			Color: models.ClassifyKp(slot.Kp).HexColor(),
 		})
 	}
 	chartJSON, err := json.Marshal(points)

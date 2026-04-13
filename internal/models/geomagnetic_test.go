@@ -7,6 +7,7 @@ func TestClassifyKp(t *testing.T) {
 		kp   float32
 		want KpStatus
 	}{
+		{-0.5, KpCalm},
 		{0, KpCalm},
 		{2.5, KpCalm},
 		{3.99, KpCalm},
@@ -14,9 +15,8 @@ func TestClassifyKp(t *testing.T) {
 		{4.9, KpUnsettled},
 		{5, KpStorm},
 		{6, KpStorm},
-		{6.99, KpStorm},
-		{7, KpSevereStorm},
-		{9, KpSevereStorm},
+		{7, KpStorm},
+		{9, KpStorm},
 	}
 	for _, c := range cases {
 		got := ClassifyKp(c.kp)
@@ -28,12 +28,12 @@ func TestClassifyKp(t *testing.T) {
 
 func TestKpStatusHelpers(t *testing.T) {
 	// Каждый статус возвращает непустую строку для всех вспомогательных методов
-	for _, s := range []KpStatus{KpCalm, KpUnsettled, KpStorm, KpSevereStorm} {
+	for _, s := range []KpStatus{KpCalm, KpUnsettled, KpStorm} {
 		if s.Label() == "" {
 			t.Errorf("Label() empty for %v", s)
 		}
-		if s.Color() == "" {
-			t.Errorf("Color() empty for %v", s)
+		if s.HexColor() == "" {
+			t.Errorf("HexColor() empty for %v", s)
 		}
 		if s.Emoji() == "" {
 			t.Errorf("Emoji() empty for %v", s)

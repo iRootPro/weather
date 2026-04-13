@@ -21,21 +21,19 @@ type GeomagneticDaily struct {
 	FetchedAt time.Time
 }
 
-// KpStatus — категория геомагнитной активности по шкале NOAA.
+// KpStatus — категория геомагнитной активности.
+// Совпадает со шкалой xras.ru: спокойно / возмущение / буря.
 type KpStatus int
 
 const (
-	KpCalm        KpStatus = iota // 0..3 — спокойно
-	KpUnsettled                   // 4 — возмущение
-	KpStorm                       // 5..6 — буря (G1–G2)
-	KpSevereStorm                 // 7..9 — сильная буря (G3–G5)
+	KpCalm      KpStatus = iota // 0..3 — спокойная магнитосфера
+	KpUnsettled                 // 4 — возбуждённая
+	KpStorm                     // ≥5 — магнитная буря (G1+)
 )
 
 // ClassifyKp возвращает категорию для значения Kp.
 func ClassifyKp(kp float32) KpStatus {
 	switch {
-	case kp >= 7:
-		return KpSevereStorm
 	case kp >= 5:
 		return KpStorm
 	case kp >= 4:
@@ -45,43 +43,37 @@ func ClassifyKp(kp float32) KpStatus {
 	}
 }
 
-// Label — короткое русское название статуса.
+// Label — короткое русское название статуса (как у xras.ru).
 func (s KpStatus) Label() string {
 	switch s {
-	case KpSevereStorm:
-		return "сильная буря"
 	case KpStorm:
-		return "буря"
+		return "магнитная буря"
 	case KpUnsettled:
-		return "возмущение"
+		return "возбуждённая"
 	default:
-		return "спокойно"
+		return "спокойная"
 	}
 }
 
-// Color — базовый Tailwind-цвет статуса (для подстановки в готовые наборы классов).
-func (s KpStatus) Color() string {
+// HexColor возвращает HEX-цвет статуса (для Chart.js).
+func (s KpStatus) HexColor() string {
 	switch s {
-	case KpSevereStorm:
-		return "red"
 	case KpStorm:
-		return "orange"
+		return "#ef4444" // red-500
 	case KpUnsettled:
-		return "yellow"
+		return "#f59e0b" // amber-500
 	default:
-		return "green"
+		return "#22c55e" // green-500
 	}
 }
 
 // Emoji — цветовой индикатор статуса.
 func (s KpStatus) Emoji() string {
 	switch s {
-	case KpSevereStorm:
-		return "🔴"
 	case KpStorm:
-		return "🟠"
+		return "🔴"
 	case KpUnsettled:
-		return "🟡"
+		return "🟠"
 	default:
 		return "🟢"
 	}
@@ -92,12 +84,10 @@ func (s KpStatus) Emoji() string {
 // не выпилил их при сборке.
 func (s KpStatus) TailwindGradient() string {
 	switch s {
-	case KpSevereStorm:
-		return "from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20"
 	case KpStorm:
-		return "from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20"
+		return "from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20"
 	case KpUnsettled:
-		return "from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20"
+		return "from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20"
 	default:
 		return "from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20"
 	}
@@ -106,12 +96,10 @@ func (s KpStatus) TailwindGradient() string {
 // TextColor возвращает Tailwind-классы текста (главное число + подпись).
 func (s KpStatus) TextColor() string {
 	switch s {
-	case KpSevereStorm:
-		return "text-red-700 dark:text-red-300"
 	case KpStorm:
-		return "text-orange-700 dark:text-orange-300"
+		return "text-red-700 dark:text-red-300"
 	case KpUnsettled:
-		return "text-yellow-700 dark:text-yellow-300"
+		return "text-orange-700 dark:text-orange-300"
 	default:
 		return "text-green-700 dark:text-green-300"
 	}

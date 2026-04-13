@@ -40,12 +40,18 @@
     </div>
     {{end}}
 
-    <!-- График Kp -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            График Kp · 5 дней (история и прогноз)
-        </h2>
-        <div class="relative h-80">
+    <!-- График Kp в стиле xras.ru -->
+    <div class="bg-black rounded-lg shadow p-6">
+        <div class="text-white font-medium mb-4">
+            Магнитные бури, Краснодар (UTC+03)
+        </div>
+        <div class="text-gray-300 text-sm mb-2">Магнитосфера</div>
+        <div class="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-200 mb-4">
+            <div class="flex items-center"><span class="inline-block w-4 h-4 mr-2" style="background:#22c55e"></span>— спокойная</div>
+            <div class="flex items-center"><span class="inline-block w-4 h-4 mr-2" style="background:#f59e0b"></span>— возбуждённая</div>
+            <div class="flex items-center"><span class="inline-block w-4 h-4 mr-2" style="background:#ef4444"></span>— магнитная буря</div>
+        </div>
+        <div class="relative h-96">
             <canvas id="kpChart"></canvas>
         </div>
     </div>
@@ -88,57 +94,28 @@
     <!-- Шкала Kp -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            Шкала индекса Kp (NOAA G-scale)
+            Шкала бурь (NOAA G-scale)
         </h2>
         <div class="space-y-2 text-sm">
-            <div class="flex items-center justify-between p-3 bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded">
-                <div class="flex items-center space-x-3">
-                    <span class="font-bold text-green-700 dark:text-green-300 w-12">0–3</span>
-                    <span class="text-gray-700 dark:text-gray-200">Спокойно</span>
-                </div>
-                <span class="text-gray-500 dark:text-gray-400">Магнитосфера в норме</span>
-            </div>
-            <div class="flex items-center justify-between p-3 bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 rounded">
-                <div class="flex items-center space-x-3">
-                    <span class="font-bold text-yellow-700 dark:text-yellow-300 w-12">4</span>
-                    <span class="text-gray-700 dark:text-gray-200">Возмущение</span>
-                </div>
-                <span class="text-gray-500 dark:text-gray-400">Возможны слабые колебания</span>
-            </div>
-            <div class="flex items-center justify-between p-3 bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded">
-                <div class="flex items-center space-x-3">
-                    <span class="font-bold text-orange-700 dark:text-orange-300 w-12">5</span>
-                    <span class="text-gray-700 dark:text-gray-200">G1 — слабая буря</span>
-                </div>
-                <span class="text-gray-500 dark:text-gray-400">Северные сияния в высоких широтах</span>
-            </div>
-            <div class="flex items-center justify-between p-3 bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded">
-                <div class="flex items-center space-x-3">
-                    <span class="font-bold text-orange-700 dark:text-orange-300 w-12">6</span>
-                    <span class="text-gray-700 dark:text-gray-200">G2 — умеренная буря</span>
-                </div>
-                <span class="text-gray-500 dark:text-gray-400">Перебои в радиосвязи на ВЧ</span>
+            <div class="flex items-center justify-between p-3 bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded">
+                <span class="text-gray-700 dark:text-gray-200"><span class="font-bold mr-2">G1</span> Kp = 5 — слабая буря</span>
+                <span class="text-gray-500 dark:text-gray-400 hidden sm:inline">Северные сияния в высоких широтах</span>
             </div>
             <div class="flex items-center justify-between p-3 bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded">
-                <div class="flex items-center space-x-3">
-                    <span class="font-bold text-red-700 dark:text-red-300 w-12">7</span>
-                    <span class="text-gray-700 dark:text-gray-200">G3 — сильная буря</span>
-                </div>
-                <span class="text-gray-500 dark:text-gray-400">Сбои навигации, сияния в средних широтах</span>
+                <span class="text-gray-700 dark:text-gray-200"><span class="font-bold mr-2">G2</span> Kp = 6 — средняя буря</span>
+                <span class="text-gray-500 dark:text-gray-400 hidden sm:inline">Перебои в радиосвязи на ВЧ</span>
             </div>
             <div class="flex items-center justify-between p-3 bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded">
-                <div class="flex items-center space-x-3">
-                    <span class="font-bold text-red-700 dark:text-red-300 w-12">8</span>
-                    <span class="text-gray-700 dark:text-gray-200">G4 — очень сильная</span>
-                </div>
-                <span class="text-gray-500 dark:text-gray-400">Влияние на электросети, сбои спутников</span>
+                <span class="text-gray-700 dark:text-gray-200"><span class="font-bold mr-2">G3</span> Kp = 7 — сильная буря</span>
+                <span class="text-gray-500 dark:text-gray-400 hidden sm:inline">Сбои навигации, сияния в средних широтах</span>
             </div>
             <div class="flex items-center justify-between p-3 bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded">
-                <div class="flex items-center space-x-3">
-                    <span class="font-bold text-red-700 dark:text-red-300 w-12">9</span>
-                    <span class="text-gray-700 dark:text-gray-200">G5 — экстремальная</span>
-                </div>
-                <span class="text-gray-500 dark:text-gray-400">Аварии электросетей, отказы оборудования</span>
+                <span class="text-gray-700 dark:text-gray-200"><span class="font-bold mr-2">G4</span> Kp = 8 — очень сильная буря</span>
+                <span class="text-gray-500 dark:text-gray-400 hidden sm:inline">Влияние на электросети, сбои спутников</span>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded">
+                <span class="text-gray-700 dark:text-gray-200"><span class="font-bold mr-2">G5</span> Kp = 9 — экстремальная буря</span>
+                <span class="text-gray-500 dark:text-gray-400 hidden sm:inline">Аварии электросетей, отказы оборудования</span>
             </div>
         </div>
     </div>
@@ -152,19 +129,101 @@
 <script>
 (function() {
     const points = {{.Data.ChartJSON}};
-    const nowISO = "{{.Data.NowISO}}";
     if (!points || points.length === 0) {
         return;
     }
 
-    const labels = points.map(p => {
-        const d = new Date(p.time);
-        return d.toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    // Группируем точки по локальной дате (UTC+3) — если в БД есть пробелы в
+    // 3-часовой сетке, всё равно показываем 8 слотов на день.
+    const SLOT_HOURS = [0, 3, 6, 9, 12, 15, 18, 21];
+    const dayKey = (date) => {
+        // используем часовой пояс пользователя
+        const y = date.getFullYear();
+        const m = (date.getMonth() + 1).toString().padStart(2, '0');
+        const d = date.getDate().toString().padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    };
+
+    // Собираем уникальные дни в порядке возрастания
+    const dayMap = new Map(); // key -> {date, slots: Map<hour, kp>}
+    for (const p of points) {
+        const dt = new Date(p.time);
+        const key = dayKey(dt);
+        if (!dayMap.has(key)) {
+            dayMap.set(key, { date: new Date(dt.getFullYear(), dt.getMonth(), dt.getDate()), slots: new Map() });
+        }
+        // округляем час вниз до ближайшего из SLOT_HOURS
+        const hour = SLOT_HOURS.reduce((acc, h) => (dt.getHours() >= h ? h : acc), 0);
+        dayMap.get(key).slots.set(hour, p.kp);
+    }
+    const days = Array.from(dayMap.values()).sort((a, b) => a.date - b.date);
+    if (days.length === 0) return;
+
+    // Раскладываем все слоты в плоский массив: 8 баров на день
+    const labels = [];
+    const data = [];
+    const colors = [];
+    const dayBoundaries = []; // индексы первого бара каждого дня
+    days.forEach((day, i) => {
+        dayBoundaries.push(labels.length);
+        for (const h of SLOT_HOURS) {
+            labels.push(h.toString().padStart(2, '0') + ':00');
+            const kp = day.slots.has(h) ? day.slots.get(h) : null;
+            data.push(kp);
+            if (kp == null) {
+                colors.push('rgba(0,0,0,0)');
+            } else if (kp >= 5) {
+                colors.push('#ef4444');
+            } else if (kp >= 4) {
+                colors.push('#f59e0b');
+            } else {
+                colors.push('#22c55e');
+            }
+        }
     });
-    const data = points.map(p => p.kp);
-    const colors = points.map(p => p.color);
-    const nowDate = new Date(nowISO);
-    const nowIndex = points.findIndex(p => new Date(p.time) > nowDate);
+
+    // Подписи дней (формат: "11 Апреля 2026") — рендерятся в кастомном плагине
+    const MONTHS = ['Января','Февраля','Марта','Апреля','Мая','Июня','Июля','Августа','Сентября','Октября','Ноября','Декабря'];
+    const dayLabels = days.map(day => `${day.date.getDate()} ${MONTHS[day.date.getMonth()]} ${day.date.getFullYear()}`);
+
+    // Кастомный плагин: вертикальные разделители суток + подписи дат снизу
+    const dayDividers = {
+        id: 'dayDividers',
+        afterDatasetsDraw(chart) {
+            const { ctx, chartArea, scales } = chart;
+            ctx.save();
+
+            // Вертикальные линии между сутками (кроме самой первой)
+            ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+            ctx.lineWidth = 1;
+            for (let i = 1; i < dayBoundaries.length; i++) {
+                const idx = dayBoundaries[i];
+                // позиция между баром (idx-1) и баром idx
+                const x1 = scales.x.getPixelForValue(idx - 1);
+                const x2 = scales.x.getPixelForValue(idx);
+                const x = (x1 + x2) / 2;
+                ctx.beginPath();
+                ctx.moveTo(x, chartArea.top);
+                ctx.lineTo(x, chartArea.bottom);
+                ctx.stroke();
+            }
+
+            // Подписи дат под X-осью
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 14px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            for (let i = 0; i < days.length; i++) {
+                const startIdx = dayBoundaries[i];
+                const endIdx = (i + 1 < dayBoundaries.length ? dayBoundaries[i + 1] : labels.length) - 1;
+                const xStart = scales.x.getPixelForValue(startIdx);
+                const xEnd = scales.x.getPixelForValue(endIdx);
+                const xCenter = (xStart + xEnd) / 2;
+                ctx.fillText(dayLabels[i], xCenter, chartArea.bottom + 28);
+            }
+            ctx.restore();
+        }
+    };
 
     const ctx = document.getElementById('kpChart');
     if (!ctx) return;
@@ -178,28 +237,84 @@
                 data: data,
                 backgroundColor: colors,
                 borderColor: colors,
-                borderWidth: 1,
+                borderWidth: 0,
+                barPercentage: 0.95,
+                categoryPercentage: 1.0,
             }]
         },
+        plugins: [dayDividers],
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            layout: {
+                padding: { bottom: 32 } // место для подписей дат
+            },
             scales: {
                 y: {
+                    position: 'left',
                     beginAtZero: true,
+                    min: 0,
                     max: 9,
-                    ticks: { stepSize: 1 },
-                    title: { display: true, text: 'Kp' }
+                    ticks: {
+                        stepSize: 1,
+                        color: '#ffffff',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Kp',
+                        color: '#ffffff',
+                    },
+                    grid: { color: 'rgba(255,255,255,0.08)' },
+                    border: { color: 'rgba(255,255,255,0.4)' },
+                },
+                yG: {
+                    position: 'right',
+                    beginAtZero: true,
+                    min: 0,
+                    max: 9,
+                    ticks: {
+                        color: '#ffffff',
+                        callback: (value) => {
+                            if (value >= 5 && value <= 9) {
+                                return 'G' + (value - 4);
+                            }
+                            return '';
+                        },
+                    },
+                    grid: { display: false },
+                    border: { color: 'rgba(255,255,255,0.4)' },
                 },
                 x: {
-                    ticks: { maxRotation: 60, minRotation: 45, autoSkip: true, maxTicksLimit: 16 }
+                    ticks: {
+                        color: '#cbd5e1',
+                        maxRotation: 0,
+                        autoSkip: false,
+                        callback: function(value, index) {
+                            // Показываем только круглые часы 00, 06, 12, 18
+                            const lbl = labels[index];
+                            return ['00:00', '06:00', '12:00', '18:00'].includes(lbl) ? lbl : '';
+                        },
+                    },
+                    grid: { color: 'rgba(255,255,255,0.05)' },
+                    border: { color: 'rgba(255,255,255,0.4)' },
                 }
             },
             plugins: {
                 legend: { display: false },
                 tooltip: {
                     callbacks: {
-                        label: (item) => 'Kp = ' + item.parsed.y + (nowIndex >= 0 && item.dataIndex >= nowIndex ? ' (прогноз)' : '')
+                        title: (items) => {
+                            // покажем дату + час слота
+                            if (!items.length) return '';
+                            const idx = items[0].dataIndex;
+                            // найти к какому дню относится индекс
+                            let dayIdx = 0;
+                            for (let i = 0; i < dayBoundaries.length; i++) {
+                                if (idx >= dayBoundaries[i]) dayIdx = i;
+                            }
+                            return dayLabels[dayIdx] + ', ' + labels[idx];
+                        },
+                        label: (item) => 'Kp = ' + (item.parsed.y == null ? '—' : item.parsed.y.toFixed(2))
                     }
                 }
             }
