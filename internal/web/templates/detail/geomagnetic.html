@@ -19,16 +19,16 @@
         <div class="text-center">
             <h1 class="text-lg font-medium text-gray-700 dark:text-gray-200 mb-2">
                 <span class="text-2xl mr-1">🧲</span>
-                Геомагнитная активность
+                Магнитные бури
             </h1>
-            <div class="text-8xl font-bold {{.Data.Card.StatusText}} mb-4">
-                Kp {{printf "%.1f" .Data.Card.Kp}}
+            <div class="text-6xl md:text-7xl font-bold {{.Data.Card.StatusText}} mb-4 leading-tight">
+                {{.Data.Card.StatusHeading}}
             </div>
-            <div class="text-2xl font-semibold {{.Data.Card.StatusText}}">
-                {{.Data.Card.StatusLabel}}
+            <div class="text-base text-gray-600 dark:text-gray-400">
+                {{.Data.Card.KpSubLine}}
             </div>
             {{if .Data.Card.PeakLine}}
-            <div class="text-base text-gray-700 dark:text-gray-300 mt-4">
+            <div class="text-base text-gray-700 dark:text-gray-300 mt-3">
                 {{.Data.Card.PeakLine}}
             </div>
             {{end}}
@@ -43,10 +43,10 @@
     <!-- График Kp -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-            Магнитные бури
+            Магнитные бури · история за 3 дня
         </h2>
         <div class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-            История за 3 дня · часовой пояс источника UTC+03
+            На графике — индекс Kp, стандартная мера возмущения магнитного поля Земли. Шкала 0–9; буря начинается с Kp = 5 (G1). Часовой пояс источника UTC+03.
         </div>
         <div class="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-700 dark:text-gray-300 mb-4">
             <div class="flex items-center"><span class="inline-block w-3 h-3 rounded-sm mr-2" style="background:#22c55e"></span>спокойная</div>

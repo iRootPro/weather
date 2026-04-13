@@ -187,10 +187,10 @@
                 <span class="text-3xl">🧲</span>
                 <div>
                     <div class="text-2xl font-bold {{.Geomagnetic.StatusText}}">
-                        Kp = {{printf "%.1f" .Geomagnetic.Kp}}
+                        {{.Geomagnetic.StatusHeading}}
                     </div>
                     <div class="text-xs text-gray-600 dark:text-gray-400">
-                        геомагнитная активность · {{.Geomagnetic.StatusLabel}}
+                        {{.Geomagnetic.KpSubLine}}
                     </div>
                 </div>
             </div>

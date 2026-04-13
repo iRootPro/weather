@@ -15,12 +15,36 @@ import (
 // GeomagneticCardData — данные для карточки на дашборде, готовые к рендеру
 // (без условий внутри шаблона).
 type GeomagneticCardData struct {
-	HasData       bool
-	Kp            float32
-	StatusLabel   string
+	HasData        bool
+	Kp             float32
+	StatusLabel    string
+	StatusHeading  string // "Спокойно" / "Возмущение" / "Магнитная буря G3" — крупно для пользователя
 	StatusGradient string
 	StatusText     string
+	KpSubLine      string // мелкая подпись «Магнитные бури · Kp 2.3»
 	PeakLine       string // готовая строка «Прогноз: …» или «Макс сегодня: …», либо пустая
+}
+
+// stormGLevel — уровень шкалы NOAA G по значению Kp (G1..G5).
+// Возвращает 0 для Kp < 5.
+func stormGLevel(kp float32) int {
+	if kp < 5 {
+		return 0
+	}
+	return min(5, max(1, int(kp)-4))
+}
+
+// statusHeading возвращает крупную подпись для пользователя:
+// «Спокойно» / «Возмущение» / «Магнитная буря G1»…
+func statusHeading(status models.KpStatus, kp float32) string {
+	switch status {
+	case models.KpStorm:
+		return fmt.Sprintf("Магнитная буря G%d", stormGLevel(kp))
+	case models.KpUnsettled:
+		return "Возмущение"
+	default:
+		return "Спокойно"
+	}
 }
 
 // buildGeomagneticCard собирает данные карточки. Никогда не возвращает ошибку —
@@ -42,20 +66,22 @@ func (h *Handler) buildGeomagneticCard(ctx context.Context) GeomagneticCardData 
 		HasData:        true,
 		Kp:             snap.Current.Kp,
 		StatusLabel:    snap.Status.Label(),
+		StatusHeading:  statusHeading(snap.Status, snap.Current.Kp),
 		StatusGradient: snap.Status.TailwindGradient(),
 		StatusText:     snap.Status.TextColor(),
+		KpSubLine:      fmt.Sprintf("Магнитные бури · Kp %.1f", snap.Current.Kp),
 	}
 
 	switch {
 	case snap.NextStorm != nil:
 		card.PeakLine = fmt.Sprintf(
-			"Прогноз: буря %s, Kp = %.1f",
+			"Прогноз: буря %s, Kp %.1f",
 			snap.NextStorm.SlotTime.In(time.Local).Format("02.01 15:04"),
 			snap.NextStorm.Kp,
 		)
 	case snap.TodayMaxKp != nil:
 		card.PeakLine = fmt.Sprintf(
-			"Макс сегодня: %.1f в %s",
+			"Макс сегодня: Kp %.1f в %s",
 			snap.TodayMaxKp.Kp,
 			snap.TodayMaxKp.SlotTime.In(time.Local).Format("15:04"),
 		)
