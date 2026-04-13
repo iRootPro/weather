@@ -163,9 +163,15 @@
     const days = Array.from(dayMap.values()).sort((a, b) => a.date - b.date);
     if (days.length === 0) return;
 
-    // Раскладываем все слоты в плоский массив: 8 баров на день
+    // Раскладываем все слоты в плоский массив: 8 баров на день.
+    // У xras.ru Kp бывает дробным и иногда отрицательным (артефакт усреднения)
+    // — отрицательные клампим к 0, а очень маленькие положительные подтягиваем
+    // до минимально видимой высоты, чтобы бар был заметен. В тултипе показываем
+    // оригинальное значение через rawKp.
+    const MIN_VISIBLE = 0.15;
     const labels = [];
-    const data = [];
+    const data = [];        // значения для рендера (clamped)
+    const rawKp = [];       // оригинальные значения для тултипа
     const colors = [];
     const dayBoundaries = []; // индексы первого бара каждого дня
     days.forEach((day, i) => {
@@ -173,10 +179,14 @@
         for (const h of SLOT_HOURS) {
             labels.push(h.toString().padStart(2, '0') + ':00');
             const kp = day.slots.has(h) ? day.slots.get(h) : null;
-            data.push(kp);
+            rawKp.push(kp);
             if (kp == null) {
+                data.push(null);
                 colors.push('rgba(0,0,0,0)');
-            } else if (kp >= 5) {
+                continue;
+            }
+            data.push(Math.max(MIN_VISIBLE, kp));
+            if (kp >= 5) {
                 colors.push('#ef4444');
             } else if (kp >= 4) {
                 colors.push('#f59e0b');
@@ -319,7 +329,10 @@
                             }
                             return dayLabels[dayIdx] + ', ' + labels[idx];
                         },
-                        label: (item) => 'Kp = ' + (item.parsed.y == null ? '—' : item.parsed.y.toFixed(2))
+                        label: (item) => {
+                            const kp = rawKp[item.dataIndex];
+                            return 'Kp = ' + (kp == null ? '—' : kp.toFixed(2));
+                        }
                     }
                 }
             }
