@@ -46,9 +46,11 @@ $SSH_CMD "
 echo -e "${GREEN}[3/5] Обновляю код из ${GIT_BRANCH:-main}...${NC}"
 $SSH_CMD "
     cd ${DEPLOY_PATH}
+    git stash --include-untracked
     git fetch origin
     git checkout ${GIT_BRANCH:-main}
     git pull origin ${GIT_BRANCH:-main}
+    git stash pop || true
 "
 
 # Проверяем .env
@@ -65,6 +67,7 @@ $SSH_CMD "
 # Пересобираем и перезапускаем контейнеры
 echo -e "${GREEN}[5/5] Пересобираю и перезапускаю контейнеры...${NC}"
 $SSH_CMD "
+    set -e
     cd ${DEPLOY_PATH}
     docker compose -f docker-compose.prod.yml build
     docker compose -f docker-compose.prod.yml up -d
@@ -72,6 +75,12 @@ $SSH_CMD "
     echo ''
     echo '=== Статус контейнеров ==='
     docker compose -f docker-compose.prod.yml ps
+
+    echo ''
+    echo '=== Очистка кеша Docker ==='
+    docker builder prune -af >/dev/null 2>&1 || true
+    docker image prune -af   >/dev/null 2>&1 || true
+    df -h / | tail -n 1
 "
 
 echo ""
