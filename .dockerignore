@@ -1,0 +1,49 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Локальные бинарники
+bin/
+
+# Бэкапы и большие архивы
+backups/
+*.tar.gz
+*.tar
+*.sql.gz
+*.sql
+*.zip
+
+# Фотографии (монтируются как volume)
+photos/
+
+# Скриншоты в корне репо
+*.png
+*.jpg
+*.jpeg
+
+# Локальные конфиги и логи
+.env
+.env.local
+*.log
+deploy.conf
+
+# Документация
+docs/
+doc/
+*.md
+!README.md
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Docker / CI (не нужны в build context)
+.dockerignore
+docker-compose*.yml
+
+# Coverage и temp
+coverage.out
+coverage.html
+tmp/
