@@ -19,15 +19,19 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/forecast-fetcher ./cmd/forecast-fe
 RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/narodmon-sender ./cmd/narodmon-sender
 RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/geomagnetic-fetcher ./cmd/geomagnetic-fetcher
 
+# Базовый Alpine с зеркалом, доступным из РФ (dl-cdn.alpinelinux.org режется DPI)
+FROM alpine:3.20 AS alpine-base
+RUN sed -i 's|dl-cdn.alpinelinux.org|mirror.yandex.ru/mirrors|g' /etc/apk/repositories
+
 # MQTT Consumer
-FROM alpine:3.20 AS mqtt-consumer
+FROM alpine-base AS mqtt-consumer
 RUN apk --no-cache add ca-certificates tzdata
 WORKDIR /app
 COPY --from=builder /bin/mqtt-consumer /app/mqtt-consumer
 CMD ["/app/mqtt-consumer"]
 
 # API Server
-FROM alpine:3.20 AS api-server
+FROM alpine-base AS api-server
 RUN apk --no-cache add ca-certificates tzdata
 WORKDIR /app
 COPY --from=builder /bin/api-server /app/api-server
@@ -37,7 +41,7 @@ EXPOSE 8080
 CMD ["/app/api-server"]
 
 # Migrator
-FROM alpine:3.20 AS migrator
+FROM alpine-base AS migrator
 RUN apk --no-cache add ca-certificates tzdata
 WORKDIR /app
 COPY --from=builder /bin/migrator /app/migrator
@@ -45,7 +49,7 @@ COPY --from=builder /app/migrations /app/migrations
 CMD ["/app/migrator", "up"]
 
 # Telegram Bot
-FROM alpine:3.20 AS telegram-bot
+FROM alpine-base AS telegram-bot
 RUN apk --no-cache add ca-certificates tzdata exiftool python3 py3-pip
 RUN pip3 install pillow-heif --break-system-packages
 WORKDIR /app
@@ -55,21 +59,21 @@ RUN chmod +x /app/convert_heic.py
 CMD ["/app/telegram-bot"]
 
 # Forecast Fetcher
-FROM alpine:3.20 AS forecast-fetcher
+FROM alpine-base AS forecast-fetcher
 RUN apk --no-cache add ca-certificates tzdata
 WORKDIR /app
 COPY --from=builder /bin/forecast-fetcher /app/forecast-fetcher
 CMD ["/app/forecast-fetcher"]
 
 # Narodmon Sender
-FROM alpine:3.20 AS narodmon-sender
+FROM alpine-base AS narodmon-sender
 RUN apk --no-cache add ca-certificates tzdata
 WORKDIR /app
 COPY --from=builder /bin/narodmon-sender /app/narodmon-sender
 CMD ["/app/narodmon-sender"]
 
 # Geomagnetic Fetcher
-FROM alpine:3.20 AS geomagnetic-fetcher
+FROM alpine-base AS geomagnetic-fetcher
 RUN apk --no-cache add ca-certificates tzdata
 WORKDIR /app
 COPY --from=builder /bin/geomagnetic-fetcher /app/geomagnetic-fetcher
