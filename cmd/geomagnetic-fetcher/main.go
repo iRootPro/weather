@@ -150,8 +150,12 @@ func (f *Fetcher) FetchAndSave(ctx context.Context) error {
 		ap := d.ApFloat()
 		maxKp := d.MaxKpFloat()
 		if f10 != nil || sn != nil || ap != nil || maxKp != nil {
+			// Колонка date — тип DATE без TZ. Сохраняем календарную дату из
+			// часового пояса источника как UTC-полночь, иначе после конвертации
+			// в UTC сдвинется на день назад.
+			localDate := time.Date(dayMidnight.Year(), dayMidnight.Month(), dayMidnight.Day(), 0, 0, 0, 0, time.UTC)
 			dailies = append(dailies, models.GeomagneticDaily{
-				Date:      dayMidnight.UTC(),
+				Date:      localDate,
 				F10:       float32Ptr(f10),
 				Sn:        float32Ptr(sn),
 				Ap:        float32Ptr(ap),

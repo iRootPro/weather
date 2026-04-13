@@ -49,13 +49,13 @@ func (h *Handler) buildGeomagneticCard(ctx context.Context) GeomagneticCardData 
 	switch {
 	case snap.NextStorm != nil:
 		card.PeakLine = fmt.Sprintf(
-			"Прогноз: буря %s, Kp = %.0f",
+			"Прогноз: буря %s, Kp = %.1f",
 			snap.NextStorm.SlotTime.In(time.Local).Format("02.01 15:04"),
 			snap.NextStorm.Kp,
 		)
 	case snap.TodayMaxKp != nil:
 		card.PeakLine = fmt.Sprintf(
-			"Макс сегодня: %.0f в %s",
+			"Макс сегодня: %.1f в %s",
 			snap.TodayMaxKp.Kp,
 			snap.TodayMaxKp.SlotTime.In(time.Local).Format("15:04"),
 		)
