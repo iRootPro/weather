@@ -12,6 +12,14 @@ import (
 	"github.com/iRootPro/weather/internal/service"
 )
 
+// SparkBar — один бар компактной столбчатой диаграммы для дашборда.
+type SparkBar struct {
+	HeightPct int    // высота в процентах (1..100)
+	Color     string // CSS-цвет
+	Title     string // подсказка по hover (например, "13.04 12:00 · Kp 0.7")
+	Empty     bool   // true → плейсхолдер для отсутствующего слота
+}
+
 // GeomagneticCardData — данные для карточки на дашборде, готовые к рендеру
 // (без условий внутри шаблона).
 type GeomagneticCardData struct {
@@ -23,6 +31,7 @@ type GeomagneticCardData struct {
 	StatusText     string
 	KpSubLine      string // мелкая подпись «Магнитные бури · Kp 2.3»
 	PeakLine       string // готовая строка «Прогноз: …» или «Макс сегодня: …», либо пустая
+	Sparkline      []SparkBar
 }
 
 // stormGLevel — уровень шкалы NOAA G по значению Kp (G1..G5).
@@ -53,7 +62,8 @@ func (h *Handler) buildGeomagneticCard(ctx context.Context) GeomagneticCardData 
 	if h.geomagneticService == nil {
 		return GeomagneticCardData{}
 	}
-	snap, err := h.geomagneticService.GetDashboardSnapshot(ctx, time.Now())
+	now := time.Now()
+	snap, err := h.geomagneticService.GetDashboardSnapshot(ctx, now)
 	if err != nil {
 		slog.Warn("failed to get geomagnetic snapshot", "error", err)
 		return GeomagneticCardData{}
@@ -70,6 +80,7 @@ func (h *Handler) buildGeomagneticCard(ctx context.Context) GeomagneticCardData 
 		StatusGradient: snap.Status.TailwindGradient(),
 		StatusText:     snap.Status.TextColor(),
 		KpSubLine:      fmt.Sprintf("Магнитные бури · Kp %.1f", snap.Current.Kp),
+		Sparkline:      h.buildSparkline(ctx, now),
 	}
 
 	switch {
@@ -88,6 +99,57 @@ func (h *Handler) buildGeomagneticCard(ctx context.Context) GeomagneticCardData 
 	}
 
 	return card
+}
+
+// buildSparkline собирает 16 фиксированных 3-часовых слотов (последние 48 часов).
+// Если для какого-то слота данных нет — отдаёт Empty=true.
+func (h *Handler) buildSparkline(ctx context.Context, now time.Time) []SparkBar {
+	const slotCount = 16
+	const slotDur = 3 * time.Hour
+
+	// Якорь — ближайший прошедший 3-часовой слот по локальному времени.
+	local := now.In(time.Local)
+	hour := (local.Hour() / 3) * 3
+	anchor := time.Date(local.Year(), local.Month(), local.Day(), hour, 0, 0, 0, local.Location())
+	from := anchor.Add(-time.Duration(slotCount-1) * slotDur)
+	to := anchor.Add(slotDur - time.Second)
+
+	rows, err := h.geomagneticService.GetDetail(ctx, from, to)
+	if err != nil || rows == nil {
+		return nil
+	}
+
+	// Индексируем по началу слота (UTC) для быстрого поиска.
+	byTime := make(map[int64]float32, len(rows.Kp))
+	for _, k := range rows.Kp {
+		byTime[k.SlotTime.UTC().Truncate(slotDur).Unix()] = k.Kp
+	}
+
+	bars := make([]SparkBar, 0, slotCount)
+	for i := range slotCount {
+		slotStart := from.Add(time.Duration(i) * slotDur)
+		key := slotStart.UTC().Truncate(slotDur).Unix()
+		kp, ok := byTime[key]
+		if !ok {
+			bars = append(bars, SparkBar{Empty: true})
+			continue
+		}
+		// Высота в процентах от Kp = 9. Минимум 4%, чтобы было видно нулевые.
+		clamped := kp
+		if clamped < 0 {
+			clamped = 0
+		}
+		if clamped > 9 {
+			clamped = 9
+		}
+		pct := int(float32(clamped)/9*96) + 4
+		bars = append(bars, SparkBar{
+			HeightPct: pct,
+			Color:     models.ClassifyKp(kp).HexColor(),
+			Title:     fmt.Sprintf("%s · Kp %.1f", slotStart.Format("02.01 15:04"), kp),
+		})
+	}
+	return bars
 }
 
 // DetailGeomagnetic рендерит детальную страницу по геомагнитной активности.
