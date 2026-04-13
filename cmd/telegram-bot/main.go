@@ -63,6 +63,7 @@ func main() {
 	notifRepo := repository.NewTelegramNotificationRepository(pool)
 	forecastRepo := repository.NewForecastRepository(pool)
 	photoRepo := repository.NewPhotoRepository(pool)
+	geomagRepo := repository.NewGeomagneticRepository(pool)
 
 	// Инициализация сервисов
 	weatherService := service.NewWeatherService(weatherRepo)
@@ -119,6 +120,8 @@ func main() {
 		subRepo,
 		notifRepo,
 		userRepo,
+		geomagRepo,
+		cfg.Geomagnetic.AlertThreshold,
 		cfg.Telegram.NotifyInterval,
 		logger,
 	)

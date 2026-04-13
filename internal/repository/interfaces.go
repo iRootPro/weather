@@ -75,3 +75,14 @@ type NarodmonLogRepository interface {
 	GetRecent(ctx context.Context, limit int) ([]models.NarodmonLog, error)
 	DeleteOld(ctx context.Context, olderThan time.Time) error
 }
+
+type GeomagneticRepository interface {
+	SaveKpBatch(ctx context.Context, data []models.GeomagneticKp) error
+	SaveDailyBatch(ctx context.Context, data []models.GeomagneticDaily) error
+	GetCurrentKp(ctx context.Context, now time.Time) (*models.GeomagneticKp, error)
+	GetKpRange(ctx context.Context, from, to time.Time) ([]models.GeomagneticKp, error)
+	GetMaxKpForDay(ctx context.Context, day time.Time) (*models.GeomagneticKp, error)
+	GetForecastedStorms(ctx context.Context, from, to time.Time, threshold float32) ([]models.GeomagneticKp, error)
+	GetDailyRange(ctx context.Context, from, to time.Time) ([]models.GeomagneticDaily, error)
+	DeleteOlderThan(ctx context.Context, threshold time.Time) error
+}

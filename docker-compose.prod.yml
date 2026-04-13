@@ -126,6 +126,26 @@ services:
       - .env
     restart: unless-stopped
 
+  geomagnetic-fetcher:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: geomagnetic-fetcher
+    container_name: weather-geomagnetic-fetcher
+    environment:
+      TZ: Europe/Moscow
+      HTTPS_PROXY: ${GEOMAGNETIC_HTTPS_PROXY:-}
+      HTTP_PROXY: ${GEOMAGNETIC_HTTPS_PROXY:-}
+      NO_PROXY: localhost,127.0.0.1,postgres,weather-postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrator:
+        condition: service_completed_successfully
+    env_file:
+      - .env
+    restart: unless-stopped
+
 volumes:
   postgres_data:
   photos_data:

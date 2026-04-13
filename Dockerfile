@@ -17,6 +17,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/migrator ./cmd/migrator
 RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/telegram-bot ./cmd/telegram-bot
 RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/forecast-fetcher ./cmd/forecast-fetcher
 RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/narodmon-sender ./cmd/narodmon-sender
+RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/geomagnetic-fetcher ./cmd/geomagnetic-fetcher
 
 # MQTT Consumer
 FROM alpine:3.20 AS mqtt-consumer
@@ -66,3 +67,10 @@ RUN apk --no-cache add ca-certificates tzdata
 WORKDIR /app
 COPY --from=builder /bin/narodmon-sender /app/narodmon-sender
 CMD ["/app/narodmon-sender"]
+
+# Geomagnetic Fetcher
+FROM alpine:3.20 AS geomagnetic-fetcher
+RUN apk --no-cache add ca-certificates tzdata
+WORKDIR /app
+COPY --from=builder /bin/geomagnetic-fetcher /app/geomagnetic-fetcher
+CMD ["/app/geomagnetic-fetcher"]

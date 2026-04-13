@@ -58,11 +58,13 @@ func main() {
 	forecastRepo := repository.NewForecastRepository(pool)
 	photoRepo := repository.NewPhotoRepository(pool)
 	narodmonLogRepo := repository.NewNarodmonLogRepository(pool)
+	geomagneticRepo := repository.NewGeomagneticRepository(pool)
 
 	// Инициализация сервисов
 	weatherService := service.NewWeatherService(weatherRepo)
 	sensorService := service.NewSensorService(sensorRepo)
 	forecastService := service.NewForecastService(forecastRepo)
+	geomagneticService := service.NewGeomagneticService(geomagneticRepo, cfg.Geomagnetic.AlertThreshold)
 	sunService, err := service.NewSunService(cfg.Location.Latitude, cfg.Location.Longitude, cfg.Location.Timezone)
 	if err != nil {
 		log.Fatalf("failed to create sun service: %v", err)
@@ -104,7 +106,7 @@ func main() {
 	}
 
 	slog.Info("creating web handler", "templatesDir", templatesDir)
-	webHandler, err := web.NewHandler(templatesDir, weatherService, sunService, moonService, forecastService, photoRepo, narodmonService, cfg.Narodmon.DeviceURL)
+	webHandler, err := web.NewHandler(templatesDir, weatherService, sunService, moonService, forecastService, photoRepo, narodmonService, cfg.Narodmon.DeviceURL, geomagneticService)
 	if err != nil {
 		log.Fatalf("failed to create web handler: %v", err)
 	}
@@ -147,6 +149,7 @@ func main() {
 	mux.HandleFunc("GET /detail/wind", webHandler.DetailWind)
 	mux.HandleFunc("GET /detail/rain", webHandler.DetailRain)
 	mux.HandleFunc("GET /detail/solar", webHandler.DetailSolar)
+	mux.HandleFunc("GET /detail/geomagnetic", webHandler.DetailGeomagnetic)
 
 	// HTMX widgets
 	mux.HandleFunc("GET /widgets/current", webHandler.CurrentWeatherWidget)

@@ -178,4 +178,31 @@
             </div>
         </a>
     </div>
+
+    {{if .Geomagnetic.HasData}}
+    <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <a href="/detail/geomagnetic"
+           class="flex items-center justify-between p-4 bg-gradient-to-r {{.Geomagnetic.StatusGradient}} rounded-lg hover:shadow transition-all duration-200 group">
+            <div class="flex items-center space-x-3">
+                <span class="text-3xl">🧲</span>
+                <div>
+                    <div class="text-2xl font-bold {{.Geomagnetic.StatusText}}">
+                        Kp = {{printf "%.0f" .Geomagnetic.Kp}}
+                    </div>
+                    <div class="text-xs text-gray-600 dark:text-gray-400">
+                        геомагнитная активность · {{.Geomagnetic.StatusLabel}}
+                    </div>
+                </div>
+            </div>
+            {{if .Geomagnetic.PeakLine}}
+            <div class="text-sm text-gray-700 dark:text-gray-300 text-right">
+                {{.Geomagnetic.PeakLine}}
+                <svg class="w-3 h-3 inline-block ml-1 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </div>
+            {{end}}
+        </a>
+    </div>
+    {{end}}
 </div>

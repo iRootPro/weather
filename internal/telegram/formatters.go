@@ -665,3 +665,34 @@ func FormatForecast(forecast []models.DailyForecast) string {
 
 	return text
 }
+
+// FormatGeomagneticAlert форматирует уведомление о геомагнитной буре.
+// kind: "now" — буря уже идёт, "fct" — прогнозируется в ближайшие 24 часа.
+func FormatGeomagneticAlert(kind string, slot *models.GeomagneticKp) string {
+	if slot == nil {
+		return ""
+	}
+	status := models.ClassifyKp(slot.Kp)
+	emoji := status.Emoji()
+	label := status.Label()
+
+	switch kind {
+	case "now":
+		return fmt.Sprintf(
+			"🧲 *Геомагнитная буря*\n\n"+
+				"Сейчас Kp = *%.0f* %s\n"+
+				"Уровень: %s\n\n"+
+				"Возможны перебои в радиосвязи и северные сияния.",
+			slot.Kp, emoji, label,
+		)
+	case "fct":
+		when := slot.SlotTime.In(time.Local).Format("02.01 в 15:04")
+		return fmt.Sprintf(
+			"🌐 *Прогноз геомагнитной бури*\n\n"+
+				"Ожидается *%s*\n"+
+				"Прогноз: Kp = *%.0f* %s (%s)",
+			when, slot.Kp, emoji, label,
+		)
+	}
+	return ""
+}

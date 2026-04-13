@@ -79,8 +79,11 @@ func (h *Handler) CurrentWeatherWidget(w http.ResponseWriter, r *http.Request) {
 		WindMax      float32
 		WindGustMax  float32
 		HasDailyData bool
+		// Геомагнитная активность
+		Geomagnetic GeomagneticCardData
 	}{
-		Time: "Данные на " + data.Time.Format("15:04"),
+		Time:        "Данные на " + data.Time.Format("15:04"),
+		Geomagnetic: h.buildGeomagneticCard(r.Context()),
 	}
 
 	// Check if we have hourly comparison data

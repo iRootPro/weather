@@ -14,26 +14,28 @@ import (
 )
 
 type Handler struct {
-	templatesDir    string
-	weatherService  *service.WeatherService
-	sunService      *service.SunService
-	moonService     *service.MoonService
-	forecastService *service.ForecastService
-	photoRepo       repository.PhotoRepository
-	narodmonService *service.NarodmonService
-	narodmonURL     string
+	templatesDir       string
+	weatherService     *service.WeatherService
+	sunService         *service.SunService
+	moonService        *service.MoonService
+	forecastService    *service.ForecastService
+	photoRepo          repository.PhotoRepository
+	narodmonService    *service.NarodmonService
+	narodmonURL        string
+	geomagneticService *service.GeomagneticService
 }
 
-func NewHandler(templatesDir string, weatherService *service.WeatherService, sunService *service.SunService, moonService *service.MoonService, forecastService *service.ForecastService, photoRepo repository.PhotoRepository, narodmonService *service.NarodmonService, narodmonURL string) (*Handler, error) {
+func NewHandler(templatesDir string, weatherService *service.WeatherService, sunService *service.SunService, moonService *service.MoonService, forecastService *service.ForecastService, photoRepo repository.PhotoRepository, narodmonService *service.NarodmonService, narodmonURL string, geomagneticService *service.GeomagneticService) (*Handler, error) {
 	return &Handler{
-		templatesDir:    templatesDir,
-		weatherService:  weatherService,
-		sunService:      sunService,
-		moonService:     moonService,
-		forecastService: forecastService,
-		photoRepo:       photoRepo,
-		narodmonService: narodmonService,
-		narodmonURL:     narodmonURL,
+		templatesDir:       templatesDir,
+		weatherService:     weatherService,
+		sunService:         sunService,
+		moonService:        moonService,
+		forecastService:    forecastService,
+		photoRepo:          photoRepo,
+		narodmonService:    narodmonService,
+		narodmonURL:        narodmonURL,
+		geomagneticService: geomagneticService,
 	}, nil
 }
 

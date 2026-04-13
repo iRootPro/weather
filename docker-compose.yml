@@ -61,6 +61,19 @@ services:
       - .env
     restart: unless-stopped
 
+  geomagnetic-fetcher:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: geomagnetic-fetcher
+    container_name: weather-geomagnetic-fetcher
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    restart: unless-stopped
+
 volumes:
   postgres_data:
   photos_data:

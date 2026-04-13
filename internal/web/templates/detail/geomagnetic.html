@@ -1,0 +1,210 @@
+{{template "base.html" .}}
+
+{{define "title"}}Геомагнитная активность - Метеостанция{{end}}
+
+{{define "content"}}
+<div class="space-y-6">
+    <!-- Breadcrumbs -->
+    <nav class="flex items-center text-sm text-gray-500 dark:text-gray-400">
+        <a href="/" class="hover:text-gray-700 dark:hover:text-gray-200">Главная</a>
+        <svg class="w-4 h-4 mx-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+        </svg>
+        <span class="text-gray-900 dark:text-white font-medium">Геомагнитная активность</span>
+    </nav>
+
+    <!-- Hero Section -->
+    {{if .Data.Card.HasData}}
+    <div class="bg-gradient-to-br {{.Data.Card.StatusGradient}} rounded-lg shadow-lg p-8 transition-colors">
+        <div class="text-center">
+            <h1 class="text-lg font-medium text-gray-700 dark:text-gray-200 mb-2">
+                <span class="text-2xl mr-1">🧲</span>
+                Геомагнитная активность
+            </h1>
+            <div class="text-8xl font-bold {{.Data.Card.StatusText}} mb-4">
+                Kp {{printf "%.0f" .Data.Card.Kp}}
+            </div>
+            <div class="text-2xl font-semibold {{.Data.Card.StatusText}}">
+                {{.Data.Card.StatusLabel}}
+            </div>
+            {{if .Data.Card.PeakLine}}
+            <div class="text-base text-gray-700 dark:text-gray-300 mt-4">
+                {{.Data.Card.PeakLine}}
+            </div>
+            {{end}}
+        </div>
+    </div>
+    {{else}}
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center text-gray-500 dark:text-gray-400">
+        Нет актуальных данных о геомагнитной активности.
+    </div>
+    {{end}}
+
+    <!-- График Kp -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            График Kp · 5 дней (история и прогноз)
+        </h2>
+        <div class="relative h-80">
+            <canvas id="kpChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Таблица суточных показателей -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            Суточные показатели солнечной активности
+        </h2>
+        {{if .Data.DailyRows}}
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+                <thead class="text-xs uppercase text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
+                    <tr>
+                        <th class="px-4 py-2 text-left">Дата</th>
+                        <th class="px-4 py-2 text-right">F10.7 (поток)</th>
+                        <th class="px-4 py-2 text-right">SN (пятна)</th>
+                        <th class="px-4 py-2 text-right">Ap</th>
+                        <th class="px-4 py-2 text-right">Max Kp</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                    {{range .Data.DailyRows}}
+                    <tr class="text-gray-800 dark:text-gray-200">
+                        <td class="px-4 py-2">{{.Date}}</td>
+                        <td class="px-4 py-2 text-right">{{.F10}}</td>
+                        <td class="px-4 py-2 text-right">{{.Sn}}</td>
+                        <td class="px-4 py-2 text-right">{{.Ap}}</td>
+                        <td class="px-4 py-2 text-right font-semibold">{{.MaxKp}}</td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+        </div>
+        {{else}}
+        <p class="text-gray-500 dark:text-gray-400">Нет данных.</p>
+        {{end}}
+    </div>
+
+    <!-- Шкала Kp -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            Шкала индекса Kp (NOAA G-scale)
+        </h2>
+        <div class="space-y-2 text-sm">
+            <div class="flex items-center justify-between p-3 bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded">
+                <div class="flex items-center space-x-3">
+                    <span class="font-bold text-green-700 dark:text-green-300 w-12">0–3</span>
+                    <span class="text-gray-700 dark:text-gray-200">Спокойно</span>
+                </div>
+                <span class="text-gray-500 dark:text-gray-400">Магнитосфера в норме</span>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 rounded">
+                <div class="flex items-center space-x-3">
+                    <span class="font-bold text-yellow-700 dark:text-yellow-300 w-12">4</span>
+                    <span class="text-gray-700 dark:text-gray-200">Возмущение</span>
+                </div>
+                <span class="text-gray-500 dark:text-gray-400">Возможны слабые колебания</span>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded">
+                <div class="flex items-center space-x-3">
+                    <span class="font-bold text-orange-700 dark:text-orange-300 w-12">5</span>
+                    <span class="text-gray-700 dark:text-gray-200">G1 — слабая буря</span>
+                </div>
+                <span class="text-gray-500 dark:text-gray-400">Северные сияния в высоких широтах</span>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded">
+                <div class="flex items-center space-x-3">
+                    <span class="font-bold text-orange-700 dark:text-orange-300 w-12">6</span>
+                    <span class="text-gray-700 dark:text-gray-200">G2 — умеренная буря</span>
+                </div>
+                <span class="text-gray-500 dark:text-gray-400">Перебои в радиосвязи на ВЧ</span>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded">
+                <div class="flex items-center space-x-3">
+                    <span class="font-bold text-red-700 dark:text-red-300 w-12">7</span>
+                    <span class="text-gray-700 dark:text-gray-200">G3 — сильная буря</span>
+                </div>
+                <span class="text-gray-500 dark:text-gray-400">Сбои навигации, сияния в средних широтах</span>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded">
+                <div class="flex items-center space-x-3">
+                    <span class="font-bold text-red-700 dark:text-red-300 w-12">8</span>
+                    <span class="text-gray-700 dark:text-gray-200">G4 — очень сильная</span>
+                </div>
+                <span class="text-gray-500 dark:text-gray-400">Влияние на электросети, сбои спутников</span>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded">
+                <div class="flex items-center space-x-3">
+                    <span class="font-bold text-red-700 dark:text-red-300 w-12">9</span>
+                    <span class="text-gray-700 dark:text-gray-200">G5 — экстремальная</span>
+                </div>
+                <span class="text-gray-500 dark:text-gray-400">Аварии электросетей, отказы оборудования</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Источник -->
+    <div class="text-center text-sm text-gray-500 dark:text-gray-400">
+        Источник данных: <a href="https://xras.ru/" class="underline hover:text-gray-700 dark:hover:text-gray-200" target="_blank" rel="noopener">xras.ru</a>
+    </div>
+</div>
+
+<script>
+(function() {
+    const points = {{.Data.ChartJSON}};
+    const nowISO = "{{.Data.NowISO}}";
+    if (!points || points.length === 0) {
+        return;
+    }
+
+    const labels = points.map(p => {
+        const d = new Date(p.time);
+        return d.toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    });
+    const data = points.map(p => p.kp);
+    const colors = points.map(p => p.color);
+    const nowDate = new Date(nowISO);
+    const nowIndex = points.findIndex(p => new Date(p.time) > nowDate);
+
+    const ctx = document.getElementById('kpChart');
+    if (!ctx) return;
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Kp',
+                data: data,
+                backgroundColor: colors,
+                borderColor: colors,
+                borderWidth: 1,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 9,
+                    ticks: { stepSize: 1 },
+                    title: { display: true, text: 'Kp' }
+                },
+                x: {
+                    ticks: { maxRotation: 60, minRotation: 45, autoSkip: true, maxTicksLimit: 16 }
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (item) => 'Kp = ' + item.parsed.y + (nowIndex >= 0 && item.dataIndex >= nowIndex ? ' (прогноз)' : '')
+                    }
+                }
+            }
+        }
+    });
+})();
+</script>
+{{end}}

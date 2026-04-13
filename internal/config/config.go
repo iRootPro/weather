@@ -9,16 +9,17 @@ import (
 )
 
 type Config struct {
-	DB        DBConfig        `yaml:"db"`
-	MQTT      MQTTConfig      `yaml:"mqtt"`
-	HTTP      HTTPConfig      `yaml:"http"`
-	API       APIConfig       `yaml:"api"`
-	Log       LogConfig       `yaml:"log"`
-	Location  LocationConfig  `yaml:"location"`
-	Telegram  TelegramConfig  `yaml:"telegram"`
-	Forecast  ForecastConfig  `yaml:"forecast"`
-	Narodmon  NarodmonConfig  `yaml:"narodmon"`
-	Astronomy AstronomyConfig `yaml:"astronomy"`
+	DB          DBConfig          `yaml:"db"`
+	MQTT        MQTTConfig        `yaml:"mqtt"`
+	HTTP        HTTPConfig        `yaml:"http"`
+	API         APIConfig         `yaml:"api"`
+	Log         LogConfig         `yaml:"log"`
+	Location    LocationConfig    `yaml:"location"`
+	Telegram    TelegramConfig    `yaml:"telegram"`
+	Forecast    ForecastConfig    `yaml:"forecast"`
+	Narodmon    NarodmonConfig    `yaml:"narodmon"`
+	Astronomy   AstronomyConfig   `yaml:"astronomy"`
+	Geomagnetic GeomagneticConfig `yaml:"geomagnetic"`
 }
 
 type LocationConfig struct {
@@ -105,6 +106,15 @@ type NarodmonConfig struct {
 type AstronomyConfig struct {
 	APIKey  string `env:"ASTRONOMY_API_KEY" env-default:""` // IPGeolocation.io API ключ
 	Timeout int    `env:"ASTRONOMY_API_TIMEOUT" env-default:"10"` // Таймаут API запросов (секунды)
+}
+
+type GeomagneticConfig struct {
+	Enabled        bool    `env:"GEOMAGNETIC_ENABLED" env-default:"true"`                                   // Включить сбор геомагнитных данных
+	URL            string  `env:"GEOMAGNETIC_URL" env-default:"https://xras.ru/txt/kp_PIL9.json"`           // Источник JSON
+	UpdateInterval int     `env:"GEOMAGNETIC_UPDATE_INTERVAL" env-default:"10800"`                          // Интервал опроса (секунды), 3ч по умолчанию
+	APITimeout     int     `env:"GEOMAGNETIC_API_TIMEOUT" env-default:"30"`                                 // Таймаут HTTP запроса (секунды)
+	AlertThreshold float32 `env:"GEOMAGNETIC_ALERT_THRESHOLD" env-default:"5"`                              // Порог Kp для Telegram-алерта (G1=5)
+	ProxyURL       string  `env:"GEOMAGNETIC_HTTPS_PROXY" env-default:""`                                   // Опциональный HTTPS прокси для xras.ru
 }
 
 func Load() (*Config, error) {

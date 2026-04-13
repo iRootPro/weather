@@ -3,6 +3,7 @@ package telegram
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"time"
 
@@ -13,13 +14,15 @@ import (
 )
 
 type Notifier struct {
-	bot        *tgbotapi.BotAPI
-	weatherSvc *service.WeatherService
-	subRepo    repository.TelegramSubscriptionRepository
-	notifRepo  repository.TelegramNotificationRepository
-	userRepo   repository.TelegramUserRepository
-	interval   time.Duration
-	logger     *slog.Logger
+	bot             *tgbotapi.BotAPI
+	weatherSvc      *service.WeatherService
+	subRepo         repository.TelegramSubscriptionRepository
+	notifRepo       repository.TelegramNotificationRepository
+	userRepo        repository.TelegramUserRepository
+	geomagRepo      repository.GeomagneticRepository
+	geomagThreshold float32
+	interval        time.Duration
+	logger          *slog.Logger
 }
 
 func NewNotifier(
@@ -28,17 +31,21 @@ func NewNotifier(
 	subRepo repository.TelegramSubscriptionRepository,
 	notifRepo repository.TelegramNotificationRepository,
 	userRepo repository.TelegramUserRepository,
+	geomagRepo repository.GeomagneticRepository,
+	geomagThreshold float32,
 	interval int,
 	logger *slog.Logger,
 ) *Notifier {
 	return &Notifier{
-		bot:        bot,
-		weatherSvc: weatherSvc,
-		subRepo:    subRepo,
-		notifRepo:  notifRepo,
-		userRepo:   userRepo,
-		interval:   time.Duration(interval) * time.Second,
-		logger:     logger,
+		bot:             bot,
+		weatherSvc:      weatherSvc,
+		subRepo:         subRepo,
+		notifRepo:       notifRepo,
+		userRepo:        userRepo,
+		geomagRepo:      geomagRepo,
+		geomagThreshold: geomagThreshold,
+		interval:        time.Duration(interval) * time.Second,
+		logger:          logger,
 	}
 }
 
@@ -72,16 +79,15 @@ func (n *Notifier) checkAndNotify(ctx context.Context) {
 		return
 	}
 
-	if len(events) == 0 {
-		return
+	if len(events) > 0 {
+		n.logger.Info("processing events", "count", len(events))
+		for _, event := range events {
+			n.processEvent(ctx, event)
+		}
 	}
 
-	n.logger.Info("processing events", "count", len(events))
-
-	// Обрабатываем каждое событие
-	for _, event := range events {
-		n.processEvent(ctx, event)
-	}
+	// Геомагнитные алерты обрабатываются независимо от обычных событий
+	n.checkGeomagneticStorms(ctx)
 }
 
 // processEvent обрабатывает одно событие
@@ -205,6 +211,87 @@ func (n *Notifier) sendNotification(ctx context.Context, chatID int64, event mod
 	n.logger.Info("notification sent",
 		"chat_id", chatID,
 		"event_type", event.Type)
+}
+
+// checkGeomagneticStorms проверяет фактические и прогнозируемые геомагнитные
+// бури и рассылает уведомления всем активным пользователям. Алерт рассылается
+// при первом обнаружении конкретного слота — повторы подавляются через
+// telegram_notifications с дедуп-ключом, включающим время слота.
+func (n *Notifier) checkGeomagneticStorms(ctx context.Context) {
+	if n.geomagRepo == nil || n.geomagThreshold <= 0 {
+		return
+	}
+
+	now := time.Now()
+
+	// 1. Буря прямо сейчас — текущий слот, не прогноз, Kp >= порога.
+	current, err := n.geomagRepo.GetCurrentKp(ctx, now)
+	if err != nil {
+		n.logger.Error("failed to get current kp", "error", err)
+	} else if current != nil && !current.IsForecast && current.Kp >= n.geomagThreshold {
+		n.notifyGeomagAll(ctx, "now", current)
+	}
+
+	// 2. Прогноз бури в ближайшие 24 часа.
+	forecasts, err := n.geomagRepo.GetForecastedStorms(ctx, now, now.Add(24*time.Hour), n.geomagThreshold)
+	if err != nil {
+		n.logger.Error("failed to get forecasted storms", "error", err)
+		return
+	}
+	if len(forecasts) > 0 {
+		first := forecasts[0]
+		n.notifyGeomagAll(ctx, "fct", &first)
+	}
+}
+
+func (n *Notifier) notifyGeomagAll(ctx context.Context, kind string, slot *models.GeomagneticKp) {
+	key := fmt.Sprintf("geomag_%s_%s", kind, slot.SlotTime.UTC().Format("20060102T15"))
+
+	users, err := n.userRepo.GetAllActive(ctx)
+	if err != nil {
+		n.logger.Error("failed to get active users for geomagnetic alert", "error", err)
+		return
+	}
+
+	text := FormatGeomagneticAlert(kind, slot)
+
+	for _, u := range users {
+		wasSent, err := n.notifRepo.WasRecentlySent(ctx, u.ID, key, 24*time.Hour)
+		if err != nil {
+			n.logger.Error("failed to check geomagnetic dedup", "user_id", u.ID, "error", err)
+			continue
+		}
+		if wasSent {
+			continue
+		}
+
+		msg := tgbotapi.NewMessage(u.ChatID, text)
+		msg.ParseMode = "Markdown"
+		if _, err := n.bot.Send(msg); err != nil {
+			n.logger.Error("failed to send geomagnetic alert",
+				"chat_id", u.ChatID,
+				"key", key,
+				"error", err)
+			continue
+		}
+
+		eventData, _ := json.Marshal(map[string]any{
+			"kind":      kind,
+			"kp":        slot.Kp,
+			"slot_time": slot.SlotTime,
+		})
+		notification := &models.TelegramNotification{
+			UserID:    u.ID,
+			EventType: key,
+			EventData: eventData,
+			SentAt:    time.Now(),
+		}
+		if err := n.notifRepo.Create(ctx, notification); err != nil {
+			n.logger.Error("failed to save geomagnetic notification", "error", err)
+		}
+
+		n.logger.Info("geomagnetic alert sent", "chat_id", u.ChatID, "key", key)
+	}
 }
 
 // getSubscriptionTypeForEvent возвращает тип подписки для события
