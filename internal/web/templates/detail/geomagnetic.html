@@ -130,7 +130,9 @@
 
 <script>
 (function() {
-    const points = {{.Data.ChartJSON}};
+    // Go html/template в JS-контексте экранирует строку как JS-литерал —
+    // нужен JSON.parse, иначе points окажется строкой, а не массивом.
+    const points = JSON.parse({{.Data.ChartJSON}});
     if (!points || points.length === 0) {
         return;
     }
