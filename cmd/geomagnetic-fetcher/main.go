@@ -145,13 +145,17 @@ func (f *Fetcher) FetchAndSave(ctx context.Context) error {
 			})
 		}
 
-		if d.F10 != nil || d.Sn != nil || d.Ap != nil || d.MaxKp != nil {
+		f10 := d.F10Float()
+		sn := d.SnFloat()
+		ap := d.ApFloat()
+		maxKp := d.MaxKpFloat()
+		if f10 != nil || sn != nil || ap != nil || maxKp != nil {
 			dailies = append(dailies, models.GeomagneticDaily{
 				Date:      dayMidnight.UTC(),
-				F10:       float32Ptr(d.F10),
-				Sn:        float32Ptr(d.Sn),
-				Ap:        float32Ptr(d.Ap),
-				MaxKp:     float32Ptr(d.MaxKp),
+				F10:       float32Ptr(f10),
+				Sn:        float32Ptr(sn),
+				Ap:        float32Ptr(ap),
+				MaxKp:     float32Ptr(maxKp),
 				FetchedAt: now,
 			})
 		}
