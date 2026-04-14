@@ -29,18 +29,9 @@ type GeomagneticCardData struct {
 	StatusHeading  string // "Спокойно" / "Возмущение" / "Магнитная буря G3" — крупно для пользователя
 	StatusGradient string
 	StatusText     string
-	KpSubLine      string // мелкая подпись «Магнитные бури · Kp 2.3»
+	SubLine        string // поясняющая подпись под крупным статусом — объясняет, о чём блок
 	PeakLine       string // готовая строка «Прогноз: …» или «Макс сегодня: …», либо пустая
 	Sparkline      []SparkBar
-}
-
-// stormGLevel — уровень шкалы NOAA G по значению Kp (G1..G5).
-// Возвращает 0 для Kp < 5.
-func stormGLevel(kp float32) int {
-	if kp < 5 {
-		return 0
-	}
-	return min(5, max(1, int(kp)-4))
 }
 
 // statusHeading возвращает крупную подпись для пользователя:
@@ -48,7 +39,10 @@ func stormGLevel(kp float32) int {
 func statusHeading(status models.KpStatus, kp float32) string {
 	switch status {
 	case models.KpStorm:
-		return fmt.Sprintf("Магнитная буря G%d", stormGLevel(kp))
+		if gLevel, _, ok := models.StormLevel(kp); ok {
+			return "Магнитная буря " + gLevel
+		}
+		return "Магнитная буря"
 	case models.KpUnsettled:
 		return "Возмущение"
 	default:
@@ -79,23 +73,23 @@ func (h *Handler) buildGeomagneticCard(ctx context.Context) GeomagneticCardData 
 		StatusHeading:  statusHeading(snap.Status, snap.Current.Kp),
 		StatusGradient: snap.Status.TailwindGradient(),
 		StatusText:     snap.Status.TextColor(),
-		KpSubLine:      fmt.Sprintf("Магнитные бури · Kp %.1f", snap.Current.Kp),
+		SubLine:        "Магнитное поле Земли",
 		Sparkline:      h.buildSparkline(ctx, now),
 	}
 
 	switch {
 	case snap.NextStorm != nil:
-		card.PeakLine = fmt.Sprintf(
-			"Прогноз: буря %s, Kp %.1f",
-			snap.NextStorm.SlotTime.In(time.Local).Format("02.01 15:04"),
-			snap.NextStorm.Kp,
-		)
+		when := snap.NextStorm.SlotTime.In(time.Local).Format("02.01 в 15:04")
+		if gLevel, desc, ok := models.StormLevel(snap.NextStorm.Kp); ok {
+			card.PeakLine = fmt.Sprintf("Прогноз: буря %s «%s» %s", gLevel, desc, when)
+		}
 	case snap.TodayMaxKp != nil:
-		card.PeakLine = fmt.Sprintf(
-			"Макс сегодня: Kp %.1f в %s",
-			snap.TodayMaxKp.Kp,
-			snap.TodayMaxKp.SlotTime.In(time.Local).Format("15:04"),
-		)
+		when := snap.TodayMaxKp.SlotTime.In(time.Local).Format("15:04")
+		if gLevel, _, ok := models.StormLevel(snap.TodayMaxKp.Kp); ok {
+			card.PeakLine = fmt.Sprintf("Макс сегодня: буря %s в %s", gLevel, when)
+		} else if models.ClassifyKp(snap.TodayMaxKp.Kp) == models.KpUnsettled {
+			card.PeakLine = fmt.Sprintf("Макс сегодня: возмущение в %s", when)
+		}
 	}
 
 	return card

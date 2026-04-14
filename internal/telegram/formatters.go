@@ -695,26 +695,27 @@ func FormatGeomagneticAlert(kind string, slot *models.GeomagneticKp) string {
 	if slot == nil {
 		return ""
 	}
-	status := models.ClassifyKp(slot.Kp)
-	emoji := status.Emoji()
-	label := status.Label()
+	emoji := models.ClassifyKp(slot.Kp).Emoji()
+	gLevel, desc, ok := models.StormLevel(slot.Kp)
+	if !ok {
+		return ""
+	}
 
 	switch kind {
 	case "now":
 		return fmt.Sprintf(
-			"🌞 *Геомагнитная буря*\n\n"+
-				"Сейчас Kp = *%.0f* %s\n"+
-				"Уровень: %s\n\n"+
-				"Возможны перебои в радиосвязи и северные сияния.",
-			slot.Kp, emoji, label,
+			"🌞 *Магнитная буря*\n\n"+
+				"Сейчас *%s «%s»* %s\n\n"+
+				"Возможны перебои радиосвязи и GPS, в высоких широтах — северные сияния.",
+			gLevel, desc, emoji,
 		)
 	case "fct":
 		when := slot.SlotTime.In(time.Local).Format("02.01 в 15:04")
 		return fmt.Sprintf(
-			"🌐 *Прогноз геомагнитной бури*\n\n"+
+			"🌞 *Прогноз магнитной бури*\n\n"+
 				"Ожидается *%s*\n"+
-				"Прогноз: Kp = *%.0f* %s (%s)",
-			when, slot.Kp, emoji, label,
+				"Сила: *%s «%s»* %s",
+			when, gLevel, desc, emoji,
 		)
 	}
 	return ""

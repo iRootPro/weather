@@ -582,6 +582,95 @@
         </div>
     </div>
 
+    <!-- Geomagnetic Activity -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+            <span class="text-2xl mr-2">🌞</span>
+            Магнитная обстановка
+        </h2>
+
+        <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">
+            На главной и в утренней сводке показывается состояние <strong>магнитного поля Земли</strong>.
+            Магнитные бури возникают, когда поток заряженных частиц с Солнца (солнечный ветер,
+            корональные выбросы массы) возмущает магнитосферу планеты.
+        </p>
+
+        <div class="space-y-4">
+            <!-- Consequences -->
+            <div>
+                <h3 class="font-medium text-gray-900 dark:text-white">Что происходит во время бури</h3>
+                <ul class="text-sm text-gray-600 dark:text-gray-300 mt-1 space-y-1 list-disc list-inside">
+                    <li>Перебои радиосвязи на коротких волнах и ошибки GPS</li>
+                    <li>Дополнительная нагрузка на спутники и линии электропередач</li>
+                    <li>В высоких широтах — полярные сияния, иногда доходящие до средних широт</li>
+                </ul>
+            </div>
+
+            <!-- Status Levels -->
+            <div>
+                <h3 class="font-medium text-gray-900 dark:text-white mb-2">Уровни активности</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
+                    <div class="bg-green-50 dark:bg-green-900/20 rounded p-2">
+                        <div class="font-semibold text-green-700 dark:text-green-300">🟢 Спокойно</div>
+                        <div class="text-xs text-gray-600 dark:text-gray-400">Kp 0–3. Обычное состояние магнитосферы.</div>
+                    </div>
+                    <div class="bg-orange-50 dark:bg-orange-900/20 rounded p-2">
+                        <div class="font-semibold text-orange-700 dark:text-orange-300">🟠 Возмущение</div>
+                        <div class="text-xs text-gray-600 dark:text-gray-400">Kp 4. Поле заметно колеблется, но до бури не дотягивает.</div>
+                    </div>
+                    <div class="bg-red-50 dark:bg-red-900/20 rounded p-2">
+                        <div class="font-semibold text-red-700 dark:text-red-300">🔴 Магнитная буря</div>
+                        <div class="text-xs text-gray-600 dark:text-gray-400">Kp ≥ 5. Классифицируется по шкале G1–G5.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NOAA G-scale -->
+            <div>
+                <h3 class="font-medium text-gray-900 dark:text-white mb-2">Шкала NOAA G1–G5</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                    Международная классификация силы геомагнитных бурь (Space Weather Prediction Center).
+                </p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                    <div class="bg-slate-50 dark:bg-slate-900/20 rounded p-2">
+                        <span class="font-bold mr-2">G1</span> слабая <span class="text-gray-500 dark:text-gray-400">(Kp = 5)</span>
+                    </div>
+                    <div class="bg-slate-50 dark:bg-slate-900/20 rounded p-2">
+                        <span class="font-bold mr-2">G2</span> средняя <span class="text-gray-500 dark:text-gray-400">(Kp = 6)</span>
+                    </div>
+                    <div class="bg-slate-50 dark:bg-slate-900/20 rounded p-2">
+                        <span class="font-bold mr-2">G3</span> сильная <span class="text-gray-500 dark:text-gray-400">(Kp = 7)</span>
+                    </div>
+                    <div class="bg-slate-50 dark:bg-slate-900/20 rounded p-2">
+                        <span class="font-bold mr-2">G4</span> очень сильная <span class="text-gray-500 dark:text-gray-400">(Kp = 8)</span>
+                    </div>
+                    <div class="bg-slate-50 dark:bg-slate-900/20 rounded p-2 sm:col-span-2">
+                        <span class="font-bold mr-2">G5</span> экстремальная <span class="text-gray-500 dark:text-gray-400">(Kp = 9)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- What is Kp -->
+            <div>
+                <h3 class="font-medium text-gray-900 dark:text-white">Индекс Kp</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                    Kp — это числовой индекс возмущения магнитного поля по шкале 0–9. Рассчитывается
+                    каждые 3 часа по данным сети наземных магнитометров. Мы используем его для графиков
+                    и расчёта G-уровня, но в интерфейсе показываем словами, чтобы было понятно всем.
+                </p>
+            </div>
+
+            <!-- Data Source -->
+            <div>
+                <h3 class="font-medium text-gray-900 dark:text-white">Источник данных</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                    Данные берутся с <strong>xras.ru</strong> (Институт прикладной геофизики),
+                    который публикует факт и прогноз геомагнитной обстановки. Обновление каждые 3 часа.
+                </p>
+            </div>
+        </div>
+    </div>
+
     <!-- Weather Forecast -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
