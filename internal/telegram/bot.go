@@ -15,6 +15,7 @@ type BotHandler struct {
 	sunSvc      *service.SunService
 	moonSvc     *service.MoonService
 	forecastSvc *service.ForecastService
+	geomagSvc   *service.GeomagneticService
 	userRepo    repository.TelegramUserRepository
 	subRepo     repository.TelegramSubscriptionRepository
 	notifRepo   repository.TelegramNotificationRepository
@@ -31,6 +32,7 @@ func NewBotHandler(
 	sunSvc *service.SunService,
 	moonSvc *service.MoonService,
 	forecastSvc *service.ForecastService,
+	geomagSvc *service.GeomagneticService,
 	userRepo repository.TelegramUserRepository,
 	subRepo repository.TelegramSubscriptionRepository,
 	notifRepo repository.TelegramNotificationRepository,
@@ -46,6 +48,7 @@ func NewBotHandler(
 		sunSvc:      sunSvc,
 		moonSvc:     moonSvc,
 		forecastSvc: forecastSvc,
+		geomagSvc:   geomagSvc,
 		userRepo:    userRepo,
 		subRepo:     subRepo,
 		notifRepo:   notifRepo,

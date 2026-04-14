@@ -85,6 +85,8 @@ func main() {
 		log.Fatalf("failed to create moon service: %v", err)
 	}
 
+	geomagneticService := service.NewGeomagneticService(geomagRepo, cfg.Geomagnetic.AlertThreshold)
+
 	slog.Info("services initialized")
 
 	// Создание Telegram бота
@@ -103,6 +105,7 @@ func main() {
 		sunService,
 		moonService,
 		forecastService,
+		geomagneticService,
 		userRepo,
 		subRepo,
 		notifRepo,
@@ -132,6 +135,7 @@ func main() {
 		weatherService,
 		sunService,
 		forecastService,
+		geomagneticService,
 		subRepo,
 		userRepo,
 		cfg.Telegram.DailySummaryTime,

@@ -16,6 +16,7 @@ type DailySummaryService struct {
 	weatherSvc  *service.WeatherService
 	sunSvc      *service.SunService
 	forecastSvc *service.ForecastService
+	geomagSvc   *service.GeomagneticService
 	subRepo     repository.TelegramSubscriptionRepository
 	userRepo    repository.TelegramUserRepository
 	sendTime    string // Время отправки в формате "07:00"
@@ -27,6 +28,7 @@ func NewDailySummaryService(
 	weatherSvc *service.WeatherService,
 	sunSvc *service.SunService,
 	forecastSvc *service.ForecastService,
+	geomagSvc *service.GeomagneticService,
 	subRepo repository.TelegramSubscriptionRepository,
 	userRepo repository.TelegramUserRepository,
 	sendTime string,
@@ -37,6 +39,7 @@ func NewDailySummaryService(
 		weatherSvc:  weatherSvc,
 		sunSvc:      sunSvc,
 		forecastSvc: forecastSvc,
+		geomagSvc:   geomagSvc,
 		subRepo:     subRepo,
 		userRepo:    userRepo,
 		sendTime:    sendTime,
@@ -140,8 +143,19 @@ func (s *DailySummaryService) sendDailySummary(ctx context.Context) {
 		}
 	}
 
+	// Получаем магнитную обстановку (если сервис подключён)
+	var geomagSnap *service.DashboardSnapshot
+	if s.geomagSvc != nil {
+		snap, err := s.geomagSvc.GetDashboardSnapshot(ctx, time.Now())
+		if err != nil {
+			s.logger.Warn("failed to get geomagnetic snapshot", "error", err)
+		} else if snap != nil && snap.HasData {
+			geomagSnap = snap
+		}
+	}
+
 	// Форматируем сообщение
-	text := FormatDailySummary(current, yesterdaySame, nightMinMax, dailyMinMax, sunData, todayForecast)
+	text := FormatDailySummary(current, yesterdaySame, nightMinMax, dailyMinMax, sunData, todayForecast, geomagSnap)
 
 	// Отправляем всем подписчикам
 	for _, chatID := range subscribers {

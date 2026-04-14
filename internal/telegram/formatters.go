@@ -492,7 +492,7 @@ func escapeMarkdown(s string) string {
 }
 
 // FormatDailySummary форматирует утреннюю сводку погоды
-func FormatDailySummary(current, yesterdaySame *models.WeatherData, nightMinMax, dailyMinMax *repository.DailyMinMax, sunData *service.SunTimesWithComparison, todayForecast []DayForecastInfo) string {
+func FormatDailySummary(current, yesterdaySame *models.WeatherData, nightMinMax, dailyMinMax *repository.DailyMinMax, sunData *service.SunTimesWithComparison, todayForecast []DayForecastInfo, geomagSnap *service.DashboardSnapshot) string {
 	// Форматируем дату
 	months := []string{"", "января", "февраля", "марта", "апреля", "мая", "июня",
 		"июля", "августа", "сентября", "октября", "ноября", "декабря"}
@@ -545,6 +545,29 @@ func FormatDailySummary(current, yesterdaySame *models.WeatherData, nightMinMax,
 			}
 		} else {
 			text += fmt.Sprintf("Световой день: %s\n", formatDurationChange(sunData.DayLength))
+		}
+		text += "\n"
+	}
+
+	// МАГНИТНАЯ ОБСТАНОВКА
+	if geomagSnap != nil && geomagSnap.HasData && geomagSnap.Current != nil {
+		text += "🌞 *МАГНИТНАЯ ОБСТАНОВКА*\n"
+		text += fmt.Sprintf("%s Сейчас %s\n",
+			geomagSnap.Status.Emoji(),
+			geomagSnap.Status.Label())
+
+		if geomagSnap.TodayMaxKp != nil {
+			maxStatus := models.ClassifyKp(geomagSnap.TodayMaxKp.Kp)
+			if maxStatus > geomagSnap.Status {
+				text += fmt.Sprintf("За сутки доходило до: %s\n", maxStatus.Label())
+			}
+		}
+
+		if geomagSnap.NextStorm != nil {
+			when := geomagSnap.NextStorm.SlotTime.In(time.Local).Format("02.01 в 15:04")
+			if gLevel, desc, ok := models.StormLevel(geomagSnap.NextStorm.Kp); ok {
+				text += fmt.Sprintf("Ожидается буря %s «%s» %s\n", gLevel, desc, when)
+			}
 		}
 		text += "\n"
 	}

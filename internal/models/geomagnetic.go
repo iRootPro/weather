@@ -93,6 +93,25 @@ func (s KpStatus) TailwindGradient() string {
 	}
 }
 
+// StormLevel возвращает уровень геомагнитной бури по шкале NOAA и его русское
+// описание. ok == false, если Kp < 5 (бури нет). Пороги — официальная таблица
+// NOAA Space Weather Prediction Center.
+func StormLevel(kp float32) (gLevel, description string, ok bool) {
+	switch {
+	case kp >= 9:
+		return "G5", "экстремальная", true
+	case kp >= 8:
+		return "G4", "очень сильная", true
+	case kp >= 7:
+		return "G3", "сильная", true
+	case kp >= 6:
+		return "G2", "средняя", true
+	case kp >= 5:
+		return "G1", "слабая", true
+	}
+	return "", "", false
+}
+
 // TextColor возвращает Tailwind-классы текста (главное число + подпись).
 func (s KpStatus) TextColor() string {
 	switch s {

@@ -14,6 +14,7 @@ import (
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/iRootPro/weather/internal/models"
+	"github.com/iRootPro/weather/internal/service"
 )
 
 func (h *BotHandler) handleCommand(ctx context.Context, msg *tgbotapi.Message) {
@@ -463,8 +464,19 @@ func (h *BotHandler) handleTestSummary(ctx context.Context, msg *tgbotapi.Messag
 		}
 	}
 
+	// Получаем магнитную обстановку (если сервис подключён)
+	var geomagSnap *service.DashboardSnapshot
+	if h.geomagSvc != nil {
+		snap, err := h.geomagSvc.GetDashboardSnapshot(ctx, time.Now())
+		if err != nil {
+			h.logger.Warn("failed to get geomagnetic snapshot", "error", err)
+		} else if snap != nil && snap.HasData {
+			geomagSnap = snap
+		}
+	}
+
 	// Форматируем сообщение
-	text := FormatDailySummary(current, yesterdaySame, nightMinMax, dailyMinMax, sunData, todayForecast)
+	text := FormatDailySummary(current, yesterdaySame, nightMinMax, dailyMinMax, sunData, todayForecast, geomagSnap)
 
 	// Добавляем пометку о тестовой рассылке
 	testNote := "\n\n🧪 *Тестовая рассылка* (только для админа)"
