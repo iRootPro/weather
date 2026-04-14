@@ -702,7 +702,7 @@ func FormatGeomagneticAlert(kind string, slot *models.GeomagneticKp) string {
 	switch kind {
 	case "now":
 		return fmt.Sprintf(
-			"🧲 *Геомагнитная буря*\n\n"+
+			"🌞 *Геомагнитная буря*\n\n"+
 				"Сейчас Kp = *%.0f* %s\n"+
 				"Уровень: %s\n\n"+
 				"Возможны перебои в радиосвязи и северные сияния.",
