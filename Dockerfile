@@ -15,6 +15,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/mqtt-consumer ./cmd/mqtt-consumer
 RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/api-server ./cmd/api-server
 RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/migrator ./cmd/migrator
 RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/telegram-bot ./cmd/telegram-bot
+RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/max-bot ./cmd/max-bot
 RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/forecast-fetcher ./cmd/forecast-fetcher
 RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/narodmon-sender ./cmd/narodmon-sender
 RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/geomagnetic-fetcher ./cmd/geomagnetic-fetcher
@@ -57,6 +58,13 @@ COPY --from=builder /bin/telegram-bot /app/telegram-bot
 COPY scripts/convert_heic.py /app/convert_heic.py
 RUN chmod +x /app/convert_heic.py
 CMD ["/app/telegram-bot"]
+
+# Max Bot
+FROM alpine-base AS max-bot
+RUN apk --no-cache add ca-certificates tzdata
+WORKDIR /app
+COPY --from=builder /bin/max-bot /app/max-bot
+CMD ["/app/max-bot"]
 
 # Forecast Fetcher
 FROM alpine-base AS forecast-fetcher

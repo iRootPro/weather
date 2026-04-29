@@ -1,4 +1,4 @@
-.PHONY: build build-consumer build-api build-migrator build-tui build-bot build-forecast run-consumer run-api run-tui run-bot run-forecast test lint migrate-up migrate-down docker-up docker-down tidy deploy deploy-logs deploy-status deploy-stop deploy-init deploy-check deploy-db-size deploy-clean deploy-clean-logs deploy-clean-all
+.PHONY: build build-consumer build-api build-migrator build-tui build-bot build-max-bot build-forecast run-consumer run-api run-tui run-bot run-max-bot run-forecast test lint migrate-up migrate-down docker-up docker-down tidy deploy deploy-logs deploy-status deploy-stop deploy-init deploy-check deploy-db-size deploy-clean deploy-clean-logs deploy-clean-all
 
 # Сборка
 build:
@@ -7,6 +7,7 @@ build:
 	go build -o bin/migrator ./cmd/migrator
 	go build -o bin/weather-tui ./cmd/weather-tui
 	go build -o bin/telegram-bot ./cmd/telegram-bot
+	go build -o bin/max-bot ./cmd/max-bot
 	go build -o bin/forecast-fetcher ./cmd/forecast-fetcher
 
 build-consumer:
@@ -24,6 +25,9 @@ build-tui:
 build-bot:
 	go build -o bin/telegram-bot ./cmd/telegram-bot
 
+build-max-bot:
+	go build -o bin/max-bot ./cmd/max-bot
+
 build-forecast:
 	go build -o bin/forecast-fetcher ./cmd/forecast-fetcher
 
@@ -39,6 +43,9 @@ run-tui:
 
 run-bot:
 	go run ./cmd/telegram-bot
+
+run-max-bot:
+	go run ./cmd/max-bot
 
 run-forecast:
 	go run ./cmd/forecast-fetcher

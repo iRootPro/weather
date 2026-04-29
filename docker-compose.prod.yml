@@ -89,6 +89,23 @@ services:
       - .env
     restart: unless-stopped
 
+  max-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: max-bot
+    container_name: weather-max-bot
+    environment:
+      TZ: Europe/Moscow
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrator:
+        condition: service_completed_successfully
+    env_file:
+      - .env
+    restart: unless-stopped
+
   forecast-fetcher:
     build:
       context: .

@@ -47,6 +47,27 @@ type TelegramNotificationRepository interface {
 	WasRecentlySent(ctx context.Context, userID int64, eventType string, within time.Duration) (bool, error)
 }
 
+type MaxUserRepository interface {
+	Create(ctx context.Context, user *models.MaxUser) error
+	GetByID(ctx context.Context, id int64) (*models.MaxUser, error)
+	GetByUserID(ctx context.Context, userID int64) (*models.MaxUser, error)
+	GetAllActive(ctx context.Context) ([]models.MaxUser, error)
+	UpdateActivity(ctx context.Context, userID int64, isActive bool) error
+}
+
+type MaxSubscriptionRepository interface {
+	Create(ctx context.Context, sub *models.MaxSubscription) error
+	GetByUserID(ctx context.Context, userID int64) ([]models.MaxSubscription, error)
+	GetActiveSubscribers(ctx context.Context, eventType string) ([]int64, error)
+	Delete(ctx context.Context, userID int64, eventType string) error
+	DeleteAll(ctx context.Context, userID int64) error
+}
+
+type MaxNotificationRepository interface {
+	Create(ctx context.Context, notification *models.MaxNotification) error
+	WasRecentlySent(ctx context.Context, userID int64, eventType string, within time.Duration) (bool, error)
+}
+
 type ForecastRepository interface {
 	SaveHourly(ctx context.Context, data *models.ForecastData) error
 	SaveDaily(ctx context.Context, data *models.ForecastData) error
