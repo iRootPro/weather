@@ -1,5 +1,17 @@
 package maxbot
 
+func mainKeyboard() []interface{} {
+	return []interface{}{
+		InlineKeyboardAttachment{
+			Type: "inline_keyboard",
+			Payload: InlineKeyboardPayload{Buttons: [][]Button{
+				{{Type: "callback", Text: "🌦️ Погода", Payload: "cmd_weather"}},
+				{{Type: "callback", Text: "🔔 Подписки", Payload: "cmd_subscribe"}},
+			}},
+		},
+	}
+}
+
 func subscriptionKeyboard() []interface{} {
 	return []interface{}{
 		InlineKeyboardAttachment{

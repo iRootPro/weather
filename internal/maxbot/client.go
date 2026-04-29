@@ -33,6 +33,10 @@ func (c *Client) GetMe(ctx context.Context) (*BotInfo, error) {
 	return &bot, nil
 }
 
+func (c *Client) PatchMe(ctx context.Context, patch BotPatch) error {
+	return c.do(ctx, http.MethodPatch, "/me", nil, patch, nil)
+}
+
 func (c *Client) GetUpdates(ctx context.Context, marker *int64, limit, timeout int, types []string) (*UpdateList, error) {
 	q := url.Values{}
 	if limit > 0 {

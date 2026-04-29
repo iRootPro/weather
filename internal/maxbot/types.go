@@ -13,6 +13,18 @@ type User struct {
 
 type BotInfo struct {
 	User
+	Description *string      `json:"description"`
+	Commands    []BotCommand `json:"commands"`
+}
+
+type BotPatch struct {
+	Description string       `json:"description,omitempty"`
+	Commands    []BotCommand `json:"commands,omitempty"`
+}
+
+type BotCommand struct {
+	Name        string `json:"name"`
+	Description string `json:"description,omitempty"`
 }
 
 type Recipient struct {
@@ -46,6 +58,9 @@ type Update struct {
 	Timestamp  int64           `json:"timestamp"`
 	Message    *Message        `json:"message"`
 	Callback   *Callback       `json:"callback"`
+	ChatID     *int64          `json:"chat_id"`
+	User       *User           `json:"user"`
+	Payload    *string         `json:"payload"`
 	UserLocale *string         `json:"user_locale"`
 	Raw        json.RawMessage `json:"-"`
 }

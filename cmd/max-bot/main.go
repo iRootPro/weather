@@ -70,6 +70,9 @@ func main() {
 		log.Fatalf("failed to authorize max bot: %v", err)
 	}
 	slog.Info("max bot authorized", "user_id", me.UserID, "username", me.Username, "name", me.FirstName)
+	if err := configureBotProfile(ctx, client); err != nil {
+		slog.Warn("failed to update max bot profile commands", "error", err)
+	}
 
 	handler := maxbot.NewBotHandler(client, weatherService, forecastService, userRepo, subRepo, logger)
 	notifier := maxbot.NewNotifier(client, weatherService, subRepo, notifRepo, userRepo, cfg.Max.NotifyInterval, logger)
@@ -90,6 +93,19 @@ func main() {
 	slog.Info("max bot stopped")
 }
 
+func configureBotProfile(ctx context.Context, client *maxbot.Client) error {
+	return client.PatchMe(ctx, maxbot.BotPatch{
+		Description: "Погода в Армавире: текущие данные метеостанции, уведомления о погодных событиях и утренняя сводка.",
+		Commands: []maxbot.BotCommand{
+			{Name: "start", Description: "Показать главное меню"},
+			{Name: "weather", Description: "Текущая погода"},
+			{Name: "subscribe", Description: "Настроить уведомления"},
+			{Name: "unsubscribe", Description: "Отключить все уведомления"},
+			{Name: "help", Description: "Помощь по боту"},
+		},
+	})
+}
+
 func waitForShutdown() {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
@@ -106,7 +122,7 @@ func pollUpdates(ctx context.Context, client *maxbot.Client, handler *maxbot.Bot
 		default:
 		}
 
-		updates, err := client.GetUpdates(ctx, marker, 100, timeout, []string{"message_created", "message_callback"})
+		updates, err := client.GetUpdates(ctx, marker, 100, timeout, []string{"bot_started", "bot_stopped", "message_created", "message_callback"})
 		if err != nil {
 			logger.Error("failed to get max updates", "error", err)
 			select {

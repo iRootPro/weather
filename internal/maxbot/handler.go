@@ -26,7 +26,18 @@ func NewBotHandler(client *Client, weatherSvc *service.WeatherService, forecastS
 }
 
 func (h *BotHandler) HandleUpdate(ctx context.Context, update Update) {
+	h.logger.Info("max update received", "type", update.UpdateType)
 	switch update.UpdateType {
+	case "bot_started":
+		if update.User != nil {
+			h.handleBotStarted(ctx, update.User, update.UserLocale)
+		}
+	case "bot_stopped":
+		if update.User != nil {
+			if err := h.userRepo.UpdateActivity(ctx, update.User.UserID, false); err != nil {
+				h.logger.Error("failed to mark max user inactive", "user_id", update.User.UserID, "error", err)
+			}
+		}
 	case "message_created":
 		if update.Message != nil {
 			h.handleMessage(ctx, update.Message, update.UserLocale)
@@ -36,6 +47,17 @@ func (h *BotHandler) HandleUpdate(ctx context.Context, update Update) {
 			h.handleCallback(ctx, update.Callback)
 		}
 	}
+}
+
+func (h *BotHandler) handleBotStarted(ctx context.Context, u *User, locale *string) {
+	user, isNew := h.registerUser(ctx, u, locale)
+	if user == nil {
+		return
+	}
+	if isNew {
+		h.subscribeDefault(ctx, user.ID)
+	}
+	h.handleStart(ctx, user.UserID)
 }
 
 func (h *BotHandler) handleMessage(ctx context.Context, msg *Message, locale *string) {
@@ -111,11 +133,26 @@ func (h *BotHandler) subscribeDefault(ctx context.Context, userID int64) {
 }
 
 func (h *BotHandler) handleStart(ctx context.Context, userID int64) {
-	h.send(ctx, userID, "🌦️ *Добро пожаловать в бот метеостанции города Армавир!*\n\n/weather - текущая погода\n/subscribe - подписки на уведомления\n/unsubscribe - отписаться от всех уведомлений\n/help - помощь")
+	text := "🌦️ *Добро пожаловать в бот метеостанции города Армавир!*\n\n" +
+		"Я показываю текущую погоду и могу присылать уведомления о важных изменениях.\n\n" +
+		"Что можно сделать:\n" +
+		"• нажать кнопку *Погода* — получить текущую погоду;\n" +
+		"• нажать *Подписки* — выбрать уведомления;\n" +
+		"• написать /weather — текущая погода;\n" +
+		"• написать /subscribe — настройки подписок;\n" +
+		"• написать /unsubscribe — отписаться от всех уведомлений.\n\n" +
+		"Новые пользователи автоматически подписываются на утреннюю сводку."
+	h.sendWithKeyboard(ctx, userID, text, mainKeyboard())
 }
 
 func (h *BotHandler) handleHelp(ctx context.Context, userID int64) {
-	h.send(ctx, userID, "📖 *Справка*\n\n/weather - текущая погода\n/subscribe - выбрать уведомления\n/unsubscribe - отписаться от всех уведомлений\n\nНовые пользователи автоматически подписываются на утреннюю сводку.")
+	text := "📖 *Справка*\n\n" +
+		"/weather - текущая погода\n" +
+		"/subscribe - выбрать уведомления\n" +
+		"/unsubscribe - отписаться от всех уведомлений\n" +
+		"/start - показать главное меню\n\n" +
+		"Также можно пользоваться кнопками ниже."
+	h.sendWithKeyboard(ctx, userID, text, mainKeyboard())
 }
 
 func (h *BotHandler) handleWeather(ctx context.Context, userID int64) {
@@ -157,6 +194,15 @@ func (h *BotHandler) handleCallback(ctx context.Context, cb *Callback) {
 	}
 	_ = h.client.AnswerCallback(ctx, cb.CallbackID, "")
 	data := cb.Payload
+	switch data {
+	case "cmd_weather":
+		h.handleWeather(ctx, user.UserID)
+		return
+	case "cmd_subscribe":
+		h.handleSubscribe(ctx, user.UserID)
+		return
+	}
+
 	if strings.HasPrefix(data, "sub_") {
 		eventType := strings.TrimPrefix(data, "sub_")
 		if err := h.subRepo.Create(ctx, &models.MaxSubscription{UserID: user.ID, EventType: eventType, IsActive: true}); err != nil {
@@ -173,7 +219,13 @@ func (h *BotHandler) handleCallback(ctx context.Context, cb *Callback) {
 }
 
 func (h *BotHandler) send(ctx context.Context, userID int64, text string) {
-	if err := h.client.SendMessageToUser(ctx, userID, textMessage(text)); err != nil {
+	h.sendWithKeyboard(ctx, userID, text, nil)
+}
+
+func (h *BotHandler) sendWithKeyboard(ctx context.Context, userID int64, text string, attachments []interface{}) {
+	body := textMessage(text)
+	body.Attachments = attachments
+	if err := h.client.SendMessageToUser(ctx, userID, body); err != nil {
 		h.logger.Error("failed to send max message", "user_id", userID, "error", err)
 	}
 }
