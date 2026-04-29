@@ -98,6 +98,7 @@ func configureBotProfile(ctx context.Context, client *maxbot.Client) error {
 		Description: "Погода в Армавире: текущие данные метеостанции, уведомления о погодных событиях и утренняя сводка.",
 		Commands: []maxbot.BotCommand{
 			{Name: "start", Description: "Показать главное меню"},
+			{Name: "menu", Description: "Показать меню"},
 			{Name: "weather", Description: "Текущая погода"},
 			{Name: "subscribe", Description: "Настроить уведомления"},
 			{Name: "unsubscribe", Description: "Отключить все уведомления"},

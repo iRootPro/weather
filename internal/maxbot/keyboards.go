@@ -2,6 +2,18 @@ package maxbot
 
 func mainKeyboard() []interface{} {
 	return []interface{}{
+		ReplyKeyboardAttachment{
+			Type: "reply_keyboard",
+			Buttons: [][]ReplyButton{
+				{{Type: "message", Text: "🌦️ Погода", Payload: "menu_weather"}},
+				{{Type: "message", Text: "🔔 Подписки", Payload: "menu_subscribe"}, {Type: "message", Text: "📖 Помощь", Payload: "menu_help"}},
+			},
+		},
+	}
+}
+
+func inlineMainKeyboard() []interface{} {
+	return []interface{}{
 		InlineKeyboardAttachment{
 			Type: "inline_keyboard",
 			Payload: InlineKeyboardPayload{Buttons: [][]Button{

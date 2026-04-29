@@ -3,6 +3,7 @@ package maxbot
 const (
 	CmdStart       = "start"
 	CmdHelp        = "help"
+	CmdMenu        = "menu"
 	CmdWeather     = "weather"
 	CmdCurrent     = "current"
 	CmdSubscribe   = "subscribe"

@@ -85,7 +85,7 @@ func (h *BotHandler) handleMessage(ctx context.Context, msg *Message, locale *st
 		parts := strings.Fields(strings.TrimPrefix(text, "/"))
 		cmd := strings.Split(parts[0], "@")[0]
 		switch cmd {
-		case CmdStart:
+		case CmdStart, CmdMenu:
 			h.handleStart(ctx, user.UserID)
 		case CmdHelp:
 			h.handleHelp(ctx, user.UserID)
@@ -106,8 +106,10 @@ func (h *BotHandler) handleMessage(ctx context.Context, msg *Message, locale *st
 		h.handleWeather(ctx, user.UserID)
 	case "подписки", "🔔 подписки":
 		h.handleSubscribe(ctx, user.UserID)
+	case "помощь", "📖 помощь", "меню":
+		h.handleHelp(ctx, user.UserID)
 	default:
-		h.send(ctx, user.UserID, "Используйте /weather для погоды или /subscribe для подписок")
+		h.sendWithKeyboard(ctx, user.UserID, "Используйте меню ниже, /weather для погоды или /subscribe для подписок", mainKeyboard())
 	}
 }
 

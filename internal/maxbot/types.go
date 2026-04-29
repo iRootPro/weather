@@ -82,6 +82,17 @@ type InlineKeyboardAttachment struct {
 	Payload InlineKeyboardPayload `json:"payload"`
 }
 
+type ReplyKeyboardAttachment struct {
+	Type    string          `json:"type"`
+	Buttons [][]ReplyButton `json:"buttons"`
+}
+
+type ReplyButton struct {
+	Type    string `json:"type,omitempty"`
+	Text    string `json:"text"`
+	Payload string `json:"payload,omitempty"`
+}
+
 type InlineKeyboardPayload struct {
 	Buttons [][]Button `json:"buttons"`
 }
