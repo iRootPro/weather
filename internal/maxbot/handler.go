@@ -109,7 +109,7 @@ func (h *BotHandler) handleMessage(ctx context.Context, msg *Message, locale *st
 	case "помощь", "📖 помощь", "меню":
 		h.handleHelp(ctx, user.UserID)
 	default:
-		h.sendWithKeyboard(ctx, user.UserID, "Используйте меню ниже, /weather для погоды или /subscribe для подписок", mainKeyboard())
+		h.sendWithKeyboard(ctx, user.UserID, "Используйте кнопки ниже, /weather для погоды или /subscribe для подписок", inlineMainKeyboard())
 	}
 }
 
@@ -144,7 +144,7 @@ func (h *BotHandler) handleStart(ctx context.Context, userID int64) {
 		"• написать /subscribe — настройки подписок;\n" +
 		"• написать /unsubscribe — отписаться от всех уведомлений.\n\n" +
 		"Новые пользователи автоматически подписываются на утреннюю сводку."
-	h.sendWithKeyboard(ctx, userID, text, mainKeyboard())
+	h.sendWithKeyboard(ctx, userID, text, inlineMainKeyboard())
 }
 
 func (h *BotHandler) handleHelp(ctx context.Context, userID int64) {
@@ -154,7 +154,7 @@ func (h *BotHandler) handleHelp(ctx context.Context, userID int64) {
 		"/unsubscribe - отписаться от всех уведомлений\n" +
 		"/start - показать главное меню\n\n" +
 		"Также можно пользоваться кнопками ниже."
-	h.sendWithKeyboard(ctx, userID, text, mainKeyboard())
+	h.sendWithKeyboard(ctx, userID, text, inlineMainKeyboard())
 }
 
 func (h *BotHandler) handleWeather(ctx context.Context, userID int64) {
@@ -202,6 +202,9 @@ func (h *BotHandler) handleCallback(ctx context.Context, cb *Callback) {
 		return
 	case "cmd_subscribe":
 		h.handleSubscribe(ctx, user.UserID)
+		return
+	case "cmd_help":
+		h.handleHelp(ctx, user.UserID)
 		return
 	}
 

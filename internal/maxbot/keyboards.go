@@ -19,6 +19,7 @@ func inlineMainKeyboard() []interface{} {
 			Payload: InlineKeyboardPayload{Buttons: [][]Button{
 				{{Type: "callback", Text: "🌦️ Погода", Payload: "cmd_weather"}},
 				{{Type: "callback", Text: "🔔 Подписки", Payload: "cmd_subscribe"}},
+				{{Type: "callback", Text: "📖 Помощь", Payload: "cmd_help"}},
 			}},
 		},
 	}
