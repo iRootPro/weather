@@ -112,7 +112,7 @@
                     <div class="badge-round">{{if .Data.IsSeason}}{{.Data.Season.Icon}}{{else}}{{.Data.DominantDayType.Icon}}{{end}}</div>
                 </section>
                 <p class="summary">
-                    {{if .Data.IsSeason}}Сезонный итог{{else}}Итог месяца{{end}}: {{printf "%.1f" .Data.CurrentMonth.RainTotal}} мм осадков, {{.Data.CurrentMonth.RainDays}} дней с дождём и {{printf "%.1f" .Data.CurrentMonth.AvgTemp}}°C в среднем. {{if .Data.CurrentMonth.MaxRainDay}}Главный дождь — {{.Data.CurrentMonth.MaxRainDay.Date.Format "02.01"}}.{{end}}
+                    {{if .Data.IsSeason}}Сезонный итог{{else}}Итог месяца{{end}}: {{printf "%.1f" .Data.CurrentMonth.RainTotal}} мм осадков; дней с дождём — {{.Data.CurrentMonth.RainDays}}, средняя температура {{printf "%.1f" .Data.CurrentMonth.AvgTemp}}°C. {{if .Data.CurrentMonth.MaxRainDay}}Главный дождь — {{.Data.CurrentMonth.MaxRainDay.Date.Format "02.01"}}.{{end}}
                 </p>
 
                 <section class="hero" aria-label="Главные показатели">
