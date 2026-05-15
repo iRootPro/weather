@@ -7,16 +7,18 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Golos+Text:wght@500;600;700;800&family=IBM+Plex+Mono:wght@500;600;700&display=swap');
         :root {
-            --paper: #fbfaf4;
-            --paper-2: #edf8fb;
-            --ink: #142033;
-            --muted: #6f7d8d;
-            --line: rgba(20, 32, 51, .14);
-            --line-strong: rgba(20, 32, 51, .22);
-            --blue: #115dde;
-            --cyan: #00a7c8;
-            --orange: #e85b20;
-            --green: #74b942;
+            --paper: #f8f5ec;
+            --paper-cold: #e8f7fb;
+            --ink: #111c2f;
+            --text: #344457;
+            --muted: #758292;
+            --line: rgba(17, 28, 47, .16);
+            --line-strong: rgba(17, 28, 47, .28);
+            --blue: #155de2;
+            --cyan: #00a2c3;
+            --orange: #ea5a1c;
+            --green: #72b943;
+            --white: rgba(255, 255, 255, .42);
         }
         * { box-sizing: border-box; }
         html, body { margin: 0; min-height: 100%; background: #0b1320; }
@@ -34,7 +36,7 @@
             height: 100%;
             overflow: hidden;
             color: var(--ink);
-            background: linear-gradient(180deg, var(--paper) 0%, #f8f5ec 61%, var(--paper-2) 100%);
+            background: linear-gradient(180deg, var(--paper) 0%, #f8f6ef 70%, var(--paper-cold) 100%);
         }
         .story-card::before {
             content: "";
@@ -42,67 +44,218 @@
             inset: 0;
             pointer-events: none;
             background:
-                linear-gradient(180deg, transparent 0 96%, rgba(20,32,51,.045) 96% 100%),
-                radial-gradient(circle at 82% 9%, rgba(17,93,222,.075), transparent 24%),
-                radial-gradient(circle at 8% 96%, rgba(0,167,200,.10), transparent 30%);
-            background-size: 100% 78px, 100% 100%, 100% 100%;
+                linear-gradient(180deg, rgba(255,255,255,.42), transparent 24%),
+                radial-gradient(circle at 83% 7%, rgba(21,93,226,.055), transparent 26%);
         }
-        .inner { position: relative; z-index: 1; height: 100%; padding: 4.6% 6.1% 4%; display: flex; flex-direction: column; }
+        .inner {
+            position: relative;
+            z-index: 1;
+            height: 100%;
+            padding: 4.8% 6.1% 4.3%;
+            display: flex;
+            flex-direction: column;
+        }
 
-        .topline { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
-        .period, .brand, .label, .fact span, .progress-head, .sub, .stamp {
+        .mono, .period, .brand, .kicker, .label, .fact span, .progress-head, .chip, .sub, .stamp {
             font-family: "IBM Plex Mono", monospace;
             text-transform: uppercase;
-            letter-spacing: .11em;
+            letter-spacing: .105em;
             font-weight: 700;
+        }
+        .topline {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 16px;
+            padding-bottom: 9px;
+            border-bottom: 1px solid var(--line);
         }
         .period { color: var(--blue); font-size: clamp(9px, 2vw, 11px); }
         .brand { color: var(--muted); font-size: clamp(8px, 1.7vw, 9px); letter-spacing: .22em; }
 
-        .hero { margin-top: 13px; }
-        .kicker { color: var(--muted); font-family: "IBM Plex Mono", monospace; font-size: clamp(7px, 1.55vw, 8px); letter-spacing: .16em; text-transform: uppercase; font-weight: 700; }
-        h1 { margin: 5px 0 0; font-size: clamp(36px, 8.6vw, 45px); line-height: .91; letter-spacing: -.055em; font-weight: 800; }
+        .hero { margin-top: 14px; }
+        .kicker { color: var(--muted); font-size: clamp(7px, 1.5vw, 8px); letter-spacing: .16em; }
+        h1 {
+            margin: 6px 0 0;
+            font-size: clamp(35px, 8.3vw, 45px);
+            line-height: .92;
+            letter-spacing: -.055em;
+            font-weight: 800;
+        }
         h1 span { display: block; color: var(--blue); }
-        .summary { margin: 8px 0 0; max-width: 94%; color: #39495b; font-size: clamp(10px, 2.12vw, 12px); line-height: 1.24; font-weight: 700; }
+        .summary {
+            margin: 9px 0 0;
+            color: var(--text);
+            font-size: clamp(10px, 2.12vw, 12px);
+            line-height: 1.28;
+            font-weight: 700;
+            max-width: 94%;
+        }
 
-        .rain-card { margin-top: 14px; display: grid; grid-template-columns: minmax(0, 1fr) 76px; gap: 12px; padding: 13px 0 12px; border-top: 2px solid var(--ink); border-bottom: 1px solid var(--line-strong); }
-        .rain-card > div:first-child { min-width: 0; }
+        .rain-panel {
+            margin-top: 14px;
+            padding: 13px 13px 12px;
+            border: 1px solid var(--line-strong);
+            border-left: 6px solid var(--blue);
+            background: var(--white);
+        }
         .label { color: var(--muted); font-size: clamp(7px, 1.42vw, 8px); }
-        .rain-value { margin-top: 6px; color: var(--blue); font-size: clamp(72px, 17.8vw, 92px); line-height: .78; letter-spacing: -.07em; font-weight: 800; white-space: nowrap; }
-        .rain-unit { margin-top: 5px; color: var(--cyan); font-size: clamp(13px, 3vw, 16px); line-height: 1; font-weight: 800; }
-        .rain-note { margin-top: 8px; color: #39495b; font-size: clamp(9px, 1.95vw, 11px); line-height: 1.22; font-weight: 700; }
+        .rain-row {
+            margin-top: 6px;
+            display: flex;
+            align-items: flex-end;
+            gap: 9px;
+            min-width: 0;
+        }
+        .rain-value {
+            color: var(--blue);
+            font-size: clamp(72px, 17.5vw, 92px);
+            line-height: .78;
+            letter-spacing: -.075em;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+        .rain-unit {
+            padding-bottom: 5px;
+            color: var(--cyan);
+            font-size: clamp(14px, 3vw, 16px);
+            line-height: 1.02;
+            font-weight: 800;
+        }
+        .rain-note {
+            margin-top: 9px;
+            color: var(--text);
+            font-size: clamp(9px, 1.95vw, 11px);
+            line-height: 1.25;
+            font-weight: 700;
+        }
         .rain-note b { color: var(--orange); font-weight: 800; }
-        .rain-line { margin-top: 9px; height: 4px; width: 74%; background: linear-gradient(90deg, var(--blue), var(--cyan), transparent); }
-        .side { min-width: 0; border-left: 1px solid var(--line); padding-left: 10px; display: grid; align-content: space-between; }
-        .side-item b { display: block; margin-top: 4px; font-size: clamp(27px, 6.2vw, 33px); line-height: .86; letter-spacing: -.045em; font-weight: 800; white-space: nowrap; }
-        .side-item .temp { color: var(--orange); }
-        .side-item .rain { color: var(--cyan); }
+        .rain-line {
+            margin-top: 10px;
+            width: 68%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--blue), var(--cyan), transparent);
+        }
 
-        .facts { margin-top: 12px; display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
-        .fact { min-height: 44px; padding: 8px 8px 7px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: rgba(255,255,255,.22); }
-        .fact b { display: block; color: var(--ink); font-size: clamp(20px, 4.7vw, 26px); line-height: .9; letter-spacing: -.04em; font-weight: 800; }
-        .fact span { display: block; margin-top: 5px; color: var(--muted); font-size: clamp(6px, 1.3vw, 7px); line-height: 1.08; letter-spacing: .05em; }
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0;
+            border-left: 1px solid var(--line);
+            border-top: 1px solid var(--line);
+            background: rgba(255,255,255,.2);
+        }
+        .metric {
+            padding: 9px 10px 8px;
+            border-right: 1px solid var(--line);
+            border-bottom: 1px solid var(--line);
+        }
+        .metric b {
+            display: block;
+            margin-top: 4px;
+            font-size: clamp(24px, 5.6vw, 32px);
+            line-height: .9;
+            letter-spacing: -.045em;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+        .metric .temp { color: var(--orange); }
+        .metric .rain { color: var(--cyan); }
+
+        .facts {
+            margin-top: 12px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            border-left: 1px solid var(--line);
+            border-top: 1px solid var(--line);
+        }
+        .fact {
+            min-height: 43px;
+            padding: 8px 8px 7px;
+            border-right: 1px solid var(--line);
+            border-bottom: 1px solid var(--line);
+            background: rgba(255,255,255,.18);
+        }
+        .fact b {
+            display: block;
+            color: var(--ink);
+            font-size: clamp(19px, 4.55vw, 25px);
+            line-height: .9;
+            letter-spacing: -.04em;
+            font-weight: 800;
+        }
+        .fact span {
+            display: block;
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: clamp(6px, 1.25vw, 7px);
+            line-height: 1.05;
+            letter-spacing: .045em;
+        }
         .hot b { color: var(--orange); }
         .cold b { color: #008aa6; }
         .good b { color: var(--blue); }
 
-        .progress-box { margin-top: 12px; padding-top: 9px; border-top: 1px solid var(--line); }
-        .progress-head { display: flex; justify-content: space-between; color: var(--ink); font-size: clamp(7px, 1.55vw, 8px); }
-        .track { margin-top: 8px; height: 5px; background: rgba(17,93,222,.13); }
+        .progress-box {
+            margin-top: 11px;
+            padding-top: 10px;
+            border-top: 1px solid var(--line);
+        }
+        .progress-head {
+            display: flex;
+            justify-content: space-between;
+            color: var(--ink);
+            font-size: clamp(7px, 1.5vw, 8px);
+        }
+        .track { margin-top: 8px; height: 5px; background: rgba(21,93,226,.13); }
         .track i { display: block; height: 100%; background: linear-gradient(90deg, var(--blue), var(--cyan), var(--green)); }
         .chips { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px 9px; }
-        .chip { color: #39495b; font-size: clamp(8px, 1.7vw, 9px); font-weight: 700; border-bottom: 2px solid rgba(17,93,222,.16); padding-bottom: 2px; }
+        .chip {
+            color: var(--text);
+            font-size: clamp(8px, 1.62vw, 9px);
+            line-height: 1;
+            letter-spacing: 0;
+            text-transform: none;
+            border-bottom: 2px solid rgba(21,93,226,.14);
+            padding-bottom: 2px;
+        }
         .chip b { color: var(--blue); }
 
-        .verdict { margin-top: 12px; padding: 10px 0 0 12px; border-top: 1px solid var(--line); border-left: 4px solid var(--blue); }
-        .verdict h2 { margin: 0; color: var(--ink); font-size: clamp(18px, 4.3vw, 24px); line-height: 1; letter-spacing: -.04em; font-weight: 800; }
+        .verdict {
+            margin-top: 12px;
+            padding: 10px 0 0 12px;
+            border-top: 1px solid var(--line);
+            border-left: 4px solid var(--blue);
+        }
+        .verdict h2 {
+            margin: 0;
+            color: var(--ink);
+            font-size: clamp(18px, 4.2vw, 24px);
+            line-height: 1;
+            letter-spacing: -.04em;
+            font-weight: 800;
+        }
         .verdict h2 span { color: var(--blue); }
-        .verdict p { margin: 6px 0 0; max-width: 95%; color: #405266; font-size: clamp(9px, 1.95vw, 11px); line-height: 1.22; font-weight: 700; }
+        .verdict p {
+            margin: 6px 0 0;
+            color: #405266;
+            font-size: clamp(9px, 1.9vw, 10px);
+            line-height: 1.22;
+            font-weight: 700;
+            max-width: 96%;
+        }
 
-        .footer { margin-top: auto; padding-top: 8px; display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; }
+        .footer {
+            margin-top: auto;
+            padding-top: 9px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 14px;
+        }
         .domain { color: var(--blue); font-size: clamp(14px, 3.1vw, 17px); line-height: 1; letter-spacing: -.035em; font-weight: 800; }
         .sub { margin-top: 4px; color: var(--muted); font-size: clamp(6px, 1.35vw, 7px); letter-spacing: .09em; }
-        .stamp { color: rgba(20,32,51,.34); font-size: clamp(6px, 1.35vw, 7px); letter-spacing: .08em; border: 1px solid rgba(20,32,51,.20); padding: 5px 6px; transform: rotate(-4deg); }
+        .stamp { color: rgba(17,28,47,.32); font-size: clamp(6px, 1.35vw, 7px); letter-spacing: .08em; border: 1px solid rgba(17,28,47,.18); padding: 5px 6px; }
         @media print { body { padding: 0; } .story-wrap { width: 1080px; height: 1920px; } }
     </style>
 </head>
@@ -123,18 +276,19 @@
                     </p>
                 </section>
 
-                <section class="rain-card" aria-label="Главные показатели">
-                    <div>
-                        <div class="label">осадки / сумма периода</div>
+                <section class="rain-panel" aria-label="Главные показатели">
+                    <div class="label">осадки / сумма периода</div>
+                    <div class="rain-row">
                         <div class="rain-value">{{printf "%.1f" .Data.CurrentMonth.RainTotal}}</div>
-                        <div class="rain-unit">мм за {{if .Data.IsSeason}}сезон{{else}}месяц{{end}}</div>
-                        <div class="rain-note">{{if .Data.CurrentMonth.MaxRainDay}}Один день дал <b>{{printf "%.1f" .Data.CurrentMonth.MaxRainDay.Value}} мм</b> — около <b>{{.Data.RainiestDaySharePercent}}%</b> всей суммы.{{end}}</div>
-                        <div class="rain-line"></div>
+                        <div class="rain-unit">мм<br>{{if .Data.IsSeason}}сезон{{else}}месяц{{end}}</div>
                     </div>
-                    <div class="side">
-                        <div class="side-item"><div class="label">средняя</div><b class="temp">{{printf "%.1f" .Data.CurrentMonth.AvgTemp}}°</b></div>
-                        <div class="side-item"><div class="label">дождь</div><b class="rain">{{.Data.CurrentMonth.RainDays}}</b></div>
-                    </div>
+                    <div class="rain-note">{{if .Data.CurrentMonth.MaxRainDay}}Один день дал <b>{{printf "%.1f" .Data.CurrentMonth.MaxRainDay.Value}} мм</b> — около <b>{{.Data.RainiestDaySharePercent}}%</b> всей суммы.{{end}}</div>
+                    <div class="rain-line"></div>
+                </section>
+
+                <section class="metrics" aria-label="Средняя температура и дождь">
+                    <div class="metric"><div class="label">средняя</div><b class="temp">{{printf "%.1f" .Data.CurrentMonth.AvgTemp}}°</b></div>
+                    <div class="metric"><div class="label">дождливых дней</div><b class="rain">{{.Data.CurrentMonth.RainDays}}</b></div>
                 </section>
 
                 <section class="facts" aria-label="Дополнительные данные">
