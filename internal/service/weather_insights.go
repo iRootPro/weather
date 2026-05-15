@@ -23,20 +23,40 @@ const (
 	highUVThreshold       = 6.0
 )
 
-// GetInsights returns human-friendly monthly weather analytics for the web page.
+// GetInsights returns human-friendly monthly weather analytics for the current month.
 func (s *WeatherService) GetInsights(ctx context.Context) (*models.WeatherInsightsPage, error) {
+	return s.GetInsightsForMonth(ctx, time.Time{})
+}
+
+// GetInsightsForMonth returns human-friendly weather analytics for the selected calendar month.
+// If month is zero or in the future, the current month is used.
+func (s *WeatherService) GetInsightsForMonth(ctx context.Context, month time.Time) (*models.WeatherInsightsPage, error) {
 	loc := s.location
 	if loc == nil {
 		loc = time.Local
 	}
 
 	now := time.Now().In(loc)
-	currentStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, loc)
+	actualCurrentStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, loc)
+	selectedStart := actualCurrentStart
+	if !month.IsZero() {
+		month = month.In(loc)
+		candidate := time.Date(month.Year(), month.Month(), 1, 0, 0, 0, 0, loc)
+		if !candidate.After(actualCurrentStart) {
+			selectedStart = candidate
+		}
+	}
+	currentStart := selectedStart
 	currentEnd := currentStart.AddDate(0, 1, 0)
+	isCurrentMonth := currentStart.Equal(actualCurrentStart)
+	periodEnd := currentEnd
+	if isCurrentMonth {
+		periodEnd = now
+	}
 	previousStart := currentStart.AddDate(0, -1, 0)
 	previousEnd := currentStart
 
-	currentDays, err := s.repo.GetDailyInsights(ctx, currentStart, now, s.timezone)
+	currentDays, err := s.repo.GetDailyInsights(ctx, currentStart, periodEnd, s.timezone)
 	if err != nil {
 		return nil, err
 	}
@@ -45,15 +65,19 @@ func (s *WeatherService) GetInsights(ctx context.Context) (*models.WeatherInsigh
 		return nil, err
 	}
 
-	rollingStart := dayStart(now, loc).AddDate(0, 0, -59)
-	rollingDays, err := s.repo.GetDailyInsights(ctx, rollingStart, now, s.timezone)
+	rollingAnchor := dayStart(periodEnd, loc).AddDate(0, 0, 1)
+	if !isCurrentMonth {
+		rollingAnchor = currentEnd
+	}
+	rollingStart := rollingAnchor.AddDate(0, 0, -59)
+	rollingDays, err := s.repo.GetDailyInsights(ctx, rollingStart, rollingAnchor, s.timezone)
 	if err != nil {
 		return nil, err
 	}
 
 	archiveDays := make([]models.DailyWeatherInsight, 0, 366)
-	for year := now.Year() - 10; year < now.Year(); year++ {
-		archiveMonthStart := time.Date(year, now.Month(), 1, 0, 0, 0, 0, loc)
+	for year := currentStart.Year() - 10; year < currentStart.Year(); year++ {
+		archiveMonthStart := time.Date(year, currentStart.Month(), 1, 0, 0, 0, 0, loc)
 		archiveMonthEnd := archiveMonthStart.AddDate(0, 1, 0)
 		days, err := s.repo.GetDailyInsights(ctx, archiveMonthStart, archiveMonthEnd, s.timezone)
 		if err != nil {
@@ -62,24 +86,42 @@ func (s *WeatherService) GetInsights(ctx context.Context) (*models.WeatherInsigh
 		archiveDays = append(archiveDays, days...)
 	}
 
-	seasonStart, seasonEnd := seasonBounds(now, loc)
-	seasonDays, err := s.repo.GetDailyInsights(ctx, seasonStart, now, s.timezone)
+	seasonStart, seasonEnd := seasonBounds(currentStart, loc)
+	seasonPeriodEnd := minTime(periodEnd, seasonEnd)
+	seasonDays, err := s.repo.GetDailyInsights(ctx, seasonStart, seasonPeriodEnd, s.timezone)
 	if err != nil {
 		return nil, err
 	}
 
-	previousCompareDays := minInt(now.Day(), daysBetween(previousStart, previousEnd))
+	daysInSelectedPeriod := daysBetween(currentStart, currentEnd)
+	analysisDate := currentEnd.Add(-time.Nanosecond)
+	if isCurrentMonth {
+		daysInSelectedPeriod = now.Day()
+		analysisDate = now
+	}
+	previousCompareDays := minInt(daysInSelectedPeriod, daysBetween(previousStart, previousEnd))
 	previousSameEnd := previousStart.AddDate(0, 0, previousCompareDays)
 	previousSameDays := filterDaysBefore(previousDays, previousSameEnd)
 
-	current := buildMonthlyInsights("Этот месяц", currentStart, now, currentDays, now.Day())
+	selectedMonthLabel := russianMonthYear(currentStart)
+	currentTitle := selectedMonthLabel
+	if isCurrentMonth {
+		currentTitle = "Этот месяц"
+	}
+	current := buildMonthlyInsights(currentTitle, currentStart, periodEnd, currentDays, daysInSelectedPeriod)
 	previous := buildMonthlyInsights("Прошлый месяц · справочно", previousStart, previousEnd.Add(-time.Nanosecond), previousDays, daysBetween(previousStart, previousEnd))
 	previousSame := buildMonthlyInsights(fmt.Sprintf("Прошлый месяц к %d числу", previousCompareDays), previousStart, previousSameEnd.Add(-time.Nanosecond), previousSameDays, previousCompareDays)
-	seasonCurrent := buildMonthlyInsights("Текущий сезон", seasonStart, now, seasonDays, maxInt(1, daysBetween(seasonStart, now)))
-	season := buildSeasonContext(now, seasonStart, seasonEnd, seasonCurrent)
-	sameMonthBenchmark := buildSameMonthBenchmark(now, current, archiveDays, loc)
-	last7Days := buildRollingPeriod("Последние 7 дней", "Сравнение с предыдущими 7 днями", rollingDays, now, 7, loc)
-	last30Days := buildRollingPeriod("Последние 30 дней", "Сравнение с предыдущими 30 днями", rollingDays, now, 30, loc)
+	seasonCurrent := buildMonthlyInsights("Текущий сезон", seasonStart, seasonPeriodEnd, seasonDays, maxInt(1, daysBetween(seasonStart, seasonPeriodEnd)))
+	season := buildSeasonContext(analysisDate, seasonStart, seasonEnd, seasonCurrent)
+	sameMonthBenchmark := buildSameMonthBenchmark(analysisDate, current, archiveDays, loc)
+	last7Title := "Последние 7 дней"
+	last30Title := "Последние 30 дней"
+	if !isCurrentMonth {
+		last7Title = "Финальные 7 дней месяца"
+		last30Title = "Последние 30 дней периода"
+	}
+	last7Days := buildRollingPeriod(last7Title, "Сравнение с предыдущими 7 днями", rollingDays, rollingAnchor.Add(-time.Nanosecond), 7, loc)
+	last30Days := buildRollingPeriod(last30Title, "Сравнение с предыдущими 30 днями", rollingDays, rollingAnchor.Add(-time.Nanosecond), 30, loc)
 
 	allDays := append([]models.DailyWeatherInsight{}, rollingDays...)
 	allDays = append(allDays, currentDays...)
@@ -94,6 +136,13 @@ func (s *WeatherService) GetInsights(ctx context.Context) (*models.WeatherInsigh
 
 	page := &models.WeatherInsightsPage{
 		GeneratedAt:               now,
+		SelectedMonthParam:        currentStart.Format("2006-01"),
+		SelectedMonthLabel:        selectedMonthLabel,
+		PreviousMonthParam:        currentStart.AddDate(0, -1, 0).Format("2006-01"),
+		NextMonthParam:            currentStart.AddDate(0, 1, 0).Format("2006-01"),
+		HasNextMonth:              currentStart.Before(actualCurrentStart),
+		IsCurrentMonth:            isCurrentMonth,
+		PeriodStatus:              insightPeriodStatus(isCurrentMonth),
 		CurrentMonth:              current,
 		PreviousMonth:             previous,
 		PreviousSamePeriod:        previousSame,
@@ -110,7 +159,7 @@ func (s *WeatherService) GetInsights(ctx context.Context) (*models.WeatherInsigh
 		HasLastRain:               hasLastRain,
 		MainInsight:               mainInsight,
 		Stories:                   stories,
-		MonthProgressPercent:      clampPercent(float64(now.Day()) / float64(daysBetween(currentStart, currentEnd)) * 100),
+		MonthProgressPercent:      clampPercent(float64(daysInSelectedPeriod) / float64(daysBetween(currentStart, currentEnd)) * 100),
 		RainVsPreviousSamePercent: clampPercent(ratioPercent(current.RainTotal, previousSame.RainTotal)),
 		RainVsPreviousFullPercent: clampPercent(ratioPercent(current.RainTotal, previous.RainTotal)),
 		RainiestDaySharePercent:   rainiestSharePercent(current),
@@ -118,7 +167,7 @@ func (s *WeatherService) GetInsights(ctx context.Context) (*models.WeatherInsigh
 		SunnyPercent:              clampPercent(ratioPercent(float64(current.SunnyDays), float64(maxInt(current.DaysWithData, 1)))),
 		RainDaysPercent:           clampPercent(ratioPercent(float64(current.RainDays), float64(maxInt(current.DaysWithData, 1)))),
 		Calendar:                  buildCalendar(currentStart, currentEnd, currentDays, now, loc),
-		RainChartData:             buildRainChartData(currentDays, previousDays, archiveDays, daysBetween(currentStart, currentEnd), daysBetween(previousStart, previousEnd), now.Day(), now.Month(), loc),
+		RainChartData:             buildRainChartData(currentDays, previousDays, archiveDays, daysBetween(currentStart, currentEnd), daysBetween(previousStart, previousEnd), daysInSelectedPeriod, currentStart.Month(), loc),
 		BestDay:                   bestDay,
 		WorstDay:                  worstDay,
 	}
@@ -945,6 +994,25 @@ func monthName(month time.Month) string {
 func daysInMonth(year int, month time.Month, loc *time.Location) int {
 	start := time.Date(year, month, 1, 0, 0, 0, 0, loc)
 	return daysBetween(start, start.AddDate(0, 1, 0))
+}
+
+func russianMonthYear(t time.Time) string {
+	months := []string{"", "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"}
+	return fmt.Sprintf("%s %d", months[t.Month()], t.Year())
+}
+
+func insightPeriodStatus(isCurrent bool) string {
+	if isCurrent {
+		return "месяц в процессе"
+	}
+	return "итоговый отчёт месяца"
+}
+
+func minTime(a, b time.Time) time.Time {
+	if a.Before(b) {
+		return a
+	}
+	return b
 }
 
 func value32(v *float32) float64 {

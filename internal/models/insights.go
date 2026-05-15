@@ -177,6 +177,14 @@ type NotableWeatherDay struct {
 type WeatherInsightsPage struct {
 	GeneratedAt time.Time `json:"generated_at"`
 
+	SelectedMonthParam string `json:"selected_month_param"`
+	SelectedMonthLabel string `json:"selected_month_label"`
+	PreviousMonthParam string `json:"previous_month_param"`
+	NextMonthParam     string `json:"next_month_param"`
+	HasNextMonth       bool   `json:"has_next_month"`
+	IsCurrentMonth     bool   `json:"is_current_month"`
+	PeriodStatus       string `json:"period_status"`
+
 	CurrentMonth       MonthlyWeatherInsights `json:"current_month"`
 	PreviousMonth      MonthlyWeatherInsights `json:"previous_month"`
 	PreviousSamePeriod MonthlyWeatherInsights `json:"previous_same_period"`

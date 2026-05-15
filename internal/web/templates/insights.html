@@ -158,6 +158,22 @@
                 <p class="text-gray-700 dark:text-gray-200 max-w-2xl">
                     {{.Data.MainInsight.Text}}
                 </p>
+                <div class="mt-5 flex flex-col gap-3 md:flex-row md:items-center">
+                    <div class="inline-flex w-fit items-center rounded-full bg-white/70 px-3 py-1 text-xs font-semibold text-gray-600 ring-1 ring-blue-100 dark:bg-gray-900/30 dark:text-gray-300 dark:ring-blue-900/60">
+                        {{.Data.SelectedMonthLabel}} · {{.Data.PeriodStatus}}
+                    </div>
+                    <form method="get" action="/insights" class="flex flex-wrap items-center gap-2">
+                        <a href="/insights?month={{.Data.PreviousMonthParam}}" class="rounded-lg bg-white/80 px-3 py-2 text-sm font-medium text-gray-700 ring-1 ring-blue-100 hover:bg-blue-50 dark:bg-gray-900/30 dark:text-gray-200 dark:ring-blue-900/60">← Предыдущий</a>
+                        <input type="month" name="month" value="{{.Data.SelectedMonthParam}}" max="{{.Data.GeneratedAt.Format "2006-01"}}" class="rounded-lg border border-blue-100 bg-white/90 px-3 py-2 text-sm text-gray-900 shadow-sm dark:border-blue-900/60 dark:bg-gray-900/50 dark:text-white">
+                        <button type="submit" class="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700">Показать</button>
+                        {{if .Data.HasNextMonth}}
+                        <a href="/insights?month={{.Data.NextMonthParam}}" class="rounded-lg bg-white/80 px-3 py-2 text-sm font-medium text-gray-700 ring-1 ring-blue-100 hover:bg-blue-50 dark:bg-gray-900/30 dark:text-gray-200 dark:ring-blue-900/60">Следующий →</a>
+                        {{end}}
+                        {{if not .Data.IsCurrentMonth}}
+                        <a href="/insights" class="rounded-lg bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700 ring-1 ring-emerald-100 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-200 dark:ring-emerald-900/60">Текущий месяц</a>
+                        {{end}}
+                    </form>
+                </div>
                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-4">Обновлено: {{.Data.GeneratedAt.Format "02.01.2006 15:04"}}</p>
             </div>
             <div class="rounded-lg bg-white/80 border border-blue-100 p-5 backdrop-blur dark:bg-gray-800/70 dark:border-blue-900/70">

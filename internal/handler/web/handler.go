@@ -203,7 +203,17 @@ func (h *Handler) Records(w http.ResponseWriter, r *http.Request) {
 
 // Insights renders the human-friendly analytics page
 func (h *Handler) Insights(w http.ResponseWriter, r *http.Request) {
-	insights, err := h.weatherService.GetInsights(r.Context())
+	var selectedMonth time.Time
+	if monthParam := r.URL.Query().Get("month"); monthParam != "" {
+		parsed, err := time.Parse("2006-01", monthParam)
+		if err != nil {
+			http.Error(w, "Bad month format, expected YYYY-MM", http.StatusBadRequest)
+			return
+		}
+		selectedMonth = parsed
+	}
+
+	insights, err := h.weatherService.GetInsightsForMonth(r.Context(), selectedMonth)
 	if err != nil {
 		slog.Error("failed to get weather insights", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
