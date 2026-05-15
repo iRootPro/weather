@@ -288,7 +288,7 @@
 
                 <section class="facts" aria-label="Дополнительные данные">
                     <div class="fact hot"><b>{{if .Data.CurrentMonth.MaxTempDay}}{{printf "%.1f" .Data.CurrentMonth.MaxTempDay.Value}}°{{else}}—{{end}}</b><span>пик тепла</span></div>
-                    <div class="fact cold"><b>{{if .Data.CurrentMonth.MinTempDay}}{{printf "%.1f" .Data.CurrentMonth.MinTempDay.Value}}°{{else}}—{{end}}</b><span>холодная ночь</span></div>
+                    <div class="fact cold"><b>{{if .Data.CurrentMonth.MinTempDay}}{{printf "%.1f" .Data.CurrentMonth.MinTempDay.Value}}°{{else}}—{{end}}</b><span>{{if .Data.CurrentMonth.MinTempDay}}{{.Data.CurrentMonth.MinTempDay.Date.Format "02.01"}} · {{end}}минимум</span></div>
                     <div class="fact"><b>{{if .Data.CurrentMonth.MaxWindGustDay}}{{printf "%.1f" .Data.CurrentMonth.MaxWindGustDay.Value}}{{else}}—{{end}}</b><span>м/с порыв</span></div>
                     <div class="fact"><b>{{.Data.CurrentMonth.WetDays}}</b><span>мокрых дней</span></div>
                     <div class="fact good"><b>{{.Data.CurrentMonth.SunnyDays}}</b><span>солнечных</span></div>
