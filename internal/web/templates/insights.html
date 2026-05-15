@@ -7,85 +7,105 @@
     .insights-page {
         font-variant-numeric: tabular-nums;
     }
+    .insights-page .shadow,
+    .insights-page .shadow-xl,
+    .insights-page .shadow-sm {
+        box-shadow: 0 1px 3px rgba(15, 23, 42, .08), 0 12px 28px rgba(15, 23, 42, .04);
+    }
+    .insights-page .rounded-3xl { border-radius: .75rem; }
+    .insights-page .rounded-2xl { border-radius: .625rem; }
     .insights-hero {
+        border: 1px solid rgb(191 219 254);
         background:
-            radial-gradient(circle at 82% 18%, rgba(125, 211, 252, .28), transparent 28%),
-            radial-gradient(circle at 20% 90%, rgba(34, 197, 94, .14), transparent 32%),
-            linear-gradient(135deg, #07111f 0%, #12317d 52%, #0e6b7d 100%);
+            radial-gradient(circle at 84% 16%, rgba(59, 130, 246, .16), transparent 26%),
+            radial-gradient(circle at 10% 92%, rgba(14, 165, 233, .12), transparent 30%),
+            linear-gradient(135deg, #eff6ff 0%, #f8fafc 52%, #e0f2fe 100%);
+    }
+    .dark .insights-hero {
+        border-color: rgba(30, 64, 175, .7);
+        background:
+            radial-gradient(circle at 84% 16%, rgba(59, 130, 246, .22), transparent 26%),
+            radial-gradient(circle at 10% 92%, rgba(14, 165, 233, .16), transparent 30%),
+            linear-gradient(135deg, #0f172a 0%, #111827 54%, #0c4a6e 100%);
     }
     .insights-hero::after {
         content: "";
         position: absolute;
         inset: 0;
-        opacity: .16;
+        opacity: .5;
         background-image:
-            linear-gradient(rgba(255,255,255,.18) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,.16) 1px, transparent 1px);
-        background-size: 42px 42px;
-        mask-image: radial-gradient(circle at 50% 30%, black, transparent 78%);
+            linear-gradient(rgba(59,130,246,.12) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(59,130,246,.10) 1px, transparent 1px);
+        background-size: 36px 36px;
+        mask-image: radial-gradient(circle at 50% 20%, black, transparent 82%);
         pointer-events: none;
     }
     .weather-orb {
         --p: 50;
-        background: conic-gradient(#38bdf8 calc(var(--p) * 1%), rgba(255,255,255,.16) 0);
+        background: conic-gradient(#3b82f6 calc(var(--p) * 1%), rgba(191,219,254,.7) 0);
+        box-shadow: 0 0 0 1px rgba(59,130,246,.18), 0 10px 24px rgba(37,99,235,.14);
     }
     .weather-orb::before {
         content: "";
         position: absolute;
         inset: 10px;
         border-radius: 999px;
-        background: rgba(8, 18, 36, .86);
-        box-shadow: inset 0 0 24px rgba(56, 189, 248, .12);
+        background: rgba(255, 255, 255, .92);
+        box-shadow: inset 0 0 18px rgba(59, 130, 246, .10);
+    }
+    .dark .weather-orb::before {
+        background: rgba(17, 24, 39, .94);
     }
     .weather-strip {
-        background-image: linear-gradient(90deg, rgba(59,130,246,.18), rgba(6,182,212,.18), rgba(245,158,11,.16), rgba(16,185,129,.18));
+        background-image: linear-gradient(90deg, rgba(59,130,246,.12), rgba(14,165,233,.12), rgba(16,185,129,.10));
+        border: 1px solid rgba(191, 219, 254, .8);
     }
     .weather-map-card::before {
         content: "";
         position: absolute;
         inset: 0;
-        opacity: .18;
+        opacity: .34;
         background:
-            linear-gradient(120deg, transparent 0 42%, rgba(56,189,248,.55) 42.3%, transparent 43%),
-            linear-gradient(24deg, transparent 0 62%, rgba(34,197,94,.38) 62.3%, transparent 63%),
-            radial-gradient(circle at 22% 72%, rgba(125,211,252,.7) 0 2px, transparent 3px),
-            radial-gradient(circle at 64% 36%, rgba(250,204,21,.7) 0 2px, transparent 3px),
-            radial-gradient(circle at 82% 64%, rgba(59,130,246,.7) 0 2px, transparent 3px);
+            linear-gradient(120deg, transparent 0 42%, rgba(59,130,246,.28) 42.3%, transparent 43%),
+            linear-gradient(24deg, transparent 0 62%, rgba(14,165,233,.22) 62.3%, transparent 63%),
+            radial-gradient(circle at 22% 72%, rgba(59,130,246,.45) 0 2px, transparent 3px),
+            radial-gradient(circle at 64% 36%, rgba(14,165,233,.45) 0 2px, transparent 3px),
+            radial-gradient(circle at 82% 64%, rgba(37,99,235,.45) 0 2px, transparent 3px);
         pointer-events: none;
     }
     .weather-map-card::after {
-        content: "АРМАВИР / MAY WEATHER ATLAS";
+        content: "АРМАВИР / МЕТЕОСВОДКА";
         position: absolute;
-        right: -24px;
+        right: -18px;
         bottom: 18px;
         transform: rotate(-90deg);
         transform-origin: right bottom;
         font-size: 10px;
-        letter-spacing: .24em;
-        color: rgba(186, 230, 253, .28);
+        letter-spacing: .22em;
+        color: rgba(37, 99, 235, .28);
         pointer-events: none;
     }
 </style>
 <div class="insights-page space-y-6">
     <!-- Header -->
-    <div class="insights-hero relative overflow-hidden rounded-3xl p-6 md:p-8 shadow-xl">
-        <div class="absolute -right-12 -top-12 h-44 w-44 rounded-full bg-cyan-400/20 blur-2xl"></div>
-        <div class="absolute -bottom-16 left-12 h-44 w-44 rounded-full bg-blue-300/20 blur-2xl"></div>
+    <div class="insights-hero relative overflow-hidden rounded-lg p-6 md:p-8 shadow">
+        <div class="absolute -right-12 -top-12 h-44 w-44 rounded-full bg-blue-300/30 blur-2xl dark:bg-blue-500/20"></div>
+        <div class="absolute -bottom-16 left-12 h-44 w-44 rounded-full bg-sky-300/25 blur-2xl dark:bg-sky-500/15"></div>
         <div class="relative grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-6 items-end">
             <div>
-                <div class="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-sm text-cyan-100 mb-4">
+                <div class="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-sm text-blue-700 mb-4 dark:bg-blue-900/40 dark:text-blue-200">
                     ✨ Аналитика по данным станции
                 </div>
-                <h2 class="text-3xl md:text-4xl font-bold text-white mb-3">Интересное о погоде</h2>
-                <p class="text-cyan-100 max-w-2xl">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3">Интересное о погоде</h2>
+                <p class="text-gray-700 dark:text-gray-200 max-w-2xl">
                     {{.Data.MainInsight.Text}}
                 </p>
-                <p class="text-xs text-cyan-200/80 mt-4">Обновлено: {{.Data.GeneratedAt.Format "02.01.2006 15:04"}}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-4">Обновлено: {{.Data.GeneratedAt.Format "02.01.2006 15:04"}}</p>
             </div>
-            <div class="rounded-2xl bg-white/10 border border-white/15 p-5 backdrop-blur">
+            <div class="rounded-lg bg-white/80 border border-blue-100 p-5 backdrop-blur dark:bg-gray-800/70 dark:border-blue-900/70">
                 <div class="text-4xl mb-3">{{.Data.MainInsight.Icon}}</div>
-                <div class="text-xl font-bold text-white mb-2">{{.Data.MainInsight.Title}}</div>
-                <div class="text-sm text-cyan-100">{{.Data.MainInsight.Text}}</div>
+                <div class="text-xl font-bold text-gray-900 dark:text-white mb-2">{{.Data.MainInsight.Title}}</div>
+                <div class="text-sm text-gray-700 dark:text-gray-200">{{.Data.MainInsight.Text}}</div>
             </div>
         </div>
     </div>
@@ -109,33 +129,33 @@
 
     <!-- Visual summary -->
     <div class="grid grid-cols-1 xl:grid-cols-[0.9fr_1.1fr] gap-6">
-        <div class="weather-map-card relative overflow-hidden rounded-3xl bg-slate-950 p-6 text-white shadow-xl">
-            <div class="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-sky-400/20 blur-2xl"></div>
+        <div class="weather-map-card relative overflow-hidden rounded-lg border border-blue-100 bg-gradient-to-br from-blue-50 to-sky-100 p-6 text-gray-900 shadow dark:border-blue-900/70 dark:from-gray-800 dark:to-sky-950/40 dark:text-white">
+            <div class="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-blue-400/20 blur-2xl"></div>
             <div class="flex items-start justify-between gap-4">
                 <div>
-                    <p class="text-sm uppercase tracking-[0.25em] text-sky-200/80">Погодный отпечаток</p>
+                    <p class="text-sm uppercase tracking-[0.25em] text-blue-700 dark:text-blue-300">Погодный отпечаток</p>
                     <h3 class="mt-2 text-2xl font-bold">Месяц одним взглядом</h3>
-                    <p class="mt-2 text-sm text-slate-300">Круг показывает, насколько текущие осадки уже догнали весь прошлый месяц.</p>
+                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Круг показывает, насколько текущие осадки уже догнали весь прошлый месяц.</p>
                 </div>
                 <div class="weather-orb relative grid h-28 w-28 shrink-0 place-items-center rounded-full" style="--p: {{.Data.RainVsPreviousFullPercent}}">
                     <div class="relative z-10 text-center">
                         <div class="text-2xl font-black">{{.Data.RainVsPreviousFullPercent}}%</div>
-                        <div class="text-[10px] uppercase tracking-wide text-sky-100">от прошлого</div>
+                        <div class="text-[10px] uppercase tracking-wide text-blue-700 dark:text-blue-200">от прошлого</div>
                     </div>
                 </div>
             </div>
             <div class="mt-6 grid grid-cols-3 gap-3 text-center">
-                <div class="rounded-2xl bg-white/10 p-3">
+                <div class="rounded-lg bg-white/70 p-3 border border-blue-100 dark:bg-gray-900/40 dark:border-blue-900/60">
                     <div class="text-2xl font-bold">{{.Data.RainDaysPercent}}%</div>
-                    <div class="text-xs text-slate-300">дней с дождём</div>
+                    <div class="text-xs text-gray-600 dark:text-gray-300">дней с дождём</div>
                 </div>
-                <div class="rounded-2xl bg-white/10 p-3">
+                <div class="rounded-lg bg-white/70 p-3 border border-blue-100 dark:bg-gray-900/40 dark:border-blue-900/60">
                     <div class="text-2xl font-bold">{{.Data.SunnyPercent}}%</div>
-                    <div class="text-xs text-slate-300">солнечных</div>
+                    <div class="text-xs text-gray-600 dark:text-gray-300">солнечных</div>
                 </div>
-                <div class="rounded-2xl bg-white/10 p-3">
+                <div class="rounded-lg bg-white/70 p-3 border border-blue-100 dark:bg-gray-900/40 dark:border-blue-900/60">
                     <div class="text-2xl font-bold">{{.Data.ComfortPercent}}%</div>
-                    <div class="text-xs text-slate-300">комфортных</div>
+                    <div class="text-xs text-gray-600 dark:text-gray-300">комфортных</div>
                 </div>
             </div>
         </div>
