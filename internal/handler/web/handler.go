@@ -2,6 +2,7 @@ package web
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"html/template"
 	"log/slog"
@@ -203,17 +204,26 @@ func (h *Handler) Records(w http.ResponseWriter, r *http.Request) {
 
 // Insights renders the human-friendly analytics page
 func (h *Handler) Insights(w http.ResponseWriter, r *http.Request) {
-	var selectedMonth time.Time
-	if monthParam := r.URL.Query().Get("month"); monthParam != "" {
-		parsed, err := time.Parse("2006-01", monthParam)
-		if err != nil {
-			http.Error(w, "Bad month format, expected YYYY-MM", http.StatusBadRequest)
+	var insights *models.WeatherInsightsPage
+	var err error
+	if r.URL.Query().Get("period") == "season" {
+		insights, err = h.weatherService.GetInsightsForSeason(r.Context(), r.URL.Query().Get("season"))
+		if errors.Is(err, service.ErrInvalidInsightSeason) {
+			http.Error(w, "Bad season format, expected YYYY-season", http.StatusBadRequest)
 			return
 		}
-		selectedMonth = parsed
+	} else {
+		var selectedMonth time.Time
+		if monthParam := r.URL.Query().Get("month"); monthParam != "" {
+			parsed, parseErr := time.Parse("2006-01", monthParam)
+			if parseErr != nil {
+				http.Error(w, "Bad month format, expected YYYY-MM", http.StatusBadRequest)
+				return
+			}
+			selectedMonth = parsed
+		}
+		insights, err = h.weatherService.GetInsightsForMonth(r.Context(), selectedMonth)
 	}
-
-	insights, err := h.weatherService.GetInsightsForMonth(r.Context(), selectedMonth)
 	if err != nil {
 		slog.Error("failed to get weather insights", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)

@@ -158,10 +158,34 @@
                 <p class="text-gray-700 dark:text-gray-200 max-w-2xl">
                     {{.Data.MainInsight.Text}}
                 </p>
-                <div class="mt-5 flex flex-col gap-3 md:flex-row md:items-center">
-                    <div class="inline-flex w-fit items-center rounded-full bg-white/70 px-3 py-1 text-xs font-semibold text-gray-600 ring-1 ring-blue-100 dark:bg-gray-900/30 dark:text-gray-300 dark:ring-blue-900/60">
-                        {{.Data.SelectedMonthLabel}} · {{.Data.PeriodStatus}}
+                <div class="mt-5 flex flex-col gap-3">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <div class="inline-flex w-fit items-center rounded-full bg-white/70 px-3 py-1 text-xs font-semibold text-gray-600 ring-1 ring-blue-100 dark:bg-gray-900/30 dark:text-gray-300 dark:ring-blue-900/60">
+                            {{if .Data.IsSeason}}{{.Data.SelectedSeasonLabel}}{{else}}{{.Data.SelectedMonthLabel}}{{end}} · {{.Data.PeriodStatus}}
+                        </div>
+                        <div class="inline-flex rounded-lg bg-white/70 p-1 text-xs font-semibold ring-1 ring-blue-100 dark:bg-gray-900/30 dark:ring-blue-900/60">
+                            <a href="/insights?month={{.Data.SelectedMonthParam}}" class="rounded-md px-3 py-1.5 {{if not .Data.IsSeason}}bg-blue-600 text-white{{else}}text-gray-600 hover:bg-blue-50 dark:text-gray-300 dark:hover:bg-blue-900/30{{end}}">Месяц</a>
+                            <a href="/insights?period=season&season={{.Data.SelectedSeasonParam}}" class="rounded-md px-3 py-1.5 {{if .Data.IsSeason}}bg-blue-600 text-white{{else}}text-gray-600 hover:bg-blue-50 dark:text-gray-300 dark:hover:bg-blue-900/30{{end}}">Сезон</a>
+                        </div>
                     </div>
+                    {{if .Data.IsSeason}}
+                    <form method="get" action="/insights" class="flex flex-wrap items-center gap-2">
+                        <input type="hidden" name="period" value="season">
+                        <a href="/insights?period=season&season={{.Data.PreviousSeasonParam}}" class="rounded-lg bg-white/80 px-3 py-2 text-sm font-medium text-gray-700 ring-1 ring-blue-100 hover:bg-blue-50 dark:bg-gray-900/30 dark:text-gray-200 dark:ring-blue-900/60">← Предыдущий</a>
+                        <select name="season" class="rounded-lg border border-blue-100 bg-white/90 px-3 py-2 text-sm text-gray-900 shadow-sm dark:border-blue-900/60 dark:bg-gray-900/50 dark:text-white">
+                            {{range .Data.SeasonOptions}}
+                            <option value="{{.Value}}" {{if eq .Value $.Data.SelectedSeasonParam}}selected{{end}}>{{.Label}}</option>
+                            {{end}}
+                        </select>
+                        <button type="submit" class="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700">Показать</button>
+                        {{if .Data.HasNextSeason}}
+                        <a href="/insights?period=season&season={{.Data.NextSeasonParam}}" class="rounded-lg bg-white/80 px-3 py-2 text-sm font-medium text-gray-700 ring-1 ring-blue-100 hover:bg-blue-50 dark:bg-gray-900/30 dark:text-gray-200 dark:ring-blue-900/60">Следующий →</a>
+                        {{end}}
+                        {{if not .Data.IsCurrentMonth}}
+                        <a href="/insights?period=season" class="rounded-lg bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700 ring-1 ring-emerald-100 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-200 dark:ring-emerald-900/60">Текущий сезон</a>
+                        {{end}}
+                    </form>
+                    {{else}}
                     <form method="get" action="/insights" class="flex flex-wrap items-center gap-2">
                         <a href="/insights?month={{.Data.PreviousMonthParam}}" class="rounded-lg bg-white/80 px-3 py-2 text-sm font-medium text-gray-700 ring-1 ring-blue-100 hover:bg-blue-50 dark:bg-gray-900/30 dark:text-gray-200 dark:ring-blue-900/60">← Предыдущий</a>
                         <input type="month" name="month" value="{{.Data.SelectedMonthParam}}" max="{{.Data.GeneratedAt.Format "2006-01"}}" class="rounded-lg border border-blue-100 bg-white/90 px-3 py-2 text-sm text-gray-900 shadow-sm dark:border-blue-900/60 dark:bg-gray-900/50 dark:text-white">
@@ -173,13 +197,14 @@
                         <a href="/insights" class="rounded-lg bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700 ring-1 ring-emerald-100 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-200 dark:ring-emerald-900/60">Текущий месяц</a>
                         {{end}}
                     </form>
+                    {{end}}
                 </div>
                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-4">Обновлено: {{.Data.GeneratedAt.Format "02.01.2006 15:04"}}</p>
             </div>
             <div class="rounded-lg bg-white/80 border border-blue-100 p-5 backdrop-blur dark:bg-gray-800/70 dark:border-blue-900/70">
                 <div class="flex items-start justify-between gap-4 mb-4">
                     <div>
-                        <div class="micro-label text-blue-600 dark:text-blue-300">Брифинг месяца</div>
+                        <div class="micro-label text-blue-600 dark:text-blue-300">Брифинг {{.Data.CurrentPeriodGenitive}}</div>
                         <div class="mt-1 text-xl font-bold text-gray-900 dark:text-white">{{.Data.MainInsight.Title}}</div>
                     </div>
                     <div class="text-4xl">{{.Data.MainInsight.Icon}}</div>
@@ -195,7 +220,7 @@
                     </div>
                     <div class="rounded-lg bg-emerald-50 p-3 dark:bg-emerald-900/20">
                         <div class="text-lg font-black text-emerald-700 dark:text-emerald-300">{{.Data.Season.ProgressPercent}}%</div>
-                        <div class="text-[10px] text-gray-500 dark:text-gray-400">сезона</div>
+                        <div class="text-[10px] text-gray-500 dark:text-gray-400">{{.Data.CurrentPeriodGenitive}}</div>
                     </div>
                 </div>
             </div>
@@ -235,8 +260,8 @@
             <div class="flex items-start justify-between gap-4">
                 <div>
                     <p class="text-sm uppercase tracking-[0.25em] text-blue-700 dark:text-blue-300">Погодный отпечаток</p>
-                    <h3 class="mt-2 text-2xl font-bold">Месяц одним взглядом</h3>
-                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">{{if .Data.SameMonthBenchmark.Available}}Круг показывает, где текущие осадки относительно таких же месяцев прошлых лет.{{else}}Архивной нормы пока мало, поэтому прошлый месяц показан только как справка.{{end}}</p>
+                    <h3 class="mt-2 text-2xl font-bold">{{if .Data.IsSeason}}Сезон{{else}}Месяц{{end}} одним взглядом</h3>
+                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">{{if .Data.SameMonthBenchmark.Available}}Круг показывает, где текущие осадки относительно похожих {{if .Data.IsSeason}}сезонов{{else}}месяцев{{end}} прошлых лет.{{else}}Архивной нормы пока мало, поэтому прошлый {{.Data.CurrentPeriodLabel}} показан только как справка.{{end}}</p>
                 </div>
                 <div class="weather-orb relative grid h-28 w-28 shrink-0 place-items-center rounded-full" style="--p: {{if .Data.SameMonthBenchmark.Available}}{{.Data.SameMonthBenchmark.RainRatioPercent}}{{else}}{{.Data.RainVsPreviousFullPercent}}{{end}}">
                     <div class="relative z-10 text-center">
@@ -264,18 +289,18 @@
         <div class="rounded-3xl bg-white dark:bg-gray-800 p-6 shadow transition-colors">
             <div class="flex items-center justify-between mb-5">
                 <div>
-                    <h3 class="text-xl font-bold text-gray-900 dark:text-white">Пульс месяца</h3>
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white">Пульс {{.Data.CurrentPeriodGenitive}}</h3>
                     <p class="text-sm text-gray-500 dark:text-gray-400">Простые шкалы, которые объясняют страницу без чтения таблиц.</p>
                 </div>
                 <div class="text-3xl">〽️</div>
             </div>
             <div class="space-y-5">
                 <div>
-                    <div class="mb-2 flex justify-between text-sm"><span class="text-gray-600 dark:text-gray-300">Пройдено месяца</span><b class="text-gray-900 dark:text-white">{{.Data.MonthProgressPercent}}%</b></div>
+                    <div class="mb-2 flex justify-between text-sm"><span class="text-gray-600 dark:text-gray-300">Пройдено {{.Data.CurrentPeriodGenitive}}</span><b class="text-gray-900 dark:text-white">{{.Data.MonthProgressPercent}}%</b></div>
                     <div class="h-3 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700"><div class="h-full rounded-full bg-slate-900 dark:bg-slate-100" style="width: {{.Data.MonthProgressPercent}}%"></div></div>
                 </div>
                 <div>
-                    <div class="mb-2 flex justify-between text-sm"><span class="text-gray-600 dark:text-gray-300">Осадки к сезонной норме месяца</span><b class="text-blue-700 dark:text-blue-300">{{if .Data.SameMonthBenchmark.Available}}{{.Data.SameMonthBenchmark.RainRatioPercent}}%{{else}}архив копится{{end}}</b></div>
+                    <div class="mb-2 flex justify-between text-sm"><span class="text-gray-600 dark:text-gray-300">Осадки к норме {{.Data.CurrentPeriodGenitive}}</span><b class="text-blue-700 dark:text-blue-300">{{if .Data.SameMonthBenchmark.Available}}{{.Data.SameMonthBenchmark.RainRatioPercent}}%{{else}}архив копится{{end}}</b></div>
                     <div class="h-3 overflow-hidden rounded-full bg-blue-50 dark:bg-blue-950"><div class="h-full rounded-full bg-blue-500" style="width: {{if .Data.SameMonthBenchmark.Available}}{{.Data.SameMonthBenchmark.RainRatioPercent}}{{else}}0{{end}}%"></div></div>
                 </div>
                 <div>
@@ -309,7 +334,7 @@
             <div class="rounded-xl bg-white/80 p-5 shadow-sm backdrop-blur dark:bg-gray-900/40">
                 <div class="flex items-start justify-between gap-4 mb-4">
                     <div>
-                        <div class="micro-label text-blue-600 dark:text-blue-300">Норма месяца</div>
+                        <div class="micro-label text-blue-600 dark:text-blue-300">Норма {{.Data.CurrentPeriodGenitive}}</div>
                         <h3 class="text-xl font-bold text-gray-900 dark:text-white">Сравнение с архивом</h3>
                         <p class="text-sm text-gray-500 dark:text-gray-400">{{.Data.SameMonthBenchmark.Subtitle}}</p>
                     </div>
@@ -330,7 +355,7 @@
                     <div class="rounded-lg bg-slate-50 dark:bg-slate-700/40 p-3">
                         <div class="text-xs text-gray-500 dark:text-gray-400">Архив</div>
                         <div class="text-xl font-bold text-gray-900 dark:text-white">{{.Data.SameMonthBenchmark.SampleSize}}</div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400">сезонов</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">периодов</div>
                     </div>
                 </div>
                 <p class="mt-4 text-sm leading-relaxed text-gray-700 dark:text-gray-200">{{.Data.SameMonthBenchmark.Verdict}}. Температура относительно архива: {{printf "%+.1f" .Data.SameMonthBenchmark.TempDelta}}°C.</p>
@@ -348,7 +373,7 @@
                 <div class="micro-label text-blue-600 dark:text-blue-300">Периоды без перегруза</div>
                 <h3 class="text-xl font-bold text-gray-900 dark:text-white">Сводка по отрезкам</h3>
             </div>
-            <p class="text-sm text-gray-500 dark:text-gray-400">Прошлый месяц оставлен только как справочный ориентир.</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Прошлый {{.Data.CurrentPeriodLabel}} оставлен только как справочный ориентир.</p>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
             {{template "periodCard" .Data.CurrentMonth}}
@@ -399,7 +424,7 @@
             <div class="flex items-start justify-between gap-4 mb-4">
                 <div>
                     <div class="micro-label text-blue-600 dark:text-blue-300">Типология дней</div>
-                    <h3 class="text-xl font-bold text-gray-900 dark:text-white">Каким был месяц по характеру</h3>
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white">Каким был {{.Data.CurrentPeriodLabel}} по характеру</h3>
                     <p class="text-sm text-gray-500 dark:text-gray-400">Каждый день получает один главный погодный тип.</p>
                 </div>
                 <div class="text-3xl">🧬</div>
@@ -469,7 +494,7 @@
             <div class="flex items-start justify-between gap-4 mb-4">
                 <div>
                     <h3 class="text-xl font-bold text-gray-900 dark:text-white">Накопление осадков</h3>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Текущий месяц, архивная норма таких же месяцев и прошлый месяц как справка.</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Текущий {{.Data.CurrentPeriodLabel}}, архивная норма похожих периодов и прошлый {{.Data.CurrentPeriodLabel}} как справка.</p>
                 </div>
                 <div class="text-3xl">📈</div>
             </div>
@@ -484,20 +509,40 @@
         </div>
     </div>
 
+    {{if .Data.IsSeason}}
+    <!-- Season months -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6 transition-colors">
+        <div class="flex items-start justify-between gap-4 mb-5">
+            <div>
+                <div class="micro-label text-blue-600 dark:text-blue-300">Паспорт сезона</div>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white">Три месяца внутри сезона</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Так видно, за счёт какого месяца сложился общий характер сезона.</p>
+            </div>
+            <div class="text-3xl">🗂️</div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {{range .Data.SeasonMonths}}
+            {{template "periodCard" .}}
+            {{end}}
+        </div>
+    </div>
+    {{end}}
+
     <!-- Calendar -->
     {{if .Data.CurrentMonth.MaxRainDay}}
     <div class="rounded-3xl border border-blue-100 bg-gradient-to-r from-blue-50 via-cyan-50 to-white p-5 shadow-sm dark:border-blue-900 dark:from-blue-950/40 dark:via-cyan-950/30 dark:to-gray-800">
         <div class="flex items-start gap-4">
             <div class="text-3xl">🗞️</div>
             <div>
-                <h3 class="font-bold text-gray-900 dark:text-white">Короткая история месяца</h3>
+                <h3 class="font-bold text-gray-900 dark:text-white">Короткая история {{.Data.CurrentPeriodGenitive}}</h3>
                 <p class="mt-1 text-sm text-gray-700 dark:text-gray-200">
-                    {{if .Data.SameMonthBenchmark.Available}}На фоне таких же месяцев архив говорит: {{.Data.SameMonthBenchmark.Verdict}}.{{else}}Архив таких же месяцев пока мал, поэтому смотрим на сезонный контекст и ближайшие недели.{{end}} Главный перелом — {{.Data.CurrentMonth.MaxRainDay.Date.Format "02.01"}}: {{printf "%.1f" .Data.CurrentMonth.MaxRainDay.Value}} мм за день, около {{.Data.RainiestDaySharePercent}}% месячной суммы.
+                    {{if .Data.SameMonthBenchmark.Available}}На фоне таких же {{if $.Data.IsSeason}}сезонов{{else}}месяцев{{end}} архив говорит: {{.Data.SameMonthBenchmark.Verdict}}.{{else}}Архив похожих периодов пока мал, поэтому смотрим на сезонный контекст и ближайшие недели.{{end}} Главный перелом — {{.Data.CurrentMonth.MaxRainDay.Date.Format "02.01"}}: {{printf "%.1f" .Data.CurrentMonth.MaxRainDay.Value}} мм за день, около {{.Data.RainiestDaySharePercent}}% суммы {{.Data.CurrentPeriodGenitive}}.
                 </p>
             </div>
         </div>
     </div>
     {{end}}
+    {{if not .Data.IsSeason}}
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6 transition-colors">
         <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-5">
             <div>
@@ -538,6 +583,7 @@
             {{end}}
         </div>
     </div>
+    {{end}}
 
     <!-- Timeline -->
     {{if .Data.Timeline}}
@@ -545,7 +591,7 @@
         <div class="flex items-start justify-between gap-4 mb-5">
             <div>
                 <div class="micro-label text-blue-600 dark:text-blue-300">Лента событий</div>
-                <h3 class="text-xl font-bold text-gray-900 dark:text-white">Что произошло в этом месяце</h3>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white">Что произошло в этом {{.Data.CurrentPeriodPreposition}}</h3>
                 <p class="text-sm text-gray-500 dark:text-gray-400">Ключевые погодные отметки в хронологическом порядке.</p>
             </div>
             <div class="text-3xl">🧾</div>
@@ -590,11 +636,11 @@
         {{end}}
     </div>
 
-    <!-- Month tops -->
+    <!-- Period tops -->
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6 transition-colors">
         <div class="flex items-center justify-between mb-5">
             <div>
-                <h3 class="text-xl font-bold text-gray-900 dark:text-white">Топы месяца</h3>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white">Топы {{.Data.CurrentPeriodGenitive}}</h3>
                 <p class="text-sm text-gray-500 dark:text-gray-400">Самые заметные дни по основным погодным параметрам.</p>
             </div>
             <div class="text-3xl">🏅</div>
@@ -781,7 +827,7 @@
                 labels: chartData.labels,
                 datasets: [
                     {
-                        label: 'Этот месяц',
+                        label: '{{if .Data.IsSeason}}Этот сезон{{else}}Этот месяц{{end}}',
                         data: chartData.current,
                         borderColor: 'rgb(37, 99, 235)',
                         backgroundColor: 'rgba(37, 99, 235, 0.12)',
@@ -802,7 +848,7 @@
                         spanGaps: false
                     },
                     {
-                        label: 'Прошлый месяц · справочно',
+                        label: 'Прошлый {{.Data.CurrentPeriodLabel}} · справочно',
                         data: chartData.previous,
                         borderColor: 'rgb(14, 165, 233)',
                         borderDash: [6, 5],

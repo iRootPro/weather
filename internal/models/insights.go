@@ -173,17 +173,33 @@ type NotableWeatherDay struct {
 	Score       int       `json:"score"`
 }
 
+// WeatherInsightsPeriodOption is one selectable month or season in the archive navigator.
+type WeatherInsightsPeriodOption struct {
+	Value string `json:"value"`
+	Label string `json:"label"`
+}
+
 // WeatherInsightsPage contains all data for the Insights web page.
 type WeatherInsightsPage struct {
 	GeneratedAt time.Time `json:"generated_at"`
 
-	SelectedMonthParam string `json:"selected_month_param"`
-	SelectedMonthLabel string `json:"selected_month_label"`
-	PreviousMonthParam string `json:"previous_month_param"`
-	NextMonthParam     string `json:"next_month_param"`
-	HasNextMonth       bool   `json:"has_next_month"`
-	IsCurrentMonth     bool   `json:"is_current_month"`
-	PeriodStatus       string `json:"period_status"`
+	IsSeason                 bool                          `json:"is_season"`
+	PeriodStatus             string                        `json:"period_status"`
+	SelectedMonthParam       string                        `json:"selected_month_param"`
+	SelectedMonthLabel       string                        `json:"selected_month_label"`
+	PreviousMonthParam       string                        `json:"previous_month_param"`
+	NextMonthParam           string                        `json:"next_month_param"`
+	HasNextMonth             bool                          `json:"has_next_month"`
+	IsCurrentMonth           bool                          `json:"is_current_month"`
+	SelectedSeasonParam      string                        `json:"selected_season_param"`
+	SelectedSeasonLabel      string                        `json:"selected_season_label"`
+	PreviousSeasonParam      string                        `json:"previous_season_param"`
+	NextSeasonParam          string                        `json:"next_season_param"`
+	HasNextSeason            bool                          `json:"has_next_season"`
+	SeasonOptions            []WeatherInsightsPeriodOption `json:"season_options"`
+	CurrentPeriodLabel       string                        `json:"current_period_label"`
+	CurrentPeriodGenitive    string                        `json:"current_period_genitive"`
+	CurrentPeriodPreposition string                        `json:"current_period_preposition"`
 
 	CurrentMonth       MonthlyWeatherInsights `json:"current_month"`
 	PreviousMonth      MonthlyWeatherInsights `json:"previous_month"`
@@ -194,11 +210,12 @@ type WeatherInsightsPage struct {
 	Last7Days          RollingWeatherPeriod    `json:"last_7_days"`
 	Last30Days         RollingWeatherPeriod    `json:"last_30_days"`
 
-	DayTypes        []WeatherDayTypeSummary `json:"day_types"`
-	DominantDayType WeatherDayTypeSummary   `json:"dominant_day_type"`
-	WindInsight     WeatherFactorInsight    `json:"wind_insight"`
-	UVInsight       WeatherFactorInsight    `json:"uv_insight"`
-	Timeline        []WeatherTimelineEvent  `json:"timeline"`
+	DayTypes        []WeatherDayTypeSummary  `json:"day_types"`
+	DominantDayType WeatherDayTypeSummary    `json:"dominant_day_type"`
+	WindInsight     WeatherFactorInsight     `json:"wind_insight"`
+	UVInsight       WeatherFactorInsight     `json:"uv_insight"`
+	Timeline        []WeatherTimelineEvent   `json:"timeline"`
+	SeasonMonths    []MonthlyWeatherInsights `json:"season_months"`
 
 	CurrentDryStreak  int       `json:"current_dry_streak"`
 	HasLastRain       bool      `json:"has_last_rain"`

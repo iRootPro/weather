@@ -35,6 +35,54 @@ func TestSeasonBounds(t *testing.T) {
 	}
 }
 
+func TestSeasonIDAndShift(t *testing.T) {
+	loc := time.FixedZone("test", 3*60*60)
+	start, end := seasonBoundsByID(2026, "winter", loc)
+	if got := start.Format("2006-01-02"); got != "2025-12-01" {
+		t.Fatalf("winter start = %s, want 2025-12-01", got)
+	}
+	if got := end.Format("2006-01-02"); got != "2026-03-01" {
+		t.Fatalf("winter end = %s, want 2026-03-01", got)
+	}
+	year, code := shiftSeasonID(2026, "winter", -1)
+	if year != 2025 || code != "autumn" {
+		t.Fatalf("previous winter season = %d-%s, want 2025-autumn", year, code)
+	}
+	year, code = shiftSeasonID(2026, "autumn", 1)
+	if year != 2027 || code != "winter" {
+		t.Fatalf("next autumn season = %d-%s, want 2027-winter", year, code)
+	}
+}
+
+func TestBuildSameSeasonBenchmarkUsesSeasonYear(t *testing.T) {
+	loc := time.FixedZone("test", 3*60*60)
+	current := models.MonthlyWeatherInsights{RainTotal: 90, RainDays: 9, AvgTemp: 3, DaysWithData: 90, DaysInPeriod: 90}
+	archive := make([]models.DailyWeatherInsight, 0)
+	for _, year := range []int{2024, 2025} {
+		start, _ := seasonBoundsByID(year, "winter", loc)
+		for offset := 0; offset < 90; offset++ {
+			value := float32(1)
+			archive = append(archive, models.DailyWeatherInsight{Date: start.AddDate(0, 0, offset), RainTotal: &value})
+		}
+	}
+	ignored := float32(50)
+	archive = append(archive, models.DailyWeatherInsight{Date: time.Date(2025, time.March, 1, 0, 0, 0, 0, loc), RainTotal: &ignored})
+
+	benchmark := buildSameSeasonBenchmark(current, archive, 2026, "winter", 90, loc)
+	if !benchmark.Available {
+		t.Fatal("benchmark should be available")
+	}
+	if benchmark.SampleSize != 2 {
+		t.Fatalf("sample size = %d, want 2", benchmark.SampleSize)
+	}
+	if benchmark.RainTotalAvg != 90 {
+		t.Fatalf("rain avg = %.1f, want 90.0", benchmark.RainTotalAvg)
+	}
+	if benchmark.RainRatioPercent != 100 {
+		t.Fatalf("rain ratio = %d, want 100", benchmark.RainRatioPercent)
+	}
+}
+
 func TestClassifyDayTypePriority(t *testing.T) {
 	rain := float32(15)
 	gust := float32(20)
