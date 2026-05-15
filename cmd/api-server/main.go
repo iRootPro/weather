@@ -142,6 +142,8 @@ func main() {
 	mux.HandleFunc("GET /records", webHandler.Records)
 	mux.HandleFunc("GET /insights", webHandler.Insights)
 	mux.HandleFunc("GET /insights/report", webHandler.InsightsReport)
+	mux.HandleFunc("GET /insights/report/story", webHandler.InsightsStory)
+	mux.HandleFunc("GET /insights/report/text", webHandler.InsightsText)
 	mux.HandleFunc("GET /help", webHandler.Help)
 	mux.HandleFunc("GET /gallery", webHandler.Gallery)
 

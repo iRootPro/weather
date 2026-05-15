@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>{{if .Data.IsSeason}}{{.Data.SelectedSeasonLabel}}{{else}}{{.Data.SelectedMonthLabel}}{{end}} — сторис</title>
+    <script src="/static/js/vendor/tailwind.min.js"></script>
+    <style>
+        html, body { margin: 0; min-height: 100%; background: #0f172a; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+        body { display: grid; place-items: center; padding: 16px; }
+        .story-wrap { width: min(100vw - 32px, 430px); aspect-ratio: 9 / 16; }
+        .story-card {
+            position: relative;
+            width: 100%; height: 100%; overflow: hidden; border-radius: 28px;
+            background:
+                radial-gradient(circle at 82% 10%, rgba(59, 130, 246, .45), transparent 28%),
+                radial-gradient(circle at 12% 92%, rgba(14, 165, 233, .36), transparent 28%),
+                linear-gradient(160deg, #eff6ff 0%, #ffffff 48%, #dbeafe 100%);
+            color: #0f172a; box-shadow: 0 24px 80px rgba(0,0,0,.35);
+        }
+        .story-card::before { content: ""; position: absolute; inset: 0; opacity: .38; background-image: linear-gradient(rgba(59,130,246,.16) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,.12) 1px, transparent 1px); background-size: 30px 30px; mask-image: radial-gradient(circle at 50% 22%, black, transparent 86%); }
+        .story-inner { position: relative; z-index: 1; height: 100%; padding: 7.5%; display: flex; flex-direction: column; }
+        .badge { display: inline-flex; width: fit-content; border-radius: 999px; background: rgba(37,99,235,.12); color: #1d4ed8; padding: 7px 12px; font-weight: 800; font-size: clamp(12px, 2.9vw, 15px); }
+        .title { margin-top: 18px; font-weight: 950; line-height: .98; font-size: clamp(38px, 11vw, 64px); letter-spacing: -0.055em; }
+        .lead { margin-top: 16px; font-size: clamp(14px, 3.4vw, 19px); line-height: 1.38; color: #334155; font-weight: 600; }
+        .metrics { margin-top: 24px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .metric { border: 1px solid rgba(191,219,254,.9); background: rgba(255,255,255,.74); border-radius: 18px; padding: 12px 8px; text-align: center; backdrop-filter: blur(8px); }
+        .metric .value { font-size: clamp(20px, 6vw, 34px); line-height: 1; font-weight: 950; }
+        .metric .label { margin-top: 5px; font-size: clamp(9px, 2.4vw, 12px); color: #64748b; font-weight: 700; }
+        .story-box { margin-top: 16px; border-radius: 22px; border: 1px solid rgba(191,219,254,.9); background: rgba(255,255,255,.72); padding: 16px; }
+        .story-box h3 { margin: 0 0 8px; font-size: clamp(15px, 4vw, 22px); font-weight: 950; }
+        .story-box p { margin: 0; color: #475569; font-size: clamp(12px, 3vw, 16px); line-height: 1.35; font-weight: 600; }
+        .bottom { margin-top: auto; display: flex; align-items: end; justify-content: space-between; gap: 16px; }
+        .domain { font-size: clamp(11px, 2.7vw, 15px); color: #1d4ed8; font-weight: 900; letter-spacing: .04em; }
+        .qr { width: clamp(58px, 15vw, 84px); aspect-ratio: 1; display: grid; place-items: center; border-radius: 18px; background: #0f172a; color: white; font-size: clamp(20px, 6vw, 34px); }
+        .actions { position: fixed; left: 16px; right: 16px; bottom: 16px; display: flex; justify-content: center; gap: 8px; }
+        .actions a { border-radius: 999px; background: rgba(255,255,255,.94); padding: 10px 14px; color: #0f172a; font-size: 13px; font-weight: 800; text-decoration: none; box-shadow: 0 8px 30px rgba(0,0,0,.22); }
+        @media (max-height: 760px) { .actions { display: none; } }
+        @media print { body { padding: 0; } .story-wrap { width: 1080px; height: 1920px; } .actions { display: none; } .story-card { border-radius: 0; box-shadow: none; } }
+    </style>
+</head>
+<body>
+    <main class="story-wrap" aria-label="Карточка погодного отчёта">
+        <article class="story-card">
+            <div class="story-inner">
+                <div class="badge">{{if .Data.IsSeason}}{{.Data.SelectedSeasonLabel}}{{else}}{{.Data.SelectedMonthLabel}}{{end}} · Армавир</div>
+                <h1 class="title">Погодный отчёт</h1>
+                <p class="lead">{{.Data.MainInsight.Text}}</p>
+
+                <div class="metrics">
+                    <div class="metric"><div class="value" style="color:#1d4ed8">{{printf "%.1f" .Data.CurrentMonth.RainTotal}}</div><div class="label">мм осадков</div></div>
+                    <div class="metric"><div class="value" style="color:#ea580c">{{printf "%.1f" .Data.CurrentMonth.AvgTemp}}°</div><div class="label">средняя</div></div>
+                    <div class="metric"><div class="value" style="color:#0891b2">{{.Data.CurrentMonth.RainDays}}</div><div class="label">дождей</div></div>
+                </div>
+
+                <div class="story-box">
+                    <h3>{{.Data.DominantDayType.Icon}} {{.Data.DominantDayType.Label}}</h3>
+                    <p>{{if .Data.CurrentMonth.MaxRainDay}}Главный дождь — {{.Data.CurrentMonth.MaxRainDay.Date.Format "02.01"}}: {{printf "%.1f" .Data.CurrentMonth.MaxRainDay.Value}} мм. {{end}}{{if .Data.SameMonthBenchmark.Available}}{{.Data.SameMonthBenchmark.Verdict}}.{{else}}Архивная норма ещё копится.{{end}}</p>
+                </div>
+
+                <div class="story-box">
+                    <h3>🚶 {{.Data.CurrentMonth.ComfortableDays}} комфортных дней</h3>
+                    <p>{{.Data.WindInsight.Advice}} {{.Data.UVInsight.Advice}}</p>
+                </div>
+
+                <div class="bottom">
+                    <div>
+                        <div class="domain">meteo.armavir.ru</div>
+                        <div style="margin-top:6px;color:#64748b;font-weight:700;font-size:clamp(10px,2.4vw,13px)">полный отчёт по ссылке</div>
+                    </div>
+                    <div class="qr">☁️</div>
+                </div>
+            </div>
+        </article>
+    </main>
+    <nav class="actions" aria-label="Действия">
+        <a href="{{if .Data.IsSeason}}/insights/report?period=season&season={{.Data.SelectedSeasonParam}}{{else}}/insights/report?month={{.Data.SelectedMonthParam}}{{end}}">Отчёт</a>
+        <a href="{{if .Data.IsSeason}}/insights/report/text?period=season&season={{.Data.SelectedSeasonParam}}{{else}}/insights/report/text?month={{.Data.SelectedMonthParam}}{{end}}">Текст</a>
+        <a href="{{if .Data.IsSeason}}/insights?period=season&season={{.Data.SelectedSeasonParam}}{{else}}/insights?month={{.Data.SelectedMonthParam}}{{end}}">Архив</a>
+    </nav>
+</body>
+</html>

@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net/http"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/iRootPro/weather/internal/models"
@@ -127,6 +128,15 @@ func (h *Handler) parseTemplate(name string) (*template.Template, error) {
 	return tmpl, nil
 }
 
+func (h *Handler) parseStandaloneTemplate(name string) (*template.Template, error) {
+	pagePath := filepath.Join(h.templatesDir, name)
+	tmpl, err := template.New(filepath.Base(pagePath)).Funcs(templateFuncs).ParseFiles(pagePath)
+	if err != nil {
+		return nil, err
+	}
+	return tmpl, nil
+}
+
 type PageData struct {
 	ActivePage string
 	Data       interface{}
@@ -208,16 +218,7 @@ func (h *Handler) Records(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) Insights(w http.ResponseWriter, r *http.Request) {
 	insights, err := h.getInsightsFromRequest(r)
 	if err != nil {
-		if errors.Is(err, service.ErrInvalidInsightSeason) {
-			http.Error(w, "Bad season format, expected YYYY-season", http.StatusBadRequest)
-			return
-		}
-		if errors.Is(err, errInvalidInsightMonth) {
-			http.Error(w, "Bad month format, expected YYYY-MM", http.StatusBadRequest)
-			return
-		}
-		slog.Error("failed to get weather insights", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		h.handleInsightsError(w, err, "failed to get weather insights")
 		return
 	}
 
@@ -243,16 +244,7 @@ func (h *Handler) Insights(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) InsightsReport(w http.ResponseWriter, r *http.Request) {
 	insights, err := h.getInsightsFromRequest(r)
 	if err != nil {
-		if errors.Is(err, service.ErrInvalidInsightSeason) {
-			http.Error(w, "Bad season format, expected YYYY-season", http.StatusBadRequest)
-			return
-		}
-		if errors.Is(err, errInvalidInsightMonth) {
-			http.Error(w, "Bad month format, expected YYYY-MM", http.StatusBadRequest)
-			return
-		}
-		slog.Error("failed to get weather insights report", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		h.handleInsightsError(w, err, "failed to get weather insights report")
 		return
 	}
 
@@ -272,6 +264,84 @@ func (h *Handler) InsightsReport(w http.ResponseWriter, r *http.Request) {
 		slog.Error("failed to render insights report", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
+}
+
+// InsightsStory renders a vertical 9:16 card suitable for screenshotting into stories.
+func (h *Handler) InsightsStory(w http.ResponseWriter, r *http.Request) {
+	insights, err := h.getInsightsFromRequest(r)
+	if err != nil {
+		h.handleInsightsError(w, err, "failed to get weather insights story")
+		return
+	}
+
+	tmpl, err := h.parseStandaloneTemplate("insights_story.html")
+	if err != nil {
+		slog.Error("failed to parse insights story template", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	if err := tmpl.Execute(w, PageData{ActivePage: "insights", Data: insights}); err != nil {
+		slog.Error("failed to render insights story", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}
+
+// InsightsText renders a ready-to-copy Telegram/social post text.
+func (h *Handler) InsightsText(w http.ResponseWriter, r *http.Request) {
+	insights, err := h.getInsightsFromRequest(r)
+	if err != nil {
+		h.handleInsightsError(w, err, "failed to get weather insights text")
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	_, _ = w.Write([]byte(buildInsightsShareText(insights)))
+}
+
+func (h *Handler) handleInsightsError(w http.ResponseWriter, err error, message string) {
+	if errors.Is(err, service.ErrInvalidInsightSeason) {
+		http.Error(w, "Bad season format, expected YYYY-season", http.StatusBadRequest)
+		return
+	}
+	if errors.Is(err, errInvalidInsightMonth) {
+		http.Error(w, "Bad month format, expected YYYY-MM", http.StatusBadRequest)
+		return
+	}
+	slog.Error(message, "error", err)
+	http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+}
+
+func buildInsightsShareText(insights *models.WeatherInsightsPage) string {
+	period := insights.SelectedMonthLabel
+	if insights.IsSeason {
+		period = insights.SelectedSeasonLabel
+	}
+	reportURL := "https://meteo.armavir.ru/insights/report?month=" + insights.SelectedMonthParam
+	if insights.IsSeason {
+		reportURL = "https://meteo.armavir.ru/insights/report?period=season&season=" + insights.SelectedSeasonParam
+	}
+
+	lines := []string{
+		fmt.Sprintf("%s в Армавире %s", period, insights.Season.Icon),
+		"",
+		insights.MainInsight.Text,
+		"",
+		fmt.Sprintf("🌧 Осадки: %.1f мм", insights.CurrentMonth.RainTotal),
+		fmt.Sprintf("🌡 Средняя температура: %.1f°C", insights.CurrentMonth.AvgTemp),
+		fmt.Sprintf("☔ Дождливых дней: %d", insights.CurrentMonth.RainDays),
+		fmt.Sprintf("🚶 Комфортных дней: %d из %d", insights.CurrentMonth.ComfortableDays, insights.CurrentMonth.DaysWithData),
+		fmt.Sprintf("🧬 Характер: %s %s", insights.DominantDayType.Icon, insights.DominantDayType.Label),
+	}
+	if insights.CurrentMonth.MaxRainDay != nil {
+		lines = append(lines, fmt.Sprintf("🏆 Главный дождь: %s — %.1f мм", insights.CurrentMonth.MaxRainDay.Date.Format("02.01"), insights.CurrentMonth.MaxRainDay.Value))
+	}
+	if insights.SameMonthBenchmark.Available {
+		lines = append(lines, fmt.Sprintf("📚 Архив: %s", insights.SameMonthBenchmark.Verdict))
+	}
+	lines = append(lines, "", "Полный отчёт:", reportURL)
+	return strings.Join(lines, "\n")
 }
 
 func (h *Handler) getInsightsFromRequest(r *http.Request) (*models.WeatherInsightsPage, error) {
