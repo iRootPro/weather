@@ -111,6 +111,38 @@ type RollingWeatherPeriod struct {
 	Verdict          string                 `json:"verdict"`
 }
 
+// WeatherDayTypeSummary describes the dominant character of days in the current month.
+type WeatherDayTypeSummary struct {
+	Code        string `json:"code"`
+	Label       string `json:"label"`
+	Icon        string `json:"icon"`
+	Count       int    `json:"count"`
+	Percent     int    `json:"percent"`
+	Description string `json:"description"`
+	Class       string `json:"class"`
+}
+
+// WeatherFactorInsight is a compact practical insight for one weather factor.
+type WeatherFactorInsight struct {
+	Icon       string `json:"icon"`
+	Title      string `json:"title"`
+	Value      string `json:"value"`
+	Detail     string `json:"detail"`
+	Advice     string `json:"advice"`
+	Level      string `json:"level"`
+	LevelLabel string `json:"level_label"`
+}
+
+// WeatherTimelineEvent is a notable event in the month.
+type WeatherTimelineEvent struct {
+	Date        time.Time `json:"date"`
+	Icon        string    `json:"icon"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	Category    string    `json:"category"`
+	Severity    int       `json:"severity"`
+}
+
 // CalendarWeatherDay is one cell in the monthly insight calendar.
 type CalendarWeatherDay struct {
 	Date     time.Time `json:"date"`
@@ -153,6 +185,12 @@ type WeatherInsightsPage struct {
 	SameMonthBenchmark WeatherArchiveBenchmark `json:"same_month_benchmark"`
 	Last7Days          RollingWeatherPeriod    `json:"last_7_days"`
 	Last30Days         RollingWeatherPeriod    `json:"last_30_days"`
+
+	DayTypes        []WeatherDayTypeSummary `json:"day_types"`
+	DominantDayType WeatherDayTypeSummary   `json:"dominant_day_type"`
+	WindInsight     WeatherFactorInsight    `json:"wind_insight"`
+	UVInsight       WeatherFactorInsight    `json:"uv_insight"`
+	Timeline        []WeatherTimelineEvent  `json:"timeline"`
 
 	CurrentDryStreak  int       `json:"current_dry_streak"`
 	HasLastRain       bool      `json:"has_last_rain"`

@@ -87,6 +87,10 @@ func (s *WeatherService) GetInsights(ctx context.Context) (*models.WeatherInsigh
 
 	mainInsight, stories := buildInsightStories(current, previous, previousSame, sameMonthBenchmark, last7Days, season, currentDryStreak, lastRainDate, hasLastRain)
 	bestDay, worstDay := findNotableDays(currentDays)
+	dayTypes, dominantDayType := buildDayTypeSummaries(currentDays)
+	windInsight := buildWindInsight(current)
+	uvInsight := buildUVInsight(currentDays, current)
+	timeline := buildTimelineEvents(current, currentDays, bestDay, worstDay)
 
 	page := &models.WeatherInsightsPage{
 		GeneratedAt:               now,
@@ -97,6 +101,11 @@ func (s *WeatherService) GetInsights(ctx context.Context) (*models.WeatherInsigh
 		SameMonthBenchmark:        sameMonthBenchmark,
 		Last7Days:                 last7Days,
 		Last30Days:                last30Days,
+		DayTypes:                  dayTypes,
+		DominantDayType:           dominantDayType,
+		WindInsight:               windInsight,
+		UVInsight:                 uvInsight,
+		Timeline:                  timeline,
 		CurrentDryStreak:          currentDryStreak,
 		HasLastRain:               hasLastRain,
 		MainInsight:               mainInsight,
@@ -447,6 +456,197 @@ func buildRainChartData(currentDays, previousDays, archiveDays []models.DailyWea
 		"current":  current,
 		"previous": previous,
 		"archive":  archive,
+	}
+}
+
+func buildDayTypeSummaries(days []models.DailyWeatherInsight) ([]models.WeatherDayTypeSummary, models.WeatherDayTypeSummary) {
+	defs := map[string]models.WeatherDayTypeSummary{
+		"storm":       {Code: "storm", Label: "ливневые", Icon: "🌧️", Description: "дни с сильным дождём", Class: "bg-blue-50 text-blue-800 dark:bg-blue-900/20 dark:text-blue-200"},
+		"windy":       {Code: "windy", Label: "ветреные", Icon: "💨", Description: "порывы заметно мешали", Class: "bg-teal-50 text-teal-800 dark:bg-teal-900/20 dark:text-teal-200"},
+		"hot":         {Code: "hot", Label: "жаркие", Icon: "🔥", Description: "максимум ≥30°C", Class: "bg-red-50 text-red-800 dark:bg-red-900/20 dark:text-red-200"},
+		"comfortable": {Code: "comfortable", Label: "комфортные", Icon: "🚶", Description: "сухо, умеренно тепло и без сильного ветра", Class: "bg-emerald-50 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-200"},
+		"sunny":       {Code: "sunny", Label: "солнечные", Icon: "☀️", Description: "яркие сухие дни", Class: "bg-yellow-50 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-200"},
+		"wet":         {Code: "wet", Label: "влажные", Icon: "💧", Description: "осадки без ливневого пика", Class: "bg-cyan-50 text-cyan-800 dark:bg-cyan-900/20 dark:text-cyan-200"},
+		"cloudy":      {Code: "cloudy", Label: "пасмурные", Icon: "☁️", Description: "мало солнечной радиации", Class: "bg-slate-50 text-slate-800 dark:bg-slate-700/40 dark:text-slate-200"},
+		"calm":        {Code: "calm", Label: "спокойные", Icon: "▫️", Description: "без яркого погодного акцента", Class: "bg-gray-50 text-gray-800 dark:bg-gray-700/40 dark:text-gray-200"},
+	}
+	order := []string{"storm", "windy", "hot", "comfortable", "sunny", "wet", "cloudy", "calm"}
+	counts := make(map[string]int, len(order))
+	for _, day := range days {
+		counts[classifyDayType(day)]++
+	}
+
+	result := make([]models.WeatherDayTypeSummary, 0, len(order))
+	dominant := defs["calm"]
+	for _, code := range order {
+		item := defs[code]
+		item.Count = counts[code]
+		item.Percent = clampPercent(ratioPercent(float64(item.Count), float64(maxInt(len(days), 1))))
+		if item.Count > 0 {
+			result = append(result, item)
+		}
+		if item.Count > dominant.Count {
+			dominant = item
+		}
+	}
+	return result, dominant
+}
+
+func classifyDayType(day models.DailyWeatherInsight) string {
+	rain := value32(day.RainTotal)
+	gust := value32(day.WindGustMax)
+	tempMax := value32(day.TempMax)
+	tempAvg := value32(day.TempAvg)
+	solar := value32(day.SolarRadiationMax)
+
+	switch {
+	case rain >= heavyRainThreshold:
+		return "storm"
+	case gust >= strongGustThreshold:
+		return "windy"
+	case tempMax >= hotDayTempThreshold:
+		return "hot"
+	case tempAvg >= 18 && tempAvg <= 26 && rain < wetDayRainThreshold && gust < 8:
+		return "comfortable"
+	case solar >= sunnySolarThreshold && rain < wetDayRainThreshold:
+		return "sunny"
+	case rain >= wetDayRainThreshold:
+		return "wet"
+	case day.SolarRadiationMax != nil && solar < cloudySolarThreshold:
+		return "cloudy"
+	default:
+		return "calm"
+	}
+}
+
+func buildWindInsight(current models.MonthlyWeatherInsights) models.WeatherFactorInsight {
+	insight := models.WeatherFactorInsight{
+		Icon:       "💨",
+		Title:      "Ветер",
+		Value:      fmt.Sprintf("%d", current.WindyDays),
+		Detail:     "ветреных дней",
+		Advice:     "Ветер почти не вмешивался в сценарий месяца.",
+		Level:      "low",
+		LevelLabel: "спокойно",
+	}
+	if current.MaxWindGustDay != nil {
+		insight.Detail = fmt.Sprintf("максимальный порыв %.1f м/с — %s", current.MaxWindGustDay.Value, formatInsightDate(current.MaxWindGustDay.Date))
+	}
+	if current.StrongWindDays > 0 {
+		insight.Value = fmt.Sprintf("%d", current.StrongWindDays)
+		insight.Advice = "Были дни, когда порывы уже могли мешать прогулкам, велосипеду и лёгким конструкциям."
+		insight.Level = "high"
+		insight.LevelLabel = "порывисто"
+	} else if current.WindyDays > 0 {
+		insight.Advice = "Ветер был заметен, но без частых сильных порывов."
+		insight.Level = "medium"
+		insight.LevelLabel = "заметно"
+	}
+	return insight
+}
+
+func buildUVInsight(days []models.DailyWeatherInsight, current models.MonthlyWeatherInsights) models.WeatherFactorInsight {
+	maxUV := 0.0
+	var maxUVDate time.Time
+	for _, day := range days {
+		uv := value32(day.UVIndexMax)
+		if day.UVIndexMax != nil && uv > maxUV {
+			maxUV = uv
+			maxUVDate = day.Date
+		}
+	}
+
+	insight := models.WeatherFactorInsight{
+		Icon:       "🕶️",
+		Title:      "UV и солнце",
+		Value:      fmt.Sprintf("%d", current.HighUVDays),
+		Detail:     "дней с высоким UV",
+		Advice:     "UV пока не был главным фактором месяца.",
+		Level:      "low",
+		LevelLabel: "мягко",
+	}
+	if !maxUVDate.IsZero() {
+		insight.Detail = fmt.Sprintf("максимум UV %.1f — %s", maxUV, formatInsightDate(maxUVDate))
+	}
+	if current.HighUVDays >= 5 {
+		insight.Advice = "Солнцезащита была практичной необходимостью: очки, крем и тень в середине дня."
+		insight.Level = "high"
+		insight.LevelLabel = "активно"
+	} else if current.HighUVDays > 0 || current.SunnyDays >= 5 {
+		insight.Advice = "Были яркие дни: для долгих прогулок лучше учитывать солнце, даже если температура комфортная."
+		insight.Level = "medium"
+		insight.LevelLabel = "ярко"
+	}
+	return insight
+}
+
+func buildTimelineEvents(current models.MonthlyWeatherInsights, days []models.DailyWeatherInsight, bestDay, worstDay *models.NotableWeatherDay) []models.WeatherTimelineEvent {
+	events := make([]models.WeatherTimelineEvent, 0, 8)
+	seen := make(map[string]bool)
+	add := func(date time.Time, icon, title, description, category string, severity int) {
+		if date.IsZero() {
+			return
+		}
+		key := fmt.Sprintf("%s:%s", date.Format("2006-01-02"), category)
+		if seen[key] {
+			return
+		}
+		seen[key] = true
+		events = append(events, models.WeatherTimelineEvent{Date: date, Icon: icon, Title: title, Description: description, Category: category, Severity: severity})
+	}
+
+	if current.MaxRainDay != nil {
+		add(current.MaxRainDay.Date, "🌧️", "Главный дождь", fmt.Sprintf("%.1f мм за день", current.MaxRainDay.Value), "rain", 90)
+	}
+	if current.MaxWindGustDay != nil {
+		add(current.MaxWindGustDay.Date, "💨", "Самый сильный порыв", fmt.Sprintf("%.1f м/с", current.MaxWindGustDay.Value), "wind", 75)
+	}
+	if current.MaxTempDay != nil {
+		add(current.MaxTempDay.Date, "🔥", "Самый жаркий день", fmt.Sprintf("%.1f°C", current.MaxTempDay.Value), "heat", 70)
+	}
+	if current.MinTempDay != nil {
+		add(current.MinTempDay.Date, "🧊", "Самая холодная ночь", fmt.Sprintf("%.1f°C", current.MinTempDay.Value), "cold", 65)
+	}
+	if current.SunniestDay != nil {
+		add(current.SunniestDay.Date, "☀️", "Самый солнечный день", fmt.Sprintf("%.0f Вт/м²", current.SunniestDay.Value), "sun", 55)
+	}
+	if maxUVDate, maxUV := maxUVDay(days); !maxUVDate.IsZero() {
+		add(maxUVDate, "🕶️", "Пик UV", fmt.Sprintf("UV %.1f", maxUV), "uv", 60)
+	}
+	if bestDay != nil {
+		add(bestDay.Date, bestDay.Icon, bestDay.Title, bestDay.Description, "best", bestDay.Score)
+	}
+	if worstDay != nil {
+		add(worstDay.Date, worstDay.Icon, worstDay.Title, worstDay.Description, "worst", 100-worstDay.Score)
+	}
+
+	sortTimelineEvents(events)
+	if len(events) > 7 {
+		return events[:7]
+	}
+	return events
+}
+
+func maxUVDay(days []models.DailyWeatherInsight) (time.Time, float64) {
+	maxUV := 0.0
+	var date time.Time
+	for _, day := range days {
+		uv := value32(day.UVIndexMax)
+		if day.UVIndexMax != nil && uv > maxUV {
+			maxUV = uv
+			date = day.Date
+		}
+	}
+	return date, maxUV
+}
+
+func sortTimelineEvents(events []models.WeatherTimelineEvent) {
+	for i := 0; i < len(events); i++ {
+		for j := i + 1; j < len(events); j++ {
+			if events[j].Date.Before(events[i].Date) {
+				events[i], events[j] = events[j], events[i]
+			}
+		}
 	}
 }
 
