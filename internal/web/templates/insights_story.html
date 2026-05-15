@@ -36,16 +36,14 @@
             height: 100%;
             overflow: hidden;
             color: var(--ink);
-            background: linear-gradient(180deg, var(--paper) 0%, #f8f6ef 70%, var(--paper-cold) 100%);
+            background: linear-gradient(180deg, #fbfaf5 0%, var(--paper) 72%, var(--paper-cold) 100%);
         }
         .story-card::before {
             content: "";
             position: absolute;
             inset: 0;
             pointer-events: none;
-            background:
-                linear-gradient(180deg, rgba(255,255,255,.42), transparent 24%),
-                radial-gradient(circle at 83% 7%, rgba(21,93,226,.055), transparent 26%);
+            background: radial-gradient(circle at 88% 4%, rgba(21,93,226,.045), transparent 24%);
         }
         .inner {
             position: relative;
@@ -94,66 +92,65 @@
 
         .rain-panel {
             margin-top: 14px;
-            padding: 13px 13px 12px;
-            border: 1px solid var(--line-strong);
-            border-left: 6px solid var(--blue);
-            background: var(--white);
+            padding: 15px 16px 14px;
+            background: linear-gradient(135deg, #155de2 0%, #0f69df 62%, #00a2c3 100%);
+            color: white;
+            box-shadow: inset 0 -1px rgba(255,255,255,.24), inset 0 1px rgba(255,255,255,.22);
         }
         .label { color: var(--muted); font-size: clamp(7px, 1.42vw, 8px); }
+        .rain-panel .label { color: rgba(255,255,255,.72); }
         .rain-row {
-            margin-top: 6px;
+            margin-top: 7px;
             display: flex;
             align-items: flex-end;
-            gap: 9px;
+            gap: 10px;
             min-width: 0;
         }
         .rain-value {
-            color: var(--blue);
-            font-size: clamp(72px, 17.5vw, 92px);
+            color: #fff;
+            font-size: clamp(70px, 17.1vw, 90px);
             line-height: .78;
             letter-spacing: -.075em;
             font-weight: 800;
             white-space: nowrap;
         }
         .rain-unit {
-            padding-bottom: 5px;
-            color: var(--cyan);
-            font-size: clamp(14px, 3vw, 16px);
-            line-height: 1.02;
+            padding-bottom: 6px;
+            color: rgba(225,250,255,.9);
+            font-size: clamp(13px, 2.9vw, 15px);
+            line-height: 1.05;
             font-weight: 800;
         }
         .rain-note {
-            margin-top: 9px;
-            color: var(--text);
+            margin-top: 10px;
+            color: rgba(255,255,255,.86);
             font-size: clamp(9px, 1.95vw, 11px);
             line-height: 1.25;
             font-weight: 700;
         }
-        .rain-note b { color: var(--orange); font-weight: 800; }
+        .rain-note b { color: #fff7d1; font-weight: 800; }
         .rain-line {
             margin-top: 10px;
-            width: 68%;
+            width: 64%;
             height: 4px;
-            background: linear-gradient(90deg, var(--blue), var(--cyan), transparent);
+            background: linear-gradient(90deg, #fff7d1, rgba(255,255,255,.74), transparent);
         }
 
         .metrics {
+            margin-top: 8px;
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 0;
-            border-left: 1px solid var(--line);
-            border-top: 1px solid var(--line);
-            background: rgba(255,255,255,.2);
+            gap: 8px;
         }
         .metric {
             padding: 9px 10px 8px;
-            border-right: 1px solid var(--line);
-            border-bottom: 1px solid var(--line);
+            background: rgba(255,255,255,.48);
+            border-top: 2px solid var(--line-strong);
         }
         .metric b {
             display: block;
             margin-top: 4px;
-            font-size: clamp(24px, 5.6vw, 32px);
+            font-size: clamp(23px, 5.3vw, 30px);
             line-height: .9;
             letter-spacing: -.045em;
             font-weight: 800;
@@ -163,23 +160,21 @@
         .metric .rain { color: var(--cyan); }
 
         .facts {
-            margin-top: 12px;
+            margin-top: 10px;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            border-left: 1px solid var(--line);
-            border-top: 1px solid var(--line);
+            gap: 8px;
         }
         .fact {
             min-height: 43px;
             padding: 8px 8px 7px;
-            border-right: 1px solid var(--line);
-            border-bottom: 1px solid var(--line);
-            background: rgba(255,255,255,.18);
+            background: rgba(255,255,255,.42);
+            border-top: 1px solid var(--line);
         }
         .fact b {
             display: block;
             color: var(--ink);
-            font-size: clamp(19px, 4.55vw, 25px);
+            font-size: clamp(19px, 4.5vw, 25px);
             line-height: .9;
             letter-spacing: -.04em;
             font-weight: 800;
@@ -197,8 +192,8 @@
         .good b { color: var(--blue); }
 
         .progress-box {
-            margin-top: 11px;
-            padding-top: 10px;
+            margin-top: 12px;
+            padding: 11px 0 0;
             border-top: 1px solid var(--line);
         }
         .progress-head {
@@ -223,8 +218,8 @@
 
         .verdict {
             margin-top: 12px;
-            padding: 10px 0 0 12px;
-            border-top: 1px solid var(--line);
+            padding: 11px 12px 10px;
+            background: rgba(255,255,255,.46);
             border-left: 4px solid var(--blue);
         }
         .verdict h2 {
