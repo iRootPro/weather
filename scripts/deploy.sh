@@ -45,18 +45,23 @@ $SSH_CMD "
 # Обновляем код
 echo -e "${GREEN}[3/5] Обновляю код из ${GIT_BRANCH:-main}...${NC}"
 $SSH_CMD "
+    set -e
     cd ${DEPLOY_PATH}
-    # Не stash'им untracked файлы: на сервере там могут быть большие backups/,
-    # которые иначе попадают в .git и быстро забивают диск.
-    STASH_BEFORE=\$(git rev-parse -q --verify refs/stash || true)
-    git stash push -m deploy-auto-stash || true
-    STASH_AFTER=\$(git rev-parse -q --verify refs/stash || true)
+
+    # Серверный репозиторий должен соответствовать origin/${GIT_BRANCH:-main}.
+    # .env, backups/ и photos/ живут вне git и сохраняются.
+    # Остальной мусор (например AppleDouble ._* после ручного копирования) чистим,
+    # иначе новые tracked-файлы могут блокировать git pull/reset.
+    git clean -fd \
+        -e .env \
+        -e '.env.bak*' \
+        -e backup-prepare.sh \
+        -e backups/ \
+        -e photos/
+
     git fetch origin
     git checkout ${GIT_BRANCH:-main}
-    git pull origin ${GIT_BRANCH:-main}
-    if [ -n \"\$STASH_AFTER\" ] && [ \"\$STASH_AFTER\" != \"\$STASH_BEFORE\" ]; then
-        git stash pop || true
-    fi
+    git reset --hard origin/${GIT_BRANCH:-main}
 "
 
 # Проверяем .env
