@@ -72,7 +72,7 @@
 
                 <h1 class="title">{{if .Data.IsSeason}}{{.Data.SelectedSeasonLabel}}{{else}}{{.Data.SelectedMonthLabel}}{{end}} <span>в цифрах</span></h1>
                 <p class="lead">
-                    {{if .Data.IsSeason}}За сезон{{else}}За выбранный период{{end}} накопилось {{printf "%.1f" .Data.CurrentMonth.RainTotal}} мм осадков: {{.Data.CurrentMonth.RainDays}} дождливых дней, средняя температура {{printf "%.1f" .Data.CurrentMonth.AvgTemp}}°. {{if .Data.CurrentMonth.MaxRainDay}}Пик дождя — {{.Data.CurrentMonth.MaxRainDay.Date.Format "02.01"}}.{{end}}
+                    {{if .Data.IsSeason}}За сезон{{else}}За месяц{{end}} накопилось {{printf "%.1f" .Data.CurrentMonth.RainTotal}} мм осадков; дней с дождём — {{.Data.CurrentMonth.RainDays}}, средняя температура {{printf "%.1f" .Data.CurrentMonth.AvgTemp}}°. {{if .Data.CurrentMonth.MaxRainDay}}Пик дождя — {{.Data.CurrentMonth.MaxRainDay.Date.Format "02.01"}}.{{end}}
                 </p>
 
                 <div class="hero-metrics" aria-label="Главные показатели">

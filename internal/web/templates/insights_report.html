@@ -3,10 +3,10 @@
 {{define "title"}}{{if .Data.IsSeason}}{{.Data.SelectedSeasonLabel}}{{else}}{{.Data.SelectedMonthLabel}}{{end}} — погодный отчёт Армавира{{end}}
 
 {{define "head_extra"}}
-<meta name="description" content="{{if .Data.IsSeason}}За сезон{{else}}За выбранный период{{end}} накопилось {{printf "%.1f" .Data.CurrentMonth.RainTotal}} мм осадков: {{.Data.CurrentMonth.RainDays}} дождливых дней, средняя температура {{printf "%.1f" .Data.CurrentMonth.AvgTemp}}°.">
+<meta name="description" content="{{if .Data.IsSeason}}За сезон{{else}}За месяц{{end}} накопилось {{printf "%.1f" .Data.CurrentMonth.RainTotal}} мм осадков; дней с дождём — {{.Data.CurrentMonth.RainDays}}, средняя температура {{printf "%.1f" .Data.CurrentMonth.AvgTemp}}°.">
 <meta property="og:type" content="article">
 <meta property="og:title" content="{{if .Data.IsSeason}}{{.Data.SelectedSeasonLabel}}{{else}}{{.Data.SelectedMonthLabel}}{{end}} — погодный отчёт Армавира">
-<meta property="og:description" content="{{if .Data.IsSeason}}За сезон{{else}}За выбранный период{{end}} накопилось {{printf "%.1f" .Data.CurrentMonth.RainTotal}} мм осадков: {{.Data.CurrentMonth.RainDays}} дождливых дней, средняя температура {{printf "%.1f" .Data.CurrentMonth.AvgTemp}}°.">
+<meta property="og:description" content="{{if .Data.IsSeason}}За сезон{{else}}За месяц{{end}} накопилось {{printf "%.1f" .Data.CurrentMonth.RainTotal}} мм осадков; дней с дождём — {{.Data.CurrentMonth.RainDays}}, средняя температура {{printf "%.1f" .Data.CurrentMonth.AvgTemp}}°.">
 <meta property="og:site_name" content="Метеостанция Армавир">
 <meta property="og:url" content="https://meteo.armavir.ru/insights/report{{if .Data.IsSeason}}?period=season&amp;season={{.Data.SelectedSeasonParam}}{{else}}?month={{.Data.SelectedMonthParam}}{{end}}">
 <meta name="twitter:card" content="summary_large_image">
@@ -58,7 +58,7 @@
                     {{if .Data.IsSeason}}{{.Data.SelectedSeasonLabel}}{{else}}{{.Data.SelectedMonthLabel}}{{end}} в Армавире
                 </h2>
                 <p class="mt-4 max-w-3xl text-lg leading-relaxed text-gray-700 dark:text-gray-200">
-                    {{if .Data.IsSeason}}За сезон{{else}}За выбранный период{{end}} накопилось {{printf "%.1f" .Data.CurrentMonth.RainTotal}} мм осадков: {{.Data.CurrentMonth.RainDays}} дождливых дней, средняя температура {{printf "%.1f" .Data.CurrentMonth.AvgTemp}}°C. {{if .Data.CurrentMonth.MaxRainDay}}Самый сильный дождь — {{.Data.CurrentMonth.MaxRainDay.Date.Format "02.01"}}: {{printf "%.1f" .Data.CurrentMonth.MaxRainDay.Value}} мм.{{end}}
+                    {{if .Data.IsSeason}}За сезон{{else}}За месяц{{end}} накопилось {{printf "%.1f" .Data.CurrentMonth.RainTotal}} мм осадков; дней с дождём — {{.Data.CurrentMonth.RainDays}}, средняя температура {{printf "%.1f" .Data.CurrentMonth.AvgTemp}}°C. {{if .Data.CurrentMonth.MaxRainDay}}Самый сильный дождь — {{.Data.CurrentMonth.MaxRainDay.Date.Format "02.01"}}: {{printf "%.1f" .Data.CurrentMonth.MaxRainDay.Value}} мм.{{end}}
                 </p>
             </div>
             <div class="report-mark rounded-xl p-5 dark:border-blue-900/60">
