@@ -1221,6 +1221,7 @@ func buildInsightStories(current, previous, previousSame models.MonthlyWeatherIn
 	}
 
 	periodNoun := trimGenitivePeriod(periodGenitive)
+	periodInstrumental := periodInstrumental(periodGenitive)
 	if benchmark.Available && math.Abs(float64(benchmark.RainDeltaPercent)) >= 25 {
 		icon := "💧"
 		title := fmt.Sprintf("%s влажнее сезонной нормы", capitalize(periodNoun))
@@ -1237,7 +1238,7 @@ func buildInsightStories(current, previous, previousSame models.MonthlyWeatherIn
 		main = models.WeatherInsightStory{
 			Icon:  "🌧️",
 			Title: "Последняя неделя резко влажнее",
-			Text:  fmt.Sprintf("За последние 7 дней выпало %.1f мм против %.1f мм неделей ранее. Это лучше отражает текущую погоду, чем сравнение с прошлым %s.", last7.Current.RainTotal, last7.Previous.RainTotal, periodNoun),
+			Text:  fmt.Sprintf("За последние 7 дней выпало %.1f мм против %.1f мм неделей ранее. Это лучше отражает текущую погоду, чем сравнение с прошлым %s.", last7.Current.RainTotal, last7.Previous.RainTotal, periodInstrumental),
 		}
 	} else if current.RainTotal > previousSame.RainTotal {
 		main = models.WeatherInsightStory{
@@ -1789,6 +1790,13 @@ func trimGenitivePeriod(period string) string {
 		return "сезон"
 	}
 	return "месяц"
+}
+
+func periodInstrumental(period string) string {
+	if period == "сезона" {
+		return "сезоном"
+	}
+	return "месяцем"
 }
 
 func minTime(a, b time.Time) time.Time {
