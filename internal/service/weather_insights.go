@@ -301,7 +301,6 @@ func buildInsightStories(current, previous, previousSame models.MonthlyWeatherIn
 		}
 	}
 
-	stories = append(stories, main)
 	stories = append(stories, models.WeatherInsightStory{
 		Icon:  "🗓️",
 		Title: "Честное сравнение к той же дате",
@@ -379,14 +378,14 @@ func comfortScore(day models.DailyWeatherInsight) int {
 	uv := value32(day.UVIndexMax)
 
 	if day.TempAvg != nil {
-		score -= int(math.Abs(tempAvg-22) * 4)
+		score -= int(math.Abs(tempAvg-22) * 2)
 	}
-	score -= int(math.Min(rain*3, 45))
+	score -= int(math.Min(rain*1.5, 30))
 	if gust > 6 {
-		score -= int((gust - 6) * 3)
+		score -= int((gust - 6) * 2)
 	}
 	if uv > 7 {
-		score -= int((uv - 7) * 4)
+		score -= int((uv - 7) * 3)
 	}
 	return maxInt(0, minInt(100, score))
 }
