@@ -61,18 +61,25 @@ func (s *WeatherService) GetInsights(ctx context.Context) (*models.WeatherInsigh
 	bestDay, worstDay := findNotableDays(currentDays)
 
 	page := &models.WeatherInsightsPage{
-		GeneratedAt:        now,
-		CurrentMonth:       current,
-		PreviousMonth:      previous,
-		PreviousSamePeriod: previousSame,
-		CurrentDryStreak:   currentDryStreak,
-		HasLastRain:        hasLastRain,
-		MainInsight:        mainInsight,
-		Stories:            stories,
-		Calendar:           buildCalendar(currentStart, currentEnd, currentDays, now, loc),
-		RainChartData:      buildRainChartData(currentDays, previousDays, daysBetween(currentStart, currentEnd), daysBetween(previousStart, previousEnd), now.Day()),
-		BestDay:            bestDay,
-		WorstDay:           worstDay,
+		GeneratedAt:               now,
+		CurrentMonth:              current,
+		PreviousMonth:             previous,
+		PreviousSamePeriod:        previousSame,
+		CurrentDryStreak:          currentDryStreak,
+		HasLastRain:               hasLastRain,
+		MainInsight:               mainInsight,
+		Stories:                   stories,
+		MonthProgressPercent:      clampPercent(float64(now.Day()) / float64(daysBetween(currentStart, currentEnd)) * 100),
+		RainVsPreviousSamePercent: clampPercent(ratioPercent(current.RainTotal, previousSame.RainTotal)),
+		RainVsPreviousFullPercent: clampPercent(ratioPercent(current.RainTotal, previous.RainTotal)),
+		RainiestDaySharePercent:   rainiestSharePercent(current),
+		ComfortPercent:            clampPercent(ratioPercent(float64(current.ComfortableDays), float64(maxInt(current.DaysWithData, 1)))),
+		SunnyPercent:              clampPercent(ratioPercent(float64(current.SunnyDays), float64(maxInt(current.DaysWithData, 1)))),
+		RainDaysPercent:           clampPercent(ratioPercent(float64(current.RainDays), float64(maxInt(current.DaysWithData, 1)))),
+		Calendar:                  buildCalendar(currentStart, currentEnd, currentDays, now, loc),
+		RainChartData:             buildRainChartData(currentDays, previousDays, daysBetween(currentStart, currentEnd), daysBetween(previousStart, previousEnd), now.Day()),
+		BestDay:                   bestDay,
+		WorstDay:                  worstDay,
 	}
 	if hasLastRain {
 		page.LastRainDate = lastRainDate
@@ -484,6 +491,33 @@ func dayStart(t time.Time, loc *time.Location) time.Time {
 
 func sameDay(a, b time.Time) bool {
 	return a.Year() == b.Year() && a.Month() == b.Month() && a.Day() == b.Day()
+}
+
+func ratioPercent(value, baseline float64) float64 {
+	if baseline <= 0 {
+		if value > 0 {
+			return 100
+		}
+		return 0
+	}
+	return value / baseline * 100
+}
+
+func clampPercent(value float64) int {
+	if value < 0 {
+		return 0
+	}
+	if value > 100 {
+		return 100
+	}
+	return int(math.Round(value))
+}
+
+func rainiestSharePercent(month models.MonthlyWeatherInsights) int {
+	if month.MaxRainDay == nil || month.RainTotal <= 0 {
+		return 0
+	}
+	return clampPercent(month.MaxRainDay.Value / month.RainTotal * 100)
 }
 
 func formatInsightDate(t time.Time) string {

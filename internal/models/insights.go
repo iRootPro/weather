@@ -117,6 +117,14 @@ type WeatherInsightsPage struct {
 	MainInsight WeatherInsightStory   `json:"main_insight"`
 	Stories     []WeatherInsightStory `json:"stories"`
 
+	MonthProgressPercent      int `json:"month_progress_percent"`
+	RainVsPreviousSamePercent int `json:"rain_vs_previous_same_percent"`
+	RainVsPreviousFullPercent int `json:"rain_vs_previous_full_percent"`
+	RainiestDaySharePercent   int `json:"rainiest_day_share_percent"`
+	ComfortPercent            int `json:"comfort_percent"`
+	SunnyPercent              int `json:"sunny_percent"`
+	RainDaysPercent           int `json:"rain_days_percent"`
+
 	Calendar      []CalendarWeatherDay   `json:"calendar"`
 	RainChartData map[string]interface{} `json:"rain_chart_data"`
 	BestDay       *NotableWeatherDay     `json:"best_day,omitempty"`
