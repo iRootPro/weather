@@ -194,6 +194,18 @@ type WeatherInsightsArchiveCard struct {
 	DominantType WeatherDayTypeSummary `json:"dominant_type"`
 }
 
+// WeatherComparisonCard is a compact explanation of how the selected period differs from a baseline.
+type WeatherComparisonCard struct {
+	Title             string `json:"title"`
+	Subtitle          string `json:"subtitle"`
+	Icon              string `json:"icon"`
+	Tone              string `json:"tone"`
+	RainDeltaText     string `json:"rain_delta_text"`
+	TempDeltaText     string `json:"temp_delta_text"`
+	RainDaysDeltaText string `json:"rain_days_delta_text"`
+	Verdict           string `json:"verdict"`
+}
+
 // WeatherInsightsPage contains all data for the Insights web page.
 type WeatherInsightsPage struct {
 	GeneratedAt time.Time `json:"generated_at"`
@@ -213,6 +225,7 @@ type WeatherInsightsPage struct {
 	HasNextSeason            bool                          `json:"has_next_season"`
 	SeasonOptions            []WeatherInsightsPeriodOption `json:"season_options"`
 	ArchiveCards             []WeatherInsightsArchiveCard  `json:"archive_cards"`
+	ComparisonCards          []WeatherComparisonCard       `json:"comparison_cards"`
 	CurrentPeriodLabel       string                        `json:"current_period_label"`
 	CurrentPeriodGenitive    string                        `json:"current_period_genitive"`
 	CurrentPeriodPreposition string                        `json:"current_period_preposition"`

@@ -105,6 +105,13 @@ func (s *WeatherService) GetInsightsForMonth(ctx context.Context, month time.Tim
 	previousCompareDays := minInt(daysInSelectedPeriod, daysBetween(previousStart, previousEnd))
 	previousSameEnd := previousStart.AddDate(0, 0, previousCompareDays)
 	previousSameDays := filterDaysBefore(previousDays, previousSameEnd)
+	previousYearStart := currentStart.AddDate(-1, 0, 0)
+	previousYearDaysCount := minInt(daysInSelectedPeriod, daysBetween(previousYearStart, previousYearStart.AddDate(0, 1, 0)))
+	previousYearEnd := previousYearStart.AddDate(0, 0, previousYearDaysCount)
+	previousYearDays, err := s.repo.GetDailyInsights(ctx, previousYearStart, previousYearEnd, s.timezone)
+	if err != nil {
+		return nil, err
+	}
 
 	selectedMonthLabel := russianMonthYear(currentStart)
 	currentTitle := selectedMonthLabel
@@ -114,6 +121,7 @@ func (s *WeatherService) GetInsightsForMonth(ctx context.Context, month time.Tim
 	current := buildMonthlyInsights(currentTitle, currentStart, periodEnd, currentDays, daysInSelectedPeriod)
 	previous := buildMonthlyInsights("Прошлый месяц · справочно", previousStart, previousEnd.Add(-time.Nanosecond), previousDays, daysBetween(previousStart, previousEnd))
 	previousSame := buildMonthlyInsights(fmt.Sprintf("Прошлый месяц к %d числу", previousCompareDays), previousStart, previousSameEnd.Add(-time.Nanosecond), previousSameDays, previousCompareDays)
+	previousYear := buildMonthlyInsights("Год назад", previousYearStart, previousYearEnd.Add(-time.Nanosecond), previousYearDays, previousYearDaysCount)
 	seasonCurrent := buildMonthlyInsights("Текущий сезон", seasonStart, seasonPeriodEnd, seasonDays, maxInt(1, daysBetween(seasonStart, seasonPeriodEnd)))
 	season := buildSeasonContext(analysisDate, seasonStart, seasonEnd, seasonCurrent)
 	selectedSeasonYear, selectedSeasonCode := seasonIDFromStart(seasonStart)
@@ -143,6 +151,7 @@ func (s *WeatherService) GetInsightsForMonth(ctx context.Context, month time.Tim
 	if err != nil {
 		return nil, err
 	}
+	comparisonCards := buildComparisonCards(current, previous, previousSame, previousYear, sameMonthBenchmark, last7Days, last30Days, "месяц", "месяца")
 
 	page := &models.WeatherInsightsPage{
 		GeneratedAt:               now,
@@ -156,6 +165,7 @@ func (s *WeatherService) GetInsightsForMonth(ctx context.Context, month time.Tim
 		SelectedSeasonLabel:       seasonLabel(selectedSeasonYear, selectedSeasonCode),
 		SeasonOptions:             buildSeasonOptions(actualSeasonYear, actualSeasonCode),
 		ArchiveCards:              archiveCards,
+		ComparisonCards:           comparisonCards,
 		PreviousMonthParam:        currentStart.AddDate(0, -1, 0).Format("2006-01"),
 		NextMonthParam:            currentStart.AddDate(0, 1, 0).Format("2006-01"),
 		HasNextMonth:              currentStart.Before(actualCurrentStart),
@@ -268,6 +278,13 @@ func (s *WeatherService) GetInsightsForSeason(ctx context.Context, seasonParam s
 		}
 		archiveDays = append(archiveDays, days...)
 	}
+	previousYearStart, previousYearFullEnd := seasonBoundsByID(selectedYear-1, selectedCode, loc)
+	previousYearDaysCount := minInt(daysInSelectedPeriod, daysBetween(previousYearStart, previousYearFullEnd))
+	previousYearEnd := previousYearStart.AddDate(0, 0, previousYearDaysCount)
+	previousYearDays, err := s.repo.GetDailyInsights(ctx, previousYearStart, previousYearEnd, s.timezone)
+	if err != nil {
+		return nil, err
+	}
 
 	selectedSeasonLabel := seasonLabel(selectedYear, selectedCode)
 	currentTitle := selectedSeasonLabel
@@ -277,6 +294,7 @@ func (s *WeatherService) GetInsightsForSeason(ctx context.Context, seasonParam s
 	current := buildMonthlyInsights(currentTitle, currentStart, periodEnd, currentDays, daysInSelectedPeriod)
 	previous := buildMonthlyInsights("Прошлый сезон · справочно", previousStart, previousEnd.Add(-time.Nanosecond), previousDays, daysBetween(previousStart, previousEnd))
 	previousSame := buildMonthlyInsights(fmt.Sprintf("Прошлый сезон к %d дню", previousCompareDays), previousStart, previousSameEnd.Add(-time.Nanosecond), previousSameDays, previousCompareDays)
+	previousYearSame := buildMonthlyInsights("Год назад", previousYearStart, previousYearEnd.Add(-time.Nanosecond), previousYearDays, previousYearDaysCount)
 	season := buildSeasonContext(analysisDate, currentStart, currentEnd, current)
 	benchmark := buildSameSeasonBenchmark(current, archiveDays, selectedYear, selectedCode, daysInSelectedPeriod, loc)
 	last7Title := "Последние 7 дней"
@@ -306,6 +324,7 @@ func (s *WeatherService) GetInsightsForSeason(ctx context.Context, seasonParam s
 	if err != nil {
 		return nil, err
 	}
+	comparisonCards := buildComparisonCards(current, previous, previousSame, previousYearSame, benchmark, last7Days, last30Days, "сезон", "сезона")
 
 	page := &models.WeatherInsightsPage{
 		GeneratedAt:               now,
@@ -326,6 +345,7 @@ func (s *WeatherService) GetInsightsForSeason(ctx context.Context, seasonParam s
 		HasNextSeason:             nextStart.Before(actualCurrentStart) || nextStart.Equal(actualCurrentStart),
 		SeasonOptions:             ensureSeasonOption(buildSeasonOptions(actualCurrentID, actualCurrentCode), selectedYear, selectedCode),
 		ArchiveCards:              archiveCards,
+		ComparisonCards:           comparisonCards,
 		PeriodStatus:              insightPeriodStatus(isCurrentSeason, true),
 		CurrentMonth:              current,
 		PreviousMonth:             previous,
@@ -454,6 +474,128 @@ func (s *WeatherService) buildArchiveCards(ctx context.Context, now time.Time, l
 		})
 	}
 	return cards, nil
+}
+
+func buildComparisonCards(current, previous, previousSame, previousYear models.MonthlyWeatherInsights, benchmark models.WeatherArchiveBenchmark, last7, last30 models.RollingWeatherPeriod, periodLabel, periodGenitive string) []models.WeatherComparisonCard {
+	cards := []models.WeatherComparisonCard{
+		buildPeriodComparisonCard(
+			fmt.Sprintf("Предыдущий %s", periodLabel),
+			"полный период рядом в архиве",
+			"↩️",
+			current,
+			previous,
+		),
+		buildPeriodComparisonCard(
+			"Та же точка прошлого периода",
+			fmt.Sprintf("честнее для незавершённого %s", periodGenitive),
+			"⏱️",
+			current,
+			previousSame,
+		),
+		buildPeriodComparisonCard(
+			"Год назад",
+			fmt.Sprintf("тот же %s в прошлом году", periodLabel),
+			"🕰️",
+			current,
+			previousYear,
+		),
+		buildRollingComparisonCard("Последние 7 дней", "короткий погодный сдвиг", "🔎", last7),
+		buildRollingComparisonCard("Последние 30 дней", "длиннее, но без сезонной ошибки", "📉", last30),
+	}
+	if benchmark.Available {
+		cards = append([]models.WeatherComparisonCard{buildBenchmarkComparisonCard(benchmark)}, cards...)
+	}
+	return cards
+}
+
+func buildPeriodComparisonCard(title, subtitle, icon string, current, baseline models.MonthlyWeatherInsights) models.WeatherComparisonCard {
+	rainDelta := current.RainTotal - baseline.RainTotal
+	tempDelta := current.AvgTemp - baseline.AvgTemp
+	rainDaysDelta := current.RainDays - baseline.RainDays
+	return models.WeatherComparisonCard{
+		Title:             title,
+		Subtitle:          subtitle,
+		Icon:              icon,
+		Tone:              comparisonTone(rainDelta, tempDelta),
+		RainDeltaText:     formatSignedFloat(rainDelta, 1, " мм"),
+		TempDeltaText:     formatSignedFloat(tempDelta, 1, "°C"),
+		RainDaysDeltaText: formatSignedInt(rainDaysDelta, " дн."),
+		Verdict:           comparisonVerdict(rainDelta, tempDelta),
+	}
+}
+
+func buildRollingComparisonCard(title, subtitle, icon string, period models.RollingWeatherPeriod) models.WeatherComparisonCard {
+	card := buildPeriodComparisonCard(title, subtitle, icon, period.Current, period.Previous)
+	card.Verdict = period.Verdict
+	return card
+}
+
+func buildBenchmarkComparisonCard(benchmark models.WeatherArchiveBenchmark) models.WeatherComparisonCard {
+	rainDelta := benchmark.RainDeltaPercent
+	tone := "neutral"
+	if rainDelta >= 15 {
+		tone = "wet"
+	} else if rainDelta <= -15 {
+		tone = "dry"
+	}
+	return models.WeatherComparisonCard{
+		Title:             "Архивная норма",
+		Subtitle:          benchmark.Subtitle,
+		Icon:              "📚",
+		Tone:              tone,
+		RainDeltaText:     formatSignedInt(rainDelta, "%"),
+		TempDeltaText:     formatSignedFloat(benchmark.TempDelta, 1, "°C"),
+		RainDaysDeltaText: formatApproxFloat(benchmark.RainDaysAvg, 1, " дн. обычно"),
+		Verdict:           benchmark.Verdict,
+	}
+}
+
+func comparisonTone(rainDelta, tempDelta float64) string {
+	switch {
+	case rainDelta >= 5:
+		return "wet"
+	case rainDelta <= -5:
+		return "dry"
+	case tempDelta >= 1.5:
+		return "warm"
+	case tempDelta <= -1.5:
+		return "cold"
+	default:
+		return "neutral"
+	}
+}
+
+func comparisonVerdict(rainDelta, tempDelta float64) string {
+	rainPart := "по осадкам почти без сдвига"
+	if rainDelta >= 5 {
+		rainPart = "влажнее"
+	} else if rainDelta <= -5 {
+		rainPart = "суше"
+	}
+	tempPart := "температура близка"
+	if tempDelta >= 1.5 {
+		tempPart = "теплее"
+	} else if tempDelta <= -1.5 {
+		tempPart = "холоднее"
+	}
+	if rainPart == "по осадкам почти без сдвига" && tempPart == "температура близка" {
+		return "Периоды очень похожи: без яркого перелома по дождю и температуре."
+	}
+	return fmt.Sprintf("Сейчас %s, %s.", rainPart, tempPart)
+}
+
+func formatSignedFloat(value float64, precision int, suffix string) string {
+	format := fmt.Sprintf("%%+.%df%%s", precision)
+	return fmt.Sprintf(format, value, suffix)
+}
+
+func formatApproxFloat(value float64, precision int, suffix string) string {
+	format := fmt.Sprintf("≈%%.%df%%s", precision)
+	return fmt.Sprintf(format, value, suffix)
+}
+
+func formatSignedInt(value int, suffix string) string {
+	return fmt.Sprintf("%+d%s", value, suffix)
 }
 
 func buildMonthlyInsights(title string, start, end time.Time, days []models.DailyWeatherInsight, daysInPeriod int) models.MonthlyWeatherInsights {
