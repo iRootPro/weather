@@ -42,7 +42,7 @@
     <div class="flex flex-wrap items-center justify-between gap-3">
         <div class="flex flex-wrap gap-2">
             <a href="{{if .Data.IsSeason}}/insights?period=season&season={{.Data.SelectedSeasonParam}}{{else}}/insights?month={{.Data.SelectedMonthParam}}{{end}}" class="rounded-lg bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-gray-200 hover:bg-blue-50 dark:bg-gray-800 dark:text-gray-200 dark:ring-gray-700">← Полный архив</a>
-            <a href="{{if .Data.IsSeason}}/insights/report/story?period=season&season={{.Data.SelectedSeasonParam}}{{else}}/insights/report/story?month={{.Data.SelectedMonthParam}}{{end}}" class="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700">Сторис 9:16</a>
+            <a href="{{if .Data.IsSeason}}/insights/report/story?period=season&season={{.Data.SelectedSeasonParam}}{{else}}/insights/report/story?month={{.Data.SelectedMonthParam}}{{end}}" class="rounded-lg bg-white px-3 py-2 text-sm font-semibold text-blue-700 shadow-sm ring-1 ring-blue-100 hover:bg-blue-50 dark:bg-gray-800 dark:text-blue-200 dark:ring-blue-900/60">Открыть сторис 9:16</a>
             <a href="{{if .Data.IsSeason}}/insights/report/text?period=season&season={{.Data.SelectedSeasonParam}}{{else}}/insights/report/text?month={{.Data.SelectedMonthParam}}{{end}}" class="rounded-lg bg-white px-3 py-2 text-sm font-semibold text-blue-700 shadow-sm ring-1 ring-blue-100 hover:bg-blue-50 dark:bg-gray-800 dark:text-blue-200 dark:ring-blue-900/60">Текст поста</a>
         </div>
         <div class="text-xs text-gray-500 dark:text-gray-400">Публичный отчёт · обновлено {{.Data.GeneratedAt.Format "02.01.2006 15:04"}}</div>
