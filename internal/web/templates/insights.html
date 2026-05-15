@@ -184,6 +184,7 @@
                         {{if not .Data.IsCurrentMonth}}
                         <a href="/insights?period=season" class="rounded-lg bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700 ring-1 ring-emerald-100 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-200 dark:ring-emerald-900/60">Текущий сезон</a>
                         {{end}}
+                        <a href="/insights/report?period=season&season={{.Data.SelectedSeasonParam}}" class="rounded-lg bg-white/80 px-3 py-2 text-sm font-semibold text-blue-700 ring-1 ring-blue-100 hover:bg-blue-50 dark:bg-gray-900/30 dark:text-blue-200 dark:ring-blue-900/60">Поделиться отчётом</a>
                     </form>
                     {{else}}
                     <form method="get" action="/insights" class="flex flex-wrap items-center gap-2">
@@ -196,6 +197,7 @@
                         {{if not .Data.IsCurrentMonth}}
                         <a href="/insights" class="rounded-lg bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700 ring-1 ring-emerald-100 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-200 dark:ring-emerald-900/60">Текущий месяц</a>
                         {{end}}
+                        <a href="/insights/report?month={{.Data.SelectedMonthParam}}" class="rounded-lg bg-white/80 px-3 py-2 text-sm font-semibold text-blue-700 ring-1 ring-blue-100 hover:bg-blue-50 dark:bg-gray-900/30 dark:text-blue-200 dark:ring-blue-900/60">Поделиться отчётом</a>
                     </form>
                     {{end}}
                 </div>

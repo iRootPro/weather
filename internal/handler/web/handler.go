@@ -41,6 +41,8 @@ func NewHandler(templatesDir string, weatherService *service.WeatherService, sun
 	}, nil
 }
 
+var errInvalidInsightMonth = errors.New("invalid insight month")
+
 var templateFuncs = template.FuncMap{
 	"russianDate": func(t time.Time, format string) string {
 		months := []string{"", "января", "февраля", "марта", "апреля", "мая", "июня",
@@ -204,27 +206,16 @@ func (h *Handler) Records(w http.ResponseWriter, r *http.Request) {
 
 // Insights renders the human-friendly analytics page
 func (h *Handler) Insights(w http.ResponseWriter, r *http.Request) {
-	var insights *models.WeatherInsightsPage
-	var err error
-	if r.URL.Query().Get("period") == "season" {
-		insights, err = h.weatherService.GetInsightsForSeason(r.Context(), r.URL.Query().Get("season"))
+	insights, err := h.getInsightsFromRequest(r)
+	if err != nil {
 		if errors.Is(err, service.ErrInvalidInsightSeason) {
 			http.Error(w, "Bad season format, expected YYYY-season", http.StatusBadRequest)
 			return
 		}
-	} else {
-		var selectedMonth time.Time
-		if monthParam := r.URL.Query().Get("month"); monthParam != "" {
-			parsed, parseErr := time.Parse("2006-01", monthParam)
-			if parseErr != nil {
-				http.Error(w, "Bad month format, expected YYYY-MM", http.StatusBadRequest)
-				return
-			}
-			selectedMonth = parsed
+		if errors.Is(err, errInvalidInsightMonth) {
+			http.Error(w, "Bad month format, expected YYYY-MM", http.StatusBadRequest)
+			return
 		}
-		insights, err = h.weatherService.GetInsightsForMonth(r.Context(), selectedMonth)
-	}
-	if err != nil {
 		slog.Error("failed to get weather insights", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
@@ -246,6 +237,61 @@ func (h *Handler) Insights(w http.ResponseWriter, r *http.Request) {
 		slog.Error("failed to render insights", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
+}
+
+// InsightsReport renders a public share-friendly weather report.
+func (h *Handler) InsightsReport(w http.ResponseWriter, r *http.Request) {
+	insights, err := h.getInsightsFromRequest(r)
+	if err != nil {
+		if errors.Is(err, service.ErrInvalidInsightSeason) {
+			http.Error(w, "Bad season format, expected YYYY-season", http.StatusBadRequest)
+			return
+		}
+		if errors.Is(err, errInvalidInsightMonth) {
+			http.Error(w, "Bad month format, expected YYYY-MM", http.StatusBadRequest)
+			return
+		}
+		slog.Error("failed to get weather insights report", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	tmpl, err := h.parseTemplate("insights_report.html")
+	if err != nil {
+		slog.Error("failed to parse insights report template", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	data := PageData{
+		ActivePage: "insights",
+		Data:       insights,
+	}
+
+	if err := tmpl.Execute(w, data); err != nil {
+		slog.Error("failed to render insights report", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}
+
+func (h *Handler) getInsightsFromRequest(r *http.Request) (*models.WeatherInsightsPage, error) {
+	if r.URL.Query().Get("period") == "season" {
+		insights, err := h.weatherService.GetInsightsForSeason(r.Context(), r.URL.Query().Get("season"))
+		if errors.Is(err, service.ErrInvalidInsightSeason) {
+			return nil, err
+		}
+		return insights, err
+	}
+
+	var selectedMonth time.Time
+	if monthParam := r.URL.Query().Get("month"); monthParam != "" {
+		parsed, err := time.Parse("2006-01", monthParam)
+		if err != nil {
+			return nil, errInvalidInsightMonth
+		}
+		selectedMonth = parsed
+	}
+	return h.weatherService.GetInsightsForMonth(r.Context(), selectedMonth)
 }
 
 // Help renders the help/reference page
