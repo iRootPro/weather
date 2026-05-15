@@ -19,18 +19,34 @@
             color: #0f172a; box-shadow: 0 24px 80px rgba(0,0,0,.35);
         }
         .story-card::before { content: ""; position: absolute; inset: 0; opacity: .38; background-image: linear-gradient(rgba(59,130,246,.16) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,.12) 1px, transparent 1px); background-size: 30px 30px; mask-image: radial-gradient(circle at 50% 22%, black, transparent 86%); }
-        .story-inner { position: relative; z-index: 1; height: 100%; padding: 6.5%; display: flex; flex-direction: column; }
-        .badge { display: inline-flex; width: fit-content; border-radius: 999px; background: rgba(37,99,235,.12); color: #1d4ed8; padding: 7px 12px; font-weight: 800; font-size: clamp(12px, 2.9vw, 15px); }
-        .title { margin-top: 14px; font-weight: 950; line-height: .98; font-size: clamp(34px, 9.5vw, 54px); letter-spacing: -0.055em; }
-        .lead { margin-top: 12px; font-size: clamp(13px, 3vw, 16px); line-height: 1.32; color: #334155; font-weight: 650; }
-        .metrics { margin-top: 18px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-        .metric { border: 1px solid rgba(191,219,254,.9); background: rgba(255,255,255,.74); border-radius: 18px; padding: 10px 7px; text-align: center; backdrop-filter: blur(8px); }
-        .metric .value { font-size: clamp(20px, 5.6vw, 31px); line-height: 1; font-weight: 950; }
-        .metric .label { margin-top: 5px; font-size: clamp(9px, 2.4vw, 12px); color: #64748b; font-weight: 700; }
-        .story-box { margin-top: 12px; border-radius: 22px; border: 1px solid rgba(191,219,254,.9); background: rgba(255,255,255,.72); padding: 13px; }
-        .story-box h3 { margin: 0 0 7px; font-size: clamp(15px, 3.6vw, 19px); font-weight: 950; }
-        .story-box p { margin: 0; color: #475569; font-size: clamp(12px, 2.8vw, 14px); line-height: 1.3; font-weight: 650; }
-        .bottom { margin-top: auto; display: flex; align-items: end; justify-content: space-between; gap: 16px; }
+        .story-inner { position: relative; z-index: 1; height: 100%; padding: 5.9%; display: flex; flex-direction: column; }
+        .badge { display: inline-flex; width: fit-content; border-radius: 999px; background: rgba(37,99,235,.12); color: #1d4ed8; padding: 6px 11px; font-weight: 850; font-size: clamp(11px, 2.7vw, 14px); }
+        .title { margin-top: 12px; font-weight: 950; line-height: .95; font-size: clamp(31px, 8.7vw, 48px); letter-spacing: -0.055em; }
+        .lead { margin-top: 10px; font-size: clamp(12px, 2.72vw, 14px); line-height: 1.28; color: #334155; font-weight: 700; }
+        .metrics { margin-top: 14px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+        .metric { border: 1px solid rgba(191,219,254,.9); background: rgba(255,255,255,.76); border-radius: 17px; padding: 9px 6px; text-align: center; backdrop-filter: blur(8px); }
+        .metric .value { font-size: clamp(19px, 5.2vw, 29px); line-height: 1; font-weight: 950; }
+        .metric .label { margin-top: 4px; font-size: clamp(8px, 2.1vw, 11px); color: #64748b; font-weight: 800; }
+        .fact-grid { margin-top: 10px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+        .fact { min-height: 54px; border: 1px solid rgba(191,219,254,.82); border-radius: 15px; background: rgba(255,255,255,.6); padding: 8px 8px 7px; }
+        .fact b { display: block; color: #0f172a; font-size: clamp(13px, 3.1vw, 17px); line-height: 1.05; font-weight: 950; }
+        .fact span { display: block; margin-top: 4px; color: #64748b; font-size: clamp(8px, 2vw, 10px); line-height: 1.15; font-weight: 800; text-transform: uppercase; letter-spacing: .035em; }
+        .strip { margin-top: 10px; border-radius: 18px; border: 1px solid rgba(191,219,254,.86); background: rgba(255,255,255,.72); padding: 11px 12px; }
+        .strip-title { display:flex; align-items:center; justify-content:space-between; gap:8px; font-size: clamp(12px, 2.75vw, 14px); color:#64748b; font-weight:900; letter-spacing:.08em; text-transform:uppercase; }
+        .progress { margin-top: 8px; width: 100%; height: 8px; border: 0; border-radius: 999px; overflow: hidden; background: rgba(191,219,254,.65); }
+        .progress::-webkit-progress-bar { background: rgba(191,219,254,.65); border-radius: 999px; }
+        .progress::-webkit-progress-value { background: linear-gradient(90deg,#2563eb,#38bdf8); border-radius: 999px; }
+        .progress::-moz-progress-bar { background: linear-gradient(90deg,#2563eb,#38bdf8); border-radius: 999px; }
+        .type-row { margin-top: 9px; display:flex; flex-wrap:wrap; gap:6px; }
+        .type-pill { border-radius:999px; background: rgba(15,23,42,.06); color:#334155; padding:5px 8px; font-size: clamp(9px,2.05vw,11px); font-weight:850; }
+        .event-list { margin-top: 10px; display: grid; gap: 6px; }
+        .event { display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:7px; border-radius: 14px; background: rgba(255,255,255,.62); border: 1px solid rgba(226,232,240,.9); padding: 7px 9px; }
+        .event strong { font-size: clamp(10px,2.35vw,12px); line-height:1.15; }
+        .event small { color:#64748b; font-weight:800; font-size: clamp(9px,2vw,10px); }
+        .story-box { margin-top: 10px; border-radius: 19px; border: 1px solid rgba(191,219,254,.9); background: rgba(255,255,255,.72); padding: 11px 12px; }
+        .story-box h3 { margin: 0 0 6px; font-size: clamp(14px, 3.3vw, 18px); font-weight: 950; }
+        .story-box p { margin: 0; color: #475569; font-size: clamp(11px, 2.55vw, 13px); line-height: 1.26; font-weight: 700; }
+        .bottom { margin-top: auto; display: flex; align-items: end; justify-content: space-between; gap: 16px; padding-top: 9px; }
         .domain { font-size: clamp(11px, 2.7vw, 15px); color: #1d4ed8; font-weight: 900; letter-spacing: .04em; }
         .qr { width: clamp(48px, 12vw, 64px); aspect-ratio: 1; display: grid; place-items: center; border-radius: 16px; background: #0f172a; color: white; font-size: clamp(20px, 5vw, 30px); }
         @media (min-width: 520px) { body { padding: 16px; } .story-card { border-radius: 28px; } }
@@ -51,15 +67,35 @@
                     <div class="metric"><div class="value" style="color:#0891b2">{{.Data.CurrentMonth.RainDays}}</div><div class="label">дождей</div></div>
                 </div>
 
-                <div class="story-box">
-                    <h3>{{.Data.DominantDayType.Icon}} {{.Data.DominantDayType.Label}}</h3>
-                    <p>{{if .Data.CurrentMonth.MaxRainDay}}Главный дождь — {{.Data.CurrentMonth.MaxRainDay.Date.Format "02.01"}}: {{printf "%.1f" .Data.CurrentMonth.MaxRainDay.Value}} мм. {{end}}{{if .Data.SameMonthBenchmark.Available}}{{.Data.SameMonthBenchmark.Verdict}}.{{else}}Архивная норма ещё копится.{{end}}</p>
+                <div class="fact-grid" aria-label="Дополнительные показатели">
+                    <div class="fact"><b>{{.Data.CurrentMonth.WetDays}}</b><span>мокрых дней</span></div>
+                    <div class="fact"><b>{{.Data.CurrentMonth.DryDays}}</b><span>сухих дней</span></div>
+                    <div class="fact"><b>{{.Data.CurrentMonth.SunnyDays}}</b><span>солнечных</span></div>
+                    <div class="fact"><b>{{if .Data.CurrentMonth.MaxRainDay}}{{printf "%.1f" .Data.CurrentMonth.MaxRainDay.Value}} мм{{else}}—{{end}}</b><span>пик дождя</span></div>
+                    <div class="fact"><b>{{if .Data.CurrentMonth.MaxWindGustDay}}{{printf "%.1f" .Data.CurrentMonth.MaxWindGustDay.Value}} м/с{{else}}—{{end}}</b><span>порыв</span></div>
+                    <div class="fact"><b>{{.Data.CurrentMonth.HighUVDays}}</b><span>UV-дней</span></div>
+                </div>
+
+                <div class="strip">
+                    <div class="strip-title"><span>{{if .Data.IsSeason}}Ход сезона{{else}}Ход месяца{{end}}</span><span>{{if .Data.IsSeason}}{{.Data.Season.ProgressPercent}}{{else}}{{.Data.MonthProgressPercent}}{{end}}%</span></div>
+                    <progress class="progress" value="{{if .Data.IsSeason}}{{.Data.Season.ProgressPercent}}{{else}}{{.Data.MonthProgressPercent}}{{end}}" max="100"></progress>
+                    <div class="type-row">
+                        {{range $i, $type := .Data.DayTypes}}{{if lt $i 4}}<span class="type-pill">{{$type.Icon}} {{$type.Count}} {{$type.Label}}</span>{{end}}{{end}}
+                    </div>
                 </div>
 
                 <div class="story-box">
-                    <h3>🚶 {{.Data.CurrentMonth.ComfortableDays}} комфортных дней</h3>
-                    <p>Ветер: {{.Data.WindInsight.LevelLabel}}. Солнце/UV: {{.Data.UVInsight.LevelLabel}}.</p>
+                    <h3>{{.Data.DominantDayType.Icon}} {{.Data.DominantDayType.Label}} · 🚶 {{.Data.CurrentMonth.ComfortableDays}} комфортных</h3>
+                    <p>{{if .Data.CurrentMonth.MaxRainDay}}Главный дождь — {{.Data.CurrentMonth.MaxRainDay.Date.Format "02.01"}}: {{printf "%.1f" .Data.CurrentMonth.MaxRainDay.Value}} мм. {{end}}Ветер: {{.Data.WindInsight.LevelLabel}}. UV: {{.Data.UVInsight.LevelLabel}}.</p>
                 </div>
+
+                {{if .Data.Timeline}}
+                <div class="event-list" aria-label="Ключевые события">
+                    {{range $i, $event := .Data.Timeline}}{{if lt $i 2}}
+                    <div class="event"><span>{{$event.Icon}}</span><strong>{{$event.Title}}</strong><small>{{$event.Date.Format "02.01"}}</small></div>
+                    {{end}}{{end}}
+                </div>
+                {{end}}
 
                 <div class="bottom">
                     <div>
