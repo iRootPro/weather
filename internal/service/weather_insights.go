@@ -51,10 +51,15 @@ func (s *WeatherService) GetInsights(ctx context.Context) (*models.WeatherInsigh
 		return nil, err
 	}
 
-	archiveStart := currentStart.AddDate(-10, 0, 0)
-	archiveDays, err := s.repo.GetDailyInsights(ctx, archiveStart, currentStart, s.timezone)
-	if err != nil {
-		return nil, err
+	archiveDays := make([]models.DailyWeatherInsight, 0, 366)
+	for year := now.Year() - 10; year < now.Year(); year++ {
+		archiveMonthStart := time.Date(year, now.Month(), 1, 0, 0, 0, 0, loc)
+		archiveMonthEnd := archiveMonthStart.AddDate(0, 1, 0)
+		days, err := s.repo.GetDailyInsights(ctx, archiveMonthStart, archiveMonthEnd, s.timezone)
+		if err != nil {
+			return nil, err
+		}
+		archiveDays = append(archiveDays, days...)
 	}
 
 	seasonStart, seasonEnd := seasonBounds(now, loc)
