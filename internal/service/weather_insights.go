@@ -139,6 +139,10 @@ func (s *WeatherService) GetInsightsForMonth(ctx context.Context, month time.Tim
 	windInsight := buildWindInsight(current)
 	uvInsight := buildUVInsight(currentDays, current)
 	timeline := buildTimelineEvents(current, currentDays, bestDay, worstDay)
+	archiveCards, err := s.buildArchiveCards(ctx, now, loc)
+	if err != nil {
+		return nil, err
+	}
 
 	page := &models.WeatherInsightsPage{
 		GeneratedAt:               now,
@@ -151,6 +155,7 @@ func (s *WeatherService) GetInsightsForMonth(ctx context.Context, month time.Tim
 		SelectedSeasonParam:       formatSeasonParam(selectedSeasonYear, selectedSeasonCode),
 		SelectedSeasonLabel:       seasonLabel(selectedSeasonYear, selectedSeasonCode),
 		SeasonOptions:             buildSeasonOptions(actualSeasonYear, actualSeasonCode),
+		ArchiveCards:              archiveCards,
 		PreviousMonthParam:        currentStart.AddDate(0, -1, 0).Format("2006-01"),
 		NextMonthParam:            currentStart.AddDate(0, 1, 0).Format("2006-01"),
 		HasNextMonth:              currentStart.Before(actualCurrentStart),
@@ -297,6 +302,10 @@ func (s *WeatherService) GetInsightsForSeason(ctx context.Context, seasonParam s
 	previousSeasonParam := formatSeasonParam(previousYear, previousCode)
 	nextYear, nextCode := shiftSeasonID(selectedYear, selectedCode, 1)
 	nextStart, _ := seasonBoundsByID(nextYear, nextCode, loc)
+	archiveCards, err := s.buildArchiveCards(ctx, now, loc)
+	if err != nil {
+		return nil, err
+	}
 
 	page := &models.WeatherInsightsPage{
 		GeneratedAt:               now,
@@ -316,6 +325,7 @@ func (s *WeatherService) GetInsightsForSeason(ctx context.Context, seasonParam s
 		NextSeasonParam:           formatSeasonParam(nextYear, nextCode),
 		HasNextSeason:             nextStart.Before(actualCurrentStart) || nextStart.Equal(actualCurrentStart),
 		SeasonOptions:             ensureSeasonOption(buildSeasonOptions(actualCurrentID, actualCurrentCode), selectedYear, selectedCode),
+		ArchiveCards:              archiveCards,
 		PeriodStatus:              insightPeriodStatus(isCurrentSeason, true),
 		CurrentMonth:              current,
 		PreviousMonth:             previous,
@@ -352,6 +362,98 @@ func (s *WeatherService) GetInsightsForSeason(ctx context.Context, seasonParam s
 	}
 
 	return page, nil
+}
+
+func (s *WeatherService) buildArchiveCards(ctx context.Context, now time.Time, loc *time.Location) ([]models.WeatherInsightsArchiveCard, error) {
+	currentMonthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, loc)
+	previousMonthStart := currentMonthStart.AddDate(0, -1, 0)
+	previousMonthEnd := currentMonthStart
+
+	currentSeasonStart, _ := seasonBounds(now, loc)
+	currentSeasonYear, currentSeasonCode := seasonIDFromStart(currentSeasonStart)
+	previousSeasonYear, previousSeasonCode := shiftSeasonID(currentSeasonYear, currentSeasonCode, -1)
+	previousSeasonStart, previousSeasonEnd := seasonBoundsByID(previousSeasonYear, previousSeasonCode, loc)
+
+	requests := []struct {
+		title        string
+		subtitle     string
+		href         string
+		periodType   string
+		status       string
+		icon         string
+		start        time.Time
+		end          time.Time
+		daysInPeriod int
+	}{
+		{
+			title:        russianMonthYear(currentMonthStart),
+			subtitle:     "Текущий месяц",
+			href:         fmt.Sprintf("/insights?month=%s", currentMonthStart.Format("2006-01")),
+			periodType:   "month",
+			status:       "в процессе",
+			icon:         "📅",
+			start:        currentMonthStart,
+			end:          now,
+			daysInPeriod: maxInt(1, now.Day()),
+		},
+		{
+			title:        seasonLabel(currentSeasonYear, currentSeasonCode),
+			subtitle:     "Текущий сезон",
+			href:         fmt.Sprintf("/insights?period=season&season=%s", formatSeasonParam(currentSeasonYear, currentSeasonCode)),
+			periodType:   "season",
+			status:       "в процессе",
+			icon:         seasonIconByCode(currentSeasonCode),
+			start:        currentSeasonStart,
+			end:          now,
+			daysInPeriod: maxInt(1, daysBetween(currentSeasonStart, dayStart(now, loc).AddDate(0, 0, 1))),
+		},
+		{
+			title:        russianMonthYear(previousMonthStart),
+			subtitle:     "Прошлый месяц",
+			href:         fmt.Sprintf("/insights?month=%s", previousMonthStart.Format("2006-01")),
+			periodType:   "month",
+			status:       "готовый отчёт",
+			icon:         "🗓️",
+			start:        previousMonthStart,
+			end:          previousMonthEnd,
+			daysInPeriod: daysBetween(previousMonthStart, previousMonthEnd),
+		},
+		{
+			title:        seasonLabel(previousSeasonYear, previousSeasonCode),
+			subtitle:     "Прошлый сезон",
+			href:         fmt.Sprintf("/insights?period=season&season=%s", formatSeasonParam(previousSeasonYear, previousSeasonCode)),
+			periodType:   "season",
+			status:       "готовый отчёт",
+			icon:         seasonIconByCode(previousSeasonCode),
+			start:        previousSeasonStart,
+			end:          previousSeasonEnd,
+			daysInPeriod: daysBetween(previousSeasonStart, previousSeasonEnd),
+		},
+	}
+
+	cards := make([]models.WeatherInsightsArchiveCard, 0, len(requests))
+	for _, request := range requests {
+		days, err := s.repo.GetDailyInsights(ctx, request.start, request.end, s.timezone)
+		if err != nil {
+			return nil, err
+		}
+		summary := buildMonthlyInsights(request.title, request.start, request.end, days, request.daysInPeriod)
+		_, dominant := buildDayTypeSummaries(days)
+		cards = append(cards, models.WeatherInsightsArchiveCard{
+			Title:        request.title,
+			Subtitle:     request.subtitle,
+			Href:         request.href,
+			PeriodType:   request.periodType,
+			Status:       request.status,
+			Icon:         request.icon,
+			RainTotal:    summary.RainTotal,
+			AvgTemp:      summary.AvgTemp,
+			RainDays:     summary.RainDays,
+			DaysWithData: summary.DaysWithData,
+			DominantType: dominant,
+		})
+	}
+	return cards, nil
 }
 
 func buildMonthlyInsights(title string, start, end time.Time, days []models.DailyWeatherInsight, daysInPeriod int) models.MonthlyWeatherInsights {
@@ -1422,6 +1524,19 @@ func seasonNameByCode(code string) string {
 		return "лето"
 	default:
 		return "осень"
+	}
+}
+
+func seasonIconByCode(code string) string {
+	switch code {
+	case "winter":
+		return "❄️"
+	case "spring":
+		return "🌱"
+	case "summer":
+		return "☀️"
+	default:
+		return "🍂"
 	}
 }
 

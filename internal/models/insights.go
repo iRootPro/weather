@@ -179,6 +179,21 @@ type WeatherInsightsPeriodOption struct {
 	Label string `json:"label"`
 }
 
+// WeatherInsightsArchiveCard is a compact entry point into a month or season report.
+type WeatherInsightsArchiveCard struct {
+	Title        string                `json:"title"`
+	Subtitle     string                `json:"subtitle"`
+	Href         string                `json:"href"`
+	PeriodType   string                `json:"period_type"`
+	Status       string                `json:"status"`
+	Icon         string                `json:"icon"`
+	RainTotal    float64               `json:"rain_total"`
+	AvgTemp      float64               `json:"avg_temp"`
+	RainDays     int                   `json:"rain_days"`
+	DaysWithData int                   `json:"days_with_data"`
+	DominantType WeatherDayTypeSummary `json:"dominant_type"`
+}
+
 // WeatherInsightsPage contains all data for the Insights web page.
 type WeatherInsightsPage struct {
 	GeneratedAt time.Time `json:"generated_at"`
@@ -197,6 +212,7 @@ type WeatherInsightsPage struct {
 	NextSeasonParam          string                        `json:"next_season_param"`
 	HasNextSeason            bool                          `json:"has_next_season"`
 	SeasonOptions            []WeatherInsightsPeriodOption `json:"season_options"`
+	ArchiveCards             []WeatherInsightsArchiveCard  `json:"archive_cards"`
 	CurrentPeriodLabel       string                        `json:"current_period_label"`
 	CurrentPeriodGenitive    string                        `json:"current_period_genitive"`
 	CurrentPeriodPreposition string                        `json:"current_period_preposition"`
