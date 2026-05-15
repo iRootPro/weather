@@ -6,91 +6,108 @@
     <title>{{if .Data.IsSeason}}{{.Data.SelectedSeasonLabel}}{{else}}{{.Data.SelectedMonthLabel}}{{end}} — сторис</title>
     <script src="/static/js/vendor/tailwind.min.js"></script>
     <style>
-        html, body { margin: 0; min-height: 100%; background: #0f172a; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-        body { display: grid; place-items: center; padding: 0; }
+        @import url('https://fonts.googleapis.com/css2?family=Onest:wght@500..900&family=Unbounded:wght@700..900&display=swap');
+        :root { --ink:#111827; --muted:#64748b; --line:rgba(147,197,253,.72); --blue:#1d4ed8; --cyan:#0891b2; --orange:#ea580c; }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; min-height: 100%; background: #0f172a; }
+        body { display: grid; place-items: center; padding: 0; font-family: Onest, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-variant-numeric: tabular-nums; }
         .story-wrap { width: min(100vw, 430px); aspect-ratio: 9 / 16; }
         .story-card {
-            position: relative;
-            width: 100%; height: 100%; overflow: hidden; border-radius: 0;
+            position: relative; width: 100%; height: 100%; overflow: hidden; color: var(--ink); border-radius: 0;
             background:
-                radial-gradient(circle at 82% 10%, rgba(59, 130, 246, .45), transparent 28%),
-                radial-gradient(circle at 12% 92%, rgba(14, 165, 233, .36), transparent 28%),
-                linear-gradient(160deg, #eff6ff 0%, #ffffff 48%, #dbeafe 100%);
-            color: #0f172a; box-shadow: 0 24px 80px rgba(0,0,0,.35);
+                radial-gradient(circle at 83% 8%, rgba(37,99,235,.25), transparent 30%),
+                radial-gradient(circle at 5% 86%, rgba(14,165,233,.30), transparent 32%),
+                linear-gradient(168deg, #f8fbff 0%, #eef6ff 42%, #dff1ff 68%, #c4e6fb 100%);
+            box-shadow: 0 24px 80px rgba(0,0,0,.35);
         }
-        .story-card::before { content: ""; position: absolute; inset: 0; opacity: .38; background-image: linear-gradient(rgba(59,130,246,.16) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,.12) 1px, transparent 1px); background-size: 30px 30px; mask-image: radial-gradient(circle at 50% 22%, black, transparent 86%); }
-        .story-inner { position: relative; z-index: 1; height: 100%; padding: 5.2%; display: flex; flex-direction: column; }
-        .badge { display: inline-flex; width: fit-content; border-radius: 999px; background: rgba(37,99,235,.12); color: #1d4ed8; padding: 5px 10px; font-weight: 850; font-size: clamp(10px, 2.45vw, 13px); }
-        .title { margin-top: 9px; font-weight: 950; line-height: .94; font-size: clamp(28px, 7.8vw, 43px); letter-spacing: -0.055em; }
-        .lead { margin-top: 8px; font-size: clamp(11px, 2.45vw, 13px); line-height: 1.22; color: #334155; font-weight: 700; }
-        .metrics { margin-top: 11px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-        .metric { border: 1px solid rgba(191,219,254,.9); background: rgba(255,255,255,.76); border-radius: 15px; padding: 7px 5px; text-align: center; backdrop-filter: blur(8px); }
-        .metric .value { font-size: clamp(18px, 4.8vw, 26px); line-height: 1; font-weight: 950; }
-        .metric .label { margin-top: 3px; font-size: clamp(8px, 1.95vw, 10px); color: #64748b; font-weight: 800; }
-        .fact-grid { margin-top: 8px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-        .fact { min-height: 46px; border: 1px solid rgba(191,219,254,.82); border-radius: 13px; background: rgba(255,255,255,.6); padding: 6px 7px 5px; }
-        .fact b { display: block; color: #0f172a; font-size: clamp(12px, 2.85vw, 15px); line-height: 1.02; font-weight: 950; }
-        .fact span { display: block; margin-top: 3px; color: #64748b; font-size: clamp(7px, 1.75vw, 9px); line-height: 1.1; font-weight: 800; text-transform: uppercase; letter-spacing: .035em; }
-        .strip { margin-top: 8px; border-radius: 16px; border: 1px solid rgba(191,219,254,.86); background: rgba(255,255,255,.72); padding: 9px 10px; }
-        .strip-title { display:flex; align-items:center; justify-content:space-between; gap:8px; font-size: clamp(10px, 2.4vw, 12px); color:#64748b; font-weight:900; letter-spacing:.08em; text-transform:uppercase; }
-        .progress { margin-top: 6px; width: 100%; height: 7px; border: 0; border-radius: 999px; overflow: hidden; background: rgba(191,219,254,.65); }
-        .progress::-webkit-progress-bar { background: rgba(191,219,254,.65); border-radius: 999px; }
-        .progress::-webkit-progress-value { background: linear-gradient(90deg,#2563eb,#38bdf8); border-radius: 999px; }
-        .progress::-moz-progress-bar { background: linear-gradient(90deg,#2563eb,#38bdf8); border-radius: 999px; }
-        .type-row { margin-top: 7px; display:flex; flex-wrap:wrap; gap:5px; }
-        .type-pill { border-radius:999px; background: rgba(15,23,42,.06); color:#334155; padding:4px 7px; font-size: clamp(8px,1.85vw,10px); font-weight:850; }
-        .event-list { margin-top: 8px; display: grid; gap: 5px; }
-        .event { display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:6px; border-radius: 13px; background: rgba(255,255,255,.62); border: 1px solid rgba(226,232,240,.9); padding: 6px 8px; }
-        .event strong { font-size: clamp(9px,2.15vw,11px); line-height:1.1; }
-        .event small { color:#64748b; font-weight:800; font-size: clamp(8px,1.85vw,9px); }
-        .story-box { margin-top: 8px; border-radius: 17px; border: 1px solid rgba(191,219,254,.9); background: rgba(255,255,255,.72); padding: 9px 10px; }
-        .story-box h3 { margin: 0 0 5px; font-size: clamp(12px, 3vw, 16px); font-weight: 950; }
-        .story-box p { margin: 0; color: #475569; font-size: clamp(10px, 2.35vw, 12px); line-height: 1.22; font-weight: 700; }
-        .bottom { margin-top: auto; display: flex; align-items: end; justify-content: space-between; gap: 12px; padding-top: 7px; }
-        .domain { font-size: clamp(10px, 2.45vw, 13px); color: #1d4ed8; font-weight: 900; letter-spacing: .04em; }
-        .qr { width: clamp(38px, 10vw, 52px); aspect-ratio: 1; display: grid; place-items: center; border-radius: 14px; background: #0f172a; color: white; font-size: clamp(17px, 4.2vw, 24px); }
-        @media (min-width: 520px) { body { padding: 16px; } .story-card { border-radius: 28px; } }
-        @media print { body { padding: 0; } .story-wrap { width: 1080px; height: 1920px; } .story-card { border-radius: 0; box-shadow: none; } }
+        .story-card::before { content:""; position:absolute; inset:0; opacity:.36; background-image: linear-gradient(rgba(37,99,235,.16) 1px, transparent 1px), linear-gradient(90deg, rgba(37,99,235,.12) 1px, transparent 1px); background-size: 31px 31px; mask-image: linear-gradient(180deg, black 0%, black 70%, transparent 100%); }
+        .story-card::after { content:""; position:absolute; right:-22%; top:28%; width:64%; aspect-ratio:1; border-radius:999px; border: 38px solid rgba(255,255,255,.28); filter: blur(.2px); }
+        .story-inner { position: relative; z-index: 1; height: 100%; padding: 5.4%; display: flex; flex-direction: column; }
+        .topline { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+        .badge { display:inline-flex; border-radius:999px; background:rgba(37,99,235,.11); color:var(--blue); padding:6px 11px; font-weight:850; font-size:clamp(10px,2.45vw,13px); }
+        .station { color:#475569; font-size:clamp(8px,1.85vw,10px); text-transform:uppercase; letter-spacing:.14em; font-weight:900; }
+        .title { margin: 10px 0 0; font-family: Unbounded, Onest, sans-serif; font-size: clamp(28px,7.6vw,42px); line-height:.98; letter-spacing:-.045em; font-weight:900; }
+        .title span { display:block; color:var(--blue); }
+        .lead { margin: 8px 0 0; max-width: 94%; color:#334155; font-size:clamp(10px,2.35vw,12px); line-height:1.26; font-weight:750; }
+        .hero-metrics { margin-top: 11px; display:grid; grid-template-columns: 1.15fr .95fr .8fr; gap:7px; }
+        .hero-card { min-height: 68px; border:1px solid var(--line); border-radius:18px; background:rgba(255,255,255,.76); padding:10px 10px 8px; box-shadow: inset 0 1px 0 rgba(255,255,255,.7); }
+        .hero-card .label { color:#64748b; font-size:clamp(7px,1.7vw,9px); text-transform:uppercase; letter-spacing:.09em; font-weight:900; }
+        .hero-card .value { margin-top:4px; font-family:Unbounded, Onest, sans-serif; font-size:clamp(18px,4.85vw,27px); line-height:1; font-weight:900; white-space:nowrap; }
+        .data-grid { margin-top: 8px; display:grid; grid-template-columns: repeat(3,1fr); gap:6px; }
+        .data-cell { min-height:45px; border:1px solid rgba(191,219,254,.9); border-radius:14px; background:rgba(255,255,255,.54); padding:7px 8px 6px; }
+        .data-cell b { display:block; color:#0f172a; font-size:clamp(12px,2.8vw,15px); line-height:1; font-weight:900; }
+        .data-cell span { display:block; margin-top:4px; color:#64748b; font-size:clamp(7px,1.7vw,9px); line-height:1.1; font-weight:900; text-transform:uppercase; letter-spacing:.05em; }
+        .panel { margin-top: 8px; border:1px solid var(--line); border-radius:19px; background:rgba(255,255,255,.64); padding:10px; backdrop-filter: blur(8px); }
+        .panel-head { display:flex; align-items:center; justify-content:space-between; gap:12px; color:#475569; font-size:clamp(9px,2.1vw,11px); text-transform:uppercase; letter-spacing:.12em; font-weight:950; }
+        .progress { margin-top:7px; width:100%; height:7px; border:0; border-radius:999px; overflow:hidden; background:rgba(191,219,254,.65); }
+        .progress::-webkit-progress-bar { background:rgba(191,219,254,.65); border-radius:999px; }
+        .progress::-webkit-progress-value { background:linear-gradient(90deg,#1d4ed8,#38bdf8); border-radius:999px; }
+        .progress::-moz-progress-bar { background:linear-gradient(90deg,#1d4ed8,#38bdf8); border-radius:999px; }
+        .pills { margin-top:7px; display:flex; flex-wrap:wrap; gap:5px; }
+        .pill { border-radius:999px; background:rgba(15,23,42,.06); color:#334155; padding:4px 7px; font-size:clamp(8px,1.8vw,9px); font-weight:850; }
+        .character { display:grid; grid-template-columns:1fr auto; gap:10px; align-items:center; }
+        .character h2 { margin:0; font-size:clamp(14px,3.15vw,17px); line-height:1.1; font-weight:950; }
+        .character p { margin:5px 0 0; color:#475569; font-size:clamp(9px,2.15vw,11px); line-height:1.25; font-weight:750; }
+        .stamp { width:48px; aspect-ratio:1; display:grid; place-items:center; border-radius:16px; background:#0f172a; color:white; font-size:24px; box-shadow:0 10px 24px rgba(15,23,42,.18); }
+        .events { margin-top: 8px; display:grid; gap:5px; }
+        .event { display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:7px; border-radius:14px; background:rgba(255,255,255,.60); border:1px solid rgba(226,232,240,.95); padding:6px 8px; }
+        .event strong { font-size:clamp(9px,2.12vw,11px); line-height:1.1; font-weight:900; }
+        .event small { color:#64748b; font-size:clamp(8px,1.8vw,9px); font-weight:850; }
+        .bottom { margin-top:auto; padding-top:7px; display:flex; align-items:end; justify-content:space-between; gap:12px; }
+        .domain { color:var(--blue); font-size:clamp(10px,2.45vw,13px); font-weight:950; letter-spacing:.02em; }
+        .note { margin-top:4px; color:#64748b; font-size:clamp(8px,1.85vw,10px); text-transform:uppercase; letter-spacing:.08em; font-weight:900; }
+        .mini-logo { width:42px; aspect-ratio:1; border-radius:14px; display:grid; place-items:center; background:#0f172a; color:white; font-size:20px; }
+        @media (min-width: 520px) { body { padding:16px; } .story-card { border-radius:28px; } }
+        @media print { body { padding:0; } .story-wrap { width:1080px; height:1920px; } .story-card { border-radius:0; box-shadow:none; } }
     </style>
 </head>
 <body>
     <main class="story-wrap" aria-label="Карточка погодного отчёта">
         <article class="story-card">
             <div class="story-inner">
-                <div class="badge">{{if .Data.IsSeason}}{{.Data.SelectedSeasonLabel}}{{else}}{{.Data.SelectedMonthLabel}}{{end}} · Армавир</div>
-                <h1 class="title">Погодный отчёт</h1>
-                <p class="lead">{{.Data.MainInsight.Text}}</p>
-
-                <div class="metrics">
-                    <div class="metric"><div class="value" style="color:#1d4ed8">{{printf "%.1f" .Data.CurrentMonth.RainTotal}}</div><div class="label">мм осадков</div></div>
-                    <div class="metric"><div class="value" style="color:#ea580c">{{printf "%.1f" .Data.CurrentMonth.AvgTemp}}°</div><div class="label">средняя</div></div>
-                    <div class="metric"><div class="value" style="color:#0891b2">{{.Data.CurrentMonth.RainDays}}</div><div class="label">дождей</div></div>
+                <div class="topline">
+                    <div class="badge">{{if .Data.IsSeason}}{{.Data.SelectedSeasonLabel}}{{else}}{{.Data.SelectedMonthLabel}}{{end}} · Армавир</div>
+                    <div class="station">EcoWitt</div>
                 </div>
 
-                <div class="fact-grid" aria-label="Дополнительные показатели">
-                    <div class="fact"><b>{{.Data.CurrentMonth.WetDays}}</b><span>мокрых дней</span></div>
-                    <div class="fact"><b>{{.Data.CurrentMonth.DryDays}}</b><span>сухих дней</span></div>
-                    <div class="fact"><b>{{.Data.CurrentMonth.SunnyDays}}</b><span>солнечных</span></div>
-                    <div class="fact"><b>{{if .Data.CurrentMonth.MaxRainDay}}{{printf "%.1f" .Data.CurrentMonth.MaxRainDay.Value}} мм{{else}}—{{end}}</b><span>пик дождя</span></div>
-                    <div class="fact"><b>{{if .Data.CurrentMonth.MaxWindGustDay}}{{printf "%.1f" .Data.CurrentMonth.MaxWindGustDay.Value}} м/с{{else}}—{{end}}</b><span>порыв</span></div>
-                    <div class="fact"><b>{{.Data.CurrentMonth.HighUVDays}}</b><span>UV-дней</span></div>
+                <h1 class="title">{{if .Data.IsSeason}}{{.Data.SelectedSeasonLabel}}{{else}}{{.Data.SelectedMonthLabel}}{{end}} <span>в цифрах</span></h1>
+                <p class="lead">
+                    {{if .Data.IsSeason}}За сезон{{else}}За выбранный период{{end}} накопилось {{printf "%.1f" .Data.CurrentMonth.RainTotal}} мм осадков: {{.Data.CurrentMonth.RainDays}} дождливых дней, средняя температура {{printf "%.1f" .Data.CurrentMonth.AvgTemp}}°. {{if .Data.CurrentMonth.MaxRainDay}}Пик дождя — {{.Data.CurrentMonth.MaxRainDay.Date.Format "02.01"}}.{{end}}
+                </p>
+
+                <div class="hero-metrics" aria-label="Главные показатели">
+                    <div class="hero-card"><div class="label">Осадки</div><div class="value" style="color:var(--blue)">{{printf "%.1f" .Data.CurrentMonth.RainTotal}}</div><div class="label">мм</div></div>
+                    <div class="hero-card"><div class="label">Температура</div><div class="value" style="color:var(--orange)">{{printf "%.1f" .Data.CurrentMonth.AvgTemp}}°</div><div class="label">средняя</div></div>
+                    <div class="hero-card"><div class="label">Дожди</div><div class="value" style="color:var(--cyan)">{{.Data.CurrentMonth.RainDays}}</div><div class="label">дней</div></div>
                 </div>
 
-                <div class="strip">
-                    <div class="strip-title"><span>{{if .Data.IsSeason}}Ход сезона{{else}}Ход месяца{{end}}</span><span>{{if .Data.IsSeason}}{{.Data.Season.ProgressPercent}}{{else}}{{.Data.MonthProgressPercent}}{{end}}%</span></div>
+                <div class="data-grid" aria-label="Дополнительные показатели">
+                    <div class="data-cell"><b>{{.Data.CurrentMonth.WetDays}}</b><span>мокрых</span></div>
+                    <div class="data-cell"><b>{{.Data.CurrentMonth.DryDays}}</b><span>сухих</span></div>
+                    <div class="data-cell"><b>{{.Data.CurrentMonth.SunnyDays}}</b><span>солнце</span></div>
+                    <div class="data-cell"><b>{{if .Data.CurrentMonth.MaxRainDay}}{{printf "%.1f" .Data.CurrentMonth.MaxRainDay.Value}} мм{{else}}—{{end}}</b><span>пик дождя</span></div>
+                    <div class="data-cell"><b>{{if .Data.CurrentMonth.MaxWindGustDay}}{{printf "%.1f" .Data.CurrentMonth.MaxWindGustDay.Value}} м/с{{else}}—{{end}}</b><span>ветер</span></div>
+                    <div class="data-cell"><b>{{.Data.CurrentMonth.HighUVDays}}</b><span>UV-дней</span></div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-head"><span>{{if .Data.IsSeason}}Ход сезона{{else}}Ход месяца{{end}}</span><span>{{if .Data.IsSeason}}{{.Data.Season.ProgressPercent}}{{else}}{{.Data.MonthProgressPercent}}{{end}}%</span></div>
                     <progress class="progress" value="{{if .Data.IsSeason}}{{.Data.Season.ProgressPercent}}{{else}}{{.Data.MonthProgressPercent}}{{end}}" max="100"></progress>
-                    <div class="type-row">
-                        {{range $i, $type := .Data.DayTypes}}{{if lt $i 4}}<span class="type-pill">{{$type.Icon}} {{$type.Count}} {{$type.Label}}</span>{{end}}{{end}}
+                    <div class="pills">
+                        {{range $i, $type := .Data.DayTypes}}{{if lt $i 4}}<span class="pill">{{$type.Icon}} {{$type.Count}} {{$type.Label}}</span>{{end}}{{end}}
                     </div>
                 </div>
 
-                <div class="story-box">
-                    <h3>{{.Data.DominantDayType.Icon}} {{.Data.DominantDayType.Label}} · 🚶 {{.Data.CurrentMonth.ComfortableDays}} комфортных</h3>
-                    <p>{{if .Data.CurrentMonth.MaxRainDay}}Главный дождь — {{.Data.CurrentMonth.MaxRainDay.Date.Format "02.01"}}: {{printf "%.1f" .Data.CurrentMonth.MaxRainDay.Value}} мм. {{end}}Ветер: {{.Data.WindInsight.LevelLabel}}. UV: {{.Data.UVInsight.LevelLabel}}.</p>
+                <div class="panel character">
+                    <div>
+                        <h2>{{.Data.DominantDayType.Icon}} {{.Data.DominantDayType.Label}} · 🚶 {{.Data.CurrentMonth.ComfortableDays}} комфортных</h2>
+                        <p>{{if .Data.CurrentMonth.MaxRainDay}}Самый сильный дождь: {{printf "%.1f" .Data.CurrentMonth.MaxRainDay.Value}} мм. {{end}}Ветер: {{.Data.WindInsight.LevelLabel}}. UV: {{.Data.UVInsight.LevelLabel}}.</p>
+                    </div>
+                    <div class="stamp">{{if .Data.IsSeason}}{{.Data.Season.Icon}}{{else}}{{.Data.DominantDayType.Icon}}{{end}}</div>
                 </div>
 
                 {{if .Data.Timeline}}
-                <div class="event-list" aria-label="Ключевые события">
+                <div class="events" aria-label="Ключевые события">
                     {{range $i, $event := .Data.Timeline}}{{if lt $i 2}}
                     <div class="event"><span>{{$event.Icon}}</span><strong>{{$event.Title}}</strong><small>{{$event.Date.Format "02.01"}}</small></div>
                     {{end}}{{end}}
@@ -100,9 +117,9 @@
                 <div class="bottom">
                     <div>
                         <div class="domain">meteo.armavir.ru</div>
-                        <div style="margin-top:6px;color:#64748b;font-weight:700;font-size:clamp(10px,2.4vw,13px)">полный отчёт по ссылке</div>
+                        <div class="note">полный отчёт по ссылке</div>
                     </div>
-                    <div class="qr">☁️</div>
+                    <div class="mini-logo">☁️</div>
                 </div>
             </div>
         </article>
