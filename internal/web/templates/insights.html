@@ -135,12 +135,12 @@
                 <div>
                     <p class="text-sm uppercase tracking-[0.25em] text-blue-700 dark:text-blue-300">Погодный отпечаток</p>
                     <h3 class="mt-2 text-2xl font-bold">Месяц одним взглядом</h3>
-                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Круг показывает, насколько текущие осадки уже догнали весь прошлый месяц.</p>
+                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">{{if .Data.SameMonthBenchmark.Available}}Круг показывает, где текущие осадки относительно таких же месяцев прошлых лет.{{else}}Архивной нормы пока мало, поэтому прошлый месяц показан только как справка.{{end}}</p>
                 </div>
-                <div class="weather-orb relative grid h-28 w-28 shrink-0 place-items-center rounded-full" style="--p: {{.Data.RainVsPreviousFullPercent}}">
+                <div class="weather-orb relative grid h-28 w-28 shrink-0 place-items-center rounded-full" style="--p: {{if .Data.SameMonthBenchmark.Available}}{{.Data.SameMonthBenchmark.RainRatioPercent}}{{else}}{{.Data.RainVsPreviousFullPercent}}{{end}}">
                     <div class="relative z-10 text-center">
-                        <div class="text-2xl font-black">{{.Data.RainVsPreviousFullPercent}}%</div>
-                        <div class="text-[10px] uppercase tracking-wide text-blue-700 dark:text-blue-200">от прошлого</div>
+                        <div class="text-2xl font-black">{{if .Data.SameMonthBenchmark.Available}}{{.Data.SameMonthBenchmark.RainRatioPercent}}{{else}}{{.Data.RainVsPreviousFullPercent}}{{end}}%</div>
+                        <div class="text-[10px] uppercase tracking-wide text-blue-700 dark:text-blue-200">{{if .Data.SameMonthBenchmark.Available}}от нормы{{else}}от прошлого{{end}}</div>
                     </div>
                 </div>
             </div>
@@ -174,24 +174,70 @@
                     <div class="h-3 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700"><div class="h-full rounded-full bg-slate-900 dark:bg-slate-100" style="width: {{.Data.MonthProgressPercent}}%"></div></div>
                 </div>
                 <div>
-                    <div class="mb-2 flex justify-between text-sm"><span class="text-gray-600 dark:text-gray-300">Осадки к той же дате прошлого месяца</span><b class="text-blue-700 dark:text-blue-300">{{.Data.RainVsPreviousSamePercent}}%</b></div>
-                    <div class="h-3 overflow-hidden rounded-full bg-blue-50 dark:bg-blue-950"><div class="h-full rounded-full bg-blue-500" style="width: {{.Data.RainVsPreviousSamePercent}}%"></div></div>
+                    <div class="mb-2 flex justify-between text-sm"><span class="text-gray-600 dark:text-gray-300">Осадки к сезонной норме месяца</span><b class="text-blue-700 dark:text-blue-300">{{if .Data.SameMonthBenchmark.Available}}{{.Data.SameMonthBenchmark.RainRatioPercent}}%{{else}}архив копится{{end}}</b></div>
+                    <div class="h-3 overflow-hidden rounded-full bg-blue-50 dark:bg-blue-950"><div class="h-full rounded-full bg-blue-500" style="width: {{if .Data.SameMonthBenchmark.Available}}{{.Data.SameMonthBenchmark.RainRatioPercent}}{{else}}0{{end}}%"></div></div>
                 </div>
                 <div>
                     <div class="mb-2 flex justify-between text-sm"><span class="text-gray-600 dark:text-gray-300">Доля самого дождливого дня</span><b class="text-cyan-700 dark:text-cyan-300">{{.Data.RainiestDaySharePercent}}%</b></div>
                     <div class="h-3 overflow-hidden rounded-full bg-cyan-50 dark:bg-cyan-950"><div class="h-full rounded-full bg-cyan-500" style="width: {{.Data.RainiestDaySharePercent}}%"></div></div>
                 </div>
                 <div class="weather-strip rounded-2xl p-4 text-sm text-gray-700 dark:text-gray-200">
-                    <b>Читается так:</b> если синяя шкала осадков больше прогресса месяца — месяц идёт влажнее обычного темпа.
+                    <b>Читается так:</b> основное сравнение теперь сезонное: {{if .Data.SameMonthBenchmark.Available}}{{.Data.SameMonthBenchmark.Verdict}}.{{else}}{{.Data.SameMonthBenchmark.StatusText}}{{end}}
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Month comparison -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Seasonal context -->
+    <div class="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-6">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-gray-100 dark:border-gray-700 transition-colors">
+            <div class="flex items-start gap-4">
+                <div class="text-4xl">{{.Data.Season.Icon}}</div>
+                <div>
+                    <div class="text-xs uppercase tracking-wide text-blue-600 dark:text-blue-300">{{.Data.Season.ProgressPercent}}% сезона прошло</div>
+                    <h3 class="mt-1 text-xl font-bold text-gray-900 dark:text-white">{{.Data.Season.Title}}</h3>
+                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">{{.Data.Season.Description}}</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-gray-100 dark:border-gray-700 transition-colors">
+            <div class="flex items-start justify-between gap-4 mb-4">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white">Сравнение с архивом</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">{{.Data.SameMonthBenchmark.Subtitle}}</p>
+                </div>
+                <div class="text-3xl">📚</div>
+            </div>
+            {{if .Data.SameMonthBenchmark.Available}}
+            <div class="grid grid-cols-3 gap-3">
+                <div class="rounded-lg bg-blue-50 dark:bg-blue-900/20 p-3">
+                    <div class="text-xs text-gray-500 dark:text-gray-400">Осадки</div>
+                    <div class="text-xl font-bold text-blue-700 dark:text-blue-300">{{.Data.SameMonthBenchmark.RainRatioPercent}}%</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">от нормы</div>
+                </div>
+                <div class="rounded-lg bg-cyan-50 dark:bg-cyan-900/20 p-3">
+                    <div class="text-xs text-gray-500 dark:text-gray-400">Обычно</div>
+                    <div class="text-xl font-bold text-cyan-700 dark:text-cyan-300">{{printf "%.1f" .Data.SameMonthBenchmark.RainTotalAvg}}</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">мм к дате</div>
+                </div>
+                <div class="rounded-lg bg-slate-50 dark:bg-slate-700/40 p-3">
+                    <div class="text-xs text-gray-500 dark:text-gray-400">Архив</div>
+                    <div class="text-xl font-bold text-gray-900 dark:text-white">{{.Data.SameMonthBenchmark.SampleSize}}</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">сезонов</div>
+                </div>
+            </div>
+            <p class="mt-3 text-sm text-gray-700 dark:text-gray-200">{{.Data.SameMonthBenchmark.Verdict}}. Температура относительно архива: {{printf "%+.1f" .Data.SameMonthBenchmark.TempDelta}}°C.</p>
+            {{else}}
+            <p class="text-sm text-gray-600 dark:text-gray-300">{{.Data.SameMonthBenchmark.StatusText}}</p>
+            {{end}}
+        </div>
+    </div>
+
+    <!-- Period comparison -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
         {{template "monthCard" .Data.CurrentMonth}}
-        {{template "monthCard" .Data.PreviousSamePeriod}}
+        {{template "monthCard" .Data.Last7Days.Current}}
+        {{template "monthCard" .Data.Last30Days.Current}}
         {{template "monthCard" .Data.PreviousMonth}}
     </div>
 
@@ -209,12 +255,12 @@
                 <div class="rounded-lg bg-cyan-50 dark:bg-cyan-900/20 p-4">
                     <div class="text-sm text-gray-600 dark:text-gray-400">Дождливых дней</div>
                     <div class="mt-2 text-3xl font-bold text-cyan-700 dark:text-cyan-300">{{.Data.CurrentMonth.RainDays}}</div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400">к той же дате: {{.Data.PreviousSamePeriod.RainDays}}</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">за 7 дней: {{.Data.Last7Days.Current.RainDays}}</div>
                 </div>
                 <div class="rounded-lg bg-blue-50 dark:bg-blue-900/20 p-4">
                     <div class="text-sm text-gray-600 dark:text-gray-400">Всего осадков</div>
                     <div class="mt-2 text-3xl font-bold text-blue-700 dark:text-blue-300">{{printf "%.1f" .Data.CurrentMonth.RainTotal}} мм</div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400">к той же дате: {{printf "%.1f" .Data.PreviousSamePeriod.RainTotal}} мм</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">{{if .Data.SameMonthBenchmark.Available}}обычно к дате: {{printf "%.1f" .Data.SameMonthBenchmark.RainTotalAvg}} мм{{else}}архивная норма недоступна{{end}}</div>
                 </div>
                 <div class="rounded-lg bg-amber-50 dark:bg-amber-900/20 p-4">
                     <div class="text-sm text-gray-600 dark:text-gray-400">Сухих дней подряд</div>
@@ -241,7 +287,7 @@
             <div class="flex items-start justify-between gap-4 mb-4">
                 <div>
                     <h3 class="text-xl font-bold text-gray-900 dark:text-white">Накопление осадков</h3>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Текущий месяц против прошлого по дням месяца.</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Текущий месяц, архивная норма таких же месяцев и прошлый месяц как справка.</p>
                 </div>
                 <div class="text-3xl">📈</div>
             </div>
@@ -264,7 +310,7 @@
             <div>
                 <h3 class="font-bold text-gray-900 dark:text-white">Короткая история месяца</h3>
                 <p class="mt-1 text-sm text-gray-700 dark:text-gray-200">
-                    Месяц выглядит влажным: {{.Data.CurrentMonth.MaxRainDay.Date.Format "02.01"}} случился резкий перелом — {{printf "%.1f" .Data.CurrentMonth.MaxRainDay.Value}} мм за день, около {{.Data.RainiestDaySharePercent}}% месячной суммы.
+                    {{if .Data.SameMonthBenchmark.Available}}На фоне таких же месяцев архив говорит: {{.Data.SameMonthBenchmark.Verdict}}.{{else}}Архив таких же месяцев пока мал, поэтому смотрим на сезонный контекст и ближайшие недели.{{end}} Главный перелом — {{.Data.CurrentMonth.MaxRainDay.Date.Format "02.01"}}: {{printf "%.1f" .Data.CurrentMonth.MaxRainDay.Value}} мм за день, около {{.Data.RainiestDaySharePercent}}% месячной суммы.
                 </p>
             </div>
         </div>
@@ -493,7 +539,18 @@
                         spanGaps: false
                     },
                     {
-                        label: 'Прошлый месяц',
+                        label: 'Архивная норма',
+                        data: chartData.archive,
+                        borderColor: 'rgb(15, 23, 42)',
+                        borderDash: [3, 4],
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0.32,
+                        fill: false,
+                        spanGaps: false
+                    },
+                    {
+                        label: 'Прошлый месяц · справочно',
                         data: chartData.previous,
                         borderColor: 'rgb(14, 165, 233)',
                         borderDash: [6, 5],

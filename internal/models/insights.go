@@ -71,6 +71,46 @@ type WeatherInsightStory struct {
 	Text  string `json:"text"`
 }
 
+// WeatherSeasonContext describes season-specific interpretation of the current period.
+type WeatherSeasonContext struct {
+	Code            string `json:"code"`
+	Name            string `json:"name"`
+	Title           string `json:"title"`
+	Description     string `json:"description"`
+	FocusTitle      string `json:"focus_title"`
+	FocusText       string `json:"focus_text"`
+	Icon            string `json:"icon"`
+	ProgressPercent int    `json:"progress_percent"`
+}
+
+// WeatherArchiveBenchmark compares the current month with the same month in previous years.
+type WeatherArchiveBenchmark struct {
+	Title            string  `json:"title"`
+	Subtitle         string  `json:"subtitle"`
+	Available        bool    `json:"available"`
+	Reliable         bool    `json:"reliable"`
+	SampleSize       int     `json:"sample_size"`
+	RainTotalAvg     float64 `json:"rain_total_avg"`
+	RainDaysAvg      float64 `json:"rain_days_avg"`
+	AvgTempAvg       float64 `json:"avg_temp_avg"`
+	RainRatioPercent int     `json:"rain_ratio_percent"`
+	RainDeltaPercent int     `json:"rain_delta_percent"`
+	TempDelta        float64 `json:"temp_delta"`
+	Verdict          string  `json:"verdict"`
+	StatusText       string  `json:"status_text"`
+}
+
+// RollingWeatherPeriod compares a recent rolling window with the preceding window.
+type RollingWeatherPeriod struct {
+	Title            string                 `json:"title"`
+	Subtitle         string                 `json:"subtitle"`
+	Current          MonthlyWeatherInsights `json:"current"`
+	Previous         MonthlyWeatherInsights `json:"previous"`
+	RainDeltaPercent int                    `json:"rain_delta_percent"`
+	TempDelta        float64                `json:"temp_delta"`
+	Verdict          string                 `json:"verdict"`
+}
+
 // CalendarWeatherDay is one cell in the monthly insight calendar.
 type CalendarWeatherDay struct {
 	Date     time.Time `json:"date"`
@@ -108,6 +148,11 @@ type WeatherInsightsPage struct {
 	CurrentMonth       MonthlyWeatherInsights `json:"current_month"`
 	PreviousMonth      MonthlyWeatherInsights `json:"previous_month"`
 	PreviousSamePeriod MonthlyWeatherInsights `json:"previous_same_period"`
+
+	Season             WeatherSeasonContext    `json:"season"`
+	SameMonthBenchmark WeatherArchiveBenchmark `json:"same_month_benchmark"`
+	Last7Days          RollingWeatherPeriod    `json:"last_7_days"`
+	Last30Days         RollingWeatherPeriod    `json:"last_30_days"`
 
 	CurrentDryStreak  int       `json:"current_dry_streak"`
 	HasLastRain       bool      `json:"has_last_rain"`

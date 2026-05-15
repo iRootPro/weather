@@ -45,19 +45,42 @@ func (s *WeatherService) GetInsights(ctx context.Context) (*models.WeatherInsigh
 		return nil, err
 	}
 
+	rollingStart := dayStart(now, loc).AddDate(0, 0, -59)
+	rollingDays, err := s.repo.GetDailyInsights(ctx, rollingStart, now, s.timezone)
+	if err != nil {
+		return nil, err
+	}
+
+	archiveStart := currentStart.AddDate(-10, 0, 0)
+	archiveDays, err := s.repo.GetDailyInsights(ctx, archiveStart, currentStart, s.timezone)
+	if err != nil {
+		return nil, err
+	}
+
+	seasonStart, seasonEnd := seasonBounds(now, loc)
+	seasonDays, err := s.repo.GetDailyInsights(ctx, seasonStart, now, s.timezone)
+	if err != nil {
+		return nil, err
+	}
+
 	previousCompareDays := minInt(now.Day(), daysBetween(previousStart, previousEnd))
 	previousSameEnd := previousStart.AddDate(0, 0, previousCompareDays)
 	previousSameDays := filterDaysBefore(previousDays, previousSameEnd)
 
 	current := buildMonthlyInsights("Этот месяц", currentStart, now, currentDays, now.Day())
-	previous := buildMonthlyInsights("Прошлый месяц", previousStart, previousEnd.Add(-time.Nanosecond), previousDays, daysBetween(previousStart, previousEnd))
+	previous := buildMonthlyInsights("Прошлый месяц · справочно", previousStart, previousEnd.Add(-time.Nanosecond), previousDays, daysBetween(previousStart, previousEnd))
 	previousSame := buildMonthlyInsights(fmt.Sprintf("Прошлый месяц к %d числу", previousCompareDays), previousStart, previousSameEnd.Add(-time.Nanosecond), previousSameDays, previousCompareDays)
+	seasonCurrent := buildMonthlyInsights("Текущий сезон", seasonStart, now, seasonDays, maxInt(1, daysBetween(seasonStart, now)))
+	season := buildSeasonContext(now, seasonStart, seasonEnd, seasonCurrent)
+	sameMonthBenchmark := buildSameMonthBenchmark(now, current, archiveDays, loc)
+	last7Days := buildRollingPeriod("Последние 7 дней", "Сравнение с предыдущими 7 днями", rollingDays, now, 7, loc)
+	last30Days := buildRollingPeriod("Последние 30 дней", "Сравнение с предыдущими 30 днями", rollingDays, now, 30, loc)
 
-	allDays := append([]models.DailyWeatherInsight{}, previousDays...)
+	allDays := append([]models.DailyWeatherInsight{}, rollingDays...)
 	allDays = append(allDays, currentDays...)
 	currentDryStreak, lastRainDate, hasLastRain := calculateRainRecency(allDays, loc)
 
-	mainInsight, stories := buildInsightStories(current, previous, previousSame, currentDryStreak, lastRainDate, hasLastRain)
+	mainInsight, stories := buildInsightStories(current, previous, previousSame, sameMonthBenchmark, last7Days, season, currentDryStreak, lastRainDate, hasLastRain)
 	bestDay, worstDay := findNotableDays(currentDays)
 
 	page := &models.WeatherInsightsPage{
@@ -65,6 +88,10 @@ func (s *WeatherService) GetInsights(ctx context.Context) (*models.WeatherInsigh
 		CurrentMonth:              current,
 		PreviousMonth:             previous,
 		PreviousSamePeriod:        previousSame,
+		Season:                    season,
+		SameMonthBenchmark:        sameMonthBenchmark,
+		Last7Days:                 last7Days,
+		Last30Days:                last30Days,
 		CurrentDryStreak:          currentDryStreak,
 		HasLastRain:               hasLastRain,
 		MainInsight:               mainInsight,
@@ -77,7 +104,7 @@ func (s *WeatherService) GetInsights(ctx context.Context) (*models.WeatherInsigh
 		SunnyPercent:              clampPercent(ratioPercent(float64(current.SunnyDays), float64(maxInt(current.DaysWithData, 1)))),
 		RainDaysPercent:           clampPercent(ratioPercent(float64(current.RainDays), float64(maxInt(current.DaysWithData, 1)))),
 		Calendar:                  buildCalendar(currentStart, currentEnd, currentDays, now, loc),
-		RainChartData:             buildRainChartData(currentDays, previousDays, daysBetween(currentStart, currentEnd), daysBetween(previousStart, previousEnd), now.Day()),
+		RainChartData:             buildRainChartData(currentDays, previousDays, archiveDays, daysBetween(currentStart, currentEnd), daysBetween(previousStart, previousEnd), now.Day(), now.Month(), loc),
 		BestDay:                   bestDay,
 		WorstDay:                  worstDay,
 	}
@@ -240,20 +267,153 @@ func buildCalendar(start, end time.Time, days []models.DailyWeatherInsight, now 
 	return cells
 }
 
-func buildRainChartData(currentDays, previousDays []models.DailyWeatherInsight, currentMonthDays, previousMonthDays, currentDay int) map[string]interface{} {
+func buildSeasonContext(now, start, end time.Time, seasonSummary models.MonthlyWeatherInsights) models.WeatherSeasonContext {
+	name, code, icon := seasonName(now.Month())
+	progress := clampPercent(float64(daysBetween(start, now)) / float64(maxInt(daysBetween(start, end), 1)) * 100)
+	ctx := models.WeatherSeasonContext{
+		Code:            code,
+		Name:            name,
+		Title:           fmt.Sprintf("Сезонный контекст: %s", name),
+		Icon:            icon,
+		ProgressPercent: progress,
+	}
+
+	switch code {
+	case "winter":
+		ctx.Description = fmt.Sprintf("Зимой важнее смотреть на морозные дни, оттепели, ветер и резкие перепады давления. Осадки сравнивать с соседним месяцем особенно опасно: декабрь, январь и февраль ведут себя по-разному.")
+		ctx.FocusTitle = "Зимний режим наблюдений"
+		ctx.FocusText = fmt.Sprintf("За сезон уже %d морозных дней и %d дней с сильными порывами.", seasonSummary.FrostDays, seasonSummary.StrongWindDays)
+	case "spring":
+		ctx.Description = "Весной нормальны быстрые смены сценария: сухие окна, ливни, первые жаркие дни и большие перепады температуры. Поэтому главный ориентир — такие же весенние месяцы и последние недели."
+		ctx.FocusTitle = "Весна с переменным характером"
+		ctx.FocusText = fmt.Sprintf("За сезон уже %d дождливых дней, %d солнечных и %d жарких.", seasonSummary.RainDays, seasonSummary.SunnyDays, seasonSummary.HotDays)
+	case "summer":
+		ctx.Description = "Летом важнее жара, UV, ливневые пики и комфортные дни. Соседний месяц может быть слабой базой: июнь, июль и август часто отличаются по режиму осадков."
+		ctx.FocusTitle = "Летний профиль: жара и ливни"
+		ctx.FocusText = fmt.Sprintf("За сезон уже %d жарких дней, %d дней с высоким UV и %.1f мм осадков.", seasonSummary.HotDays, seasonSummary.HighUVDays, seasonSummary.RainTotal)
+	default:
+		ctx.Description = "Осенью важны влажность, пасмурность, ветер и редкие сухие окна. Сравнение с летними месяцами может искажать выводы, поэтому смотрим на осенний контекст."
+		ctx.FocusTitle = "Осенний профиль: влажность и ветер"
+		ctx.FocusText = fmt.Sprintf("За сезон уже %d пасмурных дней, %d ветреных и %.1f мм осадков.", seasonSummary.CloudyDays, seasonSummary.WindyDays, seasonSummary.RainTotal)
+	}
+
+	return ctx
+}
+
+func buildSameMonthBenchmark(now time.Time, current models.MonthlyWeatherInsights, archiveDays []models.DailyWeatherInsight, loc *time.Location) models.WeatherArchiveBenchmark {
+	benchmark := models.WeatherArchiveBenchmark{
+		Title:      "Такие же месяцы в архиве",
+		Subtitle:   fmt.Sprintf("%s к %d числу прошлых лет", monthName(now.Month()), now.Day()),
+		StatusText: "Пока недостаточно прошлых лет с данными по этому месяцу. Сравнение с прошлым месяцем остаётся справочным, а не главным выводом.",
+	}
+
+	byYear := make(map[int][]models.DailyWeatherInsight)
+	for _, day := range archiveDays {
+		local := day.Date.In(loc)
+		if local.Month() != now.Month() || local.Day() > now.Day() || local.Year() == now.Year() {
+			continue
+		}
+		byYear[local.Year()] = append(byYear[local.Year()], day)
+	}
+
+	minDays := maxInt(3, int(math.Ceil(float64(now.Day())*0.65)))
+	samples := make([]models.MonthlyWeatherInsights, 0, len(byYear))
+	for year, days := range byYear {
+		if len(days) < minDays {
+			continue
+		}
+		start := time.Date(year, now.Month(), 1, 0, 0, 0, 0, loc)
+		end := time.Date(year, now.Month(), minInt(now.Day(), daysInMonth(year, now.Month(), loc)), 23, 59, 59, 0, loc)
+		samples = append(samples, buildMonthlyInsights(fmt.Sprintf("%d", year), start, end, days, now.Day()))
+	}
+
+	benchmark.SampleSize = len(samples)
+	if len(samples) == 0 {
+		return benchmark
+	}
+
+	for _, sample := range samples {
+		benchmark.RainTotalAvg += sample.RainTotal
+		benchmark.RainDaysAvg += float64(sample.RainDays)
+		benchmark.AvgTempAvg += sample.AvgTemp
+	}
+	benchmark.Available = true
+	benchmark.Reliable = len(samples) >= 2
+	benchmark.RainTotalAvg /= float64(len(samples))
+	benchmark.RainDaysAvg /= float64(len(samples))
+	benchmark.AvgTempAvg /= float64(len(samples))
+	benchmark.RainRatioPercent = clampPercent(ratioPercent(current.RainTotal, benchmark.RainTotalAvg))
+	benchmark.RainDeltaPercent = int(math.Round((current.RainTotal - benchmark.RainTotalAvg) / math.Max(benchmark.RainTotalAvg, 0.1) * 100))
+	benchmark.TempDelta = math.Round((current.AvgTemp-benchmark.AvgTempAvg)*10) / 10
+	benchmark.StatusText = fmt.Sprintf("Есть %d архивных сравнений для этого месяца года.", len(samples))
+	if !benchmark.Reliable {
+		benchmark.StatusText = "Есть только один похожий месяц в архиве — выводы показываем осторожно."
+	}
+
+	switch {
+	case benchmark.RainDeltaPercent >= 40:
+		benchmark.Verdict = "заметно влажнее обычного для этого месяца"
+	case benchmark.RainDeltaPercent >= 15:
+		benchmark.Verdict = "немного влажнее обычного для этого месяца"
+	case benchmark.RainDeltaPercent <= -40:
+		benchmark.Verdict = "заметно суше обычного для этого месяца"
+	case benchmark.RainDeltaPercent <= -15:
+		benchmark.Verdict = "немного суше обычного для этого месяца"
+	default:
+		benchmark.Verdict = "примерно в сезонном коридоре"
+	}
+
+	return benchmark
+}
+
+func buildRollingPeriod(title, subtitle string, days []models.DailyWeatherInsight, now time.Time, length int, loc *time.Location) models.RollingWeatherPeriod {
+	end := dayStart(now, loc).AddDate(0, 0, 1)
+	currentStart := end.AddDate(0, 0, -length)
+	previousStart := currentStart.AddDate(0, 0, -length)
+	currentDays := filterDaysBetween(days, currentStart, end, loc)
+	previousDays := filterDaysBetween(days, previousStart, currentStart, loc)
+
+	current := buildMonthlyInsights(title, currentStart, end.Add(-time.Nanosecond), currentDays, length)
+	previous := buildMonthlyInsights("Предыдущий период", previousStart, currentStart.Add(-time.Nanosecond), previousDays, length)
+	result := models.RollingWeatherPeriod{
+		Title:            title,
+		Subtitle:         subtitle,
+		Current:          current,
+		Previous:         previous,
+		RainDeltaPercent: int(math.Round((current.RainTotal - previous.RainTotal) / math.Max(previous.RainTotal, 0.1) * 100)),
+		TempDelta:        math.Round((current.AvgTemp-previous.AvgTemp)*10) / 10,
+	}
+
+	switch {
+	case current.RainTotal >= previous.RainTotal*1.5 && current.RainTotal >= 2:
+		result.Verdict = fmt.Sprintf("Сейчас влажнее: %.1f мм против %.1f мм в предыдущем таком же периоде.", current.RainTotal, previous.RainTotal)
+	case previous.RainTotal >= current.RainTotal*1.5 && previous.RainTotal >= 2:
+		result.Verdict = fmt.Sprintf("Сейчас суше: %.1f мм против %.1f мм в предыдущем таком же периоде.", current.RainTotal, previous.RainTotal)
+	case math.Abs(result.TempDelta) >= 2:
+		result.Verdict = fmt.Sprintf("По осадкам период близок, но средняя температура изменилась на %.1f°C.", result.TempDelta)
+	default:
+		result.Verdict = "Ближайший период без резкого перелома: осадки и температура близки к предыдущему отрезку."
+	}
+
+	return result
+}
+
+func buildRainChartData(currentDays, previousDays, archiveDays []models.DailyWeatherInsight, currentMonthDays, previousMonthDays, currentDay int, currentMonth time.Month, loc *time.Location) map[string]interface{} {
 	maxDays := maxInt(currentMonthDays, previousMonthDays)
 	labels := make([]string, maxDays)
 	current := make([]interface{}, maxDays)
 	previous := make([]interface{}, maxDays)
+	archive := make([]interface{}, maxDays)
 	currentByDay := make(map[int]float64, len(currentDays))
 	previousByDay := make(map[int]float64, len(previousDays))
 
 	for _, day := range currentDays {
-		currentByDay[day.Date.Day()] = value32(day.RainTotal)
+		currentByDay[day.Date.In(loc).Day()] = value32(day.RainTotal)
 	}
 	for _, day := range previousDays {
-		previousByDay[day.Date.Day()] = value32(day.RainTotal)
+		previousByDay[day.Date.In(loc).Day()] = value32(day.RainTotal)
 	}
+	archiveByDay := averageArchiveRainCumulativeByDay(archiveDays, currentMonth, maxDays, loc)
 
 	var currentSum, previousSum float64
 	for i := 1; i <= maxDays; i++ {
@@ -270,48 +430,80 @@ func buildRainChartData(currentDays, previousDays []models.DailyWeatherInsight, 
 		} else {
 			previous[i-1] = nil
 		}
+		if value, ok := archiveByDay[i]; ok {
+			archive[i-1] = math.Round(value*10) / 10
+		} else {
+			archive[i-1] = nil
+		}
 	}
 
 	return map[string]interface{}{
 		"labels":   labels,
 		"current":  current,
 		"previous": previous,
+		"archive":  archive,
 	}
 }
 
-func buildInsightStories(current, previous, previousSame models.MonthlyWeatherInsights, dryStreak int, lastRain time.Time, hasLastRain bool) (models.WeatherInsightStory, []models.WeatherInsightStory) {
-	stories := make([]models.WeatherInsightStory, 0, 6)
+func buildInsightStories(current, previous, previousSame models.MonthlyWeatherInsights, benchmark models.WeatherArchiveBenchmark, last7 models.RollingWeatherPeriod, season models.WeatherSeasonContext, dryStreak int, lastRain time.Time, hasLastRain bool) (models.WeatherInsightStory, []models.WeatherInsightStory) {
+	stories := make([]models.WeatherInsightStory, 0, 7)
 
 	main := models.WeatherInsightStory{
-		Icon:  "📊",
-		Title: "Месяц набирает статистику",
-		Text:  fmt.Sprintf("За %d дней собрано %.1f мм осадков и %d дождливых дней.", current.DaysWithData, current.RainTotal, current.RainDays),
+		Icon:  season.Icon,
+		Title: season.FocusTitle,
+		Text:  fmt.Sprintf("%s За %d дней месяца собрано %.1f мм осадков и %d дождливых дней.", season.FocusText, current.DaysWithData, current.RainTotal, current.RainDays),
 	}
 
-	if current.RainTotal > previous.RainTotal && current.RainDays < previous.RainDays {
+	if benchmark.Available && math.Abs(float64(benchmark.RainDeltaPercent)) >= 25 {
+		icon := "💧"
+		title := "Месяц влажнее сезонной нормы"
+		if benchmark.RainDeltaPercent < 0 {
+			icon = "🌤️"
+			title = "Месяц суше сезонной нормы"
+		}
+		main = models.WeatherInsightStory{
+			Icon:  icon,
+			Title: title,
+			Text:  fmt.Sprintf("Для этого месяца года норма к текущей дате — около %.1f мм. Сейчас %.1f мм: %s", benchmark.RainTotalAvg, current.RainTotal, benchmark.Verdict),
+		}
+	} else if last7.Current.RainTotal >= last7.Previous.RainTotal*1.8 && last7.Current.RainTotal >= 5 {
 		main = models.WeatherInsightStory{
 			Icon:  "🌧️",
-			Title: "Дождей меньше, но воды уже больше",
-			Text:  fmt.Sprintf("Дождливых дней %d против %d, зато осадков уже %.1f мм против %.1f мм за весь прошлый месяц.", current.RainDays, previous.RainDays, current.RainTotal, previous.RainTotal),
-		}
-	} else if current.RainTotal > previous.RainTotal {
-		main = models.WeatherInsightStory{
-			Icon:  "💧",
-			Title: "Месяц уже обогнал прошлый по осадкам",
-			Text:  fmt.Sprintf("Выпало %.1f мм — это больше, чем %.1f мм за весь прошлый месяц.", current.RainTotal, previous.RainTotal),
+			Title: "Последняя неделя резко влажнее",
+			Text:  fmt.Sprintf("За последние 7 дней выпало %.1f мм против %.1f мм неделей ранее. Это лучше отражает текущую погоду, чем сравнение с прошлым месяцем.", last7.Current.RainTotal, last7.Previous.RainTotal),
 		}
 	} else if current.RainTotal > previousSame.RainTotal {
 		main = models.WeatherInsightStory{
 			Icon:  "📈",
 			Title: "Темп осадков выше прошлого месяца",
-			Text:  fmt.Sprintf("К этому же числу прошлого месяца было %.1f мм, сейчас уже %.1f мм.", previousSame.RainTotal, current.RainTotal),
+			Text:  fmt.Sprintf("Это справочное сравнение: к этому же числу прошлого месяца было %.1f мм, сейчас %.1f мм. Сезонный контекст важнее.", previousSame.RainTotal, current.RainTotal),
 		}
 	}
 
 	stories = append(stories, models.WeatherInsightStory{
-		Icon:  "🗓️",
-		Title: "Честное сравнение к той же дате",
-		Text:  fmt.Sprintf("Сейчас %.1f мм за %d дней, в прошлом месяце к этому дню было %.1f мм.", current.RainTotal, current.DaysInPeriod, previousSame.RainTotal),
+		Icon:  season.Icon,
+		Title: season.Title,
+		Text:  season.Description,
+	})
+
+	if benchmark.Available {
+		stories = append(stories, models.WeatherInsightStory{
+			Icon:  "📚",
+			Title: "Сравнение с такими же месяцами",
+			Text:  fmt.Sprintf("Архивных сезонов: %d. Осадки: %.1f мм против средней %.1f мм к этой дате.", benchmark.SampleSize, current.RainTotal, benchmark.RainTotalAvg),
+		})
+	} else {
+		stories = append(stories, models.WeatherInsightStory{
+			Icon:  "📚",
+			Title: "Архив ещё копится",
+			Text:  benchmark.StatusText,
+		})
+	}
+
+	stories = append(stories, models.WeatherInsightStory{
+		Icon:  "🔎",
+		Title: "Ближайший погодный срез",
+		Text:  last7.Verdict,
 	})
 
 	if dryStreak > 0 {
@@ -471,6 +663,103 @@ func filterDaysBefore(days []models.DailyWeatherInsight, end time.Time) []models
 		}
 	}
 	return result
+}
+
+func filterDaysBetween(days []models.DailyWeatherInsight, start, end time.Time, loc *time.Location) []models.DailyWeatherInsight {
+	result := make([]models.DailyWeatherInsight, 0, len(days))
+	for _, day := range days {
+		date := dayStart(day.Date, loc)
+		if !date.Before(start) && date.Before(end) {
+			result = append(result, day)
+		}
+	}
+	return result
+}
+
+func averageArchiveRainCumulativeByDay(days []models.DailyWeatherInsight, month time.Month, maxDays int, loc *time.Location) map[int]float64 {
+	byYear := make(map[int]map[int]float64)
+	for _, day := range days {
+		local := day.Date.In(loc)
+		if local.Month() != month {
+			continue
+		}
+		if byYear[local.Year()] == nil {
+			byYear[local.Year()] = make(map[int]float64)
+		}
+		byYear[local.Year()][local.Day()] = value32(day.RainTotal)
+	}
+
+	result := make(map[int]float64, maxDays)
+	if len(byYear) < 2 {
+		return result
+	}
+
+	sums := make([]float64, maxDays+1)
+	counts := make([]int, maxDays+1)
+	for _, byDay := range byYear {
+		if len(byDay) < 3 {
+			continue
+		}
+		var cumulative float64
+		for day := 1; day <= maxDays; day++ {
+			cumulative += byDay[day]
+			if _, ok := byDay[day]; ok {
+				sums[day] += cumulative
+				counts[day]++
+			}
+		}
+	}
+
+	for day := 1; day <= maxDays; day++ {
+		if counts[day] > 0 {
+			result[day] = sums[day] / float64(counts[day])
+		}
+	}
+	return result
+}
+
+func seasonBounds(t time.Time, loc *time.Location) (time.Time, time.Time) {
+	year := t.In(loc).Year()
+	switch t.In(loc).Month() {
+	case time.December:
+		start := time.Date(year, time.December, 1, 0, 0, 0, 0, loc)
+		return start, start.AddDate(0, 3, 0)
+	case time.January, time.February:
+		start := time.Date(year-1, time.December, 1, 0, 0, 0, 0, loc)
+		return start, start.AddDate(0, 3, 0)
+	case time.March, time.April, time.May:
+		start := time.Date(year, time.March, 1, 0, 0, 0, 0, loc)
+		return start, start.AddDate(0, 3, 0)
+	case time.June, time.July, time.August:
+		start := time.Date(year, time.June, 1, 0, 0, 0, 0, loc)
+		return start, start.AddDate(0, 3, 0)
+	default:
+		start := time.Date(year, time.September, 1, 0, 0, 0, 0, loc)
+		return start, start.AddDate(0, 3, 0)
+	}
+}
+
+func seasonName(month time.Month) (name, code, icon string) {
+	switch month {
+	case time.December, time.January, time.February:
+		return "зима", "winter", "❄️"
+	case time.March, time.April, time.May:
+		return "весна", "spring", "🌱"
+	case time.June, time.July, time.August:
+		return "лето", "summer", "☀️"
+	default:
+		return "осень", "autumn", "🍂"
+	}
+}
+
+func monthName(month time.Month) string {
+	months := []string{"", "январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"}
+	return months[month]
+}
+
+func daysInMonth(year int, month time.Month, loc *time.Location) int {
+	start := time.Date(year, month, 1, 0, 0, 0, 0, loc)
+	return daysBetween(start, start.AddDate(0, 1, 0))
 }
 
 func value32(v *float32) float64 {
