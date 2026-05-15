@@ -486,26 +486,6 @@ func buildInsightStories(current, previous, previousSame models.MonthlyWeatherIn
 	}
 
 	stories = append(stories, models.WeatherInsightStory{
-		Icon:  season.Icon,
-		Title: season.Title,
-		Text:  season.Description,
-	})
-
-	if benchmark.Available {
-		stories = append(stories, models.WeatherInsightStory{
-			Icon:  "📚",
-			Title: "Сравнение с такими же месяцами",
-			Text:  fmt.Sprintf("Архивных сезонов: %d. Осадки: %.1f мм против средней %.1f мм к этой дате.", benchmark.SampleSize, current.RainTotal, benchmark.RainTotalAvg),
-		})
-	} else {
-		stories = append(stories, models.WeatherInsightStory{
-			Icon:  "📚",
-			Title: "Архив ещё копится",
-			Text:  benchmark.StatusText,
-		})
-	}
-
-	stories = append(stories, models.WeatherInsightStory{
 		Icon:  "🔎",
 		Title: "Ближайший погодный срез",
 		Text:  last7.Verdict,
