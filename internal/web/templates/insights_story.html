@@ -5,19 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>{{if .Data.IsSeason}}{{.Data.SelectedSeasonLabel}}{{else}}{{.Data.SelectedMonthLabel}}{{end}} — сторис</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@600;700&family=IBM+Plex+Sans+Condensed:wght@600;700&family=Literata:opsz,wght@7..72,650;7..72,760;7..72,850&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Golos+Text:wght@500;600;700;800&family=IBM+Plex+Mono:wght@500;600;700&display=swap');
         :root {
-            --paper: #f5f1e7;
-            --paper-cool: #dff3fb;
-            --ink: #132033;
-            --muted: #6d7d8d;
-            --faint: rgba(19,32,51,.12);
-            --line: rgba(19,32,51,.18);
-            --blue: #105bd8;
-            --cyan: #00a6ca;
-            --sky: #70d7ed;
-            --orange: #e9631d;
-            --lime: #8bc93d;
+            --paper: #fbfaf4;
+            --paper-2: #edf8fb;
+            --ink: #142033;
+            --muted: #6f7d8d;
+            --line: rgba(20, 32, 51, .14);
+            --line-strong: rgba(20, 32, 51, .22);
+            --blue: #115dde;
+            --cyan: #00a7c8;
+            --orange: #e85b20;
+            --green: #74b942;
         }
         * { box-sizing: border-box; }
         html, body { margin: 0; min-height: 100%; background: #0b1320; }
@@ -25,7 +24,7 @@
             display: grid;
             place-items: center;
             padding: 0;
-            font-family: "IBM Plex Sans Condensed", system-ui, sans-serif;
+            font-family: "Golos Text", system-ui, sans-serif;
             font-variant-numeric: tabular-nums;
         }
         .story-wrap { width: min(100vw, 430px); aspect-ratio: 9 / 16; }
@@ -35,85 +34,74 @@
             height: 100%;
             overflow: hidden;
             color: var(--ink);
-            background:
-                linear-gradient(180deg, rgba(255,255,255,.72), transparent 32%),
-                linear-gradient(180deg, var(--paper) 0%, #eef3ef 52%, var(--paper-cool) 100%);
+            background: linear-gradient(180deg, var(--paper) 0%, #f8f5ec 61%, var(--paper-2) 100%);
         }
         .story-card::before {
             content: "";
             position: absolute;
             inset: 0;
+            pointer-events: none;
             background:
-                radial-gradient(ellipse at 72% 32%, transparent 0 34%, rgba(16,91,216,.08) 34.4% 35%, transparent 35.6%),
-                radial-gradient(ellipse at 72% 32%, transparent 0 47%, rgba(0,166,202,.055) 47.4% 48%, transparent 48.6%),
-                linear-gradient(90deg, transparent 0 7.4%, rgba(19,32,51,.09) 7.4% 7.55%, transparent 7.55%),
-                linear-gradient(rgba(19,32,51,.045) 1px, transparent 1px);
-            background-size: 100% 100%, 100% 100%, 100% 100%, 100% 48px;
-            opacity: .9;
-            pointer-events: none;
+                linear-gradient(180deg, transparent 0 96%, rgba(20,32,51,.045) 96% 100%),
+                radial-gradient(circle at 82% 9%, rgba(17,93,222,.075), transparent 24%),
+                radial-gradient(circle at 8% 96%, rgba(0,167,200,.10), transparent 30%);
+            background-size: 100% 78px, 100% 100%, 100% 100%;
         }
-        .story-card::after {
-            content: "";
-            position: absolute;
-            right: 5.8%; top: 18%; bottom: 16%;
-            width: 34px;
-            background: linear-gradient(180deg, rgba(0,166,202,.08), rgba(0,166,202,.42), rgba(16,91,216,.08));
-            border-left: 1px solid rgba(16,91,216,.14);
-            border-right: 1px solid rgba(16,91,216,.10);
-            pointer-events: none;
+        .inner { position: relative; z-index: 1; height: 100%; padding: 5.4% 6.1% 4.8%; display: flex; flex-direction: column; }
+
+        .topline { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding-bottom: 11px; border-bottom: 1px solid var(--line); }
+        .period, .brand, .label, .fact span, .progress-head, .sub, .stamp {
+            font-family: "IBM Plex Mono", monospace;
+            text-transform: uppercase;
+            letter-spacing: .11em;
+            font-weight: 700;
         }
-        .inner { position: relative; z-index: 1; height: 100%; padding: 5.1% 6.1% 4.6%; display: flex; flex-direction: column; }
+        .period { color: var(--blue); font-size: clamp(9px, 2vw, 11px); }
+        .brand { color: var(--muted); font-size: clamp(8px, 1.7vw, 9px); letter-spacing: .22em; }
 
-        .topline { display: flex; align-items: center; justify-content: space-between; gap: 14px; border-bottom: 1px solid var(--line); padding-bottom: 10px; }
-        .period { color: var(--blue); font-family: "IBM Plex Mono", monospace; font-size: clamp(9px,2vw,11px); letter-spacing: .08em; font-weight: 700; text-transform: uppercase; }
-        .brand { color: var(--muted); font-family: "IBM Plex Mono", monospace; font-size: clamp(8px,1.8vw,10px); letter-spacing: .22em; font-weight: 700; }
-
-        .hero { margin-top: 15px; display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: start; }
-        .kicker { color: var(--muted); font-family: "IBM Plex Mono", monospace; font-size: clamp(8px,1.7vw,9px); letter-spacing: .18em; text-transform: uppercase; font-weight: 700; }
-        h1 { margin: 6px 0 0; font-family: "Literata", Georgia, serif; font-size: clamp(41px, 10vw, 54px); line-height: .88; letter-spacing: -.055em; font-weight: 850; max-width: 8.3ch; }
+        .hero { margin-top: 17px; }
+        .kicker { color: var(--muted); font-family: "IBM Plex Mono", monospace; font-size: clamp(8px, 1.7vw, 9px); letter-spacing: .17em; text-transform: uppercase; font-weight: 700; }
+        h1 { margin: 6px 0 0; font-size: clamp(42px, 9.6vw, 52px); line-height: .93; letter-spacing: -.055em; font-weight: 800; }
         h1 span { display: block; color: var(--blue); }
-        .wx-mark { width: 48px; height: 48px; display:grid; place-items:center; border:1px solid var(--line); color:var(--blue); font-family:"IBM Plex Mono", monospace; font-size:11px; font-weight:700; background:rgba(255,255,255,.34); }
-        .summary { margin: 9px 0 0; max-width: 90%; color: #38485b; font-size: clamp(10px,2.25vw,12px); line-height: 1.23; font-weight: 700; }
+        .summary { margin: 10px 0 0; max-width: 92%; color: #39495b; font-size: clamp(11px, 2.35vw, 13px); line-height: 1.28; font-weight: 700; }
 
-        .rain-block { margin-top: 18px; position: relative; padding: 13px 0 16px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
-        .label { color: var(--muted); font-family: "IBM Plex Mono", monospace; text-transform: uppercase; letter-spacing: .15em; font-size: clamp(7px,1.55vw,8px); font-weight: 700; }
-        .rain-main { display: flex; align-items: flex-end; gap: 10px; margin-top: 6px; }
-        .rain-value { color: var(--blue); font-family: "IBM Plex Sans Condensed", sans-serif; font-size: clamp(94px, 23.5vw, 126px); line-height: .72; letter-spacing: -.075em; font-weight: 700; }
-        .rain-unit { padding-bottom: 8px; color: var(--cyan); font-family:"IBM Plex Mono", monospace; font-size: clamp(15px,3.3vw,18px); line-height: 1; font-weight: 700; }
-        .rain-note { margin-top: 11px; max-width: 76%; color:#334457; font-size: clamp(10px,2.2vw,12px); line-height:1.25; font-weight:700; }
-        .rain-note b { color: var(--orange); font-weight: 700; }
-        .rain-stripe { margin-top: 10px; width: 72%; height: 5px; background: linear-gradient(90deg, var(--blue), var(--sky), transparent); }
-        .side-metrics { position: absolute; right: 0; top: 15px; width: 84px; display: grid; gap: 16px; }
-        .side-metric { padding-left: 11px; border-left: 1px solid var(--line); }
-        .side-metric b { display:block; margin-top: 2px; font-family:"IBM Plex Sans Condensed", sans-serif; font-size: clamp(32px,7.6vw,42px); line-height:.82; letter-spacing:-.05em; font-weight:700; }
-        .side-metric .temp { color: var(--orange); }
-        .side-metric .rain { color: var(--cyan); }
+        .rain-card { margin-top: 18px; display: grid; grid-template-columns: 1fr 86px; gap: 16px; padding: 16px 0 15px; border-top: 2px solid var(--ink); border-bottom: 1px solid var(--line-strong); }
+        .label { color: var(--muted); font-size: clamp(7px, 1.5vw, 8px); }
+        .rain-value { margin-top: 7px; color: var(--blue); font-size: clamp(86px, 20.7vw, 112px); line-height: .78; letter-spacing: -.07em; font-weight: 800; }
+        .rain-unit { margin-top: 6px; color: var(--cyan); font-size: clamp(16px, 3.5vw, 20px); line-height: 1; font-weight: 800; }
+        .rain-note { margin-top: 10px; color: #39495b; font-size: clamp(10px, 2.15vw, 12px); line-height: 1.27; font-weight: 700; }
+        .rain-note b { color: var(--orange); font-weight: 800; }
+        .rain-line { margin-top: 11px; height: 5px; width: 78%; background: linear-gradient(90deg, var(--blue), var(--cyan), transparent); }
+        .side { border-left: 1px solid var(--line); padding-left: 12px; display: grid; align-content: space-between; }
+        .side-item b { display: block; margin-top: 4px; font-size: clamp(30px, 7.1vw, 38px); line-height: .86; letter-spacing: -.045em; font-weight: 800; }
+        .side-item .temp { color: var(--orange); }
+        .side-item .rain { color: var(--cyan); }
 
         .facts { margin-top: 14px; display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
-        .fact { min-height: 54px; padding: 9px 8px 8px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: rgba(255,255,255,.12); }
-        .fact b { display:block; color:var(--ink); font-family:"IBM Plex Sans Condensed", sans-serif; font-size: clamp(23px,5.5vw,31px); line-height:.92; letter-spacing:-.045em; font-weight:700; }
-        .fact span { display:block; margin-top:5px; color:var(--muted); font-family:"IBM Plex Mono", monospace; font-size:clamp(7px,1.45vw,8px); line-height:1.1; letter-spacing:.06em; text-transform:uppercase; font-weight:700; }
-        .fact.hot b { color: var(--orange); }
-        .fact.cold b { color: #008bad; }
-        .fact.good b { color: var(--blue); }
+        .fact { min-height: 52px; padding: 9px 8px 8px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: rgba(255,255,255,.22); }
+        .fact b { display: block; color: var(--ink); font-size: clamp(23px, 5.3vw, 30px); line-height: .9; letter-spacing: -.04em; font-weight: 800; }
+        .fact span { display: block; margin-top: 6px; color: var(--muted); font-size: clamp(7px, 1.42vw, 8px); line-height: 1.08; letter-spacing: .05em; }
+        .hot b { color: var(--orange); }
+        .cold b { color: #008aa6; }
+        .good b { color: var(--blue); }
 
-        .progress-box { margin-top: 14px; padding-top: 11px; border-top: 1px solid var(--line); }
-        .progress-head { display:flex; justify-content:space-between; align-items:center; gap:12px; color:var(--ink); font-family:"IBM Plex Mono", monospace; font-size:clamp(8px,1.7vw,9px); letter-spacing:.14em; text-transform:uppercase; font-weight:700; }
-        .track { margin-top: 9px; height: 6px; background: rgba(16,91,216,.14); }
-        .track i { display:block; height:100%; background: linear-gradient(90deg, var(--blue), var(--cyan), var(--lime)); }
-        .chips { margin-top: 10px; display:flex; flex-wrap:wrap; gap: 6px; }
-        .chip { color:#334457; border-bottom: 2px solid rgba(16,91,216,.18); padding: 3px 1px 4px; font-size: clamp(9px,1.9vw,10px); line-height: 1; font-weight: 700; }
+        .progress-box { margin-top: 15px; padding-top: 11px; border-top: 1px solid var(--line); }
+        .progress-head { display: flex; justify-content: space-between; color: var(--ink); font-size: clamp(8px, 1.65vw, 9px); }
+        .track { margin-top: 9px; height: 6px; background: rgba(17,93,222,.13); }
+        .track i { display: block; height: 100%; background: linear-gradient(90deg, var(--blue), var(--cyan), var(--green)); }
+        .chips { margin-top: 9px; display: flex; flex-wrap: wrap; gap: 7px 10px; }
+        .chip { color: #39495b; font-size: clamp(9px, 1.9vw, 10px); font-weight: 700; border-bottom: 2px solid rgba(17,93,222,.16); padding-bottom: 3px; }
         .chip b { color: var(--blue); }
 
-        .verdict { margin-top: 16px; padding: 12px 0 0 16px; border-top: 1px solid var(--line); border-left: 5px solid var(--blue); }
-        .verdict h2 { margin: 0; font-family:"Literata", Georgia, serif; color:var(--ink); font-size: clamp(21px,5vw,27px); line-height: .98; letter-spacing:-.04em; font-weight:850; }
+        .verdict { margin-top: 15px; padding: 12px 0 0 15px; border-top: 1px solid var(--line); border-left: 5px solid var(--blue); }
+        .verdict h2 { margin: 0; color: var(--ink); font-size: clamp(23px, 5.2vw, 29px); line-height: 1; letter-spacing: -.04em; font-weight: 800; }
         .verdict h2 span { color: var(--blue); }
-        .verdict p { margin: 7px 0 0; max-width: 92%; color:#3e5063; font-size:clamp(10px,2.15vw,12px); line-height:1.25; font-weight:700; }
+        .verdict p { margin: 7px 0 0; max-width: 92%; color: #405266; font-size: clamp(10px, 2.15vw, 12px); line-height: 1.28; font-weight: 700; }
 
-        .footer { margin-top: auto; padding-top: 10px; display:flex; justify-content:space-between; align-items:flex-end; gap:12px; }
-        .domain { color: var(--blue); font-size: clamp(16px,3.55vw,19px); line-height:1; font-weight:700; letter-spacing:-.025em; }
-        .sub { margin-top:5px; color:var(--muted); font-family:"IBM Plex Mono", monospace; font-size:clamp(7px,1.55vw,8px); text-transform:uppercase; letter-spacing:.1em; font-weight:700; }
-        .stamp { color:rgba(19,32,51,.30); font-family:"IBM Plex Mono", monospace; font-size:clamp(8px,1.75vw,9px); font-weight:700; letter-spacing:.08em; transform: rotate(-5deg); border:1px solid rgba(19,32,51,.22); padding:7px 8px; }
+        .footer { margin-top: auto; padding-top: 10px; display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; }
+        .domain { color: var(--blue); font-size: clamp(17px, 3.7vw, 20px); line-height: 1; letter-spacing: -.035em; font-weight: 800; }
+        .sub { margin-top: 5px; color: var(--muted); font-size: clamp(7px, 1.45vw, 8px); letter-spacing: .09em; }
+        .stamp { color: rgba(20,32,51,.34); font-size: clamp(7px, 1.5vw, 8px); letter-spacing: .08em; border: 1px solid rgba(20,32,51,.20); padding: 7px 8px; transform: rotate(-4deg); }
         @media print { body { padding: 0; } .story-wrap { width: 1080px; height: 1920px; } }
     </style>
 </head>
@@ -127,27 +115,24 @@
                 </div>
 
                 <section class="hero">
-                    <div>
-                        <div class="kicker">метеобюллетень</div>
-                        <h1>{{if .Data.IsSeason}}{{.Data.SelectedSeasonLabel}}{{else}}{{.Data.SelectedMonthLabel}}{{end}} <span>Армавир</span></h1>
-                        <p class="summary">
-                            {{if .Data.IsSeason}}Сезонный итог{{else}}Итог месяца{{end}}: дождливых дней — {{.Data.CurrentMonth.RainDays}}, средняя температура {{printf "%.1f" .Data.CurrentMonth.AvgTemp}}°C{{if .Data.CurrentMonth.MaxRainDay}}, главный ливень — {{.Data.CurrentMonth.MaxRainDay.Date.Format "02.01"}}{{end}}.
-                        </p>
-                    </div>
-                    <div class="wx-mark">WX</div>
+                    <div class="kicker">погодный отчёт станции</div>
+                    <h1>{{if .Data.IsSeason}}{{.Data.SelectedSeasonLabel}}{{else}}{{.Data.SelectedMonthLabel}}{{end}} <span>Армавир</span></h1>
+                    <p class="summary">
+                        {{if .Data.IsSeason}}Сезонный итог{{else}}Итог месяца{{end}}: дождливых дней — {{.Data.CurrentMonth.RainDays}}, средняя температура {{printf "%.1f" .Data.CurrentMonth.AvgTemp}}°C{{if .Data.CurrentMonth.MaxRainDay}}, главный ливень — {{.Data.CurrentMonth.MaxRainDay.Date.Format "02.01"}}{{end}}.
+                    </p>
                 </section>
 
-                <section class="rain-block" aria-label="Главные показатели">
-                    <div class="label">осадки / сумма периода</div>
-                    <div class="rain-main">
+                <section class="rain-card" aria-label="Главные показатели">
+                    <div>
+                        <div class="label">осадки / сумма периода</div>
                         <div class="rain-value">{{printf "%.1f" .Data.CurrentMonth.RainTotal}}</div>
-                        <div class="rain-unit">мм</div>
+                        <div class="rain-unit">мм за {{if .Data.IsSeason}}сезон{{else}}месяц{{end}}</div>
+                        <div class="rain-note">{{if .Data.CurrentMonth.MaxRainDay}}Один день дал <b>{{printf "%.1f" .Data.CurrentMonth.MaxRainDay.Value}} мм</b> — около <b>{{.Data.RainiestDaySharePercent}}%</b> всей суммы.{{end}}</div>
+                        <div class="rain-line"></div>
                     </div>
-                    <div class="rain-note">{{if .Data.CurrentMonth.MaxRainDay}}Один день дал <b>{{printf "%.1f" .Data.CurrentMonth.MaxRainDay.Value}} мм</b> — около <b>{{.Data.RainiestDaySharePercent}}%</b> всей суммы.{{end}}</div>
-                    <div class="rain-stripe"></div>
-                    <div class="side-metrics">
-                        <div class="side-metric"><div class="label">средняя</div><b class="temp">{{printf "%.1f" .Data.CurrentMonth.AvgTemp}}°</b></div>
-                        <div class="side-metric"><div class="label">дождь</div><b class="rain">{{.Data.CurrentMonth.RainDays}}</b></div>
+                    <div class="side">
+                        <div class="side-item"><div class="label">средняя</div><b class="temp">{{printf "%.1f" .Data.CurrentMonth.AvgTemp}}°</b></div>
+                        <div class="side-item"><div class="label">дождь</div><b class="rain">{{.Data.CurrentMonth.RainDays}}</b></div>
                     </div>
                 </section>
 
