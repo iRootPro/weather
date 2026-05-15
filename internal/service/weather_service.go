@@ -10,11 +10,27 @@ import (
 )
 
 type WeatherService struct {
-	repo repository.WeatherRepository
+	repo     repository.WeatherRepository
+	timezone string
+	location *time.Location
 }
 
 func NewWeatherService(repo repository.WeatherRepository) *WeatherService {
-	return &WeatherService{repo: repo}
+	s := &WeatherService{repo: repo, timezone: "Europe/Moscow", location: time.Local}
+	s.SetTimezone("Europe/Moscow")
+	return s
+}
+
+func (s *WeatherService) SetTimezone(timezone string) {
+	if timezone == "" {
+		return
+	}
+	loc, err := time.LoadLocation(timezone)
+	if err != nil {
+		return
+	}
+	s.timezone = timezone
+	s.location = loc
 }
 
 func (s *WeatherService) GetCurrent(ctx context.Context) (*models.WeatherData, error) {

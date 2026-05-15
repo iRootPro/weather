@@ -488,3 +488,58 @@ func (r *weatherRepository) GetDataForEventDetection(ctx context.Context, from, 
 
 	return result, nil
 }
+
+// GetDailyInsights returns daily aggregates for calendar days in the specified timezone.
+func (r *weatherRepository) GetDailyInsights(ctx context.Context, from, to time.Time, timezone string) ([]models.DailyWeatherInsight, error) {
+	query := `
+		SELECT
+			((time AT TIME ZONE $3)::date)::timestamp AS day,
+			MIN(temp_outdoor) AS temp_min,
+			MAX(temp_outdoor) AS temp_max,
+			AVG(temp_outdoor) AS temp_avg,
+			MAX(rain_daily) AS rain_total,
+			MAX(rain_rate) AS rain_rate_max,
+			MAX(wind_speed) AS wind_speed_max,
+			MAX(wind_gust) AS wind_gust_max,
+			MAX(solar_radiation) AS solar_radiation_max,
+			MAX(uv_index) AS uv_index_max,
+			AVG(pressure_relative) AS pressure_avg,
+			AVG(humidity_outdoor)::smallint AS humidity_avg
+		FROM weather_data
+		WHERE time >= $1 AND time < $2
+		GROUP BY (time AT TIME ZONE $3)::date
+		ORDER BY day ASC`
+
+	rows, err := r.pool.Query(ctx, query, from, to, timezone)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query daily weather insights: %w", err)
+	}
+	defer rows.Close()
+
+	var result []models.DailyWeatherInsight
+	for rows.Next() {
+		var day models.DailyWeatherInsight
+		if err := rows.Scan(
+			&day.Date,
+			&day.TempMin,
+			&day.TempMax,
+			&day.TempAvg,
+			&day.RainTotal,
+			&day.RainRateMax,
+			&day.WindSpeedMax,
+			&day.WindGustMax,
+			&day.SolarRadiationMax,
+			&day.UVIndexMax,
+			&day.PressureAvg,
+			&day.HumidityAvg,
+		); err != nil {
+			return nil, fmt.Errorf("failed to scan daily weather insights: %w", err)
+		}
+		result = append(result, day)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("daily weather insights rows error: %w", err)
+	}
+
+	return result, nil
+}

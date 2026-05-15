@@ -1,6 +1,7 @@
 package web
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"log/slog"
@@ -91,6 +92,14 @@ var templateFuncs = template.FuncMap{
 		default:
 			return ""
 		}
+	},
+	"json": func(v interface{}) template.JS {
+		data, err := json.Marshal(v)
+		if err != nil {
+			slog.Error("failed to marshal template json", "error", err)
+			return template.JS("{}")
+		}
+		return template.JS(data)
 	},
 }
 
@@ -188,6 +197,33 @@ func (h *Handler) Records(w http.ResponseWriter, r *http.Request) {
 
 	if err := tmpl.Execute(w, data); err != nil {
 		slog.Error("failed to render records", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}
+
+// Insights renders the human-friendly analytics page
+func (h *Handler) Insights(w http.ResponseWriter, r *http.Request) {
+	insights, err := h.weatherService.GetInsights(r.Context())
+	if err != nil {
+		slog.Error("failed to get weather insights", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	tmpl, err := h.parseTemplate("insights.html")
+	if err != nil {
+		slog.Error("failed to parse insights template", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	data := PageData{
+		ActivePage: "insights",
+		Data:       insights,
+	}
+
+	if err := tmpl.Execute(w, data); err != nil {
+		slog.Error("failed to render insights", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }

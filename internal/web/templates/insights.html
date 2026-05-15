@@ -1,0 +1,319 @@
+{{template "base.html" .}}
+
+{{define "title"}}Интересное - Метеостанция{{end}}
+
+{{define "content"}}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-950 via-blue-900 to-cyan-800 p-6 md:p-8 shadow-xl">
+        <div class="absolute -right-12 -top-12 h-44 w-44 rounded-full bg-cyan-400/20 blur-2xl"></div>
+        <div class="absolute -bottom-16 left-12 h-44 w-44 rounded-full bg-blue-300/20 blur-2xl"></div>
+        <div class="relative grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-6 items-end">
+            <div>
+                <div class="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-sm text-cyan-100 mb-4">
+                    ✨ Аналитика по данным станции
+                </div>
+                <h2 class="text-3xl md:text-4xl font-bold text-white mb-3">Интересное о погоде</h2>
+                <p class="text-cyan-100 max-w-2xl">
+                    {{.Data.MainInsight.Text}}
+                </p>
+                <p class="text-xs text-cyan-200/80 mt-4">Обновлено: {{.Data.GeneratedAt.Format "02.01.2006 15:04"}}</p>
+            </div>
+            <div class="rounded-2xl bg-white/10 border border-white/15 p-5 backdrop-blur">
+                <div class="text-4xl mb-3">{{.Data.MainInsight.Icon}}</div>
+                <div class="text-xl font-bold text-white mb-2">{{.Data.MainInsight.Title}}</div>
+                <div class="text-sm text-cyan-100">{{.Data.MainInsight.Text}}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stories -->
+    {{if .Data.Stories}}
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        {{range .Data.Stories}}
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5 border border-gray-100 dark:border-gray-700 transition-colors">
+            <div class="flex items-start gap-3">
+                <div class="text-3xl">{{.Icon}}</div>
+                <div>
+                    <h3 class="font-semibold text-gray-900 dark:text-white mb-1">{{.Title}}</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">{{.Text}}</p>
+                </div>
+            </div>
+        </div>
+        {{end}}
+    </div>
+    {{end}}
+
+    <!-- Month comparison -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {{template "monthCard" .Data.CurrentMonth}}
+        {{template "monthCard" .Data.PreviousSamePeriod}}
+        {{template "monthCard" .Data.PreviousMonth}}
+    </div>
+
+    <!-- Rain focus + chart -->
+    <div class="grid grid-cols-1 xl:grid-cols-[1fr_1.25fr] gap-6">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6 transition-colors">
+            <div class="flex items-center justify-between mb-5">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white">Дожди и сухие серии</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Дождливый день: от 1 мм, день с осадками: от 0.2 мм.</p>
+                </div>
+                <div class="text-4xl">🌧️</div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="rounded-lg bg-cyan-50 dark:bg-cyan-900/20 p-4">
+                    <div class="text-sm text-gray-600 dark:text-gray-400">Дождливых дней</div>
+                    <div class="mt-2 text-3xl font-bold text-cyan-700 dark:text-cyan-300">{{.Data.CurrentMonth.RainDays}}</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">к той же дате: {{.Data.PreviousSamePeriod.RainDays}}</div>
+                </div>
+                <div class="rounded-lg bg-blue-50 dark:bg-blue-900/20 p-4">
+                    <div class="text-sm text-gray-600 dark:text-gray-400">Всего осадков</div>
+                    <div class="mt-2 text-3xl font-bold text-blue-700 dark:text-blue-300">{{printf "%.1f" .Data.CurrentMonth.RainTotal}} мм</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">к той же дате: {{printf "%.1f" .Data.PreviousSamePeriod.RainTotal}} мм</div>
+                </div>
+                <div class="rounded-lg bg-amber-50 dark:bg-amber-900/20 p-4">
+                    <div class="text-sm text-gray-600 dark:text-gray-400">Сухих дней подряд</div>
+                    {{if gt .Data.CurrentDryStreak 0}}
+                    <div class="mt-2 text-3xl font-bold text-amber-700 dark:text-amber-300">{{.Data.CurrentDryStreak}}</div>
+                    {{else}}
+                    <div class="mt-2 text-xl font-bold text-amber-700 dark:text-amber-300">нет серии</div>
+                    {{end}}
+                    {{if .Data.HasLastRain}}
+                    <div class="text-xs text-gray-500 dark:text-gray-400">последний дождь: {{.Data.LastRainDate.Format "02.01"}}</div>
+                    {{else}}
+                    <div class="text-xs text-gray-500 dark:text-gray-400">дождя нет в периоде сравнения</div>
+                    {{end}}
+                </div>
+                <div class="rounded-lg bg-indigo-50 dark:bg-indigo-900/20 p-4">
+                    <div class="text-sm text-gray-600 dark:text-gray-400">Макс. интенсивность</div>
+                    <div class="mt-2 text-3xl font-bold text-indigo-700 dark:text-indigo-300">{{printf "%.1f" .Data.CurrentMonth.MaxRainRate}}</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">мм/ч</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6 transition-colors">
+            <div class="flex items-start justify-between gap-4 mb-4">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white">Накопление осадков</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Текущий месяц против прошлого по дням месяца.</p>
+                </div>
+                <div class="text-3xl">📈</div>
+            </div>
+            <div class="h-72">
+                <canvas id="rainCumulativeChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calendar -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6 transition-colors">
+        <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-5">
+            <div>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white">Календарь месяца</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Капли — осадки, солнце — яркий день, огонь — жара, ветер — сильные порывы.</p>
+            </div>
+            <div class="flex flex-wrap gap-2 text-xs">
+                <span class="px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-200">🌧️ ≥10 мм</span>
+                <span class="px-2 py-1 rounded-full bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-200">💧 осадки</span>
+                <span class="px-2 py-1 rounded-full bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-200">☀️ солнце</span>
+                <span class="px-2 py-1 rounded-full bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-200">🔥 жара</span>
+            </div>
+        </div>
+        <div class="grid grid-cols-7 gap-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
+            <div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div>
+        </div>
+        <div class="grid grid-cols-7 gap-2">
+            {{range .Data.Calendar}}
+                {{if .IsBlank}}
+                <div class="min-h-20"></div>
+                {{else}}
+                <div title="{{.Summary}}" class="min-h-20 rounded-xl border p-2 text-left transition hover:-translate-y-0.5 hover:shadow-md {{.CardClass}} {{if .IsToday}}ring-2 ring-blue-500{{end}}">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="font-bold text-gray-900 dark:text-white">{{.Day}}</span>
+                        <span class="text-xs">{{range .Badges}}{{.}}{{end}}</span>
+                    </div>
+                    {{if .HasData}}
+                    <div class="text-[11px] text-gray-600 dark:text-gray-300">{{printf "%.0f" .TempMax}}°C</div>
+                    {{if gt .RainTotal 0.0}}<div class="text-[11px] font-medium text-blue-700 dark:text-blue-300">{{printf "%.1f" .RainTotal}} мм</div>{{end}}
+                    {{else if .IsFuture}}
+                    <div class="text-[11px] text-gray-400">будет</div>
+                    {{else}}
+                    <div class="text-[11px] text-gray-400">нет данных</div>
+                    {{end}}
+                </div>
+                {{end}}
+            {{end}}
+        </div>
+    </div>
+
+    <!-- Best / worst -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {{if .Data.BestDay}}
+        <div class="bg-gradient-to-br from-emerald-50 to-green-100 dark:from-emerald-900/20 dark:to-green-900/20 rounded-xl shadow p-6 border border-emerald-100 dark:border-emerald-800">
+            <div class="text-3xl mb-3">{{.Data.BestDay.Icon}}</div>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{.Data.BestDay.Title}}</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">{{.Data.BestDay.Date.Format "02.01.2006"}}</p>
+            <p class="text-gray-700 dark:text-gray-200">{{.Data.BestDay.Description}}</p>
+        </div>
+        {{end}}
+        {{if .Data.WorstDay}}
+        <div class="bg-gradient-to-br from-rose-50 to-orange-100 dark:from-rose-900/20 dark:to-orange-900/20 rounded-xl shadow p-6 border border-rose-100 dark:border-rose-800">
+            <div class="text-3xl mb-3">{{.Data.WorstDay.Icon}}</div>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{.Data.WorstDay.Title}}</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">{{.Data.WorstDay.Date.Format "02.01.2006"}}</p>
+            <p class="text-gray-700 dark:text-gray-200">{{.Data.WorstDay.Description}}</p>
+        </div>
+        {{end}}
+    </div>
+
+    <!-- Category grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6 transition-colors">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">🌡️ Температура</h3>
+            <div class="space-y-3">
+                <div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">Средняя</span><span class="font-semibold text-gray-900 dark:text-white">{{printf "%.1f" .Data.CurrentMonth.AvgTemp}}°C</span></div>
+                <div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">Жарких дней ≥30°C</span><span class="font-semibold text-red-600 dark:text-red-400">{{.Data.CurrentMonth.HotDays}}</span></div>
+                <div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">Очень жарких ≥35°C</span><span class="font-semibold text-orange-600 dark:text-orange-400">{{.Data.CurrentMonth.VeryHotDays}}</span></div>
+                <div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">Морозных дней</span><span class="font-semibold text-blue-600 dark:text-blue-400">{{.Data.CurrentMonth.FrostDays}}</span></div>
+                {{if .Data.CurrentMonth.MaxTempDay}}
+                <div class="pt-3 border-t border-gray-100 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400">Максимум: {{printf "%.1f" .Data.CurrentMonth.MaxTempDay.Value}}°C, {{.Data.CurrentMonth.MaxTempDay.Date.Format "02.01"}}</div>
+                {{end}}
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6 transition-colors">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">💨 Ветер</h3>
+            <div class="space-y-3">
+                <div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">Ветреных дней</span><span class="font-semibold text-teal-600 dark:text-teal-400">{{.Data.CurrentMonth.WindyDays}}</span></div>
+                <div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">Сильных порывов ≥15 м/с</span><span class="font-semibold text-rose-600 dark:text-rose-400">{{.Data.CurrentMonth.StrongWindDays}}</span></div>
+                {{if .Data.CurrentMonth.MaxWindGustDay}}
+                <div class="rounded-lg bg-teal-50 dark:bg-teal-900/20 p-4 mt-4">
+                    <div class="text-sm text-gray-600 dark:text-gray-400">Максимальный порыв</div>
+                    <div class="text-2xl font-bold text-teal-700 dark:text-teal-300">{{printf "%.1f" .Data.CurrentMonth.MaxWindGustDay.Value}} м/с</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">{{.Data.CurrentMonth.MaxWindGustDay.Date.Format "02.01"}}</div>
+                </div>
+                {{end}}
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6 transition-colors">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">☀️ Солнце и комфорт</h3>
+            <div class="space-y-3">
+                <div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">Солнечных дней</span><span class="font-semibold text-yellow-600 dark:text-yellow-400">{{.Data.CurrentMonth.SunnyDays}}</span></div>
+                <div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">Пасмурных дней</span><span class="font-semibold text-slate-600 dark:text-slate-300">{{.Data.CurrentMonth.CloudyDays}}</span></div>
+                <div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">Высокий UV ≥6</span><span class="font-semibold text-orange-600 dark:text-orange-400">{{.Data.CurrentMonth.HighUVDays}}</span></div>
+                <div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">Комфортных дней</span><span class="font-semibold text-emerald-600 dark:text-emerald-400">{{.Data.CurrentMonth.ComfortableDays}}</span></div>
+                {{if .Data.CurrentMonth.SunniestDay}}
+                <div class="pt-3 border-t border-gray-100 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400">Самый солнечный: {{.Data.CurrentMonth.SunniestDay.Date.Format "02.01"}}, {{printf "%.0f" .Data.CurrentMonth.SunniestDay.Value}} Вт/м²</div>
+                {{end}}
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5 text-sm text-gray-600 dark:text-gray-300">
+        <h3 class="font-semibold text-gray-900 dark:text-white mb-2">Как считаются показатели</h3>
+        <p>Дождливый день — от 1 мм осадков, день с осадками — от 0.2 мм. Солнечный день — максимум солнечной радиации от 500 Вт/м². Комфортный день — средняя температура 18–26°C, осадки меньше 0.2 мм и порыв ветра меньше 8 м/с.</p>
+    </div>
+</div>
+{{end}}
+
+{{define "monthCard"}}
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6 transition-colors">
+    <div class="flex items-start justify-between mb-5">
+        <div>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{.Title}}</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400">{{.StartDate.Format "02.01"}} — {{.EndDate.Format "02.01.2006"}}, данных: {{.DaysWithData}}/{{.DaysInPeriod}} дней</p>
+        </div>
+        <div class="text-3xl">📊</div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3 mb-5">
+        <div class="rounded-lg bg-cyan-50 dark:bg-cyan-900/20 p-4">
+            <div class="text-xs text-gray-500 dark:text-gray-400">Дождливых дней</div>
+            <div class="text-2xl font-bold text-cyan-700 dark:text-cyan-300">{{.RainDays}}</div>
+        </div>
+        <div class="rounded-lg bg-blue-50 dark:bg-blue-900/20 p-4">
+            <div class="text-xs text-gray-500 dark:text-gray-400">Осадки</div>
+            <div class="text-2xl font-bold text-blue-700 dark:text-blue-300">{{printf "%.1f" .RainTotal}} мм</div>
+        </div>
+        <div class="rounded-lg bg-red-50 dark:bg-red-900/20 p-4">
+            <div class="text-xs text-gray-500 dark:text-gray-400">Жарких дней</div>
+            <div class="text-2xl font-bold text-red-700 dark:text-red-300">{{.HotDays}}</div>
+        </div>
+        <div class="rounded-lg bg-emerald-50 dark:bg-emerald-900/20 p-4">
+            <div class="text-xs text-gray-500 dark:text-gray-400">Комфортных дней</div>
+            <div class="text-2xl font-bold text-emerald-700 dark:text-emerald-300">{{.ComfortableDays}}</div>
+        </div>
+    </div>
+
+    <div class="space-y-2 text-sm">
+        {{if .MaxRainDay}}
+        <div class="flex justify-between gap-4"><span class="text-gray-600 dark:text-gray-400">Самый дождливый день</span><span class="font-medium text-gray-900 dark:text-white">{{.MaxRainDay.Date.Format "02.01"}}, {{printf "%.1f" .MaxRainDay.Value}} мм</span></div>
+        {{end}}
+        {{if .MaxTempDay}}
+        <div class="flex justify-between gap-4"><span class="text-gray-600 dark:text-gray-400">Максимальная температура</span><span class="font-medium text-gray-900 dark:text-white">{{printf "%.1f" .MaxTempDay.Value}}°C</span></div>
+        {{end}}
+        {{if .MaxWindGustDay}}
+        <div class="flex justify-between gap-4"><span class="text-gray-600 dark:text-gray-400">Максимальный порыв</span><span class="font-medium text-gray-900 dark:text-white">{{printf "%.1f" .MaxWindGustDay.Value}} м/с</span></div>
+        {{end}}
+    </div>
+</div>
+{{end}}
+
+{{define "scripts"}}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const canvas = document.getElementById('rainCumulativeChart');
+        if (!canvas || !window.Chart) return;
+
+        const chartData = {{json .Data.RainChartData}};
+        const isDark = document.documentElement.classList.contains('dark');
+        const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(15,23,42,0.08)';
+        const textColor = isDark ? 'rgba(255,255,255,0.72)' : 'rgba(15,23,42,0.72)';
+
+        new Chart(canvas.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: chartData.labels,
+                datasets: [
+                    {
+                        label: 'Этот месяц',
+                        data: chartData.current,
+                        borderColor: 'rgb(37, 99, 235)',
+                        backgroundColor: 'rgba(37, 99, 235, 0.12)',
+                        borderWidth: 3,
+                        tension: 0.32,
+                        fill: true,
+                        spanGaps: false
+                    },
+                    {
+                        label: 'Прошлый месяц',
+                        data: chartData.previous,
+                        borderColor: 'rgb(14, 165, 233)',
+                        borderDash: [6, 5],
+                        borderWidth: 2,
+                        tension: 0.32,
+                        fill: false,
+                        spanGaps: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { labels: { color: textColor } },
+                    tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.formattedValue} мм` } }
+                },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor, callback: v => `${v} мм` } },
+                    x: { grid: { color: gridColor }, ticks: { color: textColor, maxTicksLimit: 12 } }
+                }
+            }
+        });
+    });
+</script>
+{{end}}

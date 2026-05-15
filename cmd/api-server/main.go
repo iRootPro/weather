@@ -62,6 +62,7 @@ func main() {
 
 	// Инициализация сервисов
 	weatherService := service.NewWeatherService(weatherRepo)
+	weatherService.SetTimezone(cfg.Location.Timezone)
 	sensorService := service.NewSensorService(sensorRepo)
 	forecastService := service.NewForecastService(forecastRepo)
 	geomagneticService := service.NewGeomagneticService(geomagneticRepo, cfg.Geomagnetic.AlertThreshold)
@@ -139,6 +140,7 @@ func main() {
 	mux.HandleFunc("GET /", webHandler.Dashboard)
 	mux.HandleFunc("GET /history", webHandler.History)
 	mux.HandleFunc("GET /records", webHandler.Records)
+	mux.HandleFunc("GET /insights", webHandler.Insights)
 	mux.HandleFunc("GET /help", webHandler.Help)
 	mux.HandleFunc("GET /gallery", webHandler.Gallery)
 

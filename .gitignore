@@ -18,6 +18,9 @@ Thumbs.db
 # Логи
 *.log
 
+# Локальные резервные копии на сервере
+backups/
+
 # Тестовое покрытие
 coverage.out
 coverage.html

@@ -46,11 +46,17 @@ $SSH_CMD "
 echo -e "${GREEN}[3/5] Обновляю код из ${GIT_BRANCH:-main}...${NC}"
 $SSH_CMD "
     cd ${DEPLOY_PATH}
-    git stash --include-untracked
+    # Не stash'им untracked файлы: на сервере там могут быть большие backups/,
+    # которые иначе попадают в .git и быстро забивают диск.
+    STASH_BEFORE=\$(git rev-parse -q --verify refs/stash || true)
+    git stash push -m deploy-auto-stash || true
+    STASH_AFTER=\$(git rev-parse -q --verify refs/stash || true)
     git fetch origin
     git checkout ${GIT_BRANCH:-main}
     git pull origin ${GIT_BRANCH:-main}
-    git stash pop || true
+    if [ -n \"\$STASH_AFTER\" ] && [ \"\$STASH_AFTER\" != \"\$STASH_BEFORE\" ]; then
+        git stash pop || true
+    fi
 "
 
 # Проверяем .env
@@ -69,6 +75,22 @@ echo -e "${GREEN}[5/5] Пересобираю и перезапускаю кон
 $SSH_CMD "
     set -e
     cd ${DEPLOY_PATH}
+
+    echo '=== Место на диске перед сборкой ==='
+    df -h /
+    docker system df || true
+
+    # Чистим до сборки, а не только после: при заполненном диске PostgreSQL не может пройти recovery.
+    docker builder prune -af >/dev/null 2>&1 || true
+    docker image prune -af   >/dev/null 2>&1 || true
+
+    AVAIL_KB=\$(df -Pk / | awk 'NR==2 {print \$4}')
+    if [ \"\$AVAIL_KB\" -lt 1048576 ]; then
+        echo 'ОШИБКА: на / меньше 1 ГБ свободного места после Docker cleanup'
+        df -h /
+        exit 1
+    fi
+
     docker compose -f docker-compose.prod.yml build
     docker compose -f docker-compose.prod.yml up -d
 
