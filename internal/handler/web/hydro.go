@@ -33,7 +33,7 @@ type WaterLevelCardData struct {
 	RiskHeadline      string
 	RiskCaption       string
 	AbsoluteLevelText string
-	SummaryText       string
+	StatusNote        string
 	TrendText         string
 	TrendClass        string
 	Sparkline         WaterSparklineData
@@ -134,7 +134,7 @@ func (h *Handler) buildWaterLevelCard(r *http.Request) WaterLevelCardData {
 		card.RiskCaption = "текущая отметка уровня"
 	}
 	card.TrendText, card.TrendClass = trendLabel(snap.Current.ChangeCmPerHour, snap.Change24hM)
-	card.SummaryText = buildHydroSummary(snap, card.DayChangeText, card.ToPrevention)
+	card.StatusNote = hydroStatusNote(snap.Status, snap.Current.ChangeCmPerHour, snap.Change24hM)
 	upstream, err := h.hydroService.GetUpstreamSnapshots(r.Context(), time.Now())
 	if err != nil {
 		slog.Warn("failed to get upstream hydro snapshots", "error", err)
@@ -243,22 +243,24 @@ func trendLabel(changePerHour *float32, change24hM *float32) (string, string) {
 	return "наблюдение", "text-gray-600 dark:text-gray-300"
 }
 
-func buildHydroSummary(snap *models.HydroSnapshot, dayChangeText, toPrevention string) string {
-	if snap == nil || snap.Current == nil {
-		return ""
+func hydroStatusNote(status models.HydroStatus, changePerHour *float32, change24hM *float32) string {
+	trend := summaryTrendPhrase(changePerHour, change24hM)
+	switch status {
+	case models.HydroStatusDanger:
+		return "Опасный уровень уже достигнут. Смотрите динамику и предупреждения служб."
+	case models.HydroStatusPrevention:
+		return "Неблагоприятный уровень уже достигнут. Следующий ориентир — опасный уровень."
+	case models.HydroStatusNear:
+		return "Порог почти рядом. Важнее всего сейчас — скорость роста и посты выше по течению."
+	default:
+		if strings.Contains(trend, "растёт") {
+			return "Пока ниже порога, но уровень растёт — следим за динамикой."
+		}
+		if strings.Contains(trend, "снижается") {
+			return "Уровень ниже порога и снижается."
+		}
+		return "Уровень ниже порога, резких изменений нет."
 	}
-	summary := "Кубань " + summaryTrendPhrase(snap.Current.ChangeCmPerHour, snap.Change24hM)
-	details := make([]string, 0, 2)
-	if dayChangeText != "" {
-		details = append(details, "за сутки "+dayChangeText)
-	}
-	if toPrevention != "" {
-		details = append(details, "до неблагоприятного уровня "+toPrevention)
-	}
-	if len(details) == 0 {
-		return summary
-	}
-	return summary + ": " + strings.Join(details, ", ")
 }
 
 func summaryTrendPhrase(changePerHour *float32, change24hM *float32) string {
