@@ -85,7 +85,7 @@ func (s HydroStatus) Label() string {
 	case HydroStatusPrevention:
 		return "неблагоприятный уровень"
 	case HydroStatusNear:
-		return "близко к НЯ"
+		return "почти неблагоприятный"
 	case HydroStatusNormal:
 		return "норма"
 	default:

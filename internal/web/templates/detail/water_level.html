@@ -16,11 +16,12 @@
     <div class="bg-gradient-to-br {{.Data.Card.StatusGradient}} rounded-lg shadow-lg p-8 transition-colors">
         <div class="text-center">
             <h1 class="text-lg font-medium text-gray-700 dark:text-gray-200 mb-2">🌊 Уровень Кубани</h1>
-            <div class="text-6xl md:text-7xl font-bold {{.Data.Card.StatusText}} mb-3 leading-tight">
-                {{printf "%.3f" .Data.Card.LevelM}} м
+            <div class="text-6xl md:text-7xl font-bold {{.Data.Card.StatusText}} mb-2 leading-tight">
+                {{.Data.Card.RiskHeadline}}
             </div>
+            <div class="text-xl {{.Data.Card.StatusText}} font-bold mb-3">{{.Data.Card.RiskCaption}}</div>
             <div class="text-base text-gray-600 dark:text-gray-400">{{.Data.Card.ObjectName}} · {{.Data.Card.StationName}} · {{.Data.Card.ObservedAt}}</div>
-            {{if .Data.Card.RelativeLevelCm}}<div class="mt-2 text-gray-700 dark:text-gray-300 font-semibold">{{.Data.Card.RelativeLevelCm}}</div>{{end}}
+            <div class="mt-2 text-gray-700 dark:text-gray-300 font-semibold">Уровень: {{.Data.Card.AbsoluteLevelText}}</div>
             <div class="mt-3 text-lg {{.Data.Card.StatusText}} font-semibold">{{.Data.Card.StatusLabel}}</div>
             {{if .Data.Card.ChangeText}}<div class="mt-2 text-gray-700 dark:text-gray-300">Изменение: <span class="font-semibold {{.Data.Card.ChangeClass}}">{{.Data.Card.ChangeText}}</span></div>{{end}}
             {{if .Data.Card.LeadText}}<div class="mt-1 text-gray-700 dark:text-gray-300">{{.Data.Card.LeadText}}</div>{{end}}
@@ -32,19 +33,19 @@
 
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">График уровня за 7 дней</h2>
-        <div class="text-sm text-gray-500 dark:text-gray-400 mb-4">Уровень в метрах, Балтийская система высот. Источник обновляется примерно раз в 10 минут.</div>
+        <div class="text-sm text-gray-500 dark:text-gray-400 mb-4">Служебная отметка уровня в Балтийской системе высот. Источник обновляется примерно раз в 10 минут.</div>
         <div class="relative h-96"><canvas id="waterLevelChart"></canvas></div>
     </div>
 
     {{if .Data.Gauge}}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-5">
-            <div class="text-sm text-gray-500 dark:text-gray-400">НЯ затопления</div>
+            <div class="text-sm text-gray-500 dark:text-gray-400">Неблагоприятный уровень</div>
             <div class="text-2xl font-bold text-orange-600 dark:text-orange-300">{{printf "%.3f" (deref .Data.Gauge.FloodingPreventionBM)}} м</div>
             {{if .Data.Card.ToPrevention}}<div class="text-sm text-gray-500 dark:text-gray-400">{{.Data.Card.ToPrevention}}</div>{{end}}
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-5">
-            <div class="text-sm text-gray-500 dark:text-gray-400">ОЯ затопления</div>
+            <div class="text-sm text-gray-500 dark:text-gray-400">Опасный уровень</div>
             <div class="text-2xl font-bold text-red-600 dark:text-red-300">{{printf "%.3f" (deref .Data.Gauge.FloodingDangerBSM)}} м</div>
             {{if .Data.Card.ToDanger}}<div class="text-sm text-gray-500 dark:text-gray-400">{{.Data.Card.ToDanger}}</div>{{end}}
         </div>
@@ -62,7 +63,7 @@
         <div class="overflow-x-auto">
             <table class="min-w-full text-sm">
                 <thead class="text-xs uppercase text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
-                    <tr><th class="px-4 py-2 text-left">Время</th><th class="px-4 py-2 text-right">Уровень, м БСВ</th></tr>
+                    <tr><th class="px-4 py-2 text-left">Время</th><th class="px-4 py-2 text-right">Уровень, м<br><span class="normal-case font-normal">Балтийская система высот</span></th></tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                     {{range .Data.Rows}}
@@ -92,7 +93,7 @@
         data: {
             labels: points.map(p => new Date(p.time).toLocaleString('ru-RU', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'})),
             datasets: [{
-                label: 'Уровень, м БСВ',
+                label: 'Уровень, м, Балтийская система высот',
                 data: points.map(p => p.level),
                 borderColor: '#0ea5e9',
                 backgroundColor: 'rgba(14,165,233,0.12)',

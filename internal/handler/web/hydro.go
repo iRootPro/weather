@@ -13,47 +13,53 @@ import (
 )
 
 type WaterLevelCardData struct {
-	HasData         bool
-	StationName     string
-	ObjectName      string
-	ObservedAt      string
-	LevelM          float32
-	RelativeLevelCm string
-	ChangeText      string
-	ChangeClass     string
-	DayChangeText   string
-	LeadText        string
-	StatusLabel     string
-	StatusGradient  string
-	StatusText      string
-	ToPrevention    string
-	ToDanger        string
-	RiskPct         int
-	RiskBarClass    string
-	SummaryText     string
-	TrendText       string
-	TrendClass      string
-	Sparkline       WaterSparklineData
-	Upstream        []WaterLevelMiniData
+	HasData           bool
+	StationName       string
+	ObjectName        string
+	ObservedAt        string
+	LevelM            float32
+	RelativeLevelCm   string
+	ChangeText        string
+	ChangeClass       string
+	DayChangeText     string
+	LeadText          string
+	StatusLabel       string
+	StatusGradient    string
+	StatusText        string
+	ToPrevention      string
+	ToDanger          string
+	RiskPct           int
+	RiskBarClass      string
+	RiskHeadline      string
+	RiskCaption       string
+	AbsoluteLevelText string
+	SummaryText       string
+	TrendText         string
+	TrendClass        string
+	Sparkline         WaterSparklineData
+	Upstream          []WaterLevelMiniData
 }
 
 type WaterLevelMiniData struct {
-	StationName   string
-	ObjectName    string
-	Role          string
-	ObservedAt    string
-	LevelM        float32
-	ChangeText    string
-	ChangeClass   string
-	DayChangeText string
-	StatusLabel   string
-	StatusText    string
-	ToPrevention  string
-	ToDanger      string
-	RiskPct       int
-	RiskBarClass  string
-	TrendText     string
-	TrendClass    string
+	StationName       string
+	ObjectName        string
+	Role              string
+	ObservedAt        string
+	LevelM            float32
+	ChangeText        string
+	ChangeClass       string
+	DayChangeText     string
+	StatusLabel       string
+	StatusText        string
+	ToPrevention      string
+	ToDanger          string
+	RiskPct           int
+	RiskBarClass      string
+	RiskHeadline      string
+	RiskCaption       string
+	AbsoluteLevelText string
+	TrendText         string
+	TrendClass        string
 }
 
 type WaterSparklineData struct {
@@ -81,12 +87,13 @@ func (h *Handler) buildWaterLevelCard(r *http.Request) WaterLevelCardData {
 		return WaterLevelCardData{}
 	}
 	card := WaterLevelCardData{
-		HasData:        true,
-		ObservedAt:     snap.Current.ObservedAt.In(time.Local).Format("02.01 15:04"),
-		LevelM:         snap.Current.LevelBSM,
-		StatusLabel:    snap.Status.Label(),
-		StatusGradient: snap.Status.TailwindGradient(),
-		StatusText:     snap.Status.TextColor(),
+		HasData:           true,
+		ObservedAt:        snap.Current.ObservedAt.In(time.Local).Format("02.01 15:04"),
+		LevelM:            snap.Current.LevelBSM,
+		AbsoluteLevelText: fmt.Sprintf("%.3f м, Балтийская система высот", snap.Current.LevelBSM),
+		StatusLabel:       snap.Status.Label(),
+		StatusGradient:    snap.Status.TailwindGradient(),
+		StatusText:        snap.Status.TextColor(),
 	}
 	if snap.Gauge != nil {
 		card.StationName = snap.Gauge.HolderName
@@ -121,6 +128,10 @@ func (h *Handler) buildWaterLevelCard(r *http.Request) WaterLevelCardData {
 	if snap.ToPreventionM != nil {
 		card.RiskPct = riskPercent(*snap.ToPreventionM, snap.Status)
 		card.RiskBarClass = riskBarClass(snap.Status, card.RiskPct)
+		card.RiskHeadline, card.RiskCaption = riskHeadline(*snap.ToPreventionM)
+	} else {
+		card.RiskHeadline = fmt.Sprintf("%.3f м", snap.Current.LevelBSM)
+		card.RiskCaption = "текущая отметка уровня"
 	}
 	card.TrendText, card.TrendClass = trendLabel(snap.Current.ChangeCmPerHour, snap.Change24hM)
 	card.SummaryText = buildHydroSummary(snap, card.DayChangeText, card.ToPrevention)
@@ -142,11 +153,12 @@ func buildWaterLevelMini(snap *models.HydroSnapshot) *WaterLevelMiniData {
 		return nil
 	}
 	mini := &WaterLevelMiniData{
-		ObservedAt:   snap.Current.ObservedAt.In(time.Local).Format("02.01 15:04"),
-		LevelM:       snap.Current.LevelBSM,
-		StatusLabel:  snap.Status.Label(),
-		StatusText:   snap.Status.TextColor(),
-		RiskBarClass: riskBarClass(snap.Status, 0),
+		ObservedAt:        snap.Current.ObservedAt.In(time.Local).Format("02.01 15:04"),
+		LevelM:            snap.Current.LevelBSM,
+		AbsoluteLevelText: fmt.Sprintf("%.3f м, Балтийская система высот", snap.Current.LevelBSM),
+		StatusLabel:       snap.Status.Label(),
+		StatusText:        snap.Status.TextColor(),
+		RiskBarClass:      riskBarClass(snap.Status, 0),
 	}
 	if snap.Gauge != nil {
 		mini.StationName = snap.Gauge.HolderName
@@ -178,6 +190,10 @@ func buildWaterLevelMini(snap *models.HydroSnapshot) *WaterLevelMiniData {
 		mini.ToPrevention = formatDistanceToThreshold(*snap.ToPreventionM)
 		mini.RiskPct = riskPercent(*snap.ToPreventionM, snap.Status)
 		mini.RiskBarClass = riskBarClass(snap.Status, mini.RiskPct)
+		mini.RiskHeadline, mini.RiskCaption = riskHeadline(*snap.ToPreventionM)
+	} else {
+		mini.RiskHeadline = fmt.Sprintf("%.3f м", snap.Current.LevelBSM)
+		mini.RiskCaption = "текущая отметка уровня"
 	}
 	if snap.ToDangerM != nil {
 		mini.ToDanger = formatDistanceToThreshold(*snap.ToDangerM)
@@ -499,6 +515,17 @@ func buildWaterSparkline(readings []models.HydroLevelReading, gauge *models.Hydr
 		out.HasThresholdLine = true
 	}
 	return out
+}
+
+func riskHeadline(toPreventionM float32) (string, string) {
+	cm := toPreventionM * 100
+	if cm < 0 {
+		return fmt.Sprintf("выше на %.0f см", -cm), "неблагоприятного уровня"
+	}
+	if cm == 0 {
+		return "на пороге", "неблагоприятного уровня"
+	}
+	return fmt.Sprintf("%.0f см", cm), "до неблагоприятного уровня"
 }
 
 func riskPercent(toPreventionM float32, status models.HydroStatus) int {
