@@ -55,8 +55,6 @@
                                 <stop offset="100%" stop-color="#0ea5e9" stop-opacity="0.02"/>
                             </linearGradient>
                         </defs>
-                        <line x1="0" y1="38" x2="100" y2="38" stroke="currentColor" stroke-opacity="0.10" stroke-width="1"/>
-                        <line x1="0" y1="22" x2="100" y2="22" stroke="currentColor" stroke-opacity="0.08" stroke-width="1"/>
                         {{if .Sparkline.HasThresholdLine}}
                         <line x1="0" y1="{{.Sparkline.ThresholdY}}" x2="100" y2="{{.Sparkline.ThresholdY}}" stroke="#f97316" stroke-opacity="0.75" stroke-width="1" stroke-dasharray="3 3"/>
                         {{end}}
@@ -91,16 +89,21 @@
                 </div>
 
                 <div class="rounded-lg bg-white/55 dark:bg-gray-950/25 border border-white/60 dark:border-white/10 px-4 py-3">
-                    <div class="flex justify-between text-sm mb-2">
-                        <span class="text-gray-600 dark:text-gray-300">Близость к порогу</span>
-                        <span class="font-bold {{.StatusText}}">{{.RiskPct}}%</span>
+                    <div class="flex justify-between gap-3 text-sm mb-2">
+                        <span class="text-gray-600 dark:text-gray-300">{{.ThresholdTitle}}</span>
+                        <span class="font-bold {{.StatusText}} text-right">{{.ThresholdValue}}</span>
                     </div>
-                    <div class="h-2.5 rounded-full bg-white/70 dark:bg-black/30 overflow-hidden">
+                    <div class="h-2.5 rounded-full bg-white/70 dark:bg-black/30 overflow-hidden" title="{{if .ThresholdReached}}Порог уже достигнут{{else}}{{.ThresholdDetail}}{{end}}">
                         <div class="h-full rounded-full {{.RiskBarClass}} transition-all duration-700" style="width: {{.RiskPct}}%"></div>
                     </div>
-                    {{if .ToDanger}}
-                    <div class="mt-2 text-sm text-gray-600 dark:text-gray-300">До опасного уровня: <span class="font-bold text-gray-900 dark:text-white">{{.ToDanger}}</span></div>
-                    {{end}}
+                    <div class="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                        {{if .ThresholdReached}}
+                            <span class="font-bold {{.StatusText}}">{{.ThresholdDetail}}</span>
+                        {{else}}
+                            {{.ThresholdDetail}}
+                        {{end}}
+                        {{if .ToDanger}}<span class="mx-1 text-gray-400">·</span>До опасного уровня: <span class="font-bold text-gray-900 dark:text-white">{{.ToDanger}}</span>{{end}}
+                    </div>
                 </div>
 
                 <div class="text-blue-700 dark:text-blue-300 text-sm font-semibold opacity-80 group-hover:opacity-100 transition-opacity">

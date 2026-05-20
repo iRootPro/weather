@@ -32,6 +32,10 @@ type WaterLevelCardData struct {
 	RiskBarClass      string
 	RiskHeadline      string
 	RiskCaption       string
+	ThresholdReached  bool
+	ThresholdTitle    string
+	ThresholdValue    string
+	ThresholdDetail   string
 	AbsoluteLevelText string
 	StatusNote        string
 	TrendText         string
@@ -129,6 +133,7 @@ func (h *Handler) buildWaterLevelCard(r *http.Request) WaterLevelCardData {
 		card.RiskPct = riskPercent(*snap.ToPreventionM, snap.Status)
 		card.RiskBarClass = riskBarClass(snap.Status, card.RiskPct)
 		card.RiskHeadline, card.RiskCaption = riskHeadline(*snap.ToPreventionM)
+		card.ThresholdReached, card.ThresholdTitle, card.ThresholdValue, card.ThresholdDetail = thresholdBlock(*snap.ToPreventionM, card.RiskPct)
 	} else {
 		card.RiskHeadline = fmt.Sprintf("%.3f м", snap.Current.LevelBSM)
 		card.RiskCaption = "текущая отметка уровня"
@@ -519,15 +524,23 @@ func buildWaterSparkline(readings []models.HydroLevelReading, gauge *models.Hydr
 	return out
 }
 
+func thresholdBlock(toPreventionM float32, riskPct int) (bool, string, string, string) {
+	cm := toPreventionM * 100
+	if cm <= 0 {
+		return true, "Неблагоприятный порог", "достигнут", "Превышение порога: " + formatUnsignedCm(-cm)
+	}
+	return false, "Запас до неблагоприятного", formatDistanceToThreshold(toPreventionM), fmt.Sprintf("Шкала заполнена на %d%%", riskPct)
+}
+
 func riskHeadline(toPreventionM float32) (string, string) {
 	cm := toPreventionM * 100
 	if cm < 0 {
-		return fmt.Sprintf("выше на %.0f см", -cm), "неблагоприятного уровня"
+		return "выше на " + formatUnsignedCm(-cm), "неблагоприятного уровня"
 	}
 	if cm == 0 {
 		return "на пороге", "неблагоприятного уровня"
 	}
-	return fmt.Sprintf("%.0f см", cm), "до неблагоприятного уровня"
+	return formatUnsignedCm(cm), "до неблагоприятного уровня"
 }
 
 func riskPercent(toPreventionM float32, status models.HydroStatus) int {
@@ -586,7 +599,14 @@ func changeClass(v float32) string {
 
 func formatDistanceToThreshold(v float32) string {
 	if v < 0 {
-		return fmt.Sprintf("превышен на %.0f см", -v*100)
+		return "превышен на " + formatUnsignedCm(-v*100)
 	}
-	return fmt.Sprintf("осталось %.0f см", v*100)
+	return "осталось " + formatUnsignedCm(v*100)
+}
+
+func formatUnsignedCm(cm float32) string {
+	if cm > 0 && cm < 1 {
+		return "менее 1 см"
+	}
+	return fmt.Sprintf("%.0f см", cm)
 }
