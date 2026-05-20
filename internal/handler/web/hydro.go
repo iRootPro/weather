@@ -29,6 +29,23 @@ type WaterLevelCardData struct {
 	RiskPct         int
 	RiskBarClass    string
 	Sparkline       WaterSparklineData
+	Upstream        []WaterLevelMiniData
+}
+
+type WaterLevelMiniData struct {
+	StationName   string
+	ObjectName    string
+	ObservedAt    string
+	LevelM        float32
+	ChangeText    string
+	ChangeClass   string
+	DayChangeText string
+	StatusLabel   string
+	StatusText    string
+	ToPrevention  string
+	ToDanger      string
+	RiskPct       int
+	RiskBarClass  string
 }
 
 type WaterSparklineData struct {
@@ -97,7 +114,64 @@ func (h *Handler) buildWaterLevelCard(r *http.Request) WaterLevelCardData {
 		card.RiskPct = riskPercent(*snap.ToPreventionM, snap.Status)
 		card.RiskBarClass = riskBarClass(snap.Status, card.RiskPct)
 	}
+	upstream, err := h.hydroService.GetUpstreamSnapshots(r.Context(), time.Now())
+	if err != nil {
+		slog.Warn("failed to get upstream hydro snapshots", "error", err)
+	} else {
+		for _, item := range upstream {
+			if mini := buildWaterLevelMini(item); mini != nil {
+				card.Upstream = append(card.Upstream, *mini)
+			}
+		}
+	}
 	return card
+}
+
+func buildWaterLevelMini(snap *models.HydroSnapshot) *WaterLevelMiniData {
+	if snap == nil || !snap.HasData || snap.Current == nil {
+		return nil
+	}
+	mini := &WaterLevelMiniData{
+		ObservedAt:   snap.Current.ObservedAt.In(time.Local).Format("02.01 15:04"),
+		LevelM:       snap.Current.LevelBSM,
+		StatusLabel:  snap.Status.Label(),
+		StatusText:   snap.Status.TextColor(),
+		RiskBarClass: riskBarClass(snap.Status, 0),
+	}
+	if snap.Gauge != nil {
+		mini.StationName = snap.Gauge.HolderName
+		if snap.Gauge.Locality != nil && *snap.Gauge.Locality != "" {
+			if mini.StationName != "" {
+				mini.StationName += " · " + *snap.Gauge.Locality
+			} else {
+				mini.StationName = *snap.Gauge.Locality
+			}
+		}
+		if mini.StationName == "" {
+			mini.StationName = snap.Gauge.Name
+		}
+		mini.ObjectName = snap.Gauge.MonitoringObject
+	}
+	if snap.Current.ChangeCmPerHour != nil {
+		mini.ChangeText = formatSignedFloat(*snap.Current.ChangeCmPerHour, "%.0f см/ч")
+		mini.ChangeClass = changeClass(*snap.Current.ChangeCmPerHour)
+	} else if snap.ChangeM != nil {
+		cm := *snap.ChangeM * 100
+		mini.ChangeText = formatSignedFloat(cm, "%.0f см")
+		mini.ChangeClass = changeClass(cm)
+	}
+	if snap.Change24hM != nil {
+		mini.DayChangeText = formatSignedFloat(*snap.Change24hM*100, "%.0f см")
+	}
+	if snap.ToPreventionM != nil {
+		mini.ToPrevention = formatDistanceToThreshold(*snap.ToPreventionM)
+		mini.RiskPct = riskPercent(*snap.ToPreventionM, snap.Status)
+		mini.RiskBarClass = riskBarClass(snap.Status, mini.RiskPct)
+	}
+	if snap.ToDangerM != nil {
+		mini.ToDanger = formatDistanceToThreshold(*snap.ToDangerM)
+	}
+	return mini
 }
 
 func (h *Handler) WaterLevelWidget(w http.ResponseWriter, r *http.Request) {

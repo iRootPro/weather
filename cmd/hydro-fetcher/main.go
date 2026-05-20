@@ -68,7 +68,7 @@ func main() {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 
-	logger.Info("hydro-fetcher service started", "update_interval", cfg.Hydro.UpdateInterval, "station_uuid", cfg.Hydro.StationUUID)
+	logger.Info("hydro-fetcher service started", "update_interval", cfg.Hydro.UpdateInterval, "stations", len(cfg.Hydro.Stations()), "station_uuid", cfg.Hydro.StationUUID)
 	for {
 		select {
 		case <-ticker.C:
@@ -97,34 +97,56 @@ func (f *Fetcher) FetchAndSave(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	station, ok := actual[f.config.StationUUID]
-	if !ok {
-		return fmt.Errorf("station %s not found in emercit actual response", f.config.StationUUID)
-	}
-	waterLevels := station.MCHs["waterlevel"]
-	mch, ok := waterLevels[f.config.WaterLevelUUID]
-	if !ok {
-		return fmt.Errorf("waterlevel %s not found for station %s", f.config.WaterLevelUUID, f.config.StationUUID)
-	}
 
-	gauge := buildGauge(f.config.StationUUID, f.config.WaterLevelUUID, station, mch, now)
-	if err := f.repo.SaveGauge(ctx, gauge); err != nil {
-		return err
-	}
-
-	readings := make([]models.HydroLevelReading, 0, 1)
-	if reading, err := buildActualReading(f.config.StationUUID, f.config.WaterLevelUUID, mch, now); err != nil {
-		f.logger.Warn("failed to build actual reading", "error", err)
-	} else if reading != nil {
-		readings = append(readings, *reading)
-	}
-
+	stations := f.config.Stations()
+	readings := make([]models.HydroLevelReading, 0, len(stations))
+	savedGauges := 0
 	from := now.Add(-time.Duration(f.config.HistoryHours) * time.Hour)
-	history, err := f.client.GetWaterLevelHistory(ctx, f.config.WaterLevelUUID, from, now)
-	if err != nil {
-		f.logger.Warn("failed to fetch hydro history", "error", err)
-	} else {
-		readings = append(readings, buildHistoryReadings(f.config.StationUUID, f.config.WaterLevelUUID, history, now)...)
+
+	for _, stationRef := range stations {
+		isPrimary := stationRef.StationUUID == f.config.StationUUID
+		station, ok := actual[stationRef.StationUUID]
+		if !ok {
+			err := fmt.Errorf("station %s not found in emercit actual response", stationRef.StationUUID)
+			if isPrimary {
+				return err
+			}
+			f.logger.Warn("skipping hydro station", "error", err)
+			continue
+		}
+		waterLevels := station.MCHs["waterlevel"]
+		mch, ok := waterLevels[stationRef.WaterLevelUUID]
+		if !ok {
+			err := fmt.Errorf("waterlevel %s not found for station %s", stationRef.WaterLevelUUID, stationRef.StationUUID)
+			if isPrimary {
+				return err
+			}
+			f.logger.Warn("skipping hydro station", "error", err)
+			continue
+		}
+
+		gauge := buildGauge(stationRef.StationUUID, stationRef.WaterLevelUUID, station, mch, now)
+		if err := f.repo.SaveGauge(ctx, gauge); err != nil {
+			if isPrimary {
+				return err
+			}
+			f.logger.Warn("failed to save upstream hydro gauge", "station_uuid", stationRef.StationUUID, "error", err)
+			continue
+		}
+		savedGauges++
+
+		if reading, err := buildActualReading(stationRef.StationUUID, stationRef.WaterLevelUUID, mch, now); err != nil {
+			f.logger.Warn("failed to build actual reading", "station_uuid", stationRef.StationUUID, "error", err)
+		} else if reading != nil {
+			readings = append(readings, *reading)
+		}
+
+		history, err := f.client.GetWaterLevelHistory(ctx, stationRef.WaterLevelUUID, from, now)
+		if err != nil {
+			f.logger.Warn("failed to fetch hydro history", "station_uuid", stationRef.StationUUID, "error", err)
+		} else {
+			readings = append(readings, buildHistoryReadings(stationRef.StationUUID, stationRef.WaterLevelUUID, history, now)...)
+		}
 	}
 
 	if err := f.repo.SaveReadingsBatch(ctx, readings); err != nil {
@@ -138,7 +160,7 @@ func (f *Fetcher) FetchAndSave(ctx context.Context) error {
 		}
 	}
 
-	f.logger.Info("hydro fetched and saved", "readings", len(readings), "elapsed", time.Since(start))
+	f.logger.Info("hydro fetched and saved", "gauges", savedGauges, "readings", len(readings), "elapsed", time.Since(start))
 	return nil
 }
 

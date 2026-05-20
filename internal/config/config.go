@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/joho/godotenv"
@@ -128,17 +129,57 @@ type GeomagneticConfig struct {
 }
 
 type HydroConfig struct {
-	Enabled        bool    `env:"HYDRO_ENABLED" env-default:"true"`
-	BaseURL        string  `env:"HYDRO_BASE_URL" env-default:"https://pub.emercit.ru"`
-	Username       string  `env:"HYDRO_USERNAME" env-default:""`
-	Password       string  `env:"HYDRO_PASSWORD" env-default:""`
-	StationUUID    string  `env:"HYDRO_STATION_UUID" env-default:"1f948694-1c98-4b36-b044-3bac519ed7a3"` // АГК-0004, Армавир
-	WaterLevelUUID string  `env:"HYDRO_WATERLEVEL_UUID" env-default:"8418f017-08aa-4bc8-82c1-f325f8f83ca9"`
-	UpdateInterval int     `env:"HYDRO_UPDATE_INTERVAL" env-default:"600"` // 10 минут, шаг источника
-	APITimeout     int     `env:"HYDRO_API_TIMEOUT" env-default:"30"`
-	HistoryHours   int     `env:"HYDRO_HISTORY_HOURS" env-default:"48"`
-	RetentionDays  int     `env:"HYDRO_RETENTION_DAYS" env-default:"365"`
-	ZeroPostBSM    float32 `env:"HYDRO_ZERO_POST_BS_M" env-default:"168.98"` // отметка нуля поста по AllRivers, м БСВ
+	Enabled          bool    `env:"HYDRO_ENABLED" env-default:"true"`
+	BaseURL          string  `env:"HYDRO_BASE_URL" env-default:"https://pub.emercit.ru"`
+	Username         string  `env:"HYDRO_USERNAME" env-default:""`
+	Password         string  `env:"HYDRO_PASSWORD" env-default:""`
+	StationUUID      string  `env:"HYDRO_STATION_UUID" env-default:"1f948694-1c98-4b36-b044-3bac519ed7a3"` // АГК-0004, Армавир
+	WaterLevelUUID   string  `env:"HYDRO_WATERLEVEL_UUID" env-default:"8418f017-08aa-4bc8-82c1-f325f8f83ca9"`
+	UpstreamStations string  `env:"HYDRO_UPSTREAM_STATIONS" env-default:"0c5e7f75-4f51-41e3-a0bd-c757c002d9b7:41e04a7a-3531-4c16-a16d-7c8345f87f88"` // station_uuid:waterlevel_uuid через запятую
+	UpdateInterval   int     `env:"HYDRO_UPDATE_INTERVAL" env-default:"600"`                                                                         // 10 минут, шаг источника
+	APITimeout       int     `env:"HYDRO_API_TIMEOUT" env-default:"30"`
+	HistoryHours     int     `env:"HYDRO_HISTORY_HOURS" env-default:"48"`
+	RetentionDays    int     `env:"HYDRO_RETENTION_DAYS" env-default:"365"`
+	ZeroPostBSM      float32 `env:"HYDRO_ZERO_POST_BS_M" env-default:"168.98"` // отметка нуля поста по AllRivers, м БСВ
+}
+
+type HydroStationRef struct {
+	StationUUID    string
+	WaterLevelUUID string
+}
+
+func (c HydroConfig) Stations() []HydroStationRef {
+	stations := make([]HydroStationRef, 0, 1+len(strings.Split(c.UpstreamStations, ",")))
+	seen := map[string]bool{}
+	add := func(stationUUID, waterLevelUUID string) {
+		stationUUID = strings.TrimSpace(stationUUID)
+		waterLevelUUID = strings.TrimSpace(waterLevelUUID)
+		if stationUUID == "" || waterLevelUUID == "" || seen[stationUUID] {
+			return
+		}
+		seen[stationUUID] = true
+		stations = append(stations, HydroStationRef{StationUUID: stationUUID, WaterLevelUUID: waterLevelUUID})
+	}
+	add(c.StationUUID, c.WaterLevelUUID)
+	for _, item := range strings.Split(c.UpstreamStations, ",") {
+		parts := strings.Split(strings.TrimSpace(item), ":")
+		if len(parts) != 2 {
+			continue
+		}
+		add(parts[0], parts[1])
+	}
+	return stations
+}
+
+func (c HydroConfig) UpstreamStationUUIDs() []string {
+	stations := c.Stations()
+	out := make([]string, 0, len(stations))
+	for _, station := range stations {
+		if station.StationUUID != c.StationUUID {
+			out = append(out, station.StationUUID)
+		}
+	}
+	return out
 }
 
 func Load() (*Config, error) {

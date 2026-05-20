@@ -9,25 +9,44 @@ import (
 )
 
 type HydroService struct {
-	repo           repository.HydroRepository
-	stationUUID    string
-	zeroPostBSM    float32
-	hasZeroPostBSM bool
+	repo                 repository.HydroRepository
+	stationUUID          string
+	upstreamStationUUIDs []string
+	zeroPostBSM          float32
+	hasZeroPostBSM       bool
 }
 
-func NewHydroService(repo repository.HydroRepository, stationUUID string, zeroPostBSM float32) *HydroService {
-	return &HydroService{repo: repo, stationUUID: stationUUID, zeroPostBSM: zeroPostBSM, hasZeroPostBSM: zeroPostBSM != 0}
+func NewHydroService(repo repository.HydroRepository, stationUUID string, zeroPostBSM float32, upstreamStationUUIDs ...string) *HydroService {
+	return &HydroService{repo: repo, stationUUID: stationUUID, upstreamStationUUIDs: upstreamStationUUIDs, zeroPostBSM: zeroPostBSM, hasZeroPostBSM: zeroPostBSM != 0}
 }
 
 func (s *HydroService) GetSnapshot(ctx context.Context, now time.Time) (*models.HydroSnapshot, error) {
+	return s.getSnapshotForStation(ctx, s.stationUUID, s.hasZeroPostBSM, now)
+}
+
+func (s *HydroService) GetUpstreamSnapshots(ctx context.Context, now time.Time) ([]*models.HydroSnapshot, error) {
+	out := make([]*models.HydroSnapshot, 0, len(s.upstreamStationUUIDs))
+	for _, stationUUID := range s.upstreamStationUUIDs {
+		snap, err := s.getSnapshotForStation(ctx, stationUUID, false, now)
+		if err != nil {
+			return nil, err
+		}
+		if snap != nil && snap.HasData {
+			out = append(out, snap)
+		}
+	}
+	return out, nil
+}
+
+func (s *HydroService) getSnapshotForStation(ctx context.Context, stationUUID string, calculateRelative bool, now time.Time) (*models.HydroSnapshot, error) {
 	snap := &models.HydroSnapshot{}
-	gauge, err := s.repo.GetGauge(ctx, s.stationUUID)
+	gauge, err := s.repo.GetGauge(ctx, stationUUID)
 	if err != nil {
 		return nil, err
 	}
 	snap.Gauge = gauge
 
-	current, err := s.repo.GetLatest(ctx, s.stationUUID)
+	current, err := s.repo.GetLatest(ctx, stationUUID)
 	if err != nil {
 		return nil, err
 	}
@@ -36,12 +55,12 @@ func (s *HydroService) GetSnapshot(ctx context.Context, now time.Time) (*models.
 	}
 	snap.Current = current
 	snap.HasData = true
-	if s.hasZeroPostBSM {
+	if calculateRelative && s.hasZeroPostBSM {
 		v := (current.LevelBSM - s.zeroPostBSM) * 100
 		snap.RelativeLevelCm = &v
 	}
 
-	previous, err := s.repo.GetPreviousBefore(ctx, s.stationUUID, current.ObservedAt)
+	previous, err := s.repo.GetPreviousBefore(ctx, stationUUID, current.ObservedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +70,7 @@ func (s *HydroService) GetSnapshot(ctx context.Context, now time.Time) (*models.
 		snap.ChangeM = &v
 	}
 
-	dayAgo, err := s.repo.GetNearBefore(ctx, s.stationUUID, current.ObservedAt.Add(-24*time.Hour), 2*time.Hour)
+	dayAgo, err := s.repo.GetNearBefore(ctx, stationUUID, current.ObservedAt.Add(-24*time.Hour), 2*time.Hour)
 	if err != nil {
 		return nil, err
 	}

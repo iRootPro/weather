@@ -69,7 +69,7 @@ func main() {
 	var hydroService *service.HydroService
 	if cfg.Hydro.Enabled {
 		hydroRepo := repository.NewHydroRepository(pool)
-		hydroService = service.NewHydroService(hydroRepo, cfg.Hydro.StationUUID, cfg.Hydro.ZeroPostBSM)
+		hydroService = service.NewHydroService(hydroRepo, cfg.Hydro.StationUUID, cfg.Hydro.ZeroPostBSM, cfg.Hydro.UpstreamStationUUIDs()...)
 	}
 	sunService, err := service.NewSunService(cfg.Location.Latitude, cfg.Location.Longitude, cfg.Location.Timezone)
 	if err != nil {
