@@ -16,7 +16,7 @@ func NewPostgresPool(ctx context.Context, dsn string) (*pgxpool.Pool, error) {
 		return nil, fmt.Errorf("failed to parse dsn: %w", err)
 	}
 
-	config.MaxConns = int32(envInt("DB_MAX_CONNS", 4))
+	config.MaxConns = int32(envInt("DB_MAX_CONNS", 2))
 	config.MinConns = int32(envInt("DB_MIN_CONNS", 0))
 	config.MaxConnLifetime = time.Hour
 	config.MaxConnIdleTime = 10 * time.Minute
