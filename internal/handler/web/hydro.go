@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"sort"
 	"strings"
 	"time"
 
@@ -29,6 +30,9 @@ type WaterLevelCardData struct {
 	ToDanger        string
 	RiskPct         int
 	RiskBarClass    string
+	SummaryText     string
+	TrendText       string
+	TrendClass      string
 	Sparkline       WaterSparklineData
 	Upstream        []WaterLevelMiniData
 }
@@ -48,6 +52,8 @@ type WaterLevelMiniData struct {
 	ToDanger      string
 	RiskPct       int
 	RiskBarClass  string
+	TrendText     string
+	TrendClass    string
 }
 
 type WaterSparklineData struct {
@@ -116,6 +122,8 @@ func (h *Handler) buildWaterLevelCard(r *http.Request) WaterLevelCardData {
 		card.RiskPct = riskPercent(*snap.ToPreventionM, snap.Status)
 		card.RiskBarClass = riskBarClass(snap.Status, card.RiskPct)
 	}
+	card.TrendText, card.TrendClass = trendLabel(snap.Current.ChangeCmPerHour, snap.Change24hM)
+	card.SummaryText = buildHydroSummary(snap, card.DayChangeText, card.ToPrevention)
 	upstream, err := h.hydroService.GetUpstreamSnapshots(r.Context(), time.Now())
 	if err != nil {
 		slog.Warn("failed to get upstream hydro snapshots", "error", err)
@@ -174,14 +182,69 @@ func buildWaterLevelMini(snap *models.HydroSnapshot) *WaterLevelMiniData {
 	if snap.ToDangerM != nil {
 		mini.ToDanger = formatDistanceToThreshold(*snap.ToDangerM)
 	}
+	mini.TrendText, mini.TrendClass = trendLabel(snap.Current.ChangeCmPerHour, snap.Change24hM)
 	return mini
 }
 
 func hydroStationRole(objectName string) string {
 	if strings.Contains(strings.ToLower(objectName), "кубан") {
-		return "основное русло"
+		return "выше по руслу"
 	}
 	return "приток бассейна"
+}
+
+func trendLabel(changePerHour *float32, change24hM *float32) (string, string) {
+	if changePerHour != nil {
+		v := *changePerHour
+		switch {
+		case v >= 3:
+			return "быстрый рост ↑", "text-red-700 dark:text-red-300"
+		case v >= 1:
+			return "растёт ↑", "text-red-600 dark:text-red-300"
+		case v <= -3:
+			return "быстро снижается ↓", "text-green-700 dark:text-green-300"
+		case v <= -1:
+			return "снижается ↓", "text-green-600 dark:text-green-300"
+		default:
+			return "стабильно →", "text-gray-600 dark:text-gray-300"
+		}
+	}
+	if change24hM != nil {
+		cm := *change24hM * 100
+		switch {
+		case cm >= 20:
+			return "быстрый рост ↑", "text-red-700 dark:text-red-300"
+		case cm >= 5:
+			return "растёт ↑", "text-red-600 dark:text-red-300"
+		case cm <= -20:
+			return "быстро снижается ↓", "text-green-700 dark:text-green-300"
+		case cm <= -5:
+			return "снижается ↓", "text-green-600 dark:text-green-300"
+		default:
+			return "стабильно →", "text-gray-600 dark:text-gray-300"
+		}
+	}
+	return "наблюдение", "text-gray-600 dark:text-gray-300"
+}
+
+func buildHydroSummary(snap *models.HydroSnapshot, dayChangeText, toPrevention string) string {
+	if snap == nil || snap.Current == nil {
+		return ""
+	}
+	trend, _ := trendLabel(snap.Current.ChangeCmPerHour, snap.Change24hM)
+	trend = strings.TrimSuffix(strings.TrimSuffix(strings.TrimSuffix(trend, " ↑"), " ↓"), " →")
+	summary := "Кубань " + trend
+	details := make([]string, 0, 2)
+	if dayChangeText != "" {
+		details = append(details, "за сутки "+dayChangeText)
+	}
+	if toPrevention != "" {
+		details = append(details, "до неблагоприятного уровня "+toPrevention)
+	}
+	if len(details) == 0 {
+		return summary
+	}
+	return summary + ": " + strings.Join(details, ", ")
 }
 
 func (h *Handler) WaterLevelWidget(w http.ResponseWriter, r *http.Request) {
@@ -237,6 +300,7 @@ func (h *Handler) DetailWaterLevel(w http.ResponseWriter, r *http.Request) {
 		Time  string  `json:"time"`
 		Level float32 `json:"level"`
 	}
+	readings = filterHydroOutliers(readings)
 	points := make([]point, 0, len(readings))
 	for _, row := range readings {
 		points = append(points, point{Time: row.ObservedAt.UTC().Format(time.RFC3339), Level: row.LevelBSM})
@@ -285,7 +349,40 @@ func buildWaterLevelRows(readings []models.HydroLevelReading) []waterLevelRow {
 	return out
 }
 
+func filterHydroOutliers(readings []models.HydroLevelReading) []models.HydroLevelReading {
+	if len(readings) < 4 {
+		return readings
+	}
+	levels := make([]float32, 0, len(readings))
+	for _, r := range readings {
+		levels = append(levels, r.LevelBSM)
+	}
+	sort.Slice(levels, func(i, j int) bool { return levels[i] < levels[j] })
+	median := levels[len(levels)/2]
+	q1 := levels[len(levels)/4]
+	q3 := levels[(len(levels)*3)/4]
+	iqr := q3 - q1
+	limit := iqr * 6
+	if limit < 0.75 {
+		limit = 0.75
+	}
+	if limit > 3 {
+		limit = 3
+	}
+	out := make([]models.HydroLevelReading, 0, len(readings))
+	for _, r := range readings {
+		if absFloat32(r.LevelBSM-median) <= limit {
+			out = append(out, r)
+		}
+	}
+	if len(out) < 2 {
+		return readings
+	}
+	return out
+}
+
 func buildWaterSparkline(readings []models.HydroLevelReading, gauge *models.HydroGauge) WaterSparklineData {
+	readings = filterHydroOutliers(readings)
 	if len(readings) < 2 {
 		return WaterSparklineData{}
 	}
@@ -394,10 +491,17 @@ func riskBarClass(status models.HydroStatus, pct int) string {
 	if status == models.HydroStatusDanger {
 		return "bg-red-500"
 	}
-	if status == models.HydroStatusPrevention || pct >= 80 {
+	if status == models.HydroStatusPrevention || status == models.HydroStatusNear || pct >= 80 {
 		return "bg-orange-500"
 	}
 	return "bg-sky-500"
+}
+
+func absFloat32(v float32) float32 {
+	if v < 0 {
+		return -v
+	}
+	return v
 }
 
 func formatSignedFloat(v float32, format string) string {

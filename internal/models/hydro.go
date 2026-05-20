@@ -57,6 +57,7 @@ type HydroStatus string
 const (
 	HydroStatusUnknown    HydroStatus = "unknown"
 	HydroStatusNormal     HydroStatus = "normal"
+	HydroStatusNear       HydroStatus = "near_prevention"
 	HydroStatusPrevention HydroStatus = "prevention"
 	HydroStatusDanger     HydroStatus = "danger"
 )
@@ -65,8 +66,14 @@ func ClassifyHydroLevel(level float32, prevention, danger *float32) HydroStatus 
 	if danger != nil && level >= *danger {
 		return HydroStatusDanger
 	}
-	if prevention != nil && level >= *prevention {
-		return HydroStatusPrevention
+	if prevention != nil {
+		if level >= *prevention {
+			return HydroStatusPrevention
+		}
+		// Меньше 10 см до НЯ — ещё формально норма, но в интерфейсе это уже требует внимания.
+		if *prevention-level <= 0.10 {
+			return HydroStatusNear
+		}
 	}
 	return HydroStatusNormal
 }
@@ -77,6 +84,8 @@ func (s HydroStatus) Label() string {
 		return "опасный уровень"
 	case HydroStatusPrevention:
 		return "неблагоприятный уровень"
+	case HydroStatusNear:
+		return "близко к НЯ"
 	case HydroStatusNormal:
 		return "норма"
 	default:
@@ -88,8 +97,8 @@ func (s HydroStatus) TailwindGradient() string {
 	switch s {
 	case HydroStatusDanger:
 		return "from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20"
-	case HydroStatusPrevention:
-		return "from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20"
+	case HydroStatusPrevention, HydroStatusNear:
+		return "from-orange-50 to-cyan-100 dark:from-orange-900/20 dark:to-cyan-800/20"
 	case HydroStatusNormal:
 		return "from-blue-50 to-cyan-100 dark:from-blue-900/20 dark:to-cyan-800/20"
 	default:
@@ -101,7 +110,7 @@ func (s HydroStatus) TextColor() string {
 	switch s {
 	case HydroStatusDanger:
 		return "text-red-700 dark:text-red-300"
-	case HydroStatusPrevention:
+	case HydroStatusPrevention, HydroStatusNear:
 		return "text-orange-700 dark:text-orange-300"
 	case HydroStatusNormal:
 		return "text-blue-700 dark:text-blue-300"
@@ -114,7 +123,7 @@ func (s HydroStatus) HexColor() string {
 	switch s {
 	case HydroStatusDanger:
 		return "#ef4444"
-	case HydroStatusPrevention:
+	case HydroStatusPrevention, HydroStatusNear:
 		return "#f59e0b"
 	case HydroStatusNormal:
 		return "#0ea5e9"
