@@ -1,3 +1,16 @@
+<style>
+@keyframes hydroDrift {
+    from { transform: translateX(-18px); }
+    to { transform: translateX(18px); }
+}
+@keyframes hydroRiseGlow {
+    0%, 100% { opacity: .22; }
+    50% { opacity: .38; }
+}
+.hydro-water-surface { animation: hydroDrift 5.5s ease-in-out infinite alternate; }
+.hydro-water-glow { animation: hydroRiseGlow 2.8s ease-in-out infinite; }
+</style>
+
 <a href="/detail/water-level"
    class="block group overflow-hidden rounded-xl shadow bg-gradient-to-br {{.StatusGradient}} transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
     <div class="p-5 md:p-6">
@@ -28,8 +41,34 @@
                 </div>
             </div>
 
-            <!-- Compact pulse chart -->
-            <div class="lg:col-span-5">
+            <!-- Local river scene + compact chart -->
+            <div class="lg:col-span-5 space-y-3">
+                <div class="relative overflow-hidden rounded-lg bg-gradient-to-b from-sky-50/80 via-cyan-50/70 to-slate-100/80 dark:from-sky-950/35 dark:via-cyan-950/25 dark:to-slate-950/35 border border-white/70 dark:border-white/10 h-40">
+                    <div class="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-white/70 to-transparent dark:from-white/5"></div>
+                    <svg class="absolute inset-x-5 top-5 h-16 w-[calc(100%-2.5rem)] text-slate-500/60 dark:text-slate-300/35" viewBox="0 0 520 120" preserveAspectRatio="none" aria-hidden="true">
+                        <path d="M10 72 C90 18 145 18 225 72 S365 126 510 72" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
+                        <path d="M30 80 H490" stroke="currentColor" stroke-width="6" stroke-linecap="round" opacity=".65"/>
+                        <path d="M112 76 V112 M202 76 V112 M318 76 V112 M410 76 V112" stroke="currentColor" stroke-width="5" stroke-linecap="round" opacity=".45"/>
+                    </svg>
+
+                    {{if .Scene.HasDanger}}
+                    <div class="absolute inset-x-4 border-t border-red-500/70" style="bottom: {{.Scene.DangerPct}}%"></div>
+                    <div class="absolute right-5 text-[11px] font-bold text-red-600 dark:text-red-300" style="bottom: calc({{.Scene.DangerPct}}% + 2px)">опасный уровень</div>
+                    {{end}}
+                    <div class="absolute inset-x-4 border-t-2 border-dashed border-orange-500/80" style="bottom: {{.Scene.PreventionPct}}%"></div>
+                    <div class="absolute left-5 text-[11px] font-bold text-orange-600 dark:text-orange-300" style="bottom: calc({{.Scene.PreventionPct}}% + 4px)">неблагоприятный уровень</div>
+
+                    <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-sky-500/45 via-sky-400/30 to-cyan-200/15 dark:from-sky-500/35 dark:via-sky-400/20 dark:to-cyan-200/10" style="height: {{.Scene.WaterPct}}%">
+                        <div class="hydro-water-glow absolute inset-x-0 top-0 h-8 bg-sky-300/50 blur-xl"></div>
+                        <svg class="hydro-water-surface absolute -top-3 -left-8 w-[calc(100%+4rem)] h-7 text-sky-500/85" viewBox="0 0 600 32" preserveAspectRatio="none" aria-hidden="true">
+                            <path d="M0 18 C45 4 75 4 120 18 S195 32 240 18 S315 4 360 18 S435 32 480 18 S555 4 600 18" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div class="absolute left-5 rounded-full bg-white/80 dark:bg-slate-950/60 px-3 py-1 text-xs font-black {{.StatusText}} shadow-sm" style="bottom: calc({{.Scene.WaterPct}}% + 8px)">
+                        сейчас: {{.RiskHeadline}}
+                    </div>
+                </div>
+
                 <div class="rounded-lg bg-white/55 dark:bg-gray-950/25 border border-white/60 dark:border-white/10 p-3">
                     <div class="flex items-center justify-between mb-2">
                         <div>
