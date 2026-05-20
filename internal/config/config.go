@@ -135,8 +135,8 @@ type HydroConfig struct {
 	Password         string  `env:"HYDRO_PASSWORD" env-default:""`
 	StationUUID      string  `env:"HYDRO_STATION_UUID" env-default:"1f948694-1c98-4b36-b044-3bac519ed7a3"` // АГК-0004, Армавир
 	WaterLevelUUID   string  `env:"HYDRO_WATERLEVEL_UUID" env-default:"8418f017-08aa-4bc8-82c1-f325f8f83ca9"`
-	UpstreamStations string  `env:"HYDRO_UPSTREAM_STATIONS" env-default:"0c5e7f75-4f51-41e3-a0bd-c757c002d9b7:41e04a7a-3531-4c16-a16d-7c8345f87f88"` // station_uuid:waterlevel_uuid через запятую
-	UpdateInterval   int     `env:"HYDRO_UPDATE_INTERVAL" env-default:"600"`                                                                         // 10 минут, шаг источника
+	UpstreamStations string  `env:"HYDRO_UPSTREAM_STATIONS" env-default:"0c5e7f75-4f51-41e3-a0bd-c757c002d9b7:41e04a7a-3531-4c16-a16d-7c8345f87f88,2c28d937-9333-46fa-b228-ced91a31e1c9:08398628-7885-4127-b78e-1b54fb06e779"` // station_uuid:waterlevel_uuid через запятую
+	UpdateInterval   int     `env:"HYDRO_UPDATE_INTERVAL" env-default:"600"`                                                                                                                                                   // 10 минут, шаг источника
 	APITimeout       int     `env:"HYDRO_API_TIMEOUT" env-default:"30"`
 	HistoryHours     int     `env:"HYDRO_HISTORY_HOURS" env-default:"48"`
 	RetentionDays    int     `env:"HYDRO_RETENTION_DAYS" env-default:"365"`

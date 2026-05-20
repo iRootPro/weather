@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/iRootPro/weather/internal/models"
@@ -35,6 +36,7 @@ type WaterLevelCardData struct {
 type WaterLevelMiniData struct {
 	StationName   string
 	ObjectName    string
+	Role          string
 	ObservedAt    string
 	LevelM        float32
 	ChangeText    string
@@ -151,6 +153,7 @@ func buildWaterLevelMini(snap *models.HydroSnapshot) *WaterLevelMiniData {
 			mini.StationName = snap.Gauge.Name
 		}
 		mini.ObjectName = snap.Gauge.MonitoringObject
+		mini.Role = hydroStationRole(mini.ObjectName)
 	}
 	if snap.Current.ChangeCmPerHour != nil {
 		mini.ChangeText = formatSignedFloat(*snap.Current.ChangeCmPerHour, "%.0f см/ч")
@@ -172,6 +175,13 @@ func buildWaterLevelMini(snap *models.HydroSnapshot) *WaterLevelMiniData {
 		mini.ToDanger = formatDistanceToThreshold(*snap.ToDangerM)
 	}
 	return mini
+}
+
+func hydroStationRole(objectName string) string {
+	if strings.Contains(strings.ToLower(objectName), "кубан") {
+		return "основное русло"
+	}
+	return "приток бассейна"
 }
 
 func (h *Handler) WaterLevelWidget(w http.ResponseWriter, r *http.Request) {
