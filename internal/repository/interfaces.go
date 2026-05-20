@@ -108,3 +108,14 @@ type GeomagneticRepository interface {
 	GetDailyRange(ctx context.Context, from, to time.Time) ([]models.GeomagneticDaily, error)
 	DeleteOlderThan(ctx context.Context, threshold time.Time) error
 }
+
+type HydroRepository interface {
+	SaveGauge(ctx context.Context, gauge *models.HydroGauge) error
+	SaveReadingsBatch(ctx context.Context, data []models.HydroLevelReading) error
+	GetGauge(ctx context.Context, stationUUID string) (*models.HydroGauge, error)
+	GetLatest(ctx context.Context, stationUUID string) (*models.HydroLevelReading, error)
+	GetPreviousBefore(ctx context.Context, stationUUID string, before time.Time) (*models.HydroLevelReading, error)
+	GetNearBefore(ctx context.Context, stationUUID string, target time.Time, window time.Duration) (*models.HydroLevelReading, error)
+	GetRange(ctx context.Context, stationUUID string, from, to time.Time) ([]models.HydroLevelReading, error)
+	DeleteOlderThan(ctx context.Context, threshold time.Time) error
+}

@@ -87,6 +87,19 @@ services:
       - .env
     restart: unless-stopped
 
+  hydro-fetcher:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: hydro-fetcher
+    container_name: weather-hydro-fetcher
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    restart: unless-stopped
+
 volumes:
   postgres_data:
   photos_data:

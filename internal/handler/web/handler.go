@@ -26,9 +26,10 @@ type Handler struct {
 	narodmonService    *service.NarodmonService
 	narodmonURL        string
 	geomagneticService *service.GeomagneticService
+	hydroService       *service.HydroService
 }
 
-func NewHandler(templatesDir string, weatherService *service.WeatherService, sunService *service.SunService, moonService *service.MoonService, forecastService *service.ForecastService, photoRepo repository.PhotoRepository, narodmonService *service.NarodmonService, narodmonURL string, geomagneticService *service.GeomagneticService) (*Handler, error) {
+func NewHandler(templatesDir string, weatherService *service.WeatherService, sunService *service.SunService, moonService *service.MoonService, forecastService *service.ForecastService, photoRepo repository.PhotoRepository, narodmonService *service.NarodmonService, narodmonURL string, geomagneticService *service.GeomagneticService, hydroService *service.HydroService) (*Handler, error) {
 	return &Handler{
 		templatesDir:       templatesDir,
 		weatherService:     weatherService,
@@ -39,6 +40,7 @@ func NewHandler(templatesDir string, weatherService *service.WeatherService, sun
 		narodmonService:    narodmonService,
 		narodmonURL:        narodmonURL,
 		geomagneticService: geomagneticService,
+		hydroService:       hydroService,
 	}, nil
 }
 

@@ -1,4 +1,4 @@
-.PHONY: build build-consumer build-api build-migrator build-tui build-bot build-max-bot build-forecast run-consumer run-api run-tui run-bot run-max-bot run-forecast test lint migrate-up migrate-down docker-up docker-down tidy deploy deploy-logs deploy-status deploy-stop deploy-init deploy-check deploy-db-size deploy-clean deploy-clean-logs deploy-clean-all
+.PHONY: build build-consumer build-api build-migrator build-tui build-bot build-max-bot build-forecast build-hydro run-consumer run-api run-tui run-bot run-max-bot run-forecast run-hydro test lint migrate-up migrate-down docker-up docker-down tidy deploy deploy-logs deploy-status deploy-stop deploy-init deploy-check deploy-db-size deploy-clean deploy-clean-logs deploy-clean-all
 
 # Сборка
 build:
@@ -9,6 +9,7 @@ build:
 	go build -o bin/telegram-bot ./cmd/telegram-bot
 	go build -o bin/max-bot ./cmd/max-bot
 	go build -o bin/forecast-fetcher ./cmd/forecast-fetcher
+	go build -o bin/hydro-fetcher ./cmd/hydro-fetcher
 
 build-consumer:
 	go build -o bin/mqtt-consumer ./cmd/mqtt-consumer
@@ -31,6 +32,9 @@ build-max-bot:
 build-forecast:
 	go build -o bin/forecast-fetcher ./cmd/forecast-fetcher
 
+build-hydro:
+	go build -o bin/hydro-fetcher ./cmd/hydro-fetcher
+
 # Запуск
 run-consumer:
 	go run ./cmd/mqtt-consumer
@@ -49,6 +53,9 @@ run-max-bot:
 
 run-forecast:
 	go run ./cmd/forecast-fetcher
+
+run-hydro:
+	go run ./cmd/hydro-fetcher
 
 # Тесты
 test:

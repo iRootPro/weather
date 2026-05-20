@@ -19,6 +19,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/max-bot ./cmd/max-bot
 RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/forecast-fetcher ./cmd/forecast-fetcher
 RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/narodmon-sender ./cmd/narodmon-sender
 RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/geomagnetic-fetcher ./cmd/geomagnetic-fetcher
+RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/hydro-fetcher ./cmd/hydro-fetcher
 
 # Базовый Alpine с зеркалом, доступным из РФ (dl-cdn.alpinelinux.org режется DPI)
 FROM alpine:3.20 AS alpine-base
@@ -86,3 +87,10 @@ RUN apk --no-cache add ca-certificates tzdata
 WORKDIR /app
 COPY --from=builder /bin/geomagnetic-fetcher /app/geomagnetic-fetcher
 CMD ["/app/geomagnetic-fetcher"]
+
+# Hydro Fetcher
+FROM alpine-base AS hydro-fetcher
+RUN apk --no-cache add ca-certificates tzdata
+WORKDIR /app
+COPY --from=builder /bin/hydro-fetcher /app/hydro-fetcher
+CMD ["/app/hydro-fetcher"]

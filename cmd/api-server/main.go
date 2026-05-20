@@ -66,6 +66,11 @@ func main() {
 	sensorService := service.NewSensorService(sensorRepo)
 	forecastService := service.NewForecastService(forecastRepo)
 	geomagneticService := service.NewGeomagneticService(geomagneticRepo, cfg.Geomagnetic.AlertThreshold)
+	var hydroService *service.HydroService
+	if cfg.Hydro.Enabled {
+		hydroRepo := repository.NewHydroRepository(pool)
+		hydroService = service.NewHydroService(hydroRepo, cfg.Hydro.StationUUID)
+	}
 	sunService, err := service.NewSunService(cfg.Location.Latitude, cfg.Location.Longitude, cfg.Location.Timezone)
 	if err != nil {
 		log.Fatalf("failed to create sun service: %v", err)
@@ -97,6 +102,7 @@ func main() {
 	// Инициализация хендлеров
 	weatherHandler := api.NewWeatherHandler(weatherService)
 	sensorHandler := api.NewSensorHandler(sensorService)
+	hydroHandler := api.NewHydroHandler(hydroService)
 
 	// Web handler - try Docker path first, then local development path
 	templatesDir := "templates"
@@ -107,7 +113,7 @@ func main() {
 	}
 
 	slog.Info("creating web handler", "templatesDir", templatesDir)
-	webHandler, err := web.NewHandler(templatesDir, weatherService, sunService, moonService, forecastService, photoRepo, narodmonService, cfg.Narodmon.DeviceURL, geomagneticService)
+	webHandler, err := web.NewHandler(templatesDir, weatherService, sunService, moonService, forecastService, photoRepo, narodmonService, cfg.Narodmon.DeviceURL, geomagneticService, hydroService)
 	if err != nil {
 		log.Fatalf("failed to create web handler: %v", err)
 	}
@@ -136,6 +142,10 @@ func main() {
 	mux.HandleFunc("GET /api/sensors", sensorHandler.GetAll)
 	mux.HandleFunc("GET /api/sensors/{code}", sensorHandler.GetByCode)
 
+	// Hydro API
+	mux.HandleFunc("GET /api/hydro/current", hydroHandler.GetCurrent)
+	mux.HandleFunc("GET /api/hydro/history", hydroHandler.GetHistory)
+
 	// Web pages
 	mux.HandleFunc("GET /", webHandler.Dashboard)
 	mux.HandleFunc("GET /history", webHandler.History)
@@ -155,6 +165,7 @@ func main() {
 	mux.HandleFunc("GET /detail/rain", webHandler.DetailRain)
 	mux.HandleFunc("GET /detail/solar", webHandler.DetailSolar)
 	mux.HandleFunc("GET /detail/geomagnetic", webHandler.DetailGeomagnetic)
+	mux.HandleFunc("GET /detail/water-level", webHandler.DetailWaterLevel)
 
 	// HTMX widgets
 	mux.HandleFunc("GET /widgets/current", webHandler.CurrentWeatherWidget)
@@ -164,6 +175,7 @@ func main() {
 	slog.Info("sun widget route registered")
 	mux.HandleFunc("GET /widgets/events", webHandler.WeatherEventsWidget)
 	mux.HandleFunc("GET /widgets/forecast", webHandler.ForecastWidget)
+	mux.HandleFunc("GET /widgets/water-level", webHandler.WaterLevelWidget)
 	mux.HandleFunc("GET /widgets/narodmon-status", webHandler.NarodmonStatusWidget)
 
 	// Static files
