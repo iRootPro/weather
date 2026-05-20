@@ -527,7 +527,7 @@ func buildWaterSparkline(readings []models.HydroLevelReading, gauge *models.Hydr
 func thresholdBlock(toPreventionM float32, riskPct int) (bool, string, string, string) {
 	cm := toPreventionM * 100
 	if cm <= 0 {
-		return true, "Неблагоприятный порог", "достигнут", "Превышение порога: " + formatUnsignedCm(-cm)
+		return true, "Неблагоприятный порог", "достигнут", "уровень уже выше порога"
 	}
 	return false, "Запас до неблагоприятного", formatDistanceToThreshold(toPreventionM), fmt.Sprintf("Шкала заполнена на %d%%", riskPct)
 }
@@ -535,7 +535,7 @@ func thresholdBlock(toPreventionM float32, riskPct int) (bool, string, string, s
 func riskHeadline(toPreventionM float32) (string, string) {
 	cm := toPreventionM * 100
 	if cm < 0 {
-		return "выше на " + formatUnsignedCm(-cm), "неблагоприятного уровня"
+		return formatUnsignedCm(-cm), "выше неблагоприятного уровня"
 	}
 	if cm == 0 {
 		return "на пороге", "неблагоприятного уровня"

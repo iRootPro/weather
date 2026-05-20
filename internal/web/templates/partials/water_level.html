@@ -98,11 +98,10 @@
                     </div>
                     <div class="mt-2 text-sm text-gray-600 dark:text-gray-300">
                         {{if .ThresholdReached}}
-                            <span class="font-bold {{.StatusText}}">{{.ThresholdDetail}}</span>
+                            {{if .ToDanger}}До опасного уровня: <span class="font-bold text-gray-900 dark:text-white">{{.ToDanger}}</span>{{else}}{{.ThresholdDetail}}{{end}}
                         {{else}}
-                            {{.ThresholdDetail}}
+                            {{.ThresholdDetail}}{{if .ToDanger}}<span class="mx-1 text-gray-400">·</span>До опасного уровня: <span class="font-bold text-gray-900 dark:text-white">{{.ToDanger}}</span>{{end}}
                         {{end}}
-                        {{if .ToDanger}}<span class="mx-1 text-gray-400">·</span>До опасного уровня: <span class="font-bold text-gray-900 dark:text-white">{{.ToDanger}}</span>{{end}}
                     </div>
                 </div>
 
@@ -157,7 +156,7 @@
                     <div class="mt-3">
                         <div class="flex items-center justify-between text-xs mb-1.5">
                             <span class="text-gray-500 dark:text-gray-400">близость к порогу</span>
-                            <span class="font-bold {{.StatusText}}">{{.RiskPct}}%</span>
+                            <span class="font-bold {{.StatusText}}">{{if eq .RiskPct 0}}далеко{{else}}{{.RiskPct}}%{{end}}</span>
                         </div>
                         <div class="h-2 rounded-full bg-white/75 dark:bg-black/30 overflow-hidden">
                             <div class="h-full rounded-full {{.RiskBarClass}}" style="width: {{.RiskPct}}%"></div>
