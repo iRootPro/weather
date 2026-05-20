@@ -1,39 +1,118 @@
-<div class="bg-gradient-to-br {{.StatusGradient}} rounded-lg shadow p-6 transition-colors">
-    <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Уровень Кубани</h2>
-        <span class="text-sm text-gray-500 dark:text-gray-400">{{.ObservedAt}}</span>
-    </div>
+<style>
+@keyframes hydroPulse {
+    0%, 100% { transform: scale(1); opacity: .95; }
+    50% { transform: scale(1.35); opacity: .55; }
+}
+.hydro-pulse { animation: hydroPulse 1.6s ease-in-out infinite; transform-origin: center; }
+</style>
 
-    <a href="/detail/water-level" class="block group">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+<a href="/detail/water-level"
+   class="block group overflow-hidden rounded-xl shadow bg-gradient-to-br {{.StatusGradient}} transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
+    <div class="p-5 md:p-6">
+        <div class="flex items-start justify-between gap-4 mb-4">
             <div>
-                <div class="text-sm text-gray-600 dark:text-gray-300">{{.ObjectName}} · {{.StationName}}</div>
-                <div class="text-4xl font-bold {{.StatusText}} mt-1">
-                    {{printf "%.3f" .LevelM}} м
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">🌊</span>
+                    <h2 class="text-lg font-bold text-gray-900 dark:text-white">Уровень Кубани</h2>
                 </div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">Балтийская система высот</div>
-                {{if .RelativeLevelCm}}<div class="text-sm font-semibold text-gray-700 dark:text-gray-300 mt-1">{{.RelativeLevelCm}}</div>{{end}}
+                <div class="text-sm text-gray-600 dark:text-gray-300 mt-1">{{.ObjectName}} · {{.StationName}}</div>
             </div>
-            <div class="space-y-1">
-                <div class="text-sm text-gray-600 dark:text-gray-300">Статус</div>
-                <div class="text-xl font-semibold {{.StatusText}}">{{.StatusLabel}}</div>
-                {{if .LeadText}}<div class="text-sm text-gray-600 dark:text-gray-300">{{.LeadText}}</div>{{end}}
-            </div>
-            <div class="space-y-1 text-sm text-gray-700 dark:text-gray-300">
-                {{if .ChangeText}}
-                <div>Изменение: <span class="font-semibold {{.ChangeClass}}">{{.ChangeText}}</span></div>
-                {{end}}
-                {{if .DayChangeText}}
-                <div>За сутки: <span class="font-semibold">{{.DayChangeText}}</span></div>
-                {{end}}
-                {{if .ToPrevention}}
-                <div>До НЯ: <span class="font-semibold">{{.ToPrevention}}</span></div>
-                {{end}}
-                {{if .ToDanger}}
-                <div>До ОЯ: <span class="font-semibold">{{.ToDanger}}</span></div>
-                {{end}}
-                <div class="text-blue-600 dark:text-blue-300 opacity-0 group-hover:opacity-100 transition-opacity">Подробнее →</div>
+            <div class="text-right">
+                <div class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">обновлено</div>
+                <div class="text-sm font-semibold text-gray-700 dark:text-gray-200">{{.ObservedAt}}</div>
             </div>
         </div>
-    </a>
-</div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
+            <!-- Current value -->
+            <div class="lg:col-span-3">
+                <div class="text-5xl md:text-6xl font-black {{.StatusText}} leading-none tracking-tight">
+                    {{printf "%.3f" .LevelM}}
+                </div>
+                <div class="mt-1 text-lg font-bold {{.StatusText}}">м БСВ</div>
+                {{if .RelativeLevelCm}}
+                <div class="mt-2 inline-flex items-center rounded-full bg-white/55 dark:bg-black/20 px-3 py-1 text-sm font-semibold text-gray-700 dark:text-gray-200">
+                    {{.RelativeLevelCm}}
+                </div>
+                {{end}}
+            </div>
+
+            <!-- Compact pulse chart -->
+            <div class="lg:col-span-5">
+                <div class="rounded-lg bg-white/55 dark:bg-gray-950/25 border border-white/60 dark:border-white/10 p-3">
+                    <div class="flex items-center justify-between mb-2">
+                        <div>
+                            <div class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">пульс уровня · 24ч</div>
+                            <div class="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                                {{if .DayChangeText}}за сутки {{.DayChangeText}}{{else}}накопление истории{{end}}
+                            </div>
+                        </div>
+                        {{if .ChangeText}}
+                        <div class="text-right">
+                            <div class="text-xs text-gray-500 dark:text-gray-400">сейчас</div>
+                            <div class="text-lg font-black {{.ChangeClass}}">{{.ChangeText}}</div>
+                        </div>
+                        {{end}}
+                    </div>
+
+                    {{if .Sparkline.HasData}}
+                    <svg viewBox="0 0 100 44" preserveAspectRatio="none" class="w-full h-24 overflow-visible">
+                        <defs>
+                            <linearGradient id="hydroFill" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#0ea5e9" stop-opacity="0.32"/>
+                                <stop offset="100%" stop-color="#0ea5e9" stop-opacity="0.02"/>
+                            </linearGradient>
+                        </defs>
+                        <line x1="0" y1="38" x2="100" y2="38" stroke="currentColor" stroke-opacity="0.10" stroke-width="1"/>
+                        <line x1="0" y1="22" x2="100" y2="22" stroke="currentColor" stroke-opacity="0.08" stroke-width="1"/>
+                        {{if .Sparkline.HasThresholdLine}}
+                        <line x1="0" y1="{{.Sparkline.ThresholdY}}" x2="100" y2="{{.Sparkline.ThresholdY}}" stroke="#f97316" stroke-opacity="0.75" stroke-width="1" stroke-dasharray="3 3"/>
+                        {{end}}
+                        <polygon points="{{.Sparkline.FillPoints}}" fill="url(#hydroFill)"/>
+                        <polyline points="{{.Sparkline.Points}}" fill="none" stroke="#0ea5e9" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+                        <circle cx="{{.Sparkline.LastX}}" cy="{{.Sparkline.LastY}}" r="2.4" fill="#0ea5e9" vector-effect="non-scaling-stroke"/>
+                        <circle class="hydro-pulse" cx="{{.Sparkline.LastX}}" cy="{{.Sparkline.LastY}}" r="4.8" fill="#0ea5e9" opacity="0.24" vector-effect="non-scaling-stroke"/>
+                    </svg>
+                    <div class="flex justify-between text-[11px] text-gray-500 dark:text-gray-400 mt-1">
+                        <span>min {{.Sparkline.MinText}}</span>
+                        {{if .Sparkline.HasThresholdLine}}<span class="text-orange-600 dark:text-orange-300">порог НЯ</span>{{else}}<span>24 часа</span>{{end}}
+                        <span>max {{.Sparkline.MaxText}}</span>
+                    </div>
+                    {{else}}
+                    <div class="h-24 rounded bg-white/40 dark:bg-black/20 flex items-center justify-center text-sm text-gray-500 dark:text-gray-400">
+                        График появится после накопления данных
+                    </div>
+                    {{end}}
+                </div>
+            </div>
+
+            <!-- Status and thresholds -->
+            <div class="lg:col-span-4 space-y-3">
+                <div class="flex items-center justify-between rounded-lg bg-white/55 dark:bg-gray-950/25 border border-white/60 dark:border-white/10 px-4 py-3">
+                    <div>
+                        <div class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">статус</div>
+                        <div class="text-xl font-black {{.StatusText}}">{{.StatusLabel}}</div>
+                    </div>
+                    <div class="w-3 h-3 rounded-full {{if ge .RiskPct 80}}bg-orange-500{{else}}bg-sky-500{{end}} hydro-pulse"></div>
+                </div>
+
+                <div class="rounded-lg bg-white/55 dark:bg-gray-950/25 border border-white/60 dark:border-white/10 px-4 py-3">
+                    <div class="flex justify-between text-sm mb-2">
+                        <span class="text-gray-600 dark:text-gray-300">Близость к НЯ</span>
+                        {{if .ToPrevention}}<span class="font-bold text-gray-900 dark:text-white">{{.ToPrevention}}</span>{{end}}
+                    </div>
+                    <div class="h-2.5 rounded-full bg-white/70 dark:bg-black/30 overflow-hidden">
+                        <div class="h-full rounded-full {{.RiskBarClass}} transition-all duration-700" style="width: {{.RiskPct}}%"></div>
+                    </div>
+                    {{if .ToDanger}}
+                    <div class="mt-2 text-sm text-gray-600 dark:text-gray-300">До ОЯ: <span class="font-bold text-gray-900 dark:text-white">{{.ToDanger}}</span></div>
+                    {{end}}
+                </div>
+
+                <div class="text-blue-700 dark:text-blue-300 text-sm font-semibold opacity-80 group-hover:opacity-100 transition-opacity">
+                    Открыть подробный график →
+                </div>
+            </div>
+        </div>
+    </div>
+</a>
