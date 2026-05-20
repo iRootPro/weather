@@ -104,6 +104,10 @@ func (s *HydroService) GetRange(ctx context.Context, from, to time.Time) ([]mode
 	return s.repo.GetRange(ctx, s.stationUUID, from, to)
 }
 
+func (s *HydroService) GetRangeForStation(ctx context.Context, stationUUID string, from, to time.Time) ([]models.HydroLevelReading, error) {
+	return s.repo.GetRange(ctx, stationUUID, from, to)
+}
+
 func (s *HydroService) GetGauge(ctx context.Context) (*models.HydroGauge, error) {
 	return s.repo.GetGauge(ctx, s.stationUUID)
 }

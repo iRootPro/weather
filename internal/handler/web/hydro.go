@@ -64,6 +64,7 @@ type WaterLevelMiniData struct {
 	AbsoluteLevelText string
 	TrendText         string
 	TrendClass        string
+	Sparkline         WaterSparklineData
 }
 
 type WaterSparklineData struct {
@@ -144,8 +145,18 @@ func (h *Handler) buildWaterLevelCard(r *http.Request) WaterLevelCardData {
 	if err != nil {
 		slog.Warn("failed to get upstream hydro snapshots", "error", err)
 	} else {
+		to := time.Now()
+		from := to.Add(-24 * time.Hour)
 		for _, item := range upstream {
 			if mini := buildWaterLevelMini(item); mini != nil {
+				if item.Current != nil {
+					readings, err := h.hydroService.GetRangeForStation(r.Context(), item.Current.StationUUID, from, to)
+					if err != nil {
+						slog.Warn("failed to get upstream hydro sparkline", "station_uuid", item.Current.StationUUID, "error", err)
+					} else {
+						mini.Sparkline = buildWaterSparkline(readings, item.Gauge)
+					}
+				}
 				card.Upstream = append(card.Upstream, *mini)
 			}
 		}
