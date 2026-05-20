@@ -77,7 +77,11 @@ func (s *HydroService) getSnapshotForStation(ctx context.Context, stationUUID st
 	snap.DayAgo = dayAgo
 	if dayAgo != nil {
 		v := current.LevelBSM - dayAgo.LevelBSM
-		snap.Change24hM = &v
+		// Источник иногда отдаёт одиночные выбросы в истории. Не даём им превращаться в
+		// абсурдные суточные дельты на дашборде.
+		if v <= 3 && v >= -3 {
+			snap.Change24hM = &v
+		}
 	}
 
 	if gauge != nil {

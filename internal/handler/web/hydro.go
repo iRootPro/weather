@@ -231,9 +231,7 @@ func buildHydroSummary(snap *models.HydroSnapshot, dayChangeText, toPrevention s
 	if snap == nil || snap.Current == nil {
 		return ""
 	}
-	trend, _ := trendLabel(snap.Current.ChangeCmPerHour, snap.Change24hM)
-	trend = strings.TrimSuffix(strings.TrimSuffix(strings.TrimSuffix(trend, " ↑"), " ↓"), " →")
-	summary := "Кубань " + trend
+	summary := "Кубань " + summaryTrendPhrase(snap.Current.ChangeCmPerHour, snap.Change24hM)
 	details := make([]string, 0, 2)
 	if dayChangeText != "" {
 		details = append(details, "за сутки "+dayChangeText)
@@ -245,6 +243,40 @@ func buildHydroSummary(snap *models.HydroSnapshot, dayChangeText, toPrevention s
 		return summary
 	}
 	return summary + ": " + strings.Join(details, ", ")
+}
+
+func summaryTrendPhrase(changePerHour *float32, change24hM *float32) string {
+	if changePerHour != nil {
+		v := *changePerHour
+		switch {
+		case v >= 3:
+			return "быстро растёт"
+		case v >= 1:
+			return "растёт"
+		case v <= -3:
+			return "быстро снижается"
+		case v <= -1:
+			return "снижается"
+		default:
+			return "почти без изменений"
+		}
+	}
+	if change24hM != nil {
+		cm := *change24hM * 100
+		switch {
+		case cm >= 20:
+			return "быстро растёт"
+		case cm >= 5:
+			return "растёт"
+		case cm <= -20:
+			return "быстро снижается"
+		case cm <= -5:
+			return "снижается"
+		default:
+			return "почти без изменений"
+		}
+	}
+	return "под наблюдением"
 }
 
 func (h *Handler) WaterLevelWidget(w http.ResponseWriter, r *http.Request) {
