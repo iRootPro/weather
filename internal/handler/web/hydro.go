@@ -36,7 +36,6 @@ type WaterLevelCardData struct {
 	StatusNote        string
 	TrendText         string
 	TrendClass        string
-	Scene             WaterLevelSceneData
 	Sparkline         WaterSparklineData
 	Upstream          []WaterLevelMiniData
 }
@@ -61,13 +60,6 @@ type WaterLevelMiniData struct {
 	AbsoluteLevelText string
 	TrendText         string
 	TrendClass        string
-}
-
-type WaterLevelSceneData struct {
-	WaterPct      int
-	PreventionPct int
-	DangerPct     int
-	HasDanger     bool
 }
 
 type WaterSparklineData struct {
@@ -143,7 +135,6 @@ func (h *Handler) buildWaterLevelCard(r *http.Request) WaterLevelCardData {
 	}
 	card.TrendText, card.TrendClass = trendLabel(snap.Current.ChangeCmPerHour, snap.Change24hM)
 	card.StatusNote = hydroStatusNote(snap.Status, snap.Current.ChangeCmPerHour, snap.Change24hM)
-	card.Scene = buildWaterLevelScene(snap)
 	upstream, err := h.hydroService.GetUpstreamSnapshots(r.Context(), time.Now())
 	if err != nil {
 		slog.Warn("failed to get upstream hydro snapshots", "error", err)
@@ -216,42 +207,6 @@ func hydroStationRole(objectName string) string {
 		return "выше по руслу"
 	}
 	return "приток бассейна"
-}
-
-func buildWaterLevelScene(snap *models.HydroSnapshot) WaterLevelSceneData {
-	const preventionPct = 64
-	const dangerPct = 80
-	waterPct := 42
-	if snap != nil && snap.ToPreventionM != nil {
-		toPreventionCm := *snap.ToPreventionM * 100
-		switch {
-		case toPreventionCm > 0:
-			waterPct = preventionPct - int(toPreventionCm*0.45)
-		case snap.ToDangerM != nil:
-			toDangerCm := *snap.ToDangerM * 100
-			spanCm := toDangerCm - toPreventionCm
-			if spanCm <= 0 {
-				waterPct = dangerPct
-			} else {
-				progress := -toPreventionCm / spanCm
-				waterPct = preventionPct + int(progress*float32(dangerPct-preventionPct))
-			}
-		default:
-			waterPct = preventionPct
-		}
-	}
-	if waterPct < 24 {
-		waterPct = 24
-	}
-	if waterPct > 88 {
-		waterPct = 88
-	}
-	return WaterLevelSceneData{
-		WaterPct:      waterPct,
-		PreventionPct: preventionPct,
-		DangerPct:     dangerPct,
-		HasDanger:     snap != nil && snap.ToDangerM != nil,
-	}
 }
 
 func trendLabel(changePerHour *float32, change24hM *float32) (string, string) {
