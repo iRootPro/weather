@@ -39,16 +39,17 @@ type HydroLevelReading struct {
 
 // HydroSnapshot — данные для карточки/текущего состояния.
 type HydroSnapshot struct {
-	Gauge         *HydroGauge        `json:"gauge,omitempty"`
-	Current       *HydroLevelReading `json:"current,omitempty"`
-	Previous      *HydroLevelReading `json:"previous,omitempty"`
-	DayAgo        *HydroLevelReading `json:"day_ago,omitempty"`
-	ChangeM       *float32           `json:"change_m,omitempty"`
-	Change24hM    *float32           `json:"change_24h_m,omitempty"`
-	ToPreventionM *float32           `json:"to_prevention_m,omitempty"`
-	ToDangerM     *float32           `json:"to_danger_m,omitempty"`
-	Status        HydroStatus        `json:"status"`
-	HasData       bool               `json:"has_data"`
+	Gauge           *HydroGauge        `json:"gauge,omitempty"`
+	Current         *HydroLevelReading `json:"current,omitempty"`
+	Previous        *HydroLevelReading `json:"previous,omitempty"`
+	DayAgo          *HydroLevelReading `json:"day_ago,omitempty"`
+	ChangeM         *float32           `json:"change_m,omitempty"`
+	Change24hM      *float32           `json:"change_24h_m,omitempty"`
+	RelativeLevelCm *float32           `json:"relative_level_cm,omitempty"`
+	ToPreventionM   *float32           `json:"to_prevention_m,omitempty"`
+	ToDangerM       *float32           `json:"to_danger_m,omitempty"`
+	Status          HydroStatus        `json:"status"`
+	HasData         bool               `json:"has_data"`
 }
 
 type HydroStatus string

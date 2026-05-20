@@ -20,6 +20,7 @@
                 {{printf "%.3f" .Data.Card.LevelM}} м
             </div>
             <div class="text-base text-gray-600 dark:text-gray-400">{{.Data.Card.ObjectName}} · {{.Data.Card.StationName}} · {{.Data.Card.ObservedAt}}</div>
+            {{if .Data.Card.RelativeLevelCm}}<div class="mt-2 text-gray-700 dark:text-gray-300 font-semibold">{{.Data.Card.RelativeLevelCm}}</div>{{end}}
             <div class="mt-3 text-lg {{.Data.Card.StatusText}} font-semibold">{{.Data.Card.StatusLabel}}</div>
             {{if .Data.Card.ChangeText}}<div class="mt-2 text-gray-700 dark:text-gray-300">Изменение: <span class="font-semibold {{.Data.Card.ChangeClass}}">{{.Data.Card.ChangeText}}</span></div>{{end}}
             {{if .Data.Card.LeadText}}<div class="mt-1 text-gray-700 dark:text-gray-300">{{.Data.Card.LeadText}}</div>{{end}}

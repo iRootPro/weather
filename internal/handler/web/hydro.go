@@ -11,20 +11,21 @@ import (
 )
 
 type WaterLevelCardData struct {
-	HasData        bool
-	StationName    string
-	ObjectName     string
-	ObservedAt     string
-	LevelM         float32
-	ChangeText     string
-	ChangeClass    string
-	DayChangeText  string
-	LeadText       string
-	StatusLabel    string
-	StatusGradient string
-	StatusText     string
-	ToPrevention   string
-	ToDanger       string
+	HasData         bool
+	StationName     string
+	ObjectName      string
+	ObservedAt      string
+	LevelM          float32
+	RelativeLevelCm string
+	ChangeText      string
+	ChangeClass     string
+	DayChangeText   string
+	LeadText        string
+	StatusLabel     string
+	StatusGradient  string
+	StatusText      string
+	ToPrevention    string
+	ToDanger        string
 }
 
 func (h *Handler) buildWaterLevelCard(r *http.Request) WaterLevelCardData {
@@ -65,7 +66,10 @@ func (h *Handler) buildWaterLevelCard(r *http.Request) WaterLevelCardData {
 	if snap.Change24hM != nil {
 		card.DayChangeText = formatSignedFloat(*snap.Change24hM*100, "%.0f см за сутки")
 	}
-	if snap.Current.LeadText != nil {
+	if snap.RelativeLevelCm != nil {
+		card.RelativeLevelCm = fmt.Sprintf("%.0f см над нулём поста", *snap.RelativeLevelCm)
+	}
+	if snap.Current.LeadText != nil && *snap.Current.LeadText != "?" && *snap.Current.LeadText != "---" {
 		card.LeadText = *snap.Current.LeadText
 	}
 	if snap.ToPreventionM != nil {

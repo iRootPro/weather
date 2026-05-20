@@ -12,6 +12,7 @@
                     {{printf "%.3f" .LevelM}} м
                 </div>
                 <div class="text-xs text-gray-500 dark:text-gray-400">Балтийская система высот</div>
+                {{if .RelativeLevelCm}}<div class="text-sm font-semibold text-gray-700 dark:text-gray-300 mt-1">{{.RelativeLevelCm}}</div>{{end}}
             </div>
             <div class="space-y-1">
                 <div class="text-sm text-gray-600 dark:text-gray-300">Статус</div>

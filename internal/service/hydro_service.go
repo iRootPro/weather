@@ -9,12 +9,14 @@ import (
 )
 
 type HydroService struct {
-	repo        repository.HydroRepository
-	stationUUID string
+	repo           repository.HydroRepository
+	stationUUID    string
+	zeroPostBSM    float32
+	hasZeroPostBSM bool
 }
 
-func NewHydroService(repo repository.HydroRepository, stationUUID string) *HydroService {
-	return &HydroService{repo: repo, stationUUID: stationUUID}
+func NewHydroService(repo repository.HydroRepository, stationUUID string, zeroPostBSM float32) *HydroService {
+	return &HydroService{repo: repo, stationUUID: stationUUID, zeroPostBSM: zeroPostBSM, hasZeroPostBSM: zeroPostBSM != 0}
 }
 
 func (s *HydroService) GetSnapshot(ctx context.Context, now time.Time) (*models.HydroSnapshot, error) {
@@ -34,6 +36,10 @@ func (s *HydroService) GetSnapshot(ctx context.Context, now time.Time) (*models.
 	}
 	snap.Current = current
 	snap.HasData = true
+	if s.hasZeroPostBSM {
+		v := (current.LevelBSM - s.zeroPostBSM) * 100
+		snap.RelativeLevelCm = &v
+	}
 
 	previous, err := s.repo.GetPreviousBefore(ctx, s.stationUUID, current.ObservedAt)
 	if err != nil {

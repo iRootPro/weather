@@ -128,16 +128,17 @@ type GeomagneticConfig struct {
 }
 
 type HydroConfig struct {
-	Enabled        bool   `env:"HYDRO_ENABLED" env-default:"true"`
-	BaseURL        string `env:"HYDRO_BASE_URL" env-default:"https://pub.emercit.ru"`
-	Username       string `env:"HYDRO_USERNAME" env-default:""`
-	Password       string `env:"HYDRO_PASSWORD" env-default:""`
-	StationUUID    string `env:"HYDRO_STATION_UUID" env-default:"1f948694-1c98-4b36-b044-3bac519ed7a3"` // АГК-0004, Армавир
-	WaterLevelUUID string `env:"HYDRO_WATERLEVEL_UUID" env-default:"8418f017-08aa-4bc8-82c1-f325f8f83ca9"`
-	UpdateInterval int    `env:"HYDRO_UPDATE_INTERVAL" env-default:"600"` // 10 минут, шаг источника
-	APITimeout     int    `env:"HYDRO_API_TIMEOUT" env-default:"30"`
-	HistoryHours   int    `env:"HYDRO_HISTORY_HOURS" env-default:"24"`
-	RetentionDays  int    `env:"HYDRO_RETENTION_DAYS" env-default:"365"`
+	Enabled        bool    `env:"HYDRO_ENABLED" env-default:"true"`
+	BaseURL        string  `env:"HYDRO_BASE_URL" env-default:"https://pub.emercit.ru"`
+	Username       string  `env:"HYDRO_USERNAME" env-default:""`
+	Password       string  `env:"HYDRO_PASSWORD" env-default:""`
+	StationUUID    string  `env:"HYDRO_STATION_UUID" env-default:"1f948694-1c98-4b36-b044-3bac519ed7a3"` // АГК-0004, Армавир
+	WaterLevelUUID string  `env:"HYDRO_WATERLEVEL_UUID" env-default:"8418f017-08aa-4bc8-82c1-f325f8f83ca9"`
+	UpdateInterval int     `env:"HYDRO_UPDATE_INTERVAL" env-default:"600"` // 10 минут, шаг источника
+	APITimeout     int     `env:"HYDRO_API_TIMEOUT" env-default:"30"`
+	HistoryHours   int     `env:"HYDRO_HISTORY_HOURS" env-default:"48"`
+	RetentionDays  int     `env:"HYDRO_RETENTION_DAYS" env-default:"365"`
+	ZeroPostBSM    float32 `env:"HYDRO_ZERO_POST_BS_M" env-default:"168.98"` // отметка нуля поста по AllRivers, м БСВ
 }
 
 func Load() (*Config, error) {
