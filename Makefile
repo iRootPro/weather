@@ -1,4 +1,4 @@
-.PHONY: build build-consumer build-api build-migrator build-tui build-bot build-max-bot build-forecast build-hydro run-consumer run-api run-tui run-bot run-max-bot run-forecast run-hydro test lint migrate-up migrate-down docker-up docker-down tidy deploy deploy-logs deploy-status deploy-stop deploy-init deploy-check deploy-db-size deploy-clean deploy-clean-logs deploy-clean-all
+.PHONY: build build-consumer build-api build-migrator build-tui build-bot build-max-bot build-forecast build-hydro build-webapp run-consumer run-api run-tui run-bot run-max-bot run-forecast run-hydro test lint migrate-up migrate-down docker-up docker-down tidy deploy deploy-logs deploy-status deploy-stop deploy-init deploy-check deploy-db-size deploy-clean deploy-clean-logs deploy-clean-all
 
 # Сборка
 build:
@@ -34,6 +34,9 @@ build-forecast:
 
 build-hydro:
 	go build -o bin/hydro-fetcher ./cmd/hydro-fetcher
+
+build-webapp:
+	cd webapp && npm run build
 
 # Запуск
 run-consumer:

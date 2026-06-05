@@ -43,6 +43,10 @@ doc/
 .dockerignore
 docker-compose*.yml
 
+# Frontend dev/build artifacts
+webapp/node_modules/
+webapp/dist/
+
 # Coverage и temp
 coverage.out
 coverage.html

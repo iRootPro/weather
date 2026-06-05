@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -183,6 +184,16 @@ func main() {
 	mux.HandleFunc("GET /widgets/water-level", webHandler.WaterLevelWidget)
 	mux.HandleFunc("GET /widgets/narodmon-status", webHandler.NarodmonStatusWidget)
 
+	// React/PWA app - Docker path first, then local development build path
+	webappDir := "webapp/dist"
+	if _, err := os.Stat(webappDir); os.IsNotExist(err) {
+		webappDir = "webapp"
+	}
+	mux.HandleFunc("GET /app", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/app/", http.StatusMovedPermanently)
+	})
+	mux.Handle("GET /app/", spaHandler("/app/", http.Dir(webappDir)))
+
 	// Static files
 	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.Dir(staticDir))))
 	mux.Handle("GET /photos/", http.StripPrefix("/photos/", http.FileServer(http.Dir("photos"))))
@@ -226,6 +237,40 @@ func main() {
 func healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+}
+
+func spaHandler(prefix string, fs http.FileSystem) http.Handler {
+	fileServer := http.FileServer(fs)
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		path := strings.TrimPrefix(r.URL.Path, prefix)
+		if path == "" {
+			path = "index.html"
+		}
+
+		file, err := fs.Open(path)
+		if err != nil {
+			serveSPAIndex(fileServer, r, w)
+			return
+		}
+		defer file.Close()
+
+		stat, err := file.Stat()
+		if err != nil || stat.IsDir() {
+			serveSPAIndex(fileServer, r, w)
+			return
+		}
+
+		cloned := r.Clone(r.Context())
+		cloned.URL.Path = "/" + path
+		fileServer.ServeHTTP(w, cloned)
+	})
+}
+
+func serveSPAIndex(fileServer http.Handler, r *http.Request, w http.ResponseWriter) {
+	cloned := r.Clone(r.Context())
+	cloned.URL.Path = "/index.html"
+	fileServer.ServeHTTP(w, cloned)
 }
 
 func loggingMiddleware(next http.Handler) http.Handler {

@@ -478,18 +478,18 @@ webapp/
 - TypeScript;
 - Vite;
 - TanStack Query;
-- React Router;
-- Tailwind CSS;
+- React Router позже, когда появятся детальные страницы;
+- собственный CSS на design tokens для первого MVP;
 - `vite-plugin-pwa`;
 - Recharts или ECharts позже.
 
 Задачи:
 
-- [ ] Создать Vite React TS приложение.
-- [ ] Настроить Tailwind.
-- [ ] Настроить PWA manifest/service worker.
-- [ ] Настроить API client.
-- [ ] Настроить dev proxy на Go backend.
+- [x] Создать Vite React TS приложение.
+- [x] Настроить базовую дизайн-систему на CSS tokens.
+- [x] Настроить PWA manifest/service worker.
+- [x] Настроить API client.
+- [x] Настроить dev proxy на Go backend.
 
 ---
 
@@ -512,13 +512,13 @@ webapp/
 
 Задачи:
 
-- [ ] Загрузить `/api/dashboard/snapshot`.
-- [ ] Показать headline.
-- [ ] Показать карточки, отсортированные по priority.
-- [ ] Разные стили для severity.
-- [ ] Compact view для low-priority.
-- [ ] Loading/error состояния.
-- [ ] Pull-to-refresh или обычная кнопка обновления.
+- [x] Загрузить `/api/dashboard/snapshot`.
+- [x] Показать headline.
+- [x] Показать карточки, отсортированные по priority.
+- [x] Разные стили для severity.
+- [x] Compact/context view для менее важных карточек.
+- [x] Loading/error состояния.
+- [x] Обычная кнопка обновления.
 
 Проверка:
 
@@ -539,11 +539,11 @@ webapp/
 
 Задачи:
 
-- [ ] Добавить build stage для webapp в Dockerfile.
-- [ ] Скопировать dist в api-server image.
-- [ ] Добавить static serving `/app/`.
-- [ ] Настроить fallback на `index.html` для React Router.
-- [ ] Обновить Makefile.
+- [x] Добавить build stage для webapp в Dockerfile.
+- [x] Скопировать dist в api-server image.
+- [x] Добавить static serving `/app/`.
+- [x] Настроить fallback на `index.html` для будущего React Router.
+- [x] Обновить Makefile.
 
 ---
 

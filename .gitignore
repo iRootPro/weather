@@ -24,3 +24,7 @@ backups/
 # Тестовое покрытие
 coverage.out
 coverage.html
+
+# Frontend
+webapp/node_modules/
+webapp/dist/
