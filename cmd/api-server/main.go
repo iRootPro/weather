@@ -240,37 +240,45 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func spaHandler(prefix string, fs http.FileSystem) http.Handler {
-	fileServer := http.FileServer(fs)
-
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		path := strings.TrimPrefix(r.URL.Path, prefix)
 		if path == "" {
-			path = "index.html"
+			serveFileFromFS(w, r, fs, "index.html")
+			return
 		}
 
 		file, err := fs.Open(path)
 		if err != nil {
-			serveSPAIndex(fileServer, r, w)
+			serveFileFromFS(w, r, fs, "index.html")
 			return
 		}
 		defer file.Close()
 
 		stat, err := file.Stat()
 		if err != nil || stat.IsDir() {
-			serveSPAIndex(fileServer, r, w)
+			serveFileFromFS(w, r, fs, "index.html")
 			return
 		}
 
-		cloned := r.Clone(r.Context())
-		cloned.URL.Path = "/" + path
-		fileServer.ServeHTTP(w, cloned)
+		http.ServeContent(w, r, path, stat.ModTime(), file)
 	})
 }
 
-func serveSPAIndex(fileServer http.Handler, r *http.Request, w http.ResponseWriter) {
-	cloned := r.Clone(r.Context())
-	cloned.URL.Path = "/index.html"
-	fileServer.ServeHTTP(w, cloned)
+func serveFileFromFS(w http.ResponseWriter, r *http.Request, fs http.FileSystem, name string) {
+	file, err := fs.Open(name)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	defer file.Close()
+
+	stat, err := file.Stat()
+	if err != nil || stat.IsDir() {
+		http.NotFound(w, r)
+		return
+	}
+
+	http.ServeContent(w, r, name, stat.ModTime(), file)
 }
 
 func loggingMiddleware(next http.Handler) http.Handler {
