@@ -71,6 +71,7 @@ func main() {
 		hydroRepo := repository.NewHydroRepository(pool)
 		hydroService = service.NewHydroService(hydroRepo, cfg.Hydro.StationUUID, cfg.Hydro.ZeroPostBSM, cfg.Hydro.UpstreamStationUUIDs()...)
 	}
+	dashboardService := service.NewDashboardService(weatherService, forecastService, geomagneticService, hydroService)
 	sunService, err := service.NewSunService(cfg.Location.Latitude, cfg.Location.Longitude, cfg.Location.Timezone)
 	if err != nil {
 		log.Fatalf("failed to create sun service: %v", err)
@@ -103,6 +104,7 @@ func main() {
 	weatherHandler := api.NewWeatherHandler(weatherService)
 	sensorHandler := api.NewSensorHandler(sensorService)
 	hydroHandler := api.NewHydroHandler(hydroService)
+	dashboardHandler := api.NewDashboardHandler(dashboardService)
 
 	// Web handler - try Docker path first, then local development path
 	templatesDir := "templates"
@@ -130,6 +132,9 @@ func main() {
 
 	// Health check
 	mux.HandleFunc("GET /health", healthHandler)
+
+	// Dashboard API
+	mux.HandleFunc("GET /api/dashboard/snapshot", dashboardHandler.GetSnapshot)
 
 	// Weather API
 	mux.HandleFunc("GET /api/weather/current", weatherHandler.GetCurrent)
