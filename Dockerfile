@@ -21,14 +21,6 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/narodmon-sender ./cmd/narodmon-sen
 RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/geomagnetic-fetcher ./cmd/geomagnetic-fetcher
 RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/hydro-fetcher ./cmd/hydro-fetcher
 
-# Сборка React/PWA приложения
-FROM node:26-alpine AS webapp-builder
-WORKDIR /app/webapp
-COPY webapp/package*.json ./
-RUN npm ci
-COPY webapp/ ./
-RUN npm run build
-
 # Базовый Alpine с зеркалом, доступным из РФ (dl-cdn.alpinelinux.org режется DPI)
 FROM alpine:3.20 AS alpine-base
 RUN sed -i 's|dl-cdn.alpinelinux.org|mirror.yandex.ru/mirrors|g' /etc/apk/repositories
@@ -47,7 +39,7 @@ WORKDIR /app
 COPY --from=builder /bin/api-server /app/api-server
 COPY --from=builder /app/internal/web/templates /app/templates
 COPY --from=builder /app/internal/web/static /app/static
-COPY --from=webapp-builder /app/webapp/dist /app/webapp
+COPY webapp/dist /app/webapp
 EXPOSE 8080
 CMD ["/app/api-server"]
 
