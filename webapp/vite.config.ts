@@ -13,6 +13,7 @@ export default defineConfig({
         name: 'Метеостанция Армавир',
         short_name: 'Погода',
         description: 'Умная лента внимания метеостанции Армавир',
+        lang: 'ru-RU',
         id: '/app/',
         start_url: '/app/',
         scope: '/app/',
