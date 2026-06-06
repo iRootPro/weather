@@ -13,14 +13,19 @@ export default defineConfig({
         name: 'Метеостанция Армавир',
         short_name: 'Погода',
         description: 'Умная лента внимания метеостанции Армавир',
+        id: '/app/',
         start_url: '/app/',
         scope: '/app/',
         display: 'standalone',
+        orientation: 'portrait-primary',
+        categories: ['weather', 'utilities'],
         background_color: '#10141f',
         theme_color: '#10141f',
         icons: [
           { src: '/static/icon-192.png', sizes: '192x192', type: 'image/png' },
-          { src: '/static/icon-512.png', sizes: '512x512', type: 'image/png' }
+          { src: '/static/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+          { src: '/static/icon-512.png', sizes: '512x512', type: 'image/png' },
+          { src: '/static/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
         ]
       },
       workbox: {

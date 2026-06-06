@@ -85,6 +85,7 @@ type AttentionCard struct {
 	Severity  string `json:"severity"`
 	Priority  int    `json:"priority"`
 	Reason    string `json:"reason,omitempty"`
+	Action    string `json:"action,omitempty"`
 	Icon      string `json:"icon,omitempty"`
 	DetailURL string `json:"detail_url,omitempty"`
 }

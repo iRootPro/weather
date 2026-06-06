@@ -53,6 +53,7 @@ export type AttentionCard = {
   severity: Severity;
   priority: number;
   reason?: string;
+  action?: string;
   icon?: string;
   detail_url?: string;
 };

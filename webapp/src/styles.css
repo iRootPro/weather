@@ -425,6 +425,26 @@ button {
   line-height: 1.4;
 }
 
+.card-action {
+  margin: 16px 0 0;
+  border-left: 3px solid currentColor;
+  border-radius: 14px;
+  padding: .75rem .85rem;
+  color: #f3efe6;
+  background: rgba(0,0,0,.16);
+  line-height: 1.35;
+}
+
+.card-action span {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--muted);
+  font-size: .68rem;
+  font-weight: 900;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
 .metric-lockup {
   display: grid;
   justify-items: end;
@@ -880,7 +900,8 @@ button {
   line-height: 1.25;
 }
 
-.forecast-page {
+.forecast-page,
+.risk-page {
   width: min(920px, 100%);
 }
 
@@ -982,6 +1003,189 @@ button {
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 8px;
+}
+
+.risk-hero,
+.risk-panel {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 34px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(22px) saturate(125%);
+}
+
+.risk-hero {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 22px;
+  align-items: center;
+  padding: clamp(24px, 5vw, 42px);
+  background:
+    radial-gradient(circle at 92% 12%, var(--normal), transparent 34%),
+    linear-gradient(145deg, rgba(255,255,255,.12), rgba(255,255,255,.035)),
+    rgba(17, 24, 39, .74);
+}
+
+.risk-hero.attention-warning {
+  background:
+    radial-gradient(circle at 92% 12%, rgba(255, 159, 67, .30), transparent 34%),
+    linear-gradient(145deg, rgba(255,255,255,.13), rgba(255,255,255,.035)),
+    rgba(30, 24, 18, .74);
+}
+
+.risk-hero.attention-danger {
+  background:
+    radial-gradient(circle at 92% 12%, rgba(255, 92, 122, .34), transparent 34%),
+    linear-gradient(145deg, rgba(255,255,255,.13), rgba(255,255,255,.035)),
+    rgba(36, 18, 28, .78);
+}
+
+.risk-hero-icon {
+  display: grid;
+  width: clamp(64px, 12vw, 100px);
+  height: clamp(64px, 12vw, 100px);
+  place-items: center;
+  border-radius: 28px;
+  background: rgba(255,255,255,.10);
+  font-size: clamp(2rem, 6vw, 3.4rem);
+}
+
+.risk-hero h1 {
+  margin: 12px 0 0;
+  font-family: WeatherDisplay, Georgia, serif;
+  font-size: clamp(2.3rem, 8vw, 5rem);
+  line-height: .92;
+  letter-spacing: -.075em;
+}
+
+.risk-hero p {
+  max-width: 640px;
+  margin: 14px 0 0;
+  color: #d5dce8;
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  line-height: 1.45;
+}
+
+.risk-metric {
+  display: grid;
+  justify-items: end;
+  line-height: .86;
+}
+
+.risk-metric strong {
+  font-family: WeatherDisplay, Georgia, serif;
+  font-size: clamp(3.8rem, 10vw, 7rem);
+  letter-spacing: -.08em;
+}
+
+.risk-metric span {
+  color: var(--muted);
+  font-weight: 900;
+}
+
+.risk-detail-grid {
+  display: grid;
+  grid-template-columns: 1.1fr .9fr;
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.risk-panel {
+  padding: 24px;
+  background:
+    linear-gradient(160deg, rgba(139, 211, 255, .08), rgba(255,255,255,.025)),
+    rgba(13, 17, 26, .62);
+}
+
+.action-panel {
+  background:
+    linear-gradient(160deg, rgba(97, 211, 148, .12), rgba(255,255,255,.025)),
+    rgba(13, 17, 26, .62);
+}
+
+.risk-panel h2 {
+  margin: 0;
+  font-family: WeatherDisplay, Georgia, serif;
+  font-size: clamp(1.7rem, 4vw, 2.7rem);
+  line-height: 1;
+  letter-spacing: -.06em;
+}
+
+.risk-panel p {
+  margin: 12px 0 0;
+  color: #c5cfdf;
+  line-height: 1.5;
+}
+
+.risk-related {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.risk-mini-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  align-items: center;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.risk-mini-card p {
+  margin: 4px 0 0;
+}
+
+.risk-mini-card b {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+}
+
+.update-toast {
+  position: fixed;
+  left: 50%;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(560px, calc(100% - 24px));
+  transform: translateX(-50%);
+  border: 1px solid rgba(139, 211, 255, .28);
+  border-radius: 22px;
+  padding: 12px;
+  color: var(--text);
+  background: rgba(7, 10, 16, .86);
+  box-shadow: 0 24px 70px rgba(0,0,0,.4);
+  backdrop-filter: blur(18px) saturate(140%);
+}
+
+.update-toast span {
+  flex: 1;
+  color: #dce6f3;
+  font-weight: 800;
+}
+
+.update-toast button {
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: .58rem .72rem;
+  color: #06130d;
+  background: var(--normal);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.update-toast button.ghost {
+  color: var(--muted);
+  border-color: var(--line);
+  background: transparent;
 }
 
 .quiet-summary,
@@ -1123,8 +1327,18 @@ button {
     min-height: 330px;
   }
 
+  .risk-hero,
+  .risk-detail-grid,
   .forecast-row {
-    grid-template-columns: 1fr auto;
+    grid-template-columns: 1fr;
+  }
+
+  .risk-metric {
+    justify-items: start;
+  }
+
+  .risk-hero-icon {
+    border-radius: 22px;
   }
 
   .forecast-row-icon {
@@ -1138,6 +1352,15 @@ button {
 
   .forecast-row-metrics {
     justify-content: flex-start;
+  }
+
+  .update-toast {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .update-toast button {
+    width: 100%;
   }
 
   .meta-row {

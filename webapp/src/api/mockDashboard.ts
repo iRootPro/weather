@@ -46,7 +46,7 @@ export function getMockDashboardSnapshot(scenario: DashboardScenario): Dashboard
         title: 'Жарко',
         subtitle: 'Ощущается как 33.2°'
       };
-      snapshot.cards = [card('uv-high', 'solar', 'Очень высокий UV', 'Кожа быстро обгорает на прямом солнце', '8', 'UV', 'warning', 76, '☀️', 'UV-индекс выше безопасного уровня')];
+      snapshot.cards = [card('uv-high', 'solar', 'Очень высокий UV', 'Кожа быстро обгорает на прямом солнце', '8', 'UV', 'warning', 76, '☀️', 'UV-индекс выше безопасного уровня', 'Избегай прямого солнца, используй крем и головной убор')];
       snapshot.quiet.items = ['ветер', 'дождь', 'геомагнитка', 'вода'];
       break;
 
@@ -59,8 +59,8 @@ export function getMockDashboardSnapshot(scenario: DashboardScenario): Dashboard
       };
       snapshot.summary = 'магнитная активность высокая; погода спокойная; вода и ветер в норме.';
       snapshot.cards = [
-        card('geomagnetic-storm', 'geomagnetic', 'Магнитная буря', 'Kp 6, высокий уровень возмущений', '6', 'Kp', 'danger', 90, '🧲', 'геомагнитная активность достигла уровня бури'),
-        card('uv-high', 'solar', 'UV заметный', 'Днём лучше держаться тени', '6', 'UV', 'warning', 58, '☀️', 'контекстный дневной риск')
+        card('geomagnetic-storm', 'geomagnetic', 'Магнитная буря', 'Kp 6, высокий уровень возмущений', '6', 'Kp', 'danger', 90, '🧲', 'геомагнитная активность достигла уровня бури', 'Снизь нагрузку, если чувствителен к магнитным бурям'),
+        card('uv-high', 'solar', 'UV заметный', 'Днём лучше держаться тени', '6', 'UV', 'warning', 58, '☀️', 'контекстный дневной риск', 'Лучше держаться тени в дневные часы')
       ];
       snapshot.quiet.items = ['ветер', 'дождь', 'вода'];
       break;
@@ -74,8 +74,8 @@ export function getMockDashboardSnapshot(scenario: DashboardScenario): Dashboard
       };
       snapshot.summary = 'уровень воды растёт; дождя рядом нет; ветер слабый.';
       snapshot.cards = [
-        card('hydro-rising', 'hydro', 'Рост уровня воды', '+34 см за сутки', '+34', 'см', 'warning', 82, '🌊', 'быстрый рост уровня по гидропосту'),
-        card('rain-clear', 'rain', 'Дождя рядом нет', 'Ближайшие часы без осадков', '0', '%', 'normal', 35, '🌤️', 'прогноз без значимых осадков')
+        card('hydro-rising', 'hydro', 'Рост уровня воды', '+34 см за сутки', '+34', 'см', 'warning', 82, '🌊', 'быстрый рост уровня по гидропосту', 'Проверь уровень позже вечером'),
+        card('rain-clear', 'rain', 'Дождя рядом нет', 'Ближайшие часы без осадков', '0', '%', 'normal', 35, '🌤️', 'прогноз без значимых осадков', 'Действий не требуется')
       ];
       snapshot.quiet.items = ['ветер', 'дождь', 'геомагнитка'];
       break;
@@ -95,7 +95,7 @@ export function getMockDashboardSnapshot(scenario: DashboardScenario): Dashboard
         icon: '📡'
       };
       snapshot.summary = 'данные метеостанции устарели; прогноз доступен, но текущие датчики не обновляются.';
-      snapshot.cards = [card('station-stale', 'station', 'Нет свежих данных', 'Последнее наблюдение в 18:07', '2ч+', '', 'danger', 95, '📡', 'станция давно не присылала MQTT-сообщения')];
+      snapshot.cards = [card('station-stale', 'station', 'Нет свежих данных', 'Последнее наблюдение в 18:07', '2ч+', '', 'danger', 95, '📡', 'станция давно не присылала MQTT-сообщения', 'Проверь питание станции, MQTT и связь с сервером')];
       snapshot.quiet.items = ['прогноз', 'архив'];
       break;
 
@@ -108,7 +108,7 @@ export function getMockDashboardSnapshot(scenario: DashboardScenario): Dashboard
       };
       snapshot.summary = 'к 22:00 вероятен дождь; ветер умеренный; температура начнёт снижаться.';
       snapshot.near_forecast = buildForecast('rain');
-      snapshot.cards = [card('forecast-rain', 'rain', 'Дождь в ближайшие часы', 'Пик вероятности около 22:00', '78', '%', 'warning', 80, '🌧️', 'почасовой прогноз показывает осадки')];
+      snapshot.cards = [card('forecast-rain', 'rain', 'Дождь в ближайшие часы', 'Пик вероятности около 22:00', '78', '%', 'warning', 80, '🌧️', 'почасовой прогноз показывает осадки', 'Закрой окна и забери вещи с улицы до начала дождя')];
       snapshot.quiet.items = ['вода', 'геомагнитка'];
       break;
 
@@ -126,7 +126,7 @@ export function getMockDashboardSnapshot(scenario: DashboardScenario): Dashboard
         wind_gust: 17.2,
         subtitle: 'Ветер 9.4 м/с, порывы до 17.2 м/с'
       };
-      snapshot.cards = [card('wind-gust', 'wind', 'Сильные порывы ветра', 'До 17.2 м/с на открытых местах', '17.2', 'м/с', 'warning', 84, '💨', 'порывы ветра выше комфортного уровня')];
+      snapshot.cards = [card('wind-gust', 'wind', 'Сильные порывы ветра', 'До 17.2 м/с на открытых местах', '17.2', 'м/с', 'warning', 84, '💨', 'порывы ветра выше комфортного уровня', 'Закрепи лёгкие предметы и избегай деревьев')];
       snapshot.quiet.items = ['дождь', 'геомагнитка', 'вода'];
       break;
 
@@ -190,7 +190,8 @@ function card(
   severity: Severity,
   priority: number,
   icon: string,
-  reason: string
+  reason: string,
+  action = ''
 ): AttentionCard {
   return {
     id,
@@ -202,6 +203,7 @@ function card(
     severity,
     priority,
     reason,
+    action,
     icon,
     detail_url: `/detail/${domain}`
   };

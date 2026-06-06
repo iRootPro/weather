@@ -62,6 +62,7 @@ func (s *DashboardService) GetSnapshot(ctx context.Context) (*models.DashboardSn
 				Severity: string(models.DashboardSeverityDanger),
 				Priority: 95,
 				Reason:   "последние данные недоступны",
+				Action:   "Проверь питание станции, MQTT и связь с сервером",
 				Icon:     "⚠️",
 			})
 		} else {
@@ -163,6 +164,7 @@ func buildStationFreshnessCard(status models.StationStatus) *models.AttentionCar
 		Severity: status.Severity,
 		Priority: priority,
 		Reason:   "свежесть данных влияет на доверие к остальным показателям",
+		Action:   stationFreshnessAction(*status.AgeMinutes),
 		Icon:     "⚠️",
 	}
 }
@@ -374,6 +376,7 @@ func buildWindCard(current *models.WeatherData) models.AttentionCard {
 		Severity:  string(severity),
 		Priority:  priority,
 		Reason:    "порывы ветра влияют на безопасность и комфорт",
+		Action:    windAction(maxWind),
 		Icon:      icon,
 		DetailURL: "/detail/wind",
 	}
@@ -415,6 +418,7 @@ func buildRainCard(current *models.WeatherData, _ []models.HourlyForecast) model
 		Severity:  string(severity),
 		Priority:  priority,
 		Reason:    "текущая интенсивность дождя",
+		Action:    rainAction(current),
 		Icon:      icon,
 		DetailURL: "/detail/rain",
 	}
@@ -452,8 +456,9 @@ func buildForecastRainCard(forecast []models.HourlyForecast, current *models.Wea
 		Severity:  string(severity),
 		Priority:  priority,
 		Reason:    "в прогнозе на ближайшие часы есть осадки",
+		Action:    "Закрой окна и забери вещи с улицы до начала дождя",
 		Icon:      "🌧️",
-		DetailURL: "/",
+		DetailURL: "/app/forecast",
 	}
 }
 
@@ -487,6 +492,7 @@ func buildPressureCard(current, hourAgo *models.WeatherData) *models.AttentionCa
 		Severity:  string(severity),
 		Priority:  priority,
 		Reason:    "быстрое изменение давления может означать смену погоды",
+		Action:    "Следи за ветром и осадками в ближайшие часы",
 		Icon:      icon,
 		DetailURL: "/detail/pressure",
 	}
@@ -515,6 +521,7 @@ func buildUVCard(current *models.WeatherData, now time.Time) *models.AttentionCa
 		Severity:  string(severity),
 		Priority:  priority,
 		Reason:    "UV-индекс выше безопасного уровня",
+		Action:    uvAction(*current.UVIndex),
 		Icon:      "☀️",
 		DetailURL: "/detail/solar",
 	}
@@ -619,6 +626,7 @@ func (s *DashboardService) buildGeomagneticAttentionCard(ctx context.Context, no
 		Severity:  string(severity),
 		Priority:  models.ClampPriority(priority),
 		Reason:    "геомагнитная активность по индексу Kp",
+		Action:    geomagneticAction(snap.Current.Kp),
 		Icon:      status.Emoji(),
 		DetailURL: "/detail/geomagnetic",
 	}
@@ -697,6 +705,7 @@ func (s *DashboardService) buildHydroAttentionCard(ctx context.Context, now time
 		Severity:  string(severity),
 		Priority:  models.ClampPriority(priority),
 		Reason:    "уровень воды и расстояние до неблагоприятного порога",
+		Action:    hydroAction(priority, snap.Current.ChangeCmPerHour),
 		Icon:      icon,
 		DetailURL: "/detail/water-level",
 	}
@@ -774,6 +783,66 @@ func buildDashboardSummary(snapshot *models.DashboardSnapshot) string {
 		return "Нет показателей, которые требуют внимания."
 	}
 	return strings.Join(parts, "; ") + "."
+}
+
+func stationFreshnessAction(ageMinutes int) string {
+	if ageMinutes >= 60 {
+		return "Проверь питание станции и MQTT-соединение"
+	}
+	if ageMinutes >= 30 {
+		return "Сравни с прогнозом и проверь связь, если данные не появятся"
+	}
+	return "Можно подождать следующее обновление"
+}
+
+func windAction(maxWind float32) string {
+	switch {
+	case maxWind >= 17:
+		return "Закрепи лёгкие предметы и избегай деревьев и слабых конструкций"
+	case maxWind >= 10:
+		return "Закрой окна и убери лёгкие вещи с улицы"
+	case maxWind >= 5:
+		return "На улице будет заметно ветрено"
+	default:
+		return "Действий не требуется"
+	}
+}
+
+func rainAction(current *models.WeatherData) string {
+	if current == nil || current.RainRate == nil || *current.RainRate < 0.1 {
+		return "Действий не требуется"
+	}
+	if *current.RainRate >= 2.5 {
+		return "Закрой окна и лучше пережди сильный дождь"
+	}
+	return "Возьми зонт, если выходишь сейчас"
+}
+
+func uvAction(uv float32) string {
+	if uv >= 8 {
+		return "Избегай прямого солнца, используй крем и головной убор"
+	}
+	return "Лучше держаться тени в дневные часы"
+}
+
+func geomagneticAction(kp float32) string {
+	if kp >= 5 {
+		return "Снизь нагрузку, если чувствителен к магнитным бурям"
+	}
+	if kp >= 4 {
+		return "Следи за самочувствием, возможен рост активности"
+	}
+	return "Действий не требуется"
+}
+
+func hydroAction(priority int, changeCmPerHour *float32) string {
+	if priority >= 90 {
+		return "Проверь официальный гидропост и обнови уровень позже вечером"
+	}
+	if changeCmPerHour != nil && *changeCmPerHour >= 1 {
+		return "Следи за динамикой воды в ближайшие часы"
+	}
+	return "Действий не требуется"
 }
 
 func quietLabel(card models.AttentionCard) string {
