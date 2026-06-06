@@ -1,12 +1,13 @@
 import type { UseQueryResult } from '@tanstack/react-query';
-import type { AttentionCard as AttentionCardType, CurrentWeatherSummary, DashboardSnapshot, NearForecastItem } from '../api/dashboard';
+import type { CurrentWeatherSummary, DashboardSnapshot, NearForecastItem } from '../api/dashboard';
+import { dashboardScenarios, getDashboardScenarioLabel, type DashboardScenario } from '../api/mockDashboard';
 import { AttentionCard } from '../components/AttentionCard';
 import { DashboardSkeleton } from '../components/Skeleton';
 import { Headline } from '../components/Headline';
 import { QuietSummary } from '../components/QuietSummary';
 import { formatClock } from '../utils/time';
 
-export function DashboardPage({ query }: { query: UseQueryResult<DashboardSnapshot, Error> }) {
+export function DashboardPage({ query, scenario }: { query: UseQueryResult<DashboardSnapshot, Error>; scenario?: DashboardScenario }) {
   if (query.isLoading) return <DashboardSkeleton />;
 
   if (query.isError) {
@@ -40,10 +41,15 @@ export function DashboardPage({ query }: { query: UseQueryResult<DashboardSnapsh
           <span className="app-label">Погодный ассистент</span>
           <strong>Армавир сейчас</strong>
         </div>
-        <button className="refresh-button" onClick={() => query.refetch()} disabled={query.isFetching}>
-          {query.isFetching ? 'Обновляю…' : 'Обновить'}
-        </button>
+        <div className="topbar-actions">
+          {scenario && <span className="scenario-badge">сценарий: {getDashboardScenarioLabel(scenario)}</span>}
+          <button className="refresh-button" onClick={() => query.refetch()} disabled={query.isFetching}>
+            {query.isFetching ? 'Обновляю…' : 'Обновить'}
+          </button>
+        </div>
       </header>
+
+      {scenario && <ScenarioSwitcher active={scenario} />}
 
       <Headline headline={snapshot.headline} station={snapshot.station_status} />
 
@@ -98,36 +104,62 @@ export function DashboardPage({ query }: { query: UseQueryResult<DashboardSnapsh
   );
 }
 
+function ScenarioSwitcher({ active }: { active: DashboardScenario }) {
+  return (
+    <nav className="scenario-switcher" aria-label="Тестовые сценарии дашборда">
+      <a href="/app/">живые данные</a>
+      {dashboardScenarios.map((item) => (
+        <a key={item} className={item === active ? 'active' : undefined} href={`/app/?scenario=${item}`}>
+          {getDashboardScenarioLabel(item)}
+        </a>
+      ))}
+    </nav>
+  );
+}
+
 function CalmOverview({ current, snapshot }: { current?: CurrentWeatherSummary; snapshot: DashboardSnapshot }) {
   return (
     <section className="calm-overview">
       {current && <WeatherNow current={current} />}
 
       <div className="calm-column">
-        <section className="calm-card quiet-focus">
-          <div className="calm-card-header">
-            <span className="quiet-mark">✓</span>
-            <div>
-              <h2>Можно не отвлекаться</h2>
-              <p>Система следит за показателями и поднимет наверх только то, что стало важным.</p>
-            </div>
-          </div>
-
-          {snapshot.quiet.items.length > 0 && (
-            <div className="quiet-pills" aria-label="Спокойные показатели">
-              {snapshot.quiet.items.map((item) => (
-                <span key={item}>{item}</span>
-              ))}
-            </div>
-          )}
-        </section>
-
-        <section className="calm-card watch-card">
-          <span className="watch-kicker">наблюдение</span>
-          <h2>Если что-то изменится — экран перестроится</h2>
-          <p>Магнитная буря, рост воды, порывы ветра, дождь или устаревшие данные станут отдельной крупной карточкой.</p>
-        </section>
+        <EveningInsight snapshot={snapshot} />
+        <ControlStatus quietItems={snapshot.quiet.items} />
       </div>
+    </section>
+  );
+}
+
+function EveningInsight({ snapshot }: { snapshot: DashboardSnapshot }) {
+  const insight = buildEveningInsight(snapshot);
+
+  return (
+    <section className="calm-card evening-card">
+      <span className="watch-kicker">сегодня вечером</span>
+      <h2>{insight.title}</h2>
+      <p>{insight.text}</p>
+    </section>
+  );
+}
+
+function ControlStatus({ quietItems }: { quietItems: string[] }) {
+  return (
+    <section className="calm-card quiet-focus">
+      <div className="calm-card-header">
+        <span className="quiet-mark">✓</span>
+        <div>
+          <h2>Под контролем</h2>
+          <p>Если один из показателей выйдет из нормы, он станет главной карточкой.</p>
+        </div>
+      </div>
+
+      {quietItems.length > 0 && (
+        <div className="quiet-pills" aria-label="Спокойные показатели">
+          {quietItems.map((item) => (
+            <span key={item}>{item}</span>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
@@ -189,7 +221,7 @@ function ForecastStrip({ items }: { items: NearForecastItem[] }) {
         {items.map((item) => (
           <article className="forecast-hour" key={item.time} role="listitem">
             <time>{formatClock(item.time)}</time>
-            <span className="forecast-icon" aria-hidden="true">{item.icon}</span>
+            <span className="forecast-icon" aria-hidden="true">{displayForecastIcon(item)}</span>
             <strong>{Math.round(item.temperature)}°</strong>
             <small>{item.precipitation_probability > 0 ? `${item.precipitation_probability}% дождь` : item.weather_description || 'прогноз'}</small>
           </article>
@@ -197,6 +229,47 @@ function ForecastStrip({ items }: { items: NearForecastItem[] }) {
       </div>
     </section>
   );
+}
+
+function buildEveningInsight(snapshot: DashboardSnapshot) {
+  const forecast = snapshot.near_forecast ?? [];
+  if (forecast.length === 0) {
+    return {
+      title: 'Без резких изменений',
+      text: snapshot.summary || 'Пока нет прогноза на ближайшие часы.'
+    };
+  }
+
+  const first = forecast[0];
+  const last = forecast[forecast.length - 1];
+  const rainy = forecast.find((item) => item.precipitation_probability >= 40 || item.precipitation >= 0.5);
+  const maxWind = Math.max(...forecast.map((item) => item.wind_speed));
+  const tempDelta = last.temperature - first.temperature;
+  const tempPhrase = Math.abs(tempDelta) >= 1
+    ? `${tempDelta < 0 ? 'похолодает' : 'потеплеет'} до ${Math.round(last.temperature)}°`
+    : `останется около ${Math.round(last.temperature)}°`;
+  const rainPhrase = rainy
+    ? `дождь вероятен около ${formatClock(rainy.time)}`
+    : 'дождя почти нет';
+  const windPhrase = maxWind >= 8
+    ? 'ветер будет заметным'
+    : 'ветер слабый';
+
+  return {
+    title: `К ${formatClock(last.time)} ${tempPhrase}`,
+    text: `${rainPhrase}, ${windPhrase}.`
+  };
+}
+
+function displayForecastIcon(item: NearForecastItem) {
+  const hour = new Date(item.time).getHours();
+  const isNight = hour >= 21 || hour < 5;
+  if (!isNight) return item.icon;
+
+  if (item.icon === '☀️') return '🌙';
+  if (item.icon === '🌤️') return '🌙';
+  if (item.icon === '⛅') return '☁️';
+  return item.icon;
 }
 
 function formatNumber(value?: number) {

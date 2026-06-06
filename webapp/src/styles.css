@@ -104,6 +104,22 @@ button {
   letter-spacing: -0.04em;
 }
 
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.scenario-badge {
+  border: 1px solid rgba(216, 195, 106, .35);
+  border-radius: 999px;
+  padding: .55rem .72rem;
+  color: #f5dda0;
+  background: rgba(216, 195, 106, .09);
+  font-size: .78rem;
+  font-weight: 900;
+}
+
 .refresh-button,
 .error-card button {
   border: 1px solid var(--line);
@@ -220,6 +236,14 @@ button {
   letter-spacing: -0.075em;
 }
 
+.headline-calm {
+  padding-block: clamp(20px, 4vw, 34px);
+}
+
+.headline-calm .headline-content h1 {
+  font-size: clamp(2.1rem, 6.2vw, 4.25rem);
+}
+
 .headline-content p {
   margin: 12px 0 0;
   color: #cdd5e2;
@@ -285,6 +309,10 @@ button {
   grid-template-columns: minmax(0, 1.45fr) minmax(320px, .9fr);
   gap: 18px;
   align-items: stretch;
+}
+
+.calm-overview {
+  align-items: start;
 }
 
 .attention-card,
@@ -460,6 +488,10 @@ button {
   padding: 24px;
 }
 
+.calm-overview .weather-now {
+  min-height: clamp(360px, 42vw, 480px);
+}
+
 .weather-now-top,
 .weather-now-footer,
 .weather-now-main {
@@ -554,6 +586,15 @@ button {
     rgba(13, 17, 26, .58);
 }
 
+.evening-card {
+  min-height: 210px;
+  align-content: end;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255, 159, 67, .16), transparent 42%),
+    linear-gradient(160deg, rgba(139, 211, 255, .10), rgba(255,255,255,.03)),
+    rgba(13, 17, 26, .58);
+}
+
 .calm-card-header {
   display: flex;
   gap: 14px;
@@ -633,6 +674,36 @@ button {
 
 .cards-grid.compact .attention-card {
   min-height: 190px;
+}
+
+.scenario-switcher {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin: 0 0 14px;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+
+.scenario-switcher::-webkit-scrollbar {
+  display: none;
+}
+
+.scenario-switcher a {
+  flex: 0 0 auto;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: .52rem .72rem;
+  color: var(--muted);
+  background: rgba(255,255,255,.045);
+  font-size: .78rem;
+  font-weight: 900;
+}
+
+.scenario-switcher a.active {
+  color: #06130d;
+  border-color: transparent;
+  background: var(--calm);
 }
 
 .forecast-strip-section {
@@ -806,6 +877,19 @@ button {
   .metric-lockup,
   .weather-temp {
     justify-items: start;
+  }
+
+  .topbar {
+    align-items: flex-start;
+  }
+
+  .topbar-actions {
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
+  .calm-overview .weather-now {
+    min-height: 360px;
   }
 
   .meta-row {
