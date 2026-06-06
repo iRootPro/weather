@@ -1,5 +1,5 @@
 import type { UseQueryResult } from '@tanstack/react-query';
-import type { AttentionCard as AttentionCardType, DashboardSnapshot } from '../api/dashboard';
+import type { AttentionCard as AttentionCardType, CurrentWeatherSummary, DashboardSnapshot, NearForecastItem } from '../api/dashboard';
 import { AttentionCard } from '../components/AttentionCard';
 import { DashboardSkeleton } from '../components/Skeleton';
 import { Headline } from '../components/Headline';
@@ -26,9 +26,8 @@ export function DashboardPage({ query }: { query: UseQueryResult<DashboardSnapsh
   if (!snapshot) return null;
 
   const importantThreshold = 70;
-  const weatherCard = snapshot.cards.find((card) => card.id === 'weather-current');
-  const attentionCards = snapshot.cards.filter((card) => card.id !== 'weather-current' && card.priority >= importantThreshold);
-  const contextCards = snapshot.cards.filter((card) => card.id !== 'weather-current' && card.priority < importantThreshold);
+  const attentionCards = snapshot.cards.filter((card) => card.priority >= importantThreshold);
+  const contextCards = snapshot.cards.filter((card) => card.priority < importantThreshold);
   const featuredAttention = attentionCards[0];
   const remainingAttention = attentionCards.slice(1);
   const importantCount = attentionCards.length;
@@ -48,6 +47,8 @@ export function DashboardPage({ query }: { query: UseQueryResult<DashboardSnapsh
 
       <Headline headline={snapshot.headline} station={snapshot.station_status} />
 
+      {snapshot.summary && <p className="dashboard-summary">{snapshot.summary}</p>}
+
       <section className="meta-row" aria-label="Метаданные обновления">
         <span>Обновлено: {formatClock(snapshot.generated_at)}</span>
         <span>{importantCount > 0 ? `${importantCount} важных сигналов` : 'важных сигналов нет'}</span>
@@ -56,10 +57,10 @@ export function DashboardPage({ query }: { query: UseQueryResult<DashboardSnapsh
       {featuredAttention ? (
         <section className="attention-layout">
           <AttentionCard card={featuredAttention} featured />
-          {weatherCard && <WeatherNow card={weatherCard} compact />}
+          {snapshot.current_weather && <WeatherNow current={snapshot.current_weather} compact />}
         </section>
       ) : (
-        <CalmOverview weatherCard={weatherCard} snapshot={snapshot} />
+        <CalmOverview current={snapshot.current_weather} snapshot={snapshot} />
       )}
 
       {remainingAttention.length > 0 && (
@@ -79,7 +80,7 @@ export function DashboardPage({ query }: { query: UseQueryResult<DashboardSnapsh
       {contextCards.length > 0 && (
         <section className="section-block">
           <div className="section-heading">
-            <span>02</span>
+            <span>{remainingAttention.length > 0 ? '02' : '01'}</span>
             <h2>Контекст</h2>
           </div>
           <div className="cards-grid compact">
@@ -90,15 +91,17 @@ export function DashboardPage({ query }: { query: UseQueryResult<DashboardSnapsh
         </section>
       )}
 
+      {snapshot.near_forecast && snapshot.near_forecast.length > 0 && <ForecastStrip items={snapshot.near_forecast} />}
+
       {featuredAttention && <QuietSummary quiet={snapshot.quiet} />}
     </main>
   );
 }
 
-function CalmOverview({ weatherCard, snapshot }: { weatherCard?: AttentionCardType; snapshot: DashboardSnapshot }) {
+function CalmOverview({ current, snapshot }: { current?: CurrentWeatherSummary; snapshot: DashboardSnapshot }) {
   return (
     <section className="calm-overview">
-      {weatherCard && <WeatherNow card={weatherCard} />}
+      {current && <WeatherNow current={current} />}
 
       <div className="calm-column">
         <section className="calm-card quiet-focus">
@@ -129,29 +132,78 @@ function CalmOverview({ weatherCard, snapshot }: { weatherCard?: AttentionCardTy
   );
 }
 
-function WeatherNow({ card, compact = false }: { card: AttentionCardType; compact?: boolean }) {
+function WeatherNow({ current, compact = false }: { current: CurrentWeatherSummary; compact?: boolean }) {
   return (
-    <a className={`weather-now ${compact ? 'compact' : ''}`} href={card.detail_url || '/detail/temperature'}>
+    <a className={`weather-now ${compact ? 'compact' : ''}`} href="/detail/temperature">
       <div className="weather-now-top">
-        <span className="weather-icon" aria-hidden="true">{card.icon || '🌤️'}</span>
-        <span className={`severity-pill severity-${card.severity}`}>сейчас</span>
+        <span className="weather-icon" aria-hidden="true">{current.icon || '🌤️'}</span>
+        <span className="severity-pill severity-normal">сейчас</span>
       </div>
 
       <div className="weather-now-main">
         <div>
-          <h2>{card.title}</h2>
-          {card.subtitle && <p>{card.subtitle}</p>}
+          <h2>{current.title}</h2>
+          <p>{current.subtitle}</p>
+          <WeatherFacts current={current} />
         </div>
         <div className="weather-temp">
-          <span>{card.value || '—'}</span>
-          <small>{card.unit || ''}</small>
+          <span>{formatNumber(current.temperature)}</span>
+          <small>°C</small>
         </div>
       </div>
 
       <div className="weather-now-footer">
-        <span>{card.reason || 'текущая погода'}</span>
-        <span className="priority">{card.priority}</span>
+        <span>наблюдение {formatClock(current.observed_at)}</span>
+        {typeof current.temperature_delta === 'number' && <span>{formatSigned(current.temperature_delta)}°/ч</span>}
       </div>
     </a>
   );
+}
+
+function WeatherFacts({ current }: { current: CurrentWeatherSummary }) {
+  const facts = [
+    typeof current.humidity === 'number' ? `влажность ${current.humidity}%` : null,
+    typeof current.pressure === 'number' ? `давление ${Math.round(current.pressure)} мм` : null,
+    typeof current.wind_speed === 'number' ? `ветер ${current.wind_speed.toFixed(1)} м/с` : null,
+    typeof current.rain_rate === 'number' && current.rain_rate > 0 ? `дождь ${current.rain_rate.toFixed(1)} мм/ч` : 'дождя нет',
+    typeof current.uv_index === 'number' ? `UV ${current.uv_index.toFixed(0)}` : null
+  ].filter(Boolean);
+
+  return (
+    <div className="weather-facts">
+      {facts.map((fact) => (
+        <span key={fact}>{fact}</span>
+      ))}
+    </div>
+  );
+}
+
+function ForecastStrip({ items }: { items: NearForecastItem[] }) {
+  return (
+    <section className="forecast-strip-section">
+      <div className="section-heading">
+        <span>прогноз</span>
+        <h2>Ближайшие часы</h2>
+      </div>
+      <div className="forecast-strip" role="list" aria-label="Прогноз на ближайшие часы">
+        {items.map((item) => (
+          <article className="forecast-hour" key={item.time} role="listitem">
+            <time>{formatClock(item.time)}</time>
+            <span className="forecast-icon" aria-hidden="true">{item.icon}</span>
+            <strong>{Math.round(item.temperature)}°</strong>
+            <small>{item.precipitation_probability > 0 ? `${item.precipitation_probability}% дождь` : item.weather_description || 'прогноз'}</small>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function formatNumber(value?: number) {
+  if (typeof value !== 'number') return '—';
+  return value.toFixed(1);
+}
+
+function formatSigned(value: number) {
+  return `${value > 0 ? '+' : ''}${value.toFixed(1)}`;
 }

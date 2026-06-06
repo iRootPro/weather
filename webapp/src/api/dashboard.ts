@@ -15,6 +15,34 @@ export type DashboardHeadline = {
   icon?: string;
 };
 
+export type CurrentWeatherSummary = {
+  observed_at: string;
+  temperature?: number;
+  feels_like?: number;
+  temperature_delta?: number;
+  humidity?: number;
+  pressure?: number;
+  pressure_delta?: number;
+  wind_speed?: number;
+  wind_gust?: number;
+  rain_rate?: number;
+  uv_index?: number;
+  icon: string;
+  title: string;
+  subtitle: string;
+};
+
+export type NearForecastItem = {
+  time: string;
+  temperature: number;
+  feels_like: number;
+  precipitation_probability: number;
+  precipitation: number;
+  wind_speed: number;
+  weather_description: string;
+  icon: string;
+};
+
 export type AttentionCard = {
   id: string;
   domain: string;
@@ -38,6 +66,9 @@ export type DashboardSnapshot = {
   generated_at: string;
   station_status: StationStatus;
   headline: DashboardHeadline;
+  summary?: string;
+  current_weather?: CurrentWeatherSummary;
+  near_forecast?: NearForecastItem[];
   cards: AttentionCard[];
   quiet: QuietSummary;
 };

@@ -16,11 +16,14 @@ const (
 // DashboardSnapshot — агрегированная модель главного экрана для React/PWA,
 // ботов и будущих мобильных приложений. Backend уже решает, что важно сейчас.
 type DashboardSnapshot struct {
-	GeneratedAt   time.Time         `json:"generated_at"`
-	StationStatus StationStatus     `json:"station_status"`
-	Headline      DashboardHeadline `json:"headline"`
-	Cards         []AttentionCard   `json:"cards"`
-	Quiet         QuietSummary      `json:"quiet"`
+	GeneratedAt    time.Time              `json:"generated_at"`
+	StationStatus  StationStatus          `json:"station_status"`
+	Headline       DashboardHeadline      `json:"headline"`
+	Summary        string                 `json:"summary,omitempty"`
+	CurrentWeather *CurrentWeatherSummary `json:"current_weather,omitempty"`
+	NearForecast   []NearForecastItem     `json:"near_forecast,omitempty"`
+	Cards          []AttentionCard        `json:"cards"`
+	Quiet          QuietSummary           `json:"quiet"`
 }
 
 // StationStatus описывает свежесть данных метеостанции.
@@ -38,6 +41,37 @@ type DashboardHeadline struct {
 	Summary  string `json:"summary,omitempty"`
 	Severity string `json:"severity"`
 	Icon     string `json:"icon,omitempty"`
+}
+
+// CurrentWeatherSummary — базовое состояние погоды прямо сейчас. Это не
+// attention-card: показывается всегда как контекст для пользователя.
+type CurrentWeatherSummary struct {
+	ObservedAt       time.Time `json:"observed_at"`
+	Temperature      *float32  `json:"temperature,omitempty"`
+	FeelsLike        *float32  `json:"feels_like,omitempty"`
+	TemperatureDelta *float32  `json:"temperature_delta,omitempty"`
+	Humidity         *int16    `json:"humidity,omitempty"`
+	Pressure         *float32  `json:"pressure,omitempty"`
+	PressureDelta    *float32  `json:"pressure_delta,omitempty"`
+	WindSpeed        *float32  `json:"wind_speed,omitempty"`
+	WindGust         *float32  `json:"wind_gust,omitempty"`
+	RainRate         *float32  `json:"rain_rate,omitempty"`
+	UVIndex          *float32  `json:"uv_index,omitempty"`
+	Icon             string    `json:"icon"`
+	Title            string    `json:"title"`
+	Subtitle         string    `json:"subtitle"`
+}
+
+// NearForecastItem — компактный прогноз на ближайшие часы для главного экрана.
+type NearForecastItem struct {
+	Time                     time.Time `json:"time"`
+	Temperature              float32   `json:"temperature"`
+	FeelsLike                float32   `json:"feels_like"`
+	PrecipitationProbability int16     `json:"precipitation_probability"`
+	Precipitation            float32   `json:"precipitation"`
+	WindSpeed                float32   `json:"wind_speed"`
+	WeatherDescription       string    `json:"weather_description"`
+	Icon                     string    `json:"icon"`
 }
 
 // AttentionCard — одна смысловая карточка дашборда.

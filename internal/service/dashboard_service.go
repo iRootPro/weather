@@ -66,10 +66,10 @@ func (s *DashboardService) GetSnapshot(ctx context.Context) (*models.DashboardSn
 			})
 		} else {
 			snapshot.StationStatus = buildStationStatus(current, now)
+			snapshot.CurrentWeather = buildCurrentWeatherSummary(current, hourAgo)
 			if card := buildStationFreshnessCard(snapshot.StationStatus); card != nil {
 				allCards = append(allCards, *card)
 			}
-			allCards = append(allCards, buildCurrentWeatherCard(current, hourAgo))
 			allCards = append(allCards, buildWindCard(current))
 			allCards = append(allCards, buildRainCard(current, nil))
 			if card := buildPressureCard(current, hourAgo); card != nil {
@@ -88,7 +88,8 @@ func (s *DashboardService) GetSnapshot(ctx context.Context) (*models.DashboardSn
 	}
 
 	if s.forecastService != nil {
-		if forecast, err := s.forecastService.GetHourlyForecast(ctx, 6); err == nil {
+		if forecast, err := s.forecastService.GetHourlyForecast(ctx, 12); err == nil {
+			snapshot.NearForecast = buildNearForecast(forecast, 8)
 			if card := buildForecastRainCard(forecast, current); card != nil {
 				allCards = append(allCards, *card)
 			}
@@ -111,6 +112,7 @@ func (s *DashboardService) GetSnapshot(ctx context.Context) (*models.DashboardSn
 	snapshot.Cards = cards
 	snapshot.Quiet.Items = quiet
 	snapshot.Headline = buildHeadline(cards)
+	snapshot.Summary = buildDashboardSummary(snapshot)
 	return snapshot, nil
 }
 
@@ -163,6 +165,97 @@ func buildStationFreshnessCard(status models.StationStatus) *models.AttentionCar
 		Reason:   "свежесть данных влияет на доверие к остальным показателям",
 		Icon:     "⚠️",
 	}
+}
+
+func buildCurrentWeatherSummary(current *models.WeatherData, hourAgo *models.WeatherData) *models.CurrentWeatherSummary {
+	if current == nil {
+		return nil
+	}
+
+	summary := &models.CurrentWeatherSummary{
+		ObservedAt: current.Time,
+		Icon:       "🌤️",
+		Title:      "Текущая погода",
+		Subtitle:   "Последние данные метеостанции",
+	}
+	if current.TempOutdoor != nil {
+		summary.Temperature = current.TempOutdoor
+		summary.Title = weatherComfortTitle(*current.TempOutdoor)
+		switch {
+		case *current.TempOutdoor >= 35:
+			summary.Icon = "🔥"
+			summary.Subtitle = "Очень жарко"
+		case *current.TempOutdoor >= 30:
+			summary.Icon = "🥵"
+			summary.Subtitle = "Жарко"
+		case *current.TempOutdoor <= -10:
+			summary.Icon = "🥶"
+			summary.Subtitle = "Сильный мороз"
+		case *current.TempOutdoor <= 0:
+			summary.Icon = "❄️"
+			summary.Subtitle = "Холодно"
+		default:
+			summary.Icon = "🌤️"
+		}
+	}
+	if current.TempFeelsLike != nil {
+		summary.FeelsLike = current.TempFeelsLike
+		summary.Subtitle = fmt.Sprintf("Ощущается как %.1f°", *current.TempFeelsLike)
+	} else if current.TempOutdoor != nil {
+		summary.FeelsLike = current.TempOutdoor
+	}
+	if current.HumidityOutdoor != nil {
+		summary.Humidity = current.HumidityOutdoor
+	}
+	if current.PressureRelative != nil {
+		summary.Pressure = current.PressureRelative
+	}
+	if current.WindSpeed != nil {
+		summary.WindSpeed = current.WindSpeed
+	}
+	if current.WindGust != nil {
+		summary.WindGust = current.WindGust
+	}
+	if current.RainRate != nil {
+		summary.RainRate = current.RainRate
+	}
+	if current.UVIndex != nil {
+		summary.UVIndex = current.UVIndex
+	}
+	if hourAgo != nil {
+		if current.TempOutdoor != nil && hourAgo.TempOutdoor != nil {
+			v := *current.TempOutdoor - *hourAgo.TempOutdoor
+			summary.TemperatureDelta = &v
+		}
+		if current.PressureRelative != nil && hourAgo.PressureRelative != nil {
+			v := *current.PressureRelative - *hourAgo.PressureRelative
+			summary.PressureDelta = &v
+		}
+	}
+	return summary
+}
+
+func buildNearForecast(forecast []models.HourlyForecast, limit int) []models.NearForecastItem {
+	if limit <= 0 || len(forecast) == 0 {
+		return nil
+	}
+	items := make([]models.NearForecastItem, 0, minIntDashboard(limit, len(forecast)))
+	for i, f := range forecast {
+		if i >= limit {
+			break
+		}
+		items = append(items, models.NearForecastItem{
+			Time:                     f.Time,
+			Temperature:              f.Temperature,
+			FeelsLike:                f.FeelsLike,
+			PrecipitationProbability: f.PrecipitationProbability,
+			Precipitation:            f.Precipitation,
+			WindSpeed:                f.WindSpeed,
+			WeatherDescription:       f.WeatherDescription,
+			Icon:                     f.Icon,
+		})
+	}
+	return items
 }
 
 func buildCurrentWeatherCard(current *models.WeatherData, hourAgo *models.WeatherData) models.AttentionCard {
@@ -649,6 +742,40 @@ func buildHeadline(cards []models.AttentionCard) models.DashboardHeadline {
 	}
 }
 
+func buildDashboardSummary(snapshot *models.DashboardSnapshot) string {
+	parts := make([]string, 0, 5)
+	if snapshot.CurrentWeather != nil {
+		cw := snapshot.CurrentWeather
+		if cw.Temperature != nil {
+			parts = append(parts, fmt.Sprintf("сейчас %.1f°", *cw.Temperature))
+		}
+		if cw.RainRate != nil && *cw.RainRate >= 0.1 {
+			parts = append(parts, "идёт дождь")
+		} else {
+			parts = append(parts, "сухо")
+		}
+		if cw.WindSpeed != nil {
+			if *cw.WindSpeed >= 5 {
+				parts = append(parts, "ветрено")
+			} else {
+				parts = append(parts, "ветер слабый")
+			}
+		}
+		if cw.UVIndex != nil && *cw.UVIndex >= 6 {
+			parts = append(parts, "UV высокий")
+		}
+	}
+	if len(snapshot.Cards) > 0 && snapshot.Cards[0].Priority >= 70 {
+		parts = append(parts, "есть важный сигнал: "+strings.ToLower(snapshot.Cards[0].Title))
+	} else if len(snapshot.Quiet.Items) > 0 {
+		parts = append(parts, strings.Join(snapshot.Quiet.Items, ", ")+" в норме")
+	}
+	if len(parts) == 0 {
+		return "Нет показателей, которые требуют внимания."
+	}
+	return strings.Join(parts, "; ") + "."
+}
+
 func quietLabel(card models.AttentionCard) string {
 	switch card.Domain {
 	case "hydro":
@@ -687,6 +814,13 @@ func formatEventValue(event models.WeatherEvent) string {
 		return ""
 	}
 	return fmt.Sprintf("%.1f", event.Value)
+}
+
+func minIntDashboard(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
 
 func maxIntDashboard(a, b int) int {
