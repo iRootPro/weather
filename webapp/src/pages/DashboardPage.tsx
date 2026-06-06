@@ -1,5 +1,5 @@
 import type { UseQueryResult } from '@tanstack/react-query';
-import type { DashboardSnapshot } from '../api/dashboard';
+import type { AttentionCard as AttentionCardType, DashboardSnapshot } from '../api/dashboard';
 import { AttentionCard } from '../components/AttentionCard';
 import { DashboardSkeleton } from '../components/Skeleton';
 import { Headline } from '../components/Headline';
@@ -25,17 +25,20 @@ export function DashboardPage({ query }: { query: UseQueryResult<DashboardSnapsh
   const snapshot = query.data;
   if (!snapshot) return null;
 
-  const [featured, ...restCards] = snapshot.cards;
-  const importantCards = restCards.filter((card) => card.priority >= 55);
-  const contextCards = restCards.filter((card) => card.priority < 55);
+  const weatherCard = snapshot.cards.find((card) => card.id === 'weather-current');
+  const attentionCards = snapshot.cards.filter((card) => card.id !== 'weather-current' && card.priority >= 55);
+  const contextCards = snapshot.cards.filter((card) => card.id !== 'weather-current' && card.priority < 55);
+  const featuredAttention = attentionCards[0];
+  const remainingAttention = attentionCards.slice(1);
+  const importantCount = attentionCards.length;
 
   return (
     <main className="page-shell">
       <div className="sky-noise" aria-hidden="true" />
       <header className="topbar">
         <div>
-          <span className="app-label">Weather attention</span>
-          <strong>Важно сейчас</strong>
+          <span className="app-label">Погодный ассистент</span>
+          <strong>Армавир сейчас</strong>
         </div>
         <button className="refresh-button" onClick={() => query.refetch()} disabled={query.isFetching}>
           {query.isFetching ? 'Обновляю…' : 'Обновить'}
@@ -45,37 +48,27 @@ export function DashboardPage({ query }: { query: UseQueryResult<DashboardSnapsh
       <Headline headline={snapshot.headline} station={snapshot.station_status} />
 
       <section className="meta-row" aria-label="Метаданные обновления">
-        <span>Snapshot: {formatClock(snapshot.generated_at)}</span>
-        <span>{snapshot.cards.length} активных карточек</span>
+        <span>Обновлено: {formatClock(snapshot.generated_at)}</span>
+        <span>{importantCount > 0 ? `${importantCount} важных сигналов` : 'важных сигналов нет'}</span>
       </section>
 
-      {featured ? (
-        <section className="featured-grid">
-          <AttentionCard card={featured} featured />
-          <aside className="assistant-note">
-            <span>логика внимания</span>
-            <p>
-              Backend уже отсортировал показатели по важности. Низкоприоритетные состояния уходят в спокойный блок,
-              а резкие изменения и риски поднимаются наверх.
-            </p>
-          </aside>
+      {featuredAttention ? (
+        <section className="attention-layout">
+          <AttentionCard card={featuredAttention} featured />
+          {weatherCard && <WeatherNow card={weatherCard} compact />}
         </section>
       ) : (
-        <section className="empty-attention">
-          <span>🟢</span>
-          <h2>Нет важных карточек</h2>
-          <p>Система не нашла показателей, которые требуют внимания.</p>
-        </section>
+        <CalmOverview weatherCard={weatherCard} snapshot={snapshot} />
       )}
 
-      {importantCards.length > 0 && (
+      {remainingAttention.length > 0 && (
         <section className="section-block">
           <div className="section-heading">
             <span>01</span>
-            <h2>Требует внимания</h2>
+            <h2>Ещё требует внимания</h2>
           </div>
           <div className="cards-grid">
-            {importantCards.map((card) => (
+            {remainingAttention.map((card) => (
               <AttentionCard key={card.id} card={card} />
             ))}
           </div>
@@ -96,7 +89,68 @@ export function DashboardPage({ query }: { query: UseQueryResult<DashboardSnapsh
         </section>
       )}
 
-      <QuietSummary quiet={snapshot.quiet} />
+      {featuredAttention && <QuietSummary quiet={snapshot.quiet} />}
     </main>
+  );
+}
+
+function CalmOverview({ weatherCard, snapshot }: { weatherCard?: AttentionCardType; snapshot: DashboardSnapshot }) {
+  return (
+    <section className="calm-overview">
+      {weatherCard && <WeatherNow card={weatherCard} />}
+
+      <div className="calm-column">
+        <section className="calm-card quiet-focus">
+          <div className="calm-card-header">
+            <span className="quiet-mark">✓</span>
+            <div>
+              <h2>Можно не отвлекаться</h2>
+              <p>Система следит за показателями и поднимет наверх только то, что стало важным.</p>
+            </div>
+          </div>
+
+          {snapshot.quiet.items.length > 0 && (
+            <div className="quiet-pills" aria-label="Спокойные показатели">
+              {snapshot.quiet.items.map((item) => (
+                <span key={item}>{item}</span>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="calm-card watch-card">
+          <span className="watch-kicker">наблюдение</span>
+          <h2>Если что-то изменится — экран перестроится</h2>
+          <p>Магнитная буря, рост воды, порывы ветра, дождь или устаревшие данные станут отдельной крупной карточкой.</p>
+        </section>
+      </div>
+    </section>
+  );
+}
+
+function WeatherNow({ card, compact = false }: { card: AttentionCardType; compact?: boolean }) {
+  return (
+    <a className={`weather-now ${compact ? 'compact' : ''}`} href={card.detail_url || '/detail/temperature'}>
+      <div className="weather-now-top">
+        <span className="weather-icon" aria-hidden="true">{card.icon || '🌤️'}</span>
+        <span className={`severity-pill severity-${card.severity}`}>сейчас</span>
+      </div>
+
+      <div className="weather-now-main">
+        <div>
+          <h2>{card.title}</h2>
+          {card.subtitle && <p>{card.subtitle}</p>}
+        </div>
+        <div className="weather-temp">
+          <span>{card.value || '—'}</span>
+          <small>{card.unit || ''}</small>
+        </div>
+      </div>
+
+      <div className="weather-now-footer">
+        <span>{card.reason || 'текущая погода'}</span>
+        <span className="priority">{card.priority}</span>
+      </div>
+    </a>
   );
 }
