@@ -632,7 +632,7 @@ func splitAndSortCards(allCards []models.AttentionCard) ([]models.AttentionCard,
 }
 
 func buildHeadline(cards []models.AttentionCard) models.DashboardHeadline {
-	if len(cards) == 0 || cards[0].Priority < 55 {
+	if len(cards) == 0 || cards[0].Priority < 70 {
 		return models.DashboardHeadline{
 			Title:    "Сейчас спокойно",
 			Summary:  "Нет показателей, которые требуют внимания",

@@ -25,9 +25,10 @@ export function DashboardPage({ query }: { query: UseQueryResult<DashboardSnapsh
   const snapshot = query.data;
   if (!snapshot) return null;
 
+  const importantThreshold = 70;
   const weatherCard = snapshot.cards.find((card) => card.id === 'weather-current');
-  const attentionCards = snapshot.cards.filter((card) => card.id !== 'weather-current' && card.priority >= 55);
-  const contextCards = snapshot.cards.filter((card) => card.id !== 'weather-current' && card.priority < 55);
+  const attentionCards = snapshot.cards.filter((card) => card.id !== 'weather-current' && card.priority >= importantThreshold);
+  const contextCards = snapshot.cards.filter((card) => card.id !== 'weather-current' && card.priority < importantThreshold);
   const featuredAttention = attentionCards[0];
   const remainingAttention = attentionCards.slice(1);
   const importantCount = attentionCards.length;
