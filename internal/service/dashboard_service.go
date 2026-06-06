@@ -768,7 +768,7 @@ func buildDashboardSummary(snapshot *models.DashboardSnapshot) string {
 	if len(snapshot.Cards) > 0 && snapshot.Cards[0].Priority >= 70 {
 		parts = append(parts, "есть важный сигнал: "+strings.ToLower(snapshot.Cards[0].Title))
 	} else if len(snapshot.Quiet.Items) > 0 {
-		parts = append(parts, strings.Join(snapshot.Quiet.Items, ", ")+" в норме")
+		parts = append(parts, "остальное в норме")
 	}
 	if len(parts) == 0 {
 		return "Нет показателей, которые требуют внимания."
@@ -798,6 +798,8 @@ func weatherComfortTitle(temp float32) string {
 		return "Очень жарко"
 	case temp >= 30:
 		return "Жарко"
+	case temp > 26:
+		return "Тепло"
 	case temp <= -10:
 		return "Морозно"
 	case temp <= 0:
