@@ -10,18 +10,7 @@ import { formatClock } from '../utils/time';
 export function DashboardPage({ query, scenario }: { query: UseQueryResult<DashboardSnapshot, Error>; scenario?: DashboardScenario }) {
   if (query.isLoading) return <DashboardSkeleton />;
 
-  if (query.isError) {
-    return (
-      <main className="page-shell error-shell">
-        <section className="error-card">
-          <span>⚠️</span>
-          <h1>Не удалось загрузить дашборд</h1>
-          <p>{query.error.message}</p>
-          <button onClick={() => query.refetch()}>Попробовать ещё раз</button>
-        </section>
-      </main>
-    );
-  }
+  if (query.isError) return <DashboardError message={query.error.message} onRetry={() => query.refetch()} />;
 
   const snapshot = query.data;
   if (!snapshot) return null;
@@ -32,45 +21,39 @@ export function DashboardPage({ query, scenario }: { query: UseQueryResult<Dashb
   const featuredAttention = attentionCards[0];
   const remainingAttention = attentionCards.slice(1);
   const importantCount = attentionCards.length;
+  const isCalmMode = snapshot.headline.severity === 'calm' && !featuredAttention;
 
   return (
     <main className="page-shell">
       <div className="sky-noise" aria-hidden="true" />
-      <header className="topbar">
-        <div>
-          <span className="app-label">Погодный ассистент</span>
-          <strong>Армавир сейчас</strong>
-        </div>
-        <div className="topbar-actions">
-          {scenario && <span className="scenario-badge">сценарий: {getDashboardScenarioLabel(scenario)}</span>}
-          <button className="refresh-button" onClick={() => query.refetch()} disabled={query.isFetching}>
-            {query.isFetching ? 'Обновляю…' : 'Обновить'}
-          </button>
-        </div>
-      </header>
-
+      <AppTopbar query={query} scenario={scenario} />
       {scenario && <ScenarioSwitcher active={scenario} />}
+      <SectionNav forecastHref={withScenario('/app/forecast', scenario)} />
 
-      <Headline headline={snapshot.headline} station={snapshot.station_status} />
-
-      {snapshot.summary && <p className="dashboard-summary">{snapshot.summary}</p>}
+      {isCalmMode ? (
+        <CompactStatus snapshot={snapshot} importantCount={importantCount} />
+      ) : (
+        <Headline headline={snapshot.headline} station={snapshot.station_status} />
+      )}
 
       <section className="meta-row" aria-label="Метаданные обновления">
         <span>Обновлено: {formatClock(snapshot.generated_at)}</span>
         <span>{importantCount > 0 ? `${importantCount} важных сигналов` : 'важных сигналов нет'}</span>
       </section>
 
-      {featuredAttention ? (
-        <section className="attention-layout">
-          <AttentionCard card={featuredAttention} featured />
-          {snapshot.current_weather && <WeatherNow current={snapshot.current_weather} compact />}
-        </section>
-      ) : (
-        <CalmOverview current={snapshot.current_weather} snapshot={snapshot} />
-      )}
+      <section id="now" aria-label="Текущая погода">
+        {featuredAttention ? (
+          <section className="attention-layout">
+            <AttentionCard card={featuredAttention} featured />
+            {snapshot.current_weather && <WeatherNow current={snapshot.current_weather} summary={snapshot.summary} compact />}
+          </section>
+        ) : (
+          <CalmOverview current={snapshot.current_weather} snapshot={snapshot} />
+        )}
+      </section>
 
       {remainingAttention.length > 0 && (
-        <section className="section-block">
+        <section className="section-block" id="risks">
           <div className="section-heading">
             <span>01</span>
             <h2>Ещё требует внимания</h2>
@@ -84,7 +67,7 @@ export function DashboardPage({ query, scenario }: { query: UseQueryResult<Dashb
       )}
 
       {contextCards.length > 0 && (
-        <section className="section-block">
+        <section className="section-block" id={remainingAttention.length > 0 ? undefined : 'risks'}>
           <div className="section-heading">
             <span>{remainingAttention.length > 0 ? '02' : '01'}</span>
             <h2>Контекст</h2>
@@ -97,10 +80,53 @@ export function DashboardPage({ query, scenario }: { query: UseQueryResult<Dashb
         </section>
       )}
 
-      {snapshot.near_forecast && snapshot.near_forecast.length > 0 && <ForecastStrip items={snapshot.near_forecast} />}
+      {snapshot.near_forecast && snapshot.near_forecast.length > 0 && (
+        <ForecastStrip items={snapshot.near_forecast} scenario={scenario} />
+      )}
 
       {featuredAttention && <QuietSummary quiet={snapshot.quiet} />}
     </main>
+  );
+}
+
+function DashboardError({ message, onRetry }: { message: string; onRetry: () => void }) {
+  return (
+    <main className="page-shell error-shell">
+      <section className="error-card">
+        <span>⚠️</span>
+        <h1>Не удалось загрузить дашборд</h1>
+        <p>{message}</p>
+        <button onClick={onRetry}>Попробовать ещё раз</button>
+      </section>
+    </main>
+  );
+}
+
+function AppTopbar({ query, scenario }: { query: UseQueryResult<DashboardSnapshot, Error>; scenario?: DashboardScenario }) {
+  return (
+    <header className="topbar">
+      <div>
+        <span className="app-label">Погодный ассистент</span>
+        <strong>Армавир сейчас</strong>
+      </div>
+      <div className="topbar-actions">
+        {scenario && <span className="scenario-badge">сценарий: {getDashboardScenarioLabel(scenario)}</span>}
+        <button className="refresh-button" onClick={() => query.refetch()} disabled={query.isFetching}>
+          {query.isFetching ? 'Обновляю…' : 'Обновить'}
+        </button>
+      </div>
+    </header>
+  );
+}
+
+function SectionNav({ forecastHref }: { forecastHref: string }) {
+  return (
+    <nav className="section-nav" aria-label="Разделы дашборда">
+      <a href="#now">сейчас</a>
+      <a href="#evening">вечер</a>
+      <a href="#risks">риски</a>
+      <a href={forecastHref}>прогноз</a>
+    </nav>
   );
 }
 
@@ -117,10 +143,22 @@ function ScenarioSwitcher({ active }: { active: DashboardScenario }) {
   );
 }
 
+function CompactStatus({ snapshot, importantCount }: { snapshot: DashboardSnapshot; importantCount: number }) {
+  return (
+    <section className="compact-status status-calm" aria-label="Статус внимания">
+      <span className="compact-status-icon" aria-hidden="true">{snapshot.headline.icon || '🟢'}</span>
+      <div>
+        <strong>{snapshot.headline.title}</strong>
+        <span>{snapshot.station_status.label} · {importantCount > 0 ? `${importantCount} важных сигналов` : 'важных сигналов нет'}</span>
+      </div>
+    </section>
+  );
+}
+
 function CalmOverview({ current, snapshot }: { current?: CurrentWeatherSummary; snapshot: DashboardSnapshot }) {
   return (
     <section className="calm-overview">
-      {current && <WeatherNow current={current} />}
+      {current && <WeatherNow current={current} summary={snapshot.summary} />}
 
       <div className="calm-column">
         <EveningInsight snapshot={snapshot} />
@@ -134,7 +172,7 @@ function EveningInsight({ snapshot }: { snapshot: DashboardSnapshot }) {
   const insight = buildEveningInsight(snapshot);
 
   return (
-    <section className="calm-card evening-card">
+    <section className="calm-card evening-card" id="evening">
       <span className="watch-kicker">сегодня вечером</span>
       <h2>{insight.title}</h2>
       <p>{insight.text}</p>
@@ -144,7 +182,7 @@ function EveningInsight({ snapshot }: { snapshot: DashboardSnapshot }) {
 
 function ControlStatus({ quietItems }: { quietItems: string[] }) {
   return (
-    <section className="calm-card quiet-focus">
+    <section className="calm-card quiet-focus" id="risks">
       <div className="calm-card-header">
         <span className="quiet-mark">✓</span>
         <div>
@@ -164,18 +202,22 @@ function ControlStatus({ quietItems }: { quietItems: string[] }) {
   );
 }
 
-function WeatherNow({ current, compact = false }: { current: CurrentWeatherSummary; compact?: boolean }) {
+function WeatherNow({ current, summary, compact = false }: { current: CurrentWeatherSummary; summary?: string; compact?: boolean }) {
   return (
     <a className={`weather-now ${compact ? 'compact' : ''}`} href="/detail/temperature">
       <div className="weather-now-top">
         <span className="weather-icon" aria-hidden="true">{current.icon || '🌤️'}</span>
-        <span className="severity-pill severity-normal">сейчас</span>
+        <div className="weather-status-stack">
+          <span className="severity-pill severity-normal">сейчас</span>
+          <TemperatureTrend delta={current.temperature_delta} />
+        </div>
       </div>
 
       <div className="weather-now-main">
         <div>
           <h2>{current.title}</h2>
           <p>{current.subtitle}</p>
+          {summary && <p className="weather-summary">{compactSummary(summary)}</p>}
           <WeatherFacts current={current} />
         </div>
         <div className="weather-temp">
@@ -186,9 +228,22 @@ function WeatherNow({ current, compact = false }: { current: CurrentWeatherSumma
 
       <div className="weather-now-footer">
         <span>наблюдение {formatClock(current.observed_at)}</span>
-        {typeof current.temperature_delta === 'number' && <span>{formatSigned(current.temperature_delta)}°/ч</span>}
+        <span>открыть детали</span>
       </div>
     </a>
+  );
+}
+
+function TemperatureTrend({ delta }: { delta?: number }) {
+  if (typeof delta !== 'number' || Math.abs(delta) < 0.2) {
+    return <span className="trend-chip trend-flat">температура стабильна</span>;
+  }
+
+  const falling = delta < 0;
+  return (
+    <span className={`trend-chip ${falling ? 'trend-down' : 'trend-up'}`}>
+      {falling ? '↓ холодает' : '↑ теплеет'} {Math.abs(delta).toFixed(1)}°/ч
+    </span>
   );
 }
 
@@ -210,12 +265,15 @@ function WeatherFacts({ current }: { current: CurrentWeatherSummary }) {
   );
 }
 
-function ForecastStrip({ items }: { items: NearForecastItem[] }) {
+function ForecastStrip({ items, scenario }: { items: NearForecastItem[]; scenario?: DashboardScenario }) {
   return (
-    <section className="forecast-strip-section">
-      <div className="section-heading">
-        <span>прогноз</span>
-        <h2>Ближайшие часы</h2>
+    <section className="forecast-strip-section" id="forecast">
+      <div className="section-heading forecast-heading">
+        <div>
+          <span>прогноз</span>
+          <h2>Ближайшие часы</h2>
+        </div>
+        <a href={withScenario('/app/forecast', scenario)}>Открыть подробно</a>
       </div>
       <div className="forecast-strip" role="list" aria-label="Прогноз на ближайшие часы">
         {items.map((item) => (
@@ -231,7 +289,7 @@ function ForecastStrip({ items }: { items: NearForecastItem[] }) {
   );
 }
 
-function buildEveningInsight(snapshot: DashboardSnapshot) {
+export function buildEveningInsight(snapshot: DashboardSnapshot) {
   const forecast = snapshot.near_forecast ?? [];
   if (forecast.length === 0) {
     return {
@@ -261,7 +319,7 @@ function buildEveningInsight(snapshot: DashboardSnapshot) {
   };
 }
 
-function displayForecastIcon(item: NearForecastItem) {
+export function displayForecastIcon(item: NearForecastItem) {
   const hour = new Date(item.time).getHours();
   const isNight = hour >= 21 || hour < 5;
   if (!isNight) return item.icon;
@@ -272,11 +330,15 @@ function displayForecastIcon(item: NearForecastItem) {
   return item.icon;
 }
 
+function compactSummary(summary: string) {
+  return summary.replace(/^сейчас [^;]+;\s*/i, '').replace(/;\s*/g, ' · ');
+}
+
+function withScenario(path: string, scenario?: DashboardScenario) {
+  return scenario ? `${path}?scenario=${scenario}` : path;
+}
+
 function formatNumber(value?: number) {
   if (typeof value !== 'number') return '—';
   return value.toFixed(1);
-}
-
-function formatSigned(value: number) {
-  return `${value > 0 ? '+' : ''}${value.toFixed(1)}`;
 }
