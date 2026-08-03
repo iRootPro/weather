@@ -333,7 +333,7 @@ func (r *weatherRepository) GetRecords(ctx context.Context) (*models.WeatherReco
 	err = r.pool.QueryRow(ctx, `
 		SELECT temp_outdoor, time FROM weather_data
 		WHERE temp_outdoor IS NOT NULL
-		ORDER BY temp_outdoor ASC LIMIT 1
+		ORDER BY temp_outdoor ASC, time ASC LIMIT 1
 	`).Scan(&records.TempOutdoorMin.Value, &records.TempOutdoorMin.Time)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get min temp: %w", err)
@@ -343,7 +343,7 @@ func (r *weatherRepository) GetRecords(ctx context.Context) (*models.WeatherReco
 	err = r.pool.QueryRow(ctx, `
 		SELECT temp_outdoor, time FROM weather_data
 		WHERE temp_outdoor IS NOT NULL
-		ORDER BY temp_outdoor DESC LIMIT 1
+		ORDER BY temp_outdoor DESC, time ASC LIMIT 1
 	`).Scan(&records.TempOutdoorMax.Value, &records.TempOutdoorMax.Time)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get max temp: %w", err)
@@ -353,7 +353,7 @@ func (r *weatherRepository) GetRecords(ctx context.Context) (*models.WeatherReco
 	err = r.pool.QueryRow(ctx, `
 		SELECT humidity_outdoor, time FROM weather_data
 		WHERE humidity_outdoor IS NOT NULL
-		ORDER BY humidity_outdoor ASC LIMIT 1
+		ORDER BY humidity_outdoor ASC, time ASC LIMIT 1
 	`).Scan(&records.HumidityOutdoorMin.Value, &records.HumidityOutdoorMin.Time)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get min humidity: %w", err)
@@ -363,7 +363,7 @@ func (r *weatherRepository) GetRecords(ctx context.Context) (*models.WeatherReco
 	err = r.pool.QueryRow(ctx, `
 		SELECT humidity_outdoor, time FROM weather_data
 		WHERE humidity_outdoor IS NOT NULL
-		ORDER BY humidity_outdoor DESC LIMIT 1
+		ORDER BY humidity_outdoor DESC, time ASC LIMIT 1
 	`).Scan(&records.HumidityOutdoorMax.Value, &records.HumidityOutdoorMax.Time)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get max humidity: %w", err)
@@ -373,7 +373,7 @@ func (r *weatherRepository) GetRecords(ctx context.Context) (*models.WeatherReco
 	err = r.pool.QueryRow(ctx, `
 		SELECT pressure_relative, time FROM weather_data
 		WHERE pressure_relative IS NOT NULL
-		ORDER BY pressure_relative ASC LIMIT 1
+		ORDER BY pressure_relative ASC, time ASC LIMIT 1
 	`).Scan(&records.PressureMin.Value, &records.PressureMin.Time)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get min pressure: %w", err)
@@ -383,7 +383,7 @@ func (r *weatherRepository) GetRecords(ctx context.Context) (*models.WeatherReco
 	err = r.pool.QueryRow(ctx, `
 		SELECT pressure_relative, time FROM weather_data
 		WHERE pressure_relative IS NOT NULL
-		ORDER BY pressure_relative DESC LIMIT 1
+		ORDER BY pressure_relative DESC, time ASC LIMIT 1
 	`).Scan(&records.PressureMax.Value, &records.PressureMax.Time)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get max pressure: %w", err)
@@ -393,7 +393,7 @@ func (r *weatherRepository) GetRecords(ctx context.Context) (*models.WeatherReco
 	err = r.pool.QueryRow(ctx, `
 		SELECT wind_speed, time FROM weather_data
 		WHERE wind_speed IS NOT NULL
-		ORDER BY wind_speed DESC LIMIT 1
+		ORDER BY wind_speed DESC, time ASC LIMIT 1
 	`).Scan(&records.WindSpeedMax.Value, &records.WindSpeedMax.Time)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get max wind speed: %w", err)
@@ -403,7 +403,7 @@ func (r *weatherRepository) GetRecords(ctx context.Context) (*models.WeatherReco
 	err = r.pool.QueryRow(ctx, `
 		SELECT wind_gust, time FROM weather_data
 		WHERE wind_gust IS NOT NULL
-		ORDER BY wind_gust DESC LIMIT 1
+		ORDER BY wind_gust DESC, time ASC LIMIT 1
 	`).Scan(&records.WindGustMax.Value, &records.WindGustMax.Time)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get max wind gust: %w", err)
@@ -413,7 +413,7 @@ func (r *weatherRepository) GetRecords(ctx context.Context) (*models.WeatherReco
 	err = r.pool.QueryRow(ctx, `
 		SELECT rain_daily, time FROM weather_data
 		WHERE rain_daily IS NOT NULL
-		ORDER BY rain_daily DESC LIMIT 1
+		ORDER BY rain_daily DESC, time ASC LIMIT 1
 	`).Scan(&records.RainDailyMax.Value, &records.RainDailyMax.Time)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get max rain daily: %w", err)
@@ -423,7 +423,7 @@ func (r *weatherRepository) GetRecords(ctx context.Context) (*models.WeatherReco
 	err = r.pool.QueryRow(ctx, `
 		SELECT solar_radiation, time FROM weather_data
 		WHERE solar_radiation IS NOT NULL
-		ORDER BY solar_radiation DESC LIMIT 1
+		ORDER BY solar_radiation DESC, time ASC LIMIT 1
 	`).Scan(&records.SolarRadiationMax.Value, &records.SolarRadiationMax.Time)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get max solar radiation: %w", err)
@@ -433,7 +433,7 @@ func (r *weatherRepository) GetRecords(ctx context.Context) (*models.WeatherReco
 	err = r.pool.QueryRow(ctx, `
 		SELECT uv_index, time FROM weather_data
 		WHERE uv_index IS NOT NULL
-		ORDER BY uv_index DESC LIMIT 1
+		ORDER BY uv_index DESC, time ASC LIMIT 1
 	`).Scan(&records.UVIndexMax.Value, &records.UVIndexMax.Time)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get max uv index: %w", err)
