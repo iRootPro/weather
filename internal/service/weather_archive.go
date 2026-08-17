@@ -67,6 +67,7 @@ func (s *WeatherService) GetArchive(ctx context.Context, period, metric, monthPa
 	}
 	firstDate, lastDate := archiveDateBounds(availabilityDays, now, loc)
 	coverage := buildArchiveCoverage(start, calendarEnd, currentDays, availabilityDays, loc)
+	events := filterArchiveEvents(buildArchiveEvents(currentDays), metric)
 	displayDays := filterArchiveDays(currentDays, search)
 	search.MatchedDays = len(displayDays)
 
@@ -86,6 +87,7 @@ func (s *WeatherService) GetArchive(ctx context.Context, period, metric, monthPa
 		YearOptions:    archiveYearOptions(availabilityDays, now),
 		Summary:        buildArchiveSummary(currentDays, daysInPeriod),
 		Coverage:       coverage,
+		Events:         events,
 		Search:         search,
 		Daily:          displayDays,
 	}
@@ -226,6 +228,53 @@ func buildArchiveCoverage(start, end time.Time, periodDays, availabilityDays []m
 		coverage.LongestGapDays = maxInt(coverage.LongestGapDays, gapDays)
 	}
 	return coverage
+}
+
+func buildArchiveEvents(days []models.DailyWeatherInsight) []models.WeatherArchiveEvent {
+	var hottest, coldest, wettest, windiest, sunniest *models.WeatherArchiveEvent
+	for _, day := range days {
+		if day.TempMax != nil && (hottest == nil || float64(*day.TempMax) > hottest.Value) {
+			hottest = &models.WeatherArchiveEvent{Group: "temperature", Icon: "🌡️", Title: "Самый жаркий день", Date: day.Date, Value: float64(*day.TempMax), Unit: "°C"}
+		}
+		if day.TempMin != nil && (coldest == nil || float64(*day.TempMin) < coldest.Value) {
+			coldest = &models.WeatherArchiveEvent{Group: "temperature", Icon: "❄️", Title: "Самая низкая температура", Date: day.Date, Value: float64(*day.TempMin), Unit: "°C"}
+		}
+		if day.RainTotal != nil && *day.RainTotal > 0 && (wettest == nil || float64(*day.RainTotal) > wettest.Value) {
+			wettest = &models.WeatherArchiveEvent{Group: "precipitation", Icon: "🌧️", Title: "Самый дождливый день", Date: day.Date, Value: float64(*day.RainTotal), Unit: "мм"}
+		}
+		if day.WindGustMax != nil && (windiest == nil || float64(*day.WindGustMax) > windiest.Value) {
+			windiest = &models.WeatherArchiveEvent{Group: "wind", Icon: "💨", Title: "Самый сильный порыв", Date: day.Date, Value: float64(*day.WindGustMax), Unit: "м/с"}
+		}
+		if day.SolarRadiationMax != nil && *day.SolarRadiationMax > 0 && (sunniest == nil || float64(*day.SolarRadiationMax) > sunniest.Value) {
+			sunniest = &models.WeatherArchiveEvent{Group: "sun", Icon: "☀️", Title: "Самый солнечный день", Date: day.Date, Value: float64(*day.SolarRadiationMax), Unit: "Вт/м²"}
+		}
+	}
+	events := make([]models.WeatherArchiveEvent, 0, 5)
+	for _, event := range []*models.WeatherArchiveEvent{hottest, coldest, wettest, windiest, sunniest} {
+		if event != nil {
+			events = append(events, *event)
+		}
+	}
+	return events
+}
+
+func filterArchiveEvents(events []models.WeatherArchiveEvent, metric string) []models.WeatherArchiveEvent {
+	if metric == "all" {
+		return events
+	}
+	allowed := map[string]bool{
+		"temperature":   metric == "temperature",
+		"precipitation": metric == "precipitation",
+		"wind":          metric == "wind",
+		"sun":           metric == "sun",
+	}
+	filtered := make([]models.WeatherArchiveEvent, 0, len(events))
+	for _, event := range events {
+		if allowed[event.Group] {
+			filtered = append(filtered, event)
+		}
+	}
+	return filtered
 }
 
 func resolveArchiveDaySearch(field, comparison, thresholdParam string) (models.WeatherArchiveDaySearch, error) {

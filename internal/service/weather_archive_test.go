@@ -62,6 +62,19 @@ func TestArchiveOptionsOnlyContainYearsAndSeasonsWithData(t *testing.T) {
 	}
 }
 
+func TestBuildArchiveEventsAndMetricFilter(t *testing.T) {
+	hot, cold, rain, gust, solar := float32(35), float32(-4), float32(12), float32(18), float32(800)
+	date := time.Date(2026, time.July, 12, 0, 0, 0, 0, time.UTC)
+	events := buildArchiveEvents([]models.DailyWeatherInsight{{Date: date, TempMax: &hot, TempMin: &cold, RainTotal: &rain, WindGustMax: &gust, SolarRadiationMax: &solar}})
+	if len(events) != 5 || events[0].Title != "Самый жаркий день" || events[4].Unit != "Вт/м²" {
+		t.Fatalf("unexpected events: %#v", events)
+	}
+	temperatureEvents := filterArchiveEvents(events, "temperature")
+	if len(temperatureEvents) != 2 || temperatureEvents[0].Group != "temperature" {
+		t.Fatalf("unexpected temperature events: %#v", temperatureEvents)
+	}
+}
+
 func TestArchiveDaySearchFiltersMatchingMeasurements(t *testing.T) {
 	max30, max25, rain5 := float32(30), float32(25), float32(5)
 	search, err := resolveArchiveDaySearch("temp_max", "gte", "28")

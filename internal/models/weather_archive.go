@@ -49,6 +49,16 @@ type WeatherArchiveCoverage struct {
 	Gaps           []WeatherArchiveGap `json:"gaps"`
 }
 
+// WeatherArchiveEvent is a notable measured extreme within the selected period.
+type WeatherArchiveEvent struct {
+	Group string    `json:"group"`
+	Icon  string    `json:"icon"`
+	Title string    `json:"title"`
+	Date  time.Time `json:"date"`
+	Value float64   `json:"value"`
+	Unit  string    `json:"unit"`
+}
+
 // WeatherArchiveDaySearch is an optional condition used to find matching days.
 type WeatherArchiveDaySearch struct {
 	Active      bool    `json:"active"`
@@ -79,6 +89,7 @@ type WeatherArchivePage struct {
 
 	Summary  WeatherArchiveSummary   `json:"summary"`
 	Coverage WeatherArchiveCoverage  `json:"coverage"`
+	Events   []WeatherArchiveEvent   `json:"events"`
 	Search   WeatherArchiveDaySearch `json:"search"`
 	Daily    []DailyWeatherInsight   `json:"daily"`
 }

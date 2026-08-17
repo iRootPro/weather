@@ -109,6 +109,13 @@
         <p class="mt-4 text-xs text-slate-500 dark:text-gray-400">Архив станции: с {{russianDate .Data.Coverage.FirstObserved "short"}} по {{russianDate .Data.Coverage.LastObserved "short"}}.</p>
     </section>
 
+    {{if .Data.Events}}
+    <section class="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 dark:bg-gray-800 dark:ring-gray-700">
+        <div class="flex flex-col gap-1 md:flex-row md:items-center md:justify-between"><div><p class="text-xs font-bold uppercase tracking-[0.15em] text-blue-600 dark:text-blue-300">События периода</p><h3 class="mt-1 text-xl font-bold text-slate-900 dark:text-white">Выдающиеся дни</h3></div><p class="text-sm text-slate-500 dark:text-gray-400">Экстремумы среди суточных данных станции</p></div>
+        <div class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">{{range .Data.Events}}<article class="rounded-xl bg-slate-50 p-4 ring-1 ring-slate-100 dark:bg-gray-900/60 dark:ring-gray-700"><p class="text-lg" aria-hidden="true">{{.Icon}}</p><p class="mt-2 text-sm font-semibold text-slate-700 dark:text-gray-200">{{.Title}}</p><p class="mt-1 text-2xl font-black tabular-nums text-slate-950 dark:text-white">{{printf "%.1f" .Value}} <span class="text-sm font-semibold text-slate-500 dark:text-gray-400">{{.Unit}}</span></p><p class="mt-1 text-sm text-slate-500 dark:text-gray-400">{{russianDate .Date "short"}}</p></article>{{end}}</div>
+    </section>
+    {{end}}
+
     <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {{if or (eq .Data.Metric "all") (eq .Data.Metric "temperature")}}
         <article class="rounded-xl bg-orange-50 p-4 ring-1 ring-orange-100 dark:bg-orange-950/30 dark:ring-orange-900/50"><p class="text-xs font-bold uppercase tracking-wide text-orange-700 dark:text-orange-300">Температура</p><p class="mt-2 text-3xl font-black text-orange-900 dark:text-orange-100">{{printf "%.1f" .Data.Summary.TempAvg}}°</p><p class="mt-1 text-sm text-orange-800 dark:text-orange-200">средняя · {{printf "%.1f" .Data.Summary.TempMin}}° … {{printf "%.1f" .Data.Summary.TempMax}}°</p></article>

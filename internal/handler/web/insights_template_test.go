@@ -26,6 +26,7 @@ func TestInsightsTemplateRendersArchiveControls(t *testing.T) {
 	data := PageData{ActivePage: "insights", Data: &models.WeatherArchivePage{
 		Period: "month", Metric: "all", PeriodLabel: "Август 2026", MonthParam: "2026-08", YearParam: 2026,
 		Summary: models.WeatherArchiveSummary{DaysWithData: 1, DaysInPeriod: 1, HasTemp: true, HasRain: true},
+		Events:  []models.WeatherArchiveEvent{{Icon: "🌡️", Title: "Самый жаркий день", Date: time.Date(2026, time.August, 1, 0, 0, 0, 0, time.UTC), Value: 25.6, Unit: "°C"}},
 		Daily: []models.DailyWeatherInsight{{
 			Date:    time.Date(2026, time.August, 1, 0, 0, 0, 0, time.UTC),
 			TempMin: &tempMin, TempAvg: &tempAvg, TempMax: &tempMax, RainTotal: &rain,
@@ -43,6 +44,9 @@ func TestInsightsTemplateRendersArchiveControls(t *testing.T) {
 	}
 	if !bytes.Contains(output.Bytes(), []byte(`name="search_field"`)) || !bytes.Contains(output.Bytes(), []byte("Найти дни по условию")) {
 		t.Fatal("archive day search controls are missing")
+	}
+	if !bytes.Contains(output.Bytes(), []byte("События периода")) || !bytes.Contains(output.Bytes(), []byte("Самый жаркий день")) {
+		t.Fatal("archive period events are missing")
 	}
 	if !bytes.Contains(output.Bytes(), []byte("12.3°")) || !bytes.Contains(output.Bytes(), []byte("3.7 мм")) {
 		t.Fatal("daily pointer values were not rendered as measurements")
