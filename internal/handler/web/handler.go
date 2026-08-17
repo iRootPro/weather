@@ -216,28 +216,33 @@ func (h *Handler) Records(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Insights renders the human-friendly analytics page
+// Insights renders the interactive station-observation archive.
 func (h *Handler) Insights(w http.ResponseWriter, r *http.Request) {
-	insights, err := h.getInsightsFromRequest(r)
+	query := r.URL.Query()
+	archive, err := h.weatherService.GetArchive(
+		r.Context(),
+		query.Get("period"), query.Get("metric"), query.Get("month"), query.Get("season"),
+		query.Get("year"), query.Get("from"), query.Get("to"),
+	)
 	if err != nil {
-		h.handleInsightsError(w, err, "failed to get weather insights")
+		if errors.Is(err, service.ErrInvalidArchivePeriod) || errors.Is(err, service.ErrInvalidArchiveRange) {
+			http.Error(w, "Некорректный период архива", http.StatusBadRequest)
+			return
+		}
+		slog.Error("failed to get weather archive", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
 	tmpl, err := h.parseTemplate("insights.html")
 	if err != nil {
-		slog.Error("failed to parse insights template", "error", err)
+		slog.Error("failed to parse archive template", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
-	data := PageData{
-		ActivePage: "insights",
-		Data:       insights,
-	}
-
-	if err := tmpl.Execute(w, data); err != nil {
-		slog.Error("failed to render insights", "error", err)
+	if err := tmpl.Execute(w, PageData{ActivePage: "insights", Data: archive}); err != nil {
+		slog.Error("failed to render weather archive", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }

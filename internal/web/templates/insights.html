@@ -1,1021 +1,148 @@
-{{template "base.html" .}}
-
-{{define "title"}}Архив погоды - Метеостанция{{end}}
+{{define "title"}}Архив погоды{{end}}
 
 {{define "content"}}
-<style>
-    .insights-page {
-        font-variant-numeric: tabular-nums;
-    }
-    .insights-page .shadow,
-    .insights-page .shadow-xl,
-    .insights-page .shadow-sm {
-        box-shadow: 0 1px 3px rgba(15, 23, 42, .08), 0 12px 28px rgba(15, 23, 42, .04);
-    }
-    .insights-page .rounded-3xl { border-radius: .75rem; }
-    .insights-page .rounded-2xl { border-radius: .625rem; }
-    .insights-hero {
-        border: 1px solid rgb(191 219 254);
-        background:
-            radial-gradient(circle at 84% 16%, rgba(59, 130, 246, .16), transparent 26%),
-            radial-gradient(circle at 10% 92%, rgba(14, 165, 233, .12), transparent 30%),
-            linear-gradient(135deg, #eff6ff 0%, #f8fafc 52%, #e0f2fe 100%);
-    }
-    .dark .insights-hero {
-        border-color: rgba(30, 64, 175, .7);
-        background:
-            radial-gradient(circle at 84% 16%, rgba(59, 130, 246, .22), transparent 26%),
-            radial-gradient(circle at 10% 92%, rgba(14, 165, 233, .16), transparent 30%),
-            linear-gradient(135deg, #0f172a 0%, #111827 54%, #0c4a6e 100%);
-    }
-    .insights-hero::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        opacity: .5;
-        background-image:
-            linear-gradient(rgba(59,130,246,.12) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(59,130,246,.10) 1px, transparent 1px);
-        background-size: 36px 36px;
-        mask-image: radial-gradient(circle at 50% 20%, black, transparent 82%);
-        pointer-events: none;
-    }
-    .weather-orb {
-        --p: 50;
-        background: conic-gradient(#3b82f6 calc(var(--p) * 1%), rgba(191,219,254,.7) 0);
-        box-shadow: 0 0 0 1px rgba(59,130,246,.18), 0 10px 24px rgba(37,99,235,.14);
-    }
-    .weather-orb::before {
-        content: "";
-        position: absolute;
-        inset: 10px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, .92);
-        box-shadow: inset 0 0 18px rgba(59, 130, 246, .10);
-    }
-    .dark .weather-orb::before {
-        background: rgba(17, 24, 39, .94);
-    }
-    .weather-strip {
-        background-image: linear-gradient(90deg, rgba(59,130,246,.12), rgba(14,165,233,.12), rgba(16,185,129,.10));
-        border: 1px solid rgba(191, 219, 254, .8);
-    }
-    .weather-map-card::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        opacity: .34;
-        background:
-            linear-gradient(120deg, transparent 0 42%, rgba(59,130,246,.28) 42.3%, transparent 43%),
-            linear-gradient(24deg, transparent 0 62%, rgba(14,165,233,.22) 62.3%, transparent 63%),
-            radial-gradient(circle at 22% 72%, rgba(59,130,246,.45) 0 2px, transparent 3px),
-            radial-gradient(circle at 64% 36%, rgba(14,165,233,.45) 0 2px, transparent 3px),
-            radial-gradient(circle at 82% 64%, rgba(37,99,235,.45) 0 2px, transparent 3px);
-        pointer-events: none;
-    }
-    .weather-map-card::after {
-        content: "АРМАВИР / МЕТЕОСВОДКА";
-        position: absolute;
-        right: -18px;
-        bottom: 18px;
-        transform: rotate(-90deg);
-        transform-origin: right bottom;
-        font-size: 10px;
-        letter-spacing: .22em;
-        color: rgba(37, 99, 235, .28);
-        pointer-events: none;
-    }
-    .briefing-card {
-        position: relative;
-        overflow: hidden;
-        border: 1px solid rgba(226, 232, 240, .95);
-        background: rgba(255, 255, 255, .92);
-    }
-    .dark .briefing-card {
-        border-color: rgba(55, 65, 81, .9);
-        background: rgba(31, 41, 55, .92);
-    }
-    .story-tile {
-        border: 1px solid rgba(226, 232, 240, .95);
-        background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,250,252,.92));
-    }
-    .dark .story-tile {
-        border-color: rgba(55, 65, 81, .9);
-        background: linear-gradient(180deg, rgba(31,41,55,.96), rgba(17,24,39,.92));
-    }
-    .context-board {
-        position: relative;
-        overflow: hidden;
-        border: 1px solid rgb(191 219 254);
-        background:
-            radial-gradient(circle at 8% 10%, rgba(34, 197, 94, .12), transparent 26%),
-            radial-gradient(circle at 90% 24%, rgba(59, 130, 246, .12), transparent 28%),
-            linear-gradient(135deg, #ffffff 0%, #eff6ff 100%);
-    }
-    .dark .context-board {
-        border-color: rgba(30, 64, 175, .65);
-        background:
-            radial-gradient(circle at 8% 10%, rgba(34, 197, 94, .12), transparent 26%),
-            radial-gradient(circle at 90% 24%, rgba(59, 130, 246, .16), transparent 28%),
-            linear-gradient(135deg, #1f2937 0%, #0f172a 100%);
-    }
-    .context-board::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        opacity: .34;
-        background-image:
-            linear-gradient(rgba(59,130,246,.10) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(59,130,246,.08) 1px, transparent 1px);
-        background-size: 28px 28px;
-        pointer-events: none;
-    }
-    .period-card {
-        border: 1px solid rgba(226, 232, 240, .95);
-        background: white;
-    }
-    .dark .period-card {
-        border-color: rgba(55, 65, 81, .9);
-        background: rgb(31 41 55);
-    }
-    .micro-label {
-        font-size: 10px;
-        letter-spacing: .12em;
-        text-transform: uppercase;
-    }
-</style>
-<div id="insights-content" class="insights-page space-y-6">
-    <script id="insights-rain-data" type="application/json">{{json .Data.RainChartData}}</script>
-    <!-- Header -->
-    <div class="insights-hero relative overflow-hidden rounded-lg p-6 md:p-8 shadow">
-        <div class="absolute -right-12 -top-12 h-44 w-44 rounded-full bg-blue-300/30 blur-2xl dark:bg-blue-500/20"></div>
-        <div class="absolute -bottom-16 left-12 h-44 w-44 rounded-full bg-sky-300/25 blur-2xl dark:bg-sky-500/15"></div>
-        <div class="relative grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-6 items-end">
-            <div>
-                <div class="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-sm text-blue-700 mb-4 dark:bg-blue-900/40 dark:text-blue-200">
-                    🗂️ Архив наблюдений станции
-                </div>
-                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3">Архив погоды</h2>
-                <p class="text-gray-700 dark:text-gray-200 max-w-2xl">
-                    {{.Data.MainInsight.Text}}
-                </p>
-                <div class="mt-5 flex flex-col gap-3">
-                    <div class="flex flex-wrap items-center gap-2">
-                        <div class="inline-flex w-fit items-center rounded-full bg-white/70 px-3 py-1 text-xs font-semibold text-gray-600 ring-1 ring-blue-100 dark:bg-gray-900/30 dark:text-gray-300 dark:ring-blue-900/60">
-                            {{if .Data.IsSeason}}{{.Data.SelectedSeasonLabel}}{{else}}{{.Data.SelectedMonthLabel}}{{end}} · {{.Data.PeriodStatus}}
-                        </div>
-                        <div class="inline-flex rounded-lg bg-white/70 p-1 text-xs font-semibold ring-1 ring-blue-100 dark:bg-gray-900/30 dark:ring-blue-900/60" hx-boost="true" hx-target="#insights-content" hx-select="#insights-content" hx-swap="outerHTML" hx-push-url="true">
-                            <a href="/insights?month={{.Data.SelectedMonthParam}}" class="rounded-md px-3 py-1.5 {{if not .Data.IsSeason}}bg-blue-600 text-white{{else}}text-gray-600 hover:bg-blue-50 dark:text-gray-300 dark:hover:bg-blue-900/30{{end}}">Месяц</a>
-                            <a href="/insights?period=season&season={{.Data.SelectedSeasonParam}}" class="rounded-md px-3 py-1.5 {{if .Data.IsSeason}}bg-blue-600 text-white{{else}}text-gray-600 hover:bg-blue-50 dark:text-gray-300 dark:hover:bg-blue-900/30{{end}}">Сезон</a>
-                        </div>
-                    </div>
-                    {{if .Data.IsSeason}}
-                    <form method="get" action="/insights" class="flex flex-wrap items-center gap-2" hx-get="/insights" hx-boost="true" hx-target="#insights-content" hx-select="#insights-content" hx-swap="outerHTML" hx-push-url="true" hx-indicator="#insights-loading">
-                        <input type="hidden" name="period" value="season">
-                        <a href="/insights?period=season&season={{.Data.PreviousSeasonParam}}" class="rounded-lg bg-white/80 px-3 py-2 text-sm font-medium text-gray-700 ring-1 ring-blue-100 hover:bg-blue-50 dark:bg-gray-900/30 dark:text-gray-200 dark:ring-blue-900/60">← Предыдущий</a>
-                        <select name="season" class="rounded-lg border border-blue-100 bg-white/90 px-3 py-2 text-sm text-gray-900 shadow-sm dark:border-blue-900/60 dark:bg-gray-900/50 dark:text-white">
-                            {{range .Data.SeasonOptions}}
-                            <option value="{{.Value}}" {{if eq .Value $.Data.SelectedSeasonParam}}selected{{end}}>{{.Label}}</option>
-                            {{end}}
-                        </select>
-                        <button type="submit" class="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700">Показать</button>
-                        {{if .Data.HasNextSeason}}
-                        <a href="/insights?period=season&season={{.Data.NextSeasonParam}}" class="rounded-lg bg-white/80 px-3 py-2 text-sm font-medium text-gray-700 ring-1 ring-blue-100 hover:bg-blue-50 dark:bg-gray-900/30 dark:text-gray-200 dark:ring-blue-900/60">Следующий →</a>
-                        {{end}}
-                        {{if not .Data.IsCurrentMonth}}
-                        <a href="/insights?period=season" class="rounded-lg bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700 ring-1 ring-emerald-100 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-200 dark:ring-emerald-900/60">Текущий сезон</a>
-                        {{end}}
-                        <a href="/insights/report?period=season&season={{.Data.SelectedSeasonParam}}" hx-boost="false" class="rounded-lg bg-white/80 px-3 py-2 text-sm font-semibold text-blue-700 ring-1 ring-blue-100 hover:bg-blue-50 dark:bg-gray-900/30 dark:text-blue-200 dark:ring-blue-900/60">Поделиться отчётом</a>
-                    </form>
-                    {{else}}
-                    <form method="get" action="/insights" class="flex flex-wrap items-center gap-2" hx-get="/insights" hx-boost="true" hx-target="#insights-content" hx-select="#insights-content" hx-swap="outerHTML" hx-push-url="true" hx-indicator="#insights-loading">
-                        <a href="/insights?month={{.Data.PreviousMonthParam}}" class="rounded-lg bg-white/80 px-3 py-2 text-sm font-medium text-gray-700 ring-1 ring-blue-100 hover:bg-blue-50 dark:bg-gray-900/30 dark:text-gray-200 dark:ring-blue-900/60">← Предыдущий</a>
-                        <input type="month" name="month" value="{{.Data.SelectedMonthParam}}" max="{{.Data.GeneratedAt.Format "2006-01"}}" class="rounded-lg border border-blue-100 bg-white/90 px-3 py-2 text-sm text-gray-900 shadow-sm dark:border-blue-900/60 dark:bg-gray-900/50 dark:text-white">
-                        <button type="submit" class="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700">Показать</button>
-                        {{if .Data.HasNextMonth}}
-                        <a href="/insights?month={{.Data.NextMonthParam}}" class="rounded-lg bg-white/80 px-3 py-2 text-sm font-medium text-gray-700 ring-1 ring-blue-100 hover:bg-blue-50 dark:bg-gray-900/30 dark:text-gray-200 dark:ring-blue-900/60">Следующий →</a>
-                        {{end}}
-                        {{if not .Data.IsCurrentMonth}}
-                        <a href="/insights" class="rounded-lg bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700 ring-1 ring-emerald-100 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-200 dark:ring-emerald-900/60">Текущий месяц</a>
-                        {{end}}
-                        <a href="/insights/report?month={{.Data.SelectedMonthParam}}" hx-boost="false" class="rounded-lg bg-white/80 px-3 py-2 text-sm font-semibold text-blue-700 ring-1 ring-blue-100 hover:bg-blue-50 dark:bg-gray-900/30 dark:text-blue-200 dark:ring-blue-900/60">Поделиться отчётом</a>
-                    </form>
-                    {{end}}
-                    <span id="insights-loading" class="htmx-indicator text-xs font-medium text-blue-700 dark:text-blue-300" role="status">Обновляю период…</span>
-                </div>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-4">Обновлено: {{.Data.GeneratedAt.Format "02.01.2006 15:04"}}</p>
-            </div>
-            <div class="rounded-lg bg-white/80 border border-blue-100 p-5 backdrop-blur dark:bg-gray-800/70 dark:border-blue-900/70">
-                <div class="flex items-start justify-between gap-4 mb-4">
-                    <div>
-                        <div class="micro-label text-blue-600 dark:text-blue-300">Брифинг {{.Data.CurrentPeriodGenitive}}</div>
-                        <div class="mt-1 text-xl font-bold text-gray-900 dark:text-white">{{.Data.MainInsight.Title}}</div>
-                    </div>
-                    <div class="text-4xl">{{.Data.MainInsight.Icon}}</div>
-                </div>
-                <div class="grid grid-cols-2 gap-2 text-center md:grid-cols-4">
-                    <div class="rounded-lg bg-orange-50 p-3 dark:bg-orange-900/20">
-                        <div class="text-lg font-black text-orange-700 dark:text-orange-300">{{printf "%.1f" .Data.CurrentMonth.AvgTemp}}°</div>
-                        <div class="text-[10px] text-gray-500 dark:text-gray-400">средняя</div>
-                    </div>
-                    <div class="rounded-lg bg-sky-50 p-3 dark:bg-sky-900/20">
-                        <div class="text-lg font-black text-sky-700 dark:text-sky-300">{{if .Data.CurrentMonth.MinTempDay}}{{printf "%.1f" .Data.CurrentMonth.MinTempDay.Value}}°{{else}}—{{end}}</div>
-                        <div class="text-[10px] text-gray-500 dark:text-gray-400">минимум</div>
-                    </div>
-                    <div class="rounded-lg bg-red-50 p-3 dark:bg-red-900/20">
-                        <div class="text-lg font-black text-red-700 dark:text-red-300">{{if .Data.CurrentMonth.MaxTempDay}}{{printf "%.1f" .Data.CurrentMonth.MaxTempDay.Value}}°{{else}}—{{end}}</div>
-                        <div class="text-[10px] text-gray-500 dark:text-gray-400">максимум</div>
-                    </div>
-                    <div class="rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20">
-                        <div class="text-lg font-black text-blue-700 dark:text-blue-300">{{printf "%.1f" .Data.CurrentMonth.RainTotal}}</div>
-                        <div class="text-[10px] text-gray-500 dark:text-gray-400">мм осадков</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+<div id="insights-content" class="space-y-6">
+    <script id="archive-chart-data" type="application/json">{{json .Data.Chart}}</script>
 
-    {{if .Data.ArchiveCards}}
-    <!-- Archive showcase -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5 transition-colors">
-        <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-2 mb-4">
+    <section class="rounded-2xl bg-gradient-to-br from-slate-900 via-blue-950 to-sky-900 px-5 py-6 text-white shadow-lg md:px-8 md:py-8">
+        <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
-                <div class="micro-label text-blue-600 dark:text-blue-300">Погодный журнал</div>
-                <h3 class="text-xl font-bold text-gray-900 dark:text-white">Последние отчёты</h3>
-                <p class="text-sm text-gray-500 dark:text-gray-400">Быстрый вход в месяц и сезон без ручного поиска.</p>
+                <p class="text-xs font-bold uppercase tracking-[0.2em] text-sky-200">Архив наблюдений станции</p>
+                <h2 class="mt-2 text-3xl font-black tracking-tight">{{.Data.PeriodLabel}}</h2>
+                <p class="mt-2 max-w-2xl text-sm text-sky-100 md:text-base">Суточные агрегации станции: средние значения не зависят от числа пакетов за день. Сравнение — только с предыдущим эквивалентным периодом, не с климатической нормой.</p>
             </div>
-            <div class="text-sm text-gray-500 dark:text-gray-400">Месяцы и сезоны можно листать как архив наблюдений.</div>
+            <div class="rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-sm backdrop-blur">
+                <div class="text-sky-200">Покрытие данных</div>
+                <div class="mt-1 text-2xl font-bold tabular-nums">{{.Data.Summary.DaysWithData}} <span class="text-base font-medium text-sky-200">из {{.Data.Summary.DaysInPeriod}} дней</span></div>
+            </div>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
-            {{range .Data.ArchiveCards}}
-            <a href="{{.Href}}" class="group rounded-lg border border-blue-100 bg-gradient-to-br from-white to-blue-50/60 p-4 transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-sm dark:border-blue-900/60 dark:from-gray-900/40 dark:to-blue-950/20 dark:hover:border-blue-700">
-                <div class="flex items-start justify-between gap-3">
-                    <div>
-                        <div class="text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-300">{{.Subtitle}}</div>
-                        <h4 class="mt-1 text-lg font-black text-gray-900 dark:text-white">{{.Title}}</h4>
-                    </div>
-                    <div class="grid h-10 w-10 place-items-center rounded-lg bg-white text-2xl shadow-sm dark:bg-gray-800">{{.Icon}}</div>
-                </div>
-                <div class="mt-4 grid grid-cols-3 gap-2 text-center">
-                    <div class="rounded-lg bg-blue-50 p-2 dark:bg-blue-900/20">
-                        <div class="text-sm font-black text-blue-700 dark:text-blue-300">{{printf "%.1f" .RainTotal}}</div>
-                        <div class="text-[10px] text-gray-500 dark:text-gray-400">мм</div>
-                    </div>
-                    <div class="rounded-lg bg-orange-50 p-2 dark:bg-orange-900/20">
-                        <div class="text-sm font-black text-orange-700 dark:text-orange-300">{{printf "%.1f" .AvgTemp}}°</div>
-                        <div class="text-[10px] text-gray-500 dark:text-gray-400">сред.</div>
-                    </div>
-                    <div class="rounded-lg bg-cyan-50 p-2 dark:bg-cyan-900/20">
-                        <div class="text-sm font-black text-cyan-700 dark:text-cyan-300">{{.RainDays}}</div>
-                        <div class="text-[10px] text-gray-500 dark:text-gray-400">дождей</div>
-                    </div>
-                </div>
-                <div class="mt-3 flex items-center justify-between gap-2 text-xs">
-                    <span class="rounded-full {{.DominantType.Class}} px-2 py-1 font-semibold">{{.DominantType.Icon}} {{.DominantType.Label}}</span>
-                    <span class="text-gray-500 dark:text-gray-400">{{.DaysWithData}} дней · {{.Status}}</span>
-                </div>
-            </a>
+    </section>
+
+    <section class="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 dark:bg-gray-800 dark:ring-gray-700 md:p-5">
+        <div class="flex flex-wrap gap-2 border-b border-slate-100 pb-4 dark:border-gray-700">
+            <a href="/insights?period=month&amp;month={{.Data.MonthParam}}&amp;metric={{.Data.Metric}}" hx-boost="true" hx-target="#insights-content" hx-select="#insights-content" hx-swap="outerHTML" hx-push-url="true" class="rounded-lg px-4 py-2 text-sm font-semibold {{if eq .Data.Period "month"}}bg-blue-600 text-white shadow-sm{{else}}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-gray-700 dark:text-gray-200{{end}}">Месяц</a>
+            <a href="/insights?period=season&amp;season={{.Data.SeasonParam}}&amp;metric={{.Data.Metric}}" hx-boost="true" hx-target="#insights-content" hx-select="#insights-content" hx-swap="outerHTML" hx-push-url="true" class="rounded-lg px-4 py-2 text-sm font-semibold {{if eq .Data.Period "season"}}bg-blue-600 text-white shadow-sm{{else}}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-gray-700 dark:text-gray-200{{end}}">Сезон</a>
+            <a href="/insights?period=year&amp;year={{.Data.YearParam}}&amp;metric={{.Data.Metric}}" hx-boost="true" hx-target="#insights-content" hx-select="#insights-content" hx-swap="outerHTML" hx-push-url="true" class="rounded-lg px-4 py-2 text-sm font-semibold {{if eq .Data.Period "year"}}bg-blue-600 text-white shadow-sm{{else}}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-gray-700 dark:text-gray-200{{end}}">Год</a>
+            <a href="/insights?period=range&amp;from={{.Data.FromParam}}&amp;to={{.Data.ToParam}}&amp;metric={{.Data.Metric}}" hx-boost="true" hx-target="#insights-content" hx-select="#insights-content" hx-swap="outerHTML" hx-push-url="true" class="rounded-lg px-4 py-2 text-sm font-semibold {{if eq .Data.Period "range"}}bg-blue-600 text-white shadow-sm{{else}}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-gray-700 dark:text-gray-200{{end}}">Диапазон</a>
+        </div>
+
+        <form method="get" action="/insights" class="mt-4 flex flex-col gap-4 xl:flex-row xl:items-end" hx-get="/insights" hx-target="#insights-content" hx-select="#insights-content" hx-swap="outerHTML" hx-push-url="true" hx-indicator="#archive-loading">
+            <input type="hidden" name="period" value="{{.Data.Period}}">
+            {{if eq .Data.Period "month"}}
+            <label class="block min-w-48 text-sm font-semibold text-slate-700 dark:text-gray-200">Месяц
+                <input type="month" name="month" value="{{.Data.MonthParam}}" class="mt-1 block w-full rounded-lg border-slate-300 bg-white text-slate-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white">
+            </label>
+            {{else if eq .Data.Period "season"}}
+            <label class="block min-w-56 text-sm font-semibold text-slate-700 dark:text-gray-200">Сезон
+                <select name="season" class="mt-1 block w-full rounded-lg border-slate-300 bg-white text-slate-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white">
+                    {{range .Data.SeasonOptions}}<option value="{{.Value}}" {{if eq .Value $.Data.SeasonParam}}selected{{end}}>{{.Label}}</option>{{end}}
+                </select>
+            </label>
+            {{else if eq .Data.Period "year"}}
+            <label class="block min-w-40 text-sm font-semibold text-slate-700 dark:text-gray-200">Год
+                <select name="year" class="mt-1 block w-full rounded-lg border-slate-300 bg-white text-slate-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white">
+                    {{range .Data.YearOptions}}<option value="{{.}}" {{if eq . $.Data.YearParam}}selected{{end}}>{{.}}</option>{{end}}
+                </select>
+            </label>
+            {{else}}
+            <label class="block min-w-44 text-sm font-semibold text-slate-700 dark:text-gray-200">С даты
+                <input type="date" name="from" value="{{.Data.FromParam}}" class="mt-1 block w-full rounded-lg border-slate-300 bg-white text-slate-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white">
+            </label>
+            <label class="block min-w-44 text-sm font-semibold text-slate-700 dark:text-gray-200">По дату
+                <input type="date" name="to" value="{{.Data.ToParam}}" class="mt-1 block w-full rounded-lg border-slate-300 bg-white text-slate-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white">
+            </label>
             {{end}}
-        </div>
-    </div>
-    {{end}}
+            <label class="block min-w-52 text-sm font-semibold text-slate-700 dark:text-gray-200">Показатели
+                <select name="metric" class="mt-1 block w-full rounded-lg border-slate-300 bg-white text-slate-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white">
+                    <option value="all" {{if eq .Data.Metric "all"}}selected{{end}}>Все показатели</option>
+                    <option value="temperature" {{if eq .Data.Metric "temperature"}}selected{{end}}>Температура</option>
+                    <option value="precipitation" {{if eq .Data.Metric "precipitation"}}selected{{end}}>Осадки</option>
+                    <option value="wind" {{if eq .Data.Metric "wind"}}selected{{end}}>Ветер</option>
+                    <option value="air" {{if eq .Data.Metric "air"}}selected{{end}}>Влажность и давление</option>
+                    <option value="sun" {{if eq .Data.Metric "sun"}}selected{{end}}>UV и солнечная радиация</option>
+                </select>
+            </label>
+            <button type="submit" class="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700">Показать</button>
+            <span id="archive-loading" class="htmx-indicator pb-2 text-sm font-medium text-blue-600 dark:text-blue-300">Обновляю…</span>
+        </form>
+        <p class="mt-3 text-xs text-slate-500 dark:text-gray-400">Произвольный диапазон — до 366 дней; будущие даты недоступны.</p>
+    </section>
 
-    {{if .Data.ComparisonCards}}
-    <!-- Comparison cards -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5 transition-colors">
-        <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-2 mb-4">
-            <div>
-                <div class="micro-label text-blue-600 dark:text-blue-300">Сравнить с…</div>
-                <h3 class="text-xl font-bold text-gray-900 dark:text-white">Чем этот {{.Data.CurrentPeriodLabel}} отличается</h3>
-                <p class="text-sm text-gray-500 dark:text-gray-400">Осадки, температура и дождливые дни относительно полезных ориентиров.</p>
-            </div>
-            <div class="text-sm text-gray-500 dark:text-gray-400">Плюс — больше текущего периода, минус — меньше.</div>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-            {{range .Data.ComparisonCards}}
-            <div class="rounded-lg border p-4 {{if eq .Tone "wet"}}border-blue-100 bg-blue-50/70 dark:border-blue-900/60 dark:bg-blue-900/20{{else if eq .Tone "dry"}}border-amber-100 bg-amber-50/70 dark:border-amber-900/60 dark:bg-amber-900/20{{else if eq .Tone "warm"}}border-orange-100 bg-orange-50/70 dark:border-orange-900/60 dark:bg-orange-900/20{{else if eq .Tone "cold"}}border-sky-100 bg-sky-50/70 dark:border-sky-900/60 dark:bg-sky-900/20{{else}}border-gray-100 bg-gray-50 dark:border-gray-700 dark:bg-gray-900/30{{end}}">
-                <div class="flex items-start justify-between gap-3">
-                    <div>
-                        <h4 class="font-bold text-gray-900 dark:text-white">{{.Title}}</h4>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">{{.Subtitle}}</p>
-                    </div>
-                    <div class="text-2xl">{{.Icon}}</div>
-                </div>
-                <div class="mt-4 grid grid-cols-3 gap-2 text-center">
-                    <div class="rounded-lg bg-white/75 p-2 dark:bg-gray-900/35">
-                        <div class="text-xs text-gray-500 dark:text-gray-400">Осадки</div>
-                        <div class="font-black text-blue-700 dark:text-blue-300">{{.RainDeltaText}}</div>
-                    </div>
-                    <div class="rounded-lg bg-white/75 p-2 dark:bg-gray-900/35">
-                        <div class="text-xs text-gray-500 dark:text-gray-400">Темп.</div>
-                        <div class="font-black text-orange-700 dark:text-orange-300">{{.TempDeltaText}}</div>
-                    </div>
-                    <div class="rounded-lg bg-white/75 p-2 dark:bg-gray-900/35">
-                        <div class="text-xs text-gray-500 dark:text-gray-400">Дожди</div>
-                        <div class="font-black text-cyan-700 dark:text-cyan-300">{{.RainDaysDeltaText}}</div>
-                    </div>
-                </div>
-                <p class="mt-3 text-sm leading-relaxed text-gray-700 dark:text-gray-200">{{.Verdict}}</p>
-            </div>
-            {{end}}
-        </div>
-    </div>
-    {{end}}
+    {{if eq .Data.Summary.DaysWithData 0}}
+    <section class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-10 text-center dark:border-gray-600 dark:bg-gray-800">
+        <h3 class="text-lg font-bold text-slate-800 dark:text-white">За этот период нет наблюдений станции</h3>
+        <p class="mt-2 text-sm text-slate-500 dark:text-gray-400">Выберите другой период или проверьте даты.</p>
+    </section>
+    {{else}}
+    <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {{if or (eq .Data.Metric "all") (eq .Data.Metric "temperature")}}
+        <article class="rounded-xl bg-orange-50 p-4 ring-1 ring-orange-100 dark:bg-orange-950/30 dark:ring-orange-900/50"><p class="text-xs font-bold uppercase tracking-wide text-orange-700 dark:text-orange-300">Температура</p><p class="mt-2 text-3xl font-black text-orange-900 dark:text-orange-100">{{printf "%.1f" .Data.Summary.TempAvg}}°</p><p class="mt-1 text-sm text-orange-800 dark:text-orange-200">средняя · {{printf "%.1f" .Data.Summary.TempMin}}° … {{printf "%.1f" .Data.Summary.TempMax}}°</p></article>
+        {{end}}
+        {{if or (eq .Data.Metric "all") (eq .Data.Metric "precipitation")}}
+        <article class="rounded-xl bg-blue-50 p-4 ring-1 ring-blue-100 dark:bg-blue-950/30 dark:ring-blue-900/50"><p class="text-xs font-bold uppercase tracking-wide text-blue-700 dark:text-blue-300">Осадки</p><p class="mt-2 text-3xl font-black text-blue-900 dark:text-blue-100">{{printf "%.1f" .Data.Summary.RainTotal}} <span class="text-lg">мм</span></p><p class="mt-1 text-sm text-blue-800 dark:text-blue-200">{{.Data.Summary.RainDays}} дождливых дней</p></article>
+        {{end}}
+        {{if or (eq .Data.Metric "all") (eq .Data.Metric "wind")}}
+        <article class="rounded-xl bg-cyan-50 p-4 ring-1 ring-cyan-100 dark:bg-cyan-950/30 dark:ring-cyan-900/50"><p class="text-xs font-bold uppercase tracking-wide text-cyan-700 dark:text-cyan-300">Ветер</p><p class="mt-2 text-3xl font-black text-cyan-900 dark:text-cyan-100">{{printf "%.1f" .Data.Summary.WindGustMax}} <span class="text-lg">м/с</span></p><p class="mt-1 text-sm text-cyan-800 dark:text-cyan-200">максимальный порыв</p></article>
+        {{end}}
+        {{if or (eq .Data.Metric "all") (eq .Data.Metric "air")}}
+        <article class="rounded-xl bg-violet-50 p-4 ring-1 ring-violet-100 dark:bg-violet-950/30 dark:ring-violet-900/50"><p class="text-xs font-bold uppercase tracking-wide text-violet-700 dark:text-violet-300">Воздух</p><p class="mt-2 text-3xl font-black text-violet-900 dark:text-violet-100">{{printf "%.0f" .Data.Summary.HumidityAvg}}<span class="text-lg">%</span></p><p class="mt-1 text-sm text-violet-800 dark:text-violet-200">влажность · {{printf "%.0f" .Data.Summary.PressureAvg}} гПа</p></article>
+        {{end}}
+        {{if or (eq .Data.Metric "all") (eq .Data.Metric "sun")}}
+        <article class="rounded-xl bg-amber-50 p-4 ring-1 ring-amber-100 dark:bg-amber-950/30 dark:ring-amber-900/50"><p class="text-xs font-bold uppercase tracking-wide text-amber-700 dark:text-amber-300">Солнце</p><p class="mt-2 text-3xl font-black text-amber-900 dark:text-amber-100">{{printf "%.1f" .Data.Summary.UVIndexMax}} UV</p><p class="mt-1 text-sm text-amber-800 dark:text-amber-200">до {{printf "%.0f" .Data.Summary.SolarRadiationMax}} Вт/м²</p></article>
+        {{end}}
+    </section>
 
-    <!-- Stories -->
-    {{if .Data.Stories}}
-    <div class="briefing-card rounded-xl shadow p-4 md:p-5 transition-colors">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4">
-            <div>
-                <div class="micro-label text-blue-600 dark:text-blue-300">Сигналы станции</div>
-                <h3 class="text-lg font-bold text-gray-900 dark:text-white">Что важно заметить сейчас</h3>
-            </div>
-            <div class="text-sm text-gray-500 dark:text-gray-400">Сезон и архив вынесены отдельно, здесь — короткие наблюдения.</div>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
-            {{range .Data.Stories}}
-            <div class="story-tile rounded-lg p-4 transition hover:-translate-y-0.5 hover:shadow-sm">
-                <div class="flex items-start gap-3">
-                    <div class="text-2xl leading-none">{{.Icon}}</div>
-                    <div>
-                        <h3 class="font-semibold text-gray-900 dark:text-white mb-1">{{.Title}}</h3>
-                        <p class="text-sm leading-relaxed text-gray-600 dark:text-gray-300">{{.Text}}</p>
-                    </div>
-                </div>
-            </div>
-            {{end}}
-        </div>
-    </div>
-    {{end}}
+    <section class="grid gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(20rem,0.8fr)]">
+        <article class="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 dark:bg-gray-800 dark:ring-gray-700">
+            <div class="flex items-baseline justify-between gap-4"><div><p class="text-xs font-bold uppercase tracking-[0.15em] text-blue-600 dark:text-blue-300">Динамика</p><h3 class="mt-1 text-xl font-bold text-slate-900 dark:text-white">{{.Data.Chart.Label}}</h3></div><span class="text-sm text-slate-500 dark:text-gray-400">{{.Data.Chart.Unit}}</span></div>
+            <div class="mt-4 h-72"><canvas id="archive-chart" aria-label="График: {{.Data.Chart.Label}}"></canvas></div>
+        </article>
+        <article class="rounded-2xl bg-slate-900 p-5 text-white shadow-sm">
+            <p class="text-xs font-bold uppercase tracking-[0.15em] text-sky-300">Сравнение</p>
+            <h3 class="mt-1 text-xl font-bold">{{.Data.PreviousPeriodLabel}}</h3>
+            {{if .Data.HasPreviousPeriod}}
+            <dl class="mt-5 space-y-4 text-sm">
+                {{if or (eq .Data.Metric "all") (eq .Data.Metric "temperature")}}<div class="flex items-baseline justify-between gap-4"><dt class="text-slate-300">Средняя температура</dt><dd class="font-bold tabular-nums">{{printf "%+.1f" .Data.TemperatureDelta}}°</dd></div>{{end}}
+                {{if or (eq .Data.Metric "all") (eq .Data.Metric "precipitation")}}<div class="flex items-baseline justify-between gap-4"><dt class="text-slate-300">Осадки</dt><dd class="font-bold tabular-nums">{{printf "%+.1f" .Data.PrecipitationDelta}} мм</dd></div>{{end}}
+                {{if or (eq .Data.Metric "all") (eq .Data.Metric "wind")}}<div class="flex items-baseline justify-between gap-4"><dt class="text-slate-300">Максимальный порыв</dt><dd class="font-bold tabular-nums">{{printf "%+.1f" .Data.WindGustDelta}} м/с</dd></div>{{end}}
+                {{if or (eq .Data.Metric "all") (eq .Data.Metric "air")}}<div class="flex items-baseline justify-between gap-4"><dt class="text-slate-300">Влажность</dt><dd class="font-bold tabular-nums">{{printf "%+.1f" .Data.HumidityDelta}} п.п.</dd></div><div class="flex items-baseline justify-between gap-4"><dt class="text-slate-300">Давление</dt><dd class="font-bold tabular-nums">{{printf "%+.1f" .Data.PressureDelta}} гПа</dd></div>{{end}}
+                {{if eq .Data.Metric "sun"}}<div class="text-slate-300">Для UV и радиации — максимумы текущего периода выше.</div>{{end}}
+            </dl>
+            {{else}}<p class="mt-5 text-sm text-slate-300">Для сравнения пока нет достаточных данных станции.</p>{{end}}
+        </article>
+    </section>
 
-    <!-- Visual summary -->
-    <div class="grid grid-cols-1 xl:grid-cols-[0.9fr_1.1fr] gap-6">
-        <div class="weather-map-card relative overflow-hidden rounded-lg border border-blue-100 bg-gradient-to-br from-blue-50 to-sky-100 p-6 text-gray-900 shadow dark:border-blue-900/70 dark:from-gray-800 dark:to-sky-950/40 dark:text-white">
-            <div class="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-blue-400/20 blur-2xl"></div>
-            <div class="flex items-start justify-between gap-4">
-                <div>
-                    <p class="text-sm uppercase tracking-[0.25em] text-blue-700 dark:text-blue-300">Погодный отпечаток</p>
-                    <h3 class="mt-2 text-2xl font-bold">{{if .Data.IsSeason}}Сезон{{else}}Месяц{{end}} одним взглядом</h3>
-                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">{{if .Data.SameMonthBenchmark.Available}}Круг показывает, где текущие осадки относительно похожих {{if .Data.IsSeason}}сезонов{{else}}месяцев{{end}} прошлых лет.{{else}}Архивной нормы пока мало, поэтому прошлый {{.Data.CurrentPeriodLabel}} показан только как справка.{{end}}</p>
-                </div>
-                <div class="weather-orb relative grid h-28 w-28 shrink-0 place-items-center rounded-full" style="--p: {{if .Data.SameMonthBenchmark.Available}}{{.Data.SameMonthBenchmark.RainRatioPercent}}{{else}}{{.Data.RainVsPreviousFullPercent}}{{end}}">
-                    <div class="relative z-10 text-center">
-                        <div class="text-2xl font-black">{{if .Data.SameMonthBenchmark.Available}}{{.Data.SameMonthBenchmark.RainRatioPercent}}{{else}}{{.Data.RainVsPreviousFullPercent}}{{end}}%</div>
-                        <div class="text-[10px] uppercase tracking-wide text-blue-700 dark:text-blue-200">{{if .Data.SameMonthBenchmark.Available}}от нормы{{else}}от прошлого{{end}}</div>
-                    </div>
-                </div>
-            </div>
-            <div class="mt-6 grid grid-cols-3 gap-3 text-center">
-                <div class="rounded-lg bg-white/70 p-3 border border-blue-100 dark:bg-gray-900/40 dark:border-blue-900/60">
-                    <div class="text-2xl font-bold">{{.Data.RainDaysPercent}}%</div>
-                    <div class="text-xs text-gray-600 dark:text-gray-300">дней с дождём</div>
-                </div>
-                <div class="rounded-lg bg-white/70 p-3 border border-blue-100 dark:bg-gray-900/40 dark:border-blue-900/60">
-                    <div class="text-2xl font-bold">{{.Data.SunnyPercent}}%</div>
-                    <div class="text-xs text-gray-600 dark:text-gray-300">солнечных</div>
-                </div>
-                <div class="rounded-lg bg-white/70 p-3 border border-blue-100 dark:bg-gray-900/40 dark:border-blue-900/60">
-                    <div class="text-2xl font-bold">{{.Data.ComfortPercent}}%</div>
-                    <div class="text-xs text-gray-600 dark:text-gray-300">комфортных</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="rounded-3xl bg-white dark:bg-gray-800 p-6 shadow transition-colors">
-            <div class="flex items-center justify-between mb-5">
-                <div>
-                    <h3 class="text-xl font-bold text-gray-900 dark:text-white">Пульс {{.Data.CurrentPeriodGenitive}}</h3>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Простые шкалы, которые объясняют страницу без чтения таблиц.</p>
-                </div>
-                <div class="text-3xl">〽️</div>
-            </div>
-            <div class="space-y-5">
-                <div>
-                    <div class="mb-2 flex justify-between text-sm"><span class="text-gray-600 dark:text-gray-300">Пройдено {{.Data.CurrentPeriodGenitive}}</span><b class="text-gray-900 dark:text-white">{{.Data.MonthProgressPercent}}%</b></div>
-                    <div class="h-3 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700"><div class="h-full rounded-full bg-slate-900 dark:bg-slate-100" style="width: {{.Data.MonthProgressPercent}}%"></div></div>
-                </div>
-                <div>
-                    <div class="mb-2 flex justify-between text-sm"><span class="text-gray-600 dark:text-gray-300">Осадки к норме {{.Data.CurrentPeriodGenitive}}</span><b class="text-blue-700 dark:text-blue-300">{{if .Data.SameMonthBenchmark.Available}}{{.Data.SameMonthBenchmark.RainRatioPercent}}%{{else}}архив копится{{end}}</b></div>
-                    <div class="h-3 overflow-hidden rounded-full bg-blue-50 dark:bg-blue-950"><div class="h-full rounded-full bg-blue-500" style="width: {{if .Data.SameMonthBenchmark.Available}}{{.Data.SameMonthBenchmark.RainRatioPercent}}{{else}}0{{end}}%"></div></div>
-                </div>
-                <div>
-                    <div class="mb-2 flex justify-between text-sm"><span class="text-gray-600 dark:text-gray-300">Доля самого дождливого дня</span><b class="text-cyan-700 dark:text-cyan-300">{{.Data.RainiestDaySharePercent}}%</b></div>
-                    <div class="h-3 overflow-hidden rounded-full bg-cyan-50 dark:bg-cyan-950"><div class="h-full rounded-full bg-cyan-500" style="width: {{.Data.RainiestDaySharePercent}}%"></div></div>
-                </div>
-                <div class="weather-strip rounded-2xl p-4 text-sm text-gray-700 dark:text-gray-200">
-                    <b>Читается так:</b> основное сравнение теперь сезонное: {{if .Data.SameMonthBenchmark.Available}}{{.Data.SameMonthBenchmark.Verdict}}.{{else}}{{.Data.SameMonthBenchmark.StatusText}}{{end}}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Seasonal context -->
-    <div class="context-board rounded-xl shadow p-6 md:p-7 transition-colors">
-        <div class="relative z-10 grid grid-cols-1 xl:grid-cols-[1.15fr_0.85fr] gap-6 items-stretch">
-            <div class="flex flex-col justify-between gap-6">
-                <div class="flex items-start gap-4">
-                    <div class="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-white/80 text-4xl shadow-sm dark:bg-gray-900/50">{{.Data.Season.Icon}}</div>
-                    <div>
-                        <div class="micro-label text-blue-600 dark:text-blue-300">{{.Data.Season.ProgressPercent}}% сезона прошло</div>
-                        <h3 class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{{.Data.Season.Title}}</h3>
-                        <p class="mt-2 max-w-3xl text-sm leading-relaxed text-gray-600 dark:text-gray-300">{{.Data.Season.Description}}</p>
-                    </div>
-                </div>
-                <div class="rounded-lg bg-white/75 p-4 text-sm text-gray-700 shadow-sm dark:bg-gray-900/35 dark:text-gray-200">
-                    <b>{{.Data.Season.FocusTitle}}:</b> {{.Data.Season.FocusText}}
-                </div>
-            </div>
-
-            <div class="rounded-xl bg-white/80 p-5 shadow-sm backdrop-blur dark:bg-gray-900/40">
-                <div class="flex items-start justify-between gap-4 mb-4">
-                    <div>
-                        <div class="micro-label text-blue-600 dark:text-blue-300">Норма {{.Data.CurrentPeriodGenitive}}</div>
-                        <h3 class="text-xl font-bold text-gray-900 dark:text-white">Сравнение с архивом</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">{{.Data.SameMonthBenchmark.Subtitle}}</p>
-                    </div>
-                    <div class="text-3xl">📚</div>
-                </div>
-                {{if .Data.SameMonthBenchmark.Available}}
-                <div class="grid grid-cols-3 gap-3">
-                    <div class="rounded-lg bg-blue-50 dark:bg-blue-900/20 p-3">
-                        <div class="text-xs text-gray-500 dark:text-gray-400">Осадки</div>
-                        <div class="text-xl font-bold text-blue-700 dark:text-blue-300">{{.Data.SameMonthBenchmark.RainRatioPercent}}%</div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400">от нормы</div>
-                    </div>
-                    <div class="rounded-lg bg-cyan-50 dark:bg-cyan-900/20 p-3">
-                        <div class="text-xs text-gray-500 dark:text-gray-400">Обычно</div>
-                        <div class="text-xl font-bold text-cyan-700 dark:text-cyan-300">{{printf "%.1f" .Data.SameMonthBenchmark.RainTotalAvg}}</div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400">мм к дате</div>
-                    </div>
-                    <div class="rounded-lg bg-slate-50 dark:bg-slate-700/40 p-3">
-                        <div class="text-xs text-gray-500 dark:text-gray-400">Архив</div>
-                        <div class="text-xl font-bold text-gray-900 dark:text-white">{{.Data.SameMonthBenchmark.SampleSize}}</div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400">периодов</div>
-                    </div>
-                </div>
-                <p class="mt-4 text-sm leading-relaxed text-gray-700 dark:text-gray-200">{{.Data.SameMonthBenchmark.Verdict}}. Температура относительно архива: {{printf "%+.1f" .Data.SameMonthBenchmark.TempDelta}}°C.</p>
-                {{else}}
-                <p class="text-sm leading-relaxed text-gray-600 dark:text-gray-300">{{.Data.SameMonthBenchmark.StatusText}}</p>
-                {{end}}
-            </div>
-        </div>
-    </div>
-
-    <!-- Period comparison -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5 transition-colors">
-        <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-2 mb-4">
-            <div>
-                <div class="micro-label text-blue-600 dark:text-blue-300">Периоды без перегруза</div>
-                <h3 class="text-xl font-bold text-gray-900 dark:text-white">Сводка по отрезкам</h3>
-            </div>
-            <p class="text-sm text-gray-500 dark:text-gray-400">Прошлый {{.Data.CurrentPeriodLabel}} оставлен только как справочный ориентир.</p>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
-            {{template "periodCard" .Data.CurrentMonth}}
-            {{template "periodCard" .Data.Last7Days.Current}}
-            {{template "periodCard" .Data.Last30Days.Current}}
-            {{template "periodCard" .Data.PreviousMonth}}
-        </div>
-    </div>
-
-    <!-- Practical factors -->
-    <div class="grid grid-cols-1 xl:grid-cols-[0.9fr_1.1fr] gap-6">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5 transition-colors">
-            <div class="flex items-start justify-between gap-4 mb-4">
-                <div>
-                    <div class="micro-label text-blue-600 dark:text-blue-300">Практический смысл</div>
-                    <h3 class="text-xl font-bold text-gray-900 dark:text-white">Ветер и солнце</h3>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">То, что влияет на прогулки не меньше дождя.</p>
-                </div>
-                <div class="text-3xl">🧭</div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div class="rounded-lg border border-teal-100 bg-teal-50 p-4 dark:border-teal-900/60 dark:bg-teal-900/20">
-                    <div class="flex items-start justify-between gap-3">
-                        <div>
-                            <div class="text-sm font-semibold text-teal-800 dark:text-teal-200">{{.Data.WindInsight.Icon}} {{.Data.WindInsight.Title}}</div>
-                            <div class="mt-2 text-3xl font-black text-teal-700 dark:text-teal-300">{{.Data.WindInsight.Value}}</div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400">{{.Data.WindInsight.Detail}}</div>
-                        </div>
-                        <span class="rounded-full bg-white/80 px-2 py-1 text-xs font-semibold text-teal-700 dark:bg-gray-900/40 dark:text-teal-200">{{.Data.WindInsight.LevelLabel}}</span>
-                    </div>
-                    <p class="mt-3 text-sm leading-relaxed text-gray-700 dark:text-gray-200">{{.Data.WindInsight.Advice}}</p>
-                </div>
-                <div class="rounded-lg border border-yellow-100 bg-yellow-50 p-4 dark:border-yellow-900/60 dark:bg-yellow-900/20">
-                    <div class="flex items-start justify-between gap-3">
-                        <div>
-                            <div class="text-sm font-semibold text-yellow-800 dark:text-yellow-200">{{.Data.UVInsight.Icon}} {{.Data.UVInsight.Title}}</div>
-                            <div class="mt-2 text-3xl font-black text-yellow-700 dark:text-yellow-300">{{.Data.UVInsight.Value}}</div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400">{{.Data.UVInsight.Detail}}</div>
-                        </div>
-                        <span class="rounded-full bg-white/80 px-2 py-1 text-xs font-semibold text-yellow-700 dark:bg-gray-900/40 dark:text-yellow-200">{{.Data.UVInsight.LevelLabel}}</span>
-                    </div>
-                    <p class="mt-3 text-sm leading-relaxed text-gray-700 dark:text-gray-200">{{.Data.UVInsight.Advice}}</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5 transition-colors">
-            <div class="flex items-start justify-between gap-4 mb-4">
-                <div>
-                    <div class="micro-label text-blue-600 dark:text-blue-300">Типология дней</div>
-                    <h3 class="text-xl font-bold text-gray-900 dark:text-white">Каким был {{.Data.CurrentPeriodLabel}} по характеру</h3>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Каждый день получает один главный погодный тип.</p>
-                </div>
-                <div class="text-3xl">🧬</div>
-            </div>
-            <div class="mb-4 rounded-lg {{.Data.DominantDayType.Class}} p-4">
-                <div class="text-sm opacity-80">Преобладающий тип</div>
-                <div class="mt-1 text-2xl font-black">{{.Data.DominantDayType.Icon}} {{.Data.DominantDayType.Label}}</div>
-                <div class="text-sm opacity-80">{{.Data.DominantDayType.Count}} дней · {{.Data.DominantDayType.Description}}</div>
-            </div>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-                {{range .Data.DayTypes}}
-                <div class="rounded-lg {{.Class}} p-3">
-                    <div class="flex items-center justify-between gap-2">
-                        <span class="text-sm font-semibold">{{.Icon}} {{.Label}}</span>
-                        <span class="text-xs opacity-70">{{.Percent}}%</span>
-                    </div>
-                    <div class="mt-1 text-xl font-black">{{.Count}}</div>
-                </div>
-                {{end}}
-            </div>
-        </div>
-    </div>
-
-    <!-- Rain focus + chart -->
-    <div class="grid grid-cols-1 xl:grid-cols-[1fr_1.25fr] gap-6">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6 transition-colors">
-            <div class="flex items-center justify-between mb-5">
-                <div>
-                    <h3 class="text-xl font-bold text-gray-900 dark:text-white">Дожди и сухие серии</h3>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Дождливый день: от 1 мм, день с осадками: от 0.2 мм.</p>
-                </div>
-                <div class="text-4xl">🌧️</div>
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-                <div class="rounded-lg bg-cyan-50 dark:bg-cyan-900/20 p-4">
-                    <div class="text-sm text-gray-600 dark:text-gray-400">Дождливых дней</div>
-                    <div class="mt-2 text-3xl font-bold text-cyan-700 dark:text-cyan-300">{{.Data.CurrentMonth.RainDays}}</div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400">за 7 дней: {{.Data.Last7Days.Current.RainDays}}</div>
-                </div>
-                <div class="rounded-lg bg-blue-50 dark:bg-blue-900/20 p-4">
-                    <div class="text-sm text-gray-600 dark:text-gray-400">Всего осадков</div>
-                    <div class="mt-2 text-3xl font-bold text-blue-700 dark:text-blue-300">{{printf "%.1f" .Data.CurrentMonth.RainTotal}} мм</div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400">{{if .Data.SameMonthBenchmark.Available}}обычно к дате: {{printf "%.1f" .Data.SameMonthBenchmark.RainTotalAvg}} мм{{else}}архивная норма недоступна{{end}}</div>
-                </div>
-                <div class="rounded-lg bg-amber-50 dark:bg-amber-900/20 p-4">
-                    <div class="text-sm text-gray-600 dark:text-gray-400">Сухих дней подряд</div>
-                    {{if gt .Data.CurrentDryStreak 0}}
-                    <div class="mt-2 text-3xl font-bold text-amber-700 dark:text-amber-300">{{.Data.CurrentDryStreak}}</div>
-                    {{else}}
-                    <div class="mt-2 text-xl font-bold text-amber-700 dark:text-amber-300">нет серии</div>
-                    {{end}}
-                    {{if .Data.HasLastRain}}
-                    <div class="text-xs text-gray-500 dark:text-gray-400">последний дождь: {{.Data.LastRainDate.Format "02.01"}}</div>
-                    {{else}}
-                    <div class="text-xs text-gray-500 dark:text-gray-400">дождя нет в периоде сравнения</div>
-                    {{end}}
-                </div>
-                <div class="rounded-lg bg-indigo-50 dark:bg-indigo-900/20 p-4">
-                    <div class="text-sm text-gray-600 dark:text-gray-400">Макс. интенсивность</div>
-                    <div class="mt-2 text-3xl font-bold text-indigo-700 dark:text-indigo-300">{{printf "%.1f" .Data.CurrentMonth.MaxRainRate}}</div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400">мм/ч</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6 transition-colors">
-            <div class="flex items-start justify-between gap-4 mb-4">
-                <div>
-                    <h3 class="text-xl font-bold text-gray-900 dark:text-white">Накопление осадков</h3>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Текущий {{.Data.CurrentPeriodLabel}}, архивная норма похожих периодов и прошлый {{.Data.CurrentPeriodLabel}} как справка.</p>
-                </div>
-                <div class="text-3xl">📈</div>
-            </div>
-            <div class="h-72">
-                <canvas id="rainCumulativeChart"></canvas>
-            </div>
-            {{if .Data.CurrentMonth.MaxRainDay}}
-            <div class="mt-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 px-3 py-2 text-sm text-blue-800 dark:text-blue-200">
-                {{.Data.CurrentMonth.MaxRainDay.Date.Format "02.01"}} выпало {{printf "%.1f" .Data.CurrentMonth.MaxRainDay.Value}} мм — это главный скачок на графике.
-            </div>
-            {{end}}
-        </div>
-    </div>
-
-    {{if .Data.IsSeason}}
-    <!-- Season months -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6 transition-colors">
-        <div class="flex items-start justify-between gap-4 mb-5">
-            <div>
-                <div class="micro-label text-blue-600 dark:text-blue-300">Паспорт сезона</div>
-                <h3 class="text-xl font-bold text-gray-900 dark:text-white">Три месяца внутри сезона</h3>
-                <p class="text-sm text-gray-500 dark:text-gray-400">Так видно, за счёт какого месяца сложился общий характер сезона.</p>
-            </div>
-            <div class="text-3xl">🗂️</div>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {{range .Data.SeasonMonths}}
-            {{template "periodCard" .}}
-            {{end}}
-        </div>
-    </div>
-    {{end}}
-
-    {{if .Data.Daily}}
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow transition-colors">
-        <div class="flex flex-col gap-2 border-b border-gray-100 p-5 dark:border-gray-700 md:flex-row md:items-end md:justify-between">
-            <div>
-                <div class="micro-label text-blue-600 dark:text-blue-300">Суточные наблюдения</div>
-                <h3 class="text-xl font-bold text-gray-900 dark:text-white">Температура и осадки по дням</h3>
-                <p class="text-sm text-gray-500 dark:text-gray-400">Средняя — среднее из измерений станции за календарные сутки.</p>
-            </div>
-            <div class="text-sm text-gray-500 dark:text-gray-400">Данных: {{.Data.CurrentMonth.DaysWithData}}/{{.Data.CurrentMonth.DaysInPeriod}} дней</div>
-        </div>
-        <div class="max-h-[38rem] overflow-auto">
-            <table class="min-w-full text-sm tabular-nums">
-                <thead class="sticky top-0 bg-gray-50 text-xs uppercase tracking-wide text-gray-500 dark:bg-gray-900 dark:text-gray-400">
-                    <tr><th class="px-5 py-3 text-left font-semibold">Дата</th><th class="px-4 py-3 text-right font-semibold">Мин.</th><th class="px-4 py-3 text-right font-semibold">Средняя</th><th class="px-4 py-3 text-right font-semibold">Макс.</th><th class="px-5 py-3 text-right font-semibold">Осадки</th></tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                    {{range .Data.Daily}}
-                    <tr class="text-gray-700 hover:bg-blue-50/50 dark:text-gray-200 dark:hover:bg-blue-900/10">
-                        <th scope="row" class="whitespace-nowrap px-5 py-3 text-left font-semibold text-gray-900 dark:text-white">{{russianDate .Date "short"}}</th>
-                        <td class="px-4 py-3 text-right text-sky-700 dark:text-sky-300">{{if .TempMin}}{{printf "%.1f" (deref .TempMin)}}°{{else}}—{{end}}</td>
-                        <td class="px-4 py-3 text-right font-semibold">{{if .TempAvg}}{{printf "%.1f" (deref .TempAvg)}}°{{else}}—{{end}}</td>
-                        <td class="px-4 py-3 text-right text-red-700 dark:text-red-300">{{if .TempMax}}{{printf "%.1f" (deref .TempMax)}}°{{else}}—{{end}}</td>
-                        <td class="px-5 py-3 text-right text-blue-700 dark:text-blue-300">{{if .RainTotal}}{{printf "%.1f" (deref .RainTotal)}} мм{{else}}—{{end}}</td>
-                    </tr>
-                    {{end}}
-                </tbody>
+    <section class="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 dark:bg-gray-800 dark:ring-gray-700">
+        <div class="flex flex-col gap-1 border-b border-slate-100 px-5 py-4 dark:border-gray-700 md:flex-row md:items-center md:justify-between"><div><p class="text-xs font-bold uppercase tracking-[0.15em] text-blue-600 dark:text-blue-300">Суточные данные</p><h3 class="mt-1 text-xl font-bold text-slate-900 dark:text-white">Наблюдения по дням</h3></div><p class="text-sm text-slate-500 dark:text-gray-400">Все значения — из станции</p></div>
+        <div class="max-h-[40rem] overflow-auto">
+            <table class="min-w-full whitespace-nowrap text-sm tabular-nums">
+                <thead class="sticky top-0 z-10 bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:bg-gray-900 dark:text-gray-400"><tr><th class="px-5 py-3 text-left">Дата</th>{{if or (eq .Data.Metric "all") (eq .Data.Metric "temperature")}}<th class="px-3 py-3 text-right">Мин.</th><th class="px-3 py-3 text-right">Средняя</th><th class="px-3 py-3 text-right">Макс.</th>{{end}}{{if or (eq .Data.Metric "all") (eq .Data.Metric "precipitation")}}<th class="px-3 py-3 text-right">Осадки</th>{{end}}{{if or (eq .Data.Metric "all") (eq .Data.Metric "wind")}}<th class="px-3 py-3 text-right">Ветер</th><th class="px-3 py-3 text-right">Порыв</th>{{end}}{{if or (eq .Data.Metric "all") (eq .Data.Metric "air")}}<th class="px-3 py-3 text-right">Влажность</th><th class="px-3 py-3 text-right">Давление</th>{{end}}{{if or (eq .Data.Metric "all") (eq .Data.Metric "sun")}}<th class="px-3 py-3 text-right">UV</th><th class="px-5 py-3 text-right">Радиация</th>{{end}}</tr></thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-gray-700">{{range .Data.Daily}}<tr class="text-slate-700 hover:bg-blue-50/60 dark:text-gray-200 dark:hover:bg-blue-950/20"><th scope="row" class="px-5 py-3 text-left font-semibold text-slate-900 dark:text-white">{{russianDate .Date "short"}}</th>{{if or (eq $.Data.Metric "all") (eq $.Data.Metric "temperature")}}<td class="px-3 py-3 text-right text-sky-700 dark:text-sky-300">{{if .TempMin}}{{printf "%.1f" (deref .TempMin)}}°{{else}}—{{end}}</td><td class="px-3 py-3 text-right font-semibold">{{if .TempAvg}}{{printf "%.1f" (deref .TempAvg)}}°{{else}}—{{end}}</td><td class="px-3 py-3 text-right text-red-700 dark:text-red-300">{{if .TempMax}}{{printf "%.1f" (deref .TempMax)}}°{{else}}—{{end}}</td>{{end}}{{if or (eq $.Data.Metric "all") (eq $.Data.Metric "precipitation")}}<td class="px-3 py-3 text-right text-blue-700 dark:text-blue-300">{{if .RainTotal}}{{printf "%.1f" (deref .RainTotal)}} мм{{else}}—{{end}}</td>{{end}}{{if or (eq $.Data.Metric "all") (eq $.Data.Metric "wind")}}<td class="px-3 py-3 text-right">{{if .WindSpeedMax}}{{printf "%.1f" (deref .WindSpeedMax)}}{{else}}—{{end}}</td><td class="px-3 py-3 text-right">{{if .WindGustMax}}{{printf "%.1f" (deref .WindGustMax)}}{{else}}—{{end}}</td>{{end}}{{if or (eq $.Data.Metric "all") (eq $.Data.Metric "air")}}<td class="px-3 py-3 text-right">{{if .HumidityAvg}}{{deref .HumidityAvg}}%{{else}}—{{end}}</td><td class="px-3 py-3 text-right">{{if .PressureAvg}}{{printf "%.0f" (deref .PressureAvg)}}{{else}}—{{end}}</td>{{end}}{{if or (eq $.Data.Metric "all") (eq $.Data.Metric "sun")}}<td class="px-3 py-3 text-right">{{if .UVIndexMax}}{{printf "%.1f" (deref .UVIndexMax)}}{{else}}—{{end}}</td><td class="px-5 py-3 text-right">{{if .SolarRadiationMax}}{{printf "%.0f" (deref .SolarRadiationMax)}}{{else}}—{{end}}</td>{{end}}</tr>{{end}}</tbody>
             </table>
         </div>
-    </div>
+    </section>
     {{end}}
-
-    <!-- Calendar -->
-    {{if .Data.CurrentMonth.MaxRainDay}}
-    <div class="rounded-3xl border border-blue-100 bg-gradient-to-r from-blue-50 via-cyan-50 to-white p-5 shadow-sm dark:border-blue-900 dark:from-blue-950/40 dark:via-cyan-950/30 dark:to-gray-800">
-        <div class="flex items-start gap-4">
-            <div class="text-3xl">🗞️</div>
-            <div>
-                <h3 class="font-bold text-gray-900 dark:text-white">Короткая история {{.Data.CurrentPeriodGenitive}}</h3>
-                <p class="mt-1 text-sm text-gray-700 dark:text-gray-200">
-                    {{if .Data.SameMonthBenchmark.Available}}На фоне таких же {{if $.Data.IsSeason}}сезонов{{else}}месяцев{{end}} архив говорит: {{.Data.SameMonthBenchmark.Verdict}}.{{else}}Архив похожих периодов пока мал, поэтому смотрим на сезонный контекст и ближайшие недели.{{end}} Главный перелом — {{.Data.CurrentMonth.MaxRainDay.Date.Format "02.01"}}: {{printf "%.1f" .Data.CurrentMonth.MaxRainDay.Value}} мм за день, около {{.Data.RainiestDaySharePercent}}% суммы {{.Data.CurrentPeriodGenitive}}.
-                </p>
-            </div>
-        </div>
-    </div>
-    {{end}}
-    {{if not .Data.IsSeason}}
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6 transition-colors">
-        <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-5">
-            <div>
-                <h3 class="text-xl font-bold text-gray-900 dark:text-white">Календарь месяца</h3>
-                <p class="text-sm text-gray-500 dark:text-gray-400">Капли — осадки, солнце — яркий день, огонь — жара, ветер — сильные порывы.</p>
-            </div>
-            <div class="flex flex-wrap gap-2 text-xs">
-                <span class="px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200">0.2–1 мм морось</span>
-                <span class="px-2 py-1 rounded-full bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-200">💧 1–10 мм</span>
-                <span class="px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-200">🌧️ ≥10 мм</span>
-                <span class="px-2 py-1 rounded-full bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-200">☀️ солнце</span>
-                <span class="px-2 py-1 rounded-full bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-200">🔥 жара</span>
-            </div>
-        </div>
-        <div class="grid grid-cols-7 gap-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
-            <div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div>
-        </div>
-        <div class="grid grid-cols-7 gap-2">
-            {{range .Data.Calendar}}
-                {{if .IsBlank}}
-                <div class="min-h-24"></div>
-                {{else}}
-                <div title="{{.Summary}}" class="min-h-24 rounded-xl border p-2.5 text-left transition hover:-translate-y-0.5 hover:shadow-md {{.CardClass}} {{if .IsToday}}ring-2 ring-blue-500{{end}}">
-                    <div class="flex items-center justify-between mb-1">
-                        <span class="text-base font-bold text-gray-900 dark:text-white">{{.Day}}</span>
-                        <span class="text-sm leading-none">{{range .Badges}}{{.}}{{end}}</span>
-                    </div>
-                    {{if .HasData}}
-                    <div class="text-xs font-medium text-gray-700 dark:text-gray-200">{{printf "%.0f" .TempMax}}°C</div>
-                    {{if gt .RainTotal 0.0}}<div class="text-xs font-bold text-blue-700 dark:text-blue-300">{{printf "%.1f" .RainTotal}} мм</div>{{end}}
-                    {{else if .IsFuture}}
-                    <div class="text-xs text-gray-400">будет</div>
-                    {{else}}
-                    <div class="text-xs text-gray-400">нет данных</div>
-                    {{end}}
-                </div>
-                {{end}}
-            {{end}}
-        </div>
-    </div>
-    {{end}}
-
-    <!-- Timeline -->
-    {{if .Data.Timeline}}
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6 transition-colors">
-        <div class="flex items-start justify-between gap-4 mb-5">
-            <div>
-                <div class="micro-label text-blue-600 dark:text-blue-300">Лента событий</div>
-                <h3 class="text-xl font-bold text-gray-900 dark:text-white">Что произошло в этом {{.Data.CurrentPeriodPreposition}}</h3>
-                <p class="text-sm text-gray-500 dark:text-gray-400">Ключевые погодные отметки в хронологическом порядке.</p>
-            </div>
-            <div class="text-3xl">🧾</div>
-        </div>
-        <div class="relative">
-            <div class="absolute left-4 top-2 bottom-2 w-px bg-blue-100 dark:bg-blue-900/60"></div>
-            <div class="space-y-3">
-                {{range .Data.Timeline}}
-                <div class="relative pl-12">
-                    <div class="absolute left-0 top-1 grid h-8 w-8 place-items-center rounded-full bg-blue-50 text-lg ring-4 ring-white dark:bg-blue-900/30 dark:ring-gray-800">{{.Icon}}</div>
-                    <div class="rounded-lg border border-gray-100 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900/30">
-                        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-1">
-                            <h4 class="font-semibold text-gray-900 dark:text-white">{{.Title}}</h4>
-                            <span class="text-xs text-gray-500 dark:text-gray-400">{{.Date.Format "02.01.2006"}}</span>
-                        </div>
-                        <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">{{.Description}}</p>
-                    </div>
-                </div>
-                {{end}}
-            </div>
-        </div>
-    </div>
-    {{end}}
-
-    <!-- Best / worst -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {{if .Data.BestDay}}
-        <div class="bg-gradient-to-br from-emerald-50 to-green-100 dark:from-emerald-900/20 dark:to-green-900/20 rounded-xl shadow p-6 border border-emerald-100 dark:border-emerald-800">
-            <div class="text-3xl mb-3">{{.Data.BestDay.Icon}}</div>
-            <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{.Data.BestDay.Title}}</h3>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">{{.Data.BestDay.Date.Format "02.01.2006"}}</p>
-            <p class="text-gray-700 dark:text-gray-200">{{.Data.BestDay.Description}}</p>
-        </div>
-        {{end}}
-        {{if .Data.WorstDay}}
-        <div class="bg-gradient-to-br from-rose-50 to-orange-100 dark:from-rose-900/20 dark:to-orange-900/20 rounded-xl shadow p-6 border border-rose-100 dark:border-rose-800">
-            <div class="text-3xl mb-3">{{.Data.WorstDay.Icon}}</div>
-            <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{.Data.WorstDay.Title}}</h3>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">{{.Data.WorstDay.Date.Format "02.01.2006"}}</p>
-            <p class="text-gray-700 dark:text-gray-200">{{.Data.WorstDay.Description}}</p>
-        </div>
-        {{end}}
-    </div>
-
-    <!-- Period tops -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6 transition-colors">
-        <div class="flex items-center justify-between mb-5">
-            <div>
-                <h3 class="text-xl font-bold text-gray-900 dark:text-white">Топы {{.Data.CurrentPeriodGenitive}}</h3>
-                <p class="text-sm text-gray-500 dark:text-gray-400">Самые заметные дни по основным погодным параметрам.</p>
-            </div>
-            <div class="text-3xl">🏅</div>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
-            {{if .Data.CurrentMonth.MaxRainDay}}
-            <div class="rounded-lg bg-blue-50 dark:bg-blue-900/20 p-4">
-                <div class="text-sm text-gray-600 dark:text-gray-400">Самый дождливый</div>
-                <div class="mt-2 text-xl font-bold text-blue-700 dark:text-blue-300">{{.Data.CurrentMonth.MaxRainDay.Date.Format "02.01"}}</div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">{{printf "%.1f" .Data.CurrentMonth.MaxRainDay.Value}} мм</div>
-            </div>
-            {{end}}
-            {{if .Data.CurrentMonth.MaxTempDay}}
-            <div class="rounded-lg bg-red-50 dark:bg-red-900/20 p-4">
-                <div class="text-sm text-gray-600 dark:text-gray-400">Самый жаркий</div>
-                <div class="mt-2 text-xl font-bold text-red-700 dark:text-red-300">{{.Data.CurrentMonth.MaxTempDay.Date.Format "02.01"}}</div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">{{printf "%.1f" .Data.CurrentMonth.MaxTempDay.Value}}°C</div>
-            </div>
-            {{end}}
-            {{if .Data.CurrentMonth.MinTempDay}}
-            <div class="rounded-lg bg-sky-50 dark:bg-sky-900/20 p-4">
-                <div class="text-sm text-gray-600 dark:text-gray-400">Самый холодный</div>
-                <div class="mt-2 text-xl font-bold text-sky-700 dark:text-sky-300">{{.Data.CurrentMonth.MinTempDay.Date.Format "02.01"}}</div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">{{printf "%.1f" .Data.CurrentMonth.MinTempDay.Value}}°C</div>
-            </div>
-            {{end}}
-            {{if .Data.CurrentMonth.MaxWindGustDay}}
-            <div class="rounded-lg bg-teal-50 dark:bg-teal-900/20 p-4">
-                <div class="text-sm text-gray-600 dark:text-gray-400">Самый ветреный</div>
-                <div class="mt-2 text-xl font-bold text-teal-700 dark:text-teal-300">{{.Data.CurrentMonth.MaxWindGustDay.Date.Format "02.01"}}</div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">{{printf "%.1f" .Data.CurrentMonth.MaxWindGustDay.Value}} м/с</div>
-            </div>
-            {{end}}
-            {{if .Data.CurrentMonth.SunniestDay}}
-            <div class="rounded-lg bg-yellow-50 dark:bg-yellow-900/20 p-4">
-                <div class="text-sm text-gray-600 dark:text-gray-400">Самый солнечный</div>
-                <div class="mt-2 text-xl font-bold text-yellow-700 dark:text-yellow-300">{{.Data.CurrentMonth.SunniestDay.Date.Format "02.01"}}</div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">{{printf "%.0f" .Data.CurrentMonth.SunniestDay.Value}} Вт/м²</div>
-            </div>
-            {{end}}
-        </div>
-    </div>
-
-    <!-- Category summary -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6 transition-colors">
-        <div class="flex items-center justify-between mb-4">
-            <div>
-                <h3 class="text-xl font-bold text-gray-900 dark:text-white">Сводка по категориям</h3>
-                <p class="text-sm text-gray-500 dark:text-gray-400">Компактный итог по температуре, ветру и солнцу.</p>
-            </div>
-            <div class="text-3xl">🧭</div>
-        </div>
-        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            <div class="rounded-2xl bg-red-50 dark:bg-red-900/20 p-4">
-                <div class="text-xs text-gray-500 dark:text-gray-400">Средняя температура</div>
-                <div class="mt-1 text-2xl font-bold text-red-700 dark:text-red-300">{{printf "%.1f" .Data.CurrentMonth.AvgTemp}}°C</div>
-            </div>
-            <div class="rounded-2xl bg-orange-50 dark:bg-orange-900/20 p-4">
-                <div class="text-xs text-gray-500 dark:text-gray-400">Жарких дней</div>
-                <div class="mt-1 text-2xl font-bold text-orange-700 dark:text-orange-300">{{.Data.CurrentMonth.HotDays}}</div>
-            </div>
-            <div class="rounded-2xl bg-teal-50 dark:bg-teal-900/20 p-4">
-                <div class="text-xs text-gray-500 dark:text-gray-400">Ветреных дней</div>
-                <div class="mt-1 text-2xl font-bold text-teal-700 dark:text-teal-300">{{.Data.CurrentMonth.WindyDays}}</div>
-            </div>
-            <div class="rounded-2xl bg-rose-50 dark:bg-rose-900/20 p-4">
-                <div class="text-xs text-gray-500 dark:text-gray-400">Порывы ≥15 м/с</div>
-                <div class="mt-1 text-2xl font-bold text-rose-700 dark:text-rose-300">{{.Data.CurrentMonth.StrongWindDays}}</div>
-            </div>
-            <div class="rounded-2xl bg-yellow-50 dark:bg-yellow-900/20 p-4">
-                <div class="text-xs text-gray-500 dark:text-gray-400">Солнечных дней</div>
-                <div class="mt-1 text-2xl font-bold text-yellow-700 dark:text-yellow-300">{{.Data.CurrentMonth.SunnyDays}}</div>
-            </div>
-            <div class="rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 p-4">
-                <div class="text-xs text-gray-500 dark:text-gray-400">Комфортных дней</div>
-                <div class="mt-1 text-2xl font-bold text-emerald-700 dark:text-emerald-300">{{.Data.CurrentMonth.ComfortableDays}}</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5 text-sm text-gray-600 dark:text-gray-300">
-        <h3 class="font-semibold text-gray-900 dark:text-white mb-2">Как считаются показатели</h3>
-        <p>Дождливый день — от 1 мм осадков, день с осадками — от 0.2 мм. Солнечный день — максимум солнечной радиации от 500 Вт/м². Комфортный день — средняя температура 18–26°C, осадки меньше 0.2 мм и порыв ветра меньше 8 м/с.</p>
-    </div>
-</div>
-{{end}}
-
-{{define "periodCard"}}
-<div class="period-card rounded-lg p-4 transition hover:-translate-y-0.5 hover:shadow-sm">
-    <div class="flex items-start justify-between gap-3 mb-4">
-        <div>
-            <h4 class="font-bold text-gray-900 dark:text-white leading-tight">{{.Title}}</h4>
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{.StartDate.Format "02.01"}} — {{.EndDate.Format "02.01"}}, данных {{.DaysWithData}}/{{.DaysInPeriod}}</p>
-        </div>
-        <div class="text-2xl">📊</div>
-    </div>
-    <div class="grid grid-cols-2 gap-2">
-        <div class="rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20">
-            <div class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-gray-400">Осадки</div>
-            <div class="mt-1 text-xl font-black text-blue-700 dark:text-blue-300">{{printf "%.1f" .RainTotal}}</div>
-            <div class="text-[10px] text-gray-500 dark:text-gray-400">мм</div>
-        </div>
-        <div class="rounded-lg bg-cyan-50 p-3 dark:bg-cyan-900/20">
-            <div class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-gray-400">Дожди</div>
-            <div class="mt-1 text-xl font-black text-cyan-700 dark:text-cyan-300">{{.RainDays}}</div>
-            <div class="text-[10px] text-gray-500 dark:text-gray-400">дней</div>
-        </div>
-        <div class="rounded-lg bg-orange-50 p-3 dark:bg-orange-900/20">
-            <div class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-gray-400">Средняя</div>
-            <div class="mt-1 text-xl font-black text-orange-700 dark:text-orange-300">{{printf "%.1f" .AvgTemp}}°</div>
-        </div>
-        <div class="rounded-lg bg-emerald-50 p-3 dark:bg-emerald-900/20">
-            <div class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-gray-400">Комфорт</div>
-            <div class="mt-1 text-xl font-black text-emerald-700 dark:text-emerald-300">{{.ComfortableDays}}</div>
-            <div class="text-[10px] text-gray-500 dark:text-gray-400">дней</div>
-        </div>
-    </div>
-    {{if .MaxRainDay}}
-    <div class="mt-3 border-t border-gray-100 pt-3 text-xs text-gray-600 dark:border-gray-700 dark:text-gray-300">
-        Пик дождя: <b class="text-gray-900 dark:text-white">{{.MaxRainDay.Date.Format "02.01"}}, {{printf "%.1f" .MaxRainDay.Value}} мм</b>
-    </div>
-    {{end}}
-</div>
-{{end}}
-
-{{define "monthCard"}}
-<div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6 transition-colors">
-    <div class="flex items-start justify-between mb-5">
-        <div>
-            <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{.Title}}</h3>
-            <p class="text-sm text-gray-500 dark:text-gray-400">{{.StartDate.Format "02.01"}} — {{.EndDate.Format "02.01.2006"}}, данных: {{.DaysWithData}}/{{.DaysInPeriod}} дней</p>
-        </div>
-        <div class="text-3xl">📊</div>
-    </div>
-
-    <div class="grid grid-cols-2 gap-3 mb-5">
-        <div class="rounded-lg bg-cyan-50 dark:bg-cyan-900/20 p-4">
-            <div class="text-xs text-gray-500 dark:text-gray-400">Дождливых дней</div>
-            <div class="text-2xl font-bold text-cyan-700 dark:text-cyan-300">{{.RainDays}}</div>
-        </div>
-        <div class="rounded-lg bg-blue-50 dark:bg-blue-900/20 p-4">
-            <div class="text-xs text-gray-500 dark:text-gray-400">Осадки</div>
-            <div class="text-2xl font-bold text-blue-700 dark:text-blue-300">{{printf "%.1f" .RainTotal}} мм</div>
-        </div>
-        <div class="rounded-lg bg-red-50 dark:bg-red-900/20 p-4">
-            <div class="text-xs text-gray-500 dark:text-gray-400">Жарких дней</div>
-            <div class="text-2xl font-bold text-red-700 dark:text-red-300">{{.HotDays}}</div>
-        </div>
-        <div class="rounded-lg bg-emerald-50 dark:bg-emerald-900/20 p-4">
-            <div class="text-xs text-gray-500 dark:text-gray-400">Комфортных дней</div>
-            <div class="text-2xl font-bold text-emerald-700 dark:text-emerald-300">{{.ComfortableDays}}</div>
-        </div>
-    </div>
-
-    <div class="space-y-2 text-sm">
-        {{if .MaxRainDay}}
-        <div class="flex justify-between gap-4"><span class="text-gray-600 dark:text-gray-400">Самый дождливый день</span><span class="font-medium text-gray-900 dark:text-white">{{.MaxRainDay.Date.Format "02.01"}}, {{printf "%.1f" .MaxRainDay.Value}} мм</span></div>
-        {{end}}
-        {{if .MaxTempDay}}
-        <div class="flex justify-between gap-4"><span class="text-gray-600 dark:text-gray-400">Максимальная температура</span><span class="font-medium text-gray-900 dark:text-white">{{printf "%.1f" .MaxTempDay.Value}}°C</span></div>
-        {{end}}
-        {{if .MaxWindGustDay}}
-        <div class="flex justify-between gap-4"><span class="text-gray-600 dark:text-gray-400">Максимальный порыв</span><span class="font-medium text-gray-900 dark:text-white">{{printf "%.1f" .MaxWindGustDay.Value}} м/с</span></div>
-        {{end}}
-    </div>
 </div>
 {{end}}
 
 {{define "scripts"}}
 <script>
-    function initInsightsRainChart(root) {
+    function initArchiveChart(root) {
         const scope = root || document;
-        const canvas = scope.querySelector('#rainCumulativeChart');
-        const payload = scope.querySelector('#insights-rain-data');
+        const canvas = scope.querySelector('#archive-chart');
+        const payload = scope.querySelector('#archive-chart-data');
         if (!canvas || !payload || !window.Chart || canvas.dataset.chartReady) return;
-
-        let chartData;
-        try {
-            chartData = JSON.parse(payload.textContent);
-        } catch (_) {
-            return;
-        }
+        let data;
+        try { data = JSON.parse(payload.textContent); } catch (_) { return; }
         canvas.dataset.chartReady = 'true';
-        const isDark = document.documentElement.classList.contains('dark');
-        const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(15,23,42,0.08)';
-        const textColor = isDark ? 'rgba(255,255,255,0.72)' : 'rgba(15,23,42,0.72)';
-        const archiveColor = isDark ? 'rgba(226,232,240,0.85)' : 'rgb(15, 23, 42)';
-
-        new Chart(canvas.getContext('2d'), {
-            type: 'line',
-            data: {
-                labels: chartData.labels,
-                datasets: [
-                    {
-                        label: '{{if .Data.IsSeason}}Этот сезон{{else}}Этот месяц{{end}}',
-                        data: chartData.current,
-                        borderColor: 'rgb(37, 99, 235)',
-                        backgroundColor: 'rgba(37, 99, 235, 0.12)',
-                        borderWidth: 3,
-                        tension: 0.32,
-                        fill: true,
-                        spanGaps: false
-                    },
-                    {
-                        label: 'Архивная норма',
-                        data: chartData.archive,
-                        borderColor: archiveColor,
-                        borderDash: [3, 4],
-                        borderWidth: 2,
-                        pointRadius: 0,
-                        tension: 0.32,
-                        fill: false,
-                        spanGaps: false
-                    },
-                    {
-                        label: 'Прошлый {{.Data.CurrentPeriodLabel}} · справочно',
-                        data: chartData.previous,
-                        borderColor: 'rgb(14, 165, 233)',
-                        borderDash: [6, 5],
-                        borderWidth: 2,
-                        tension: 0.32,
-                        fill: false,
-                        spanGaps: false
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: { mode: 'index', intersect: false },
-                plugins: {
-                    legend: { labels: { color: textColor } },
-                    tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.formattedValue} мм` } }
-                },
-                scales: {
-                    y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor, callback: v => `${v} мм` } },
-                    x: { grid: { color: gridColor }, ticks: { color: textColor, maxTicksLimit: 12 } }
-                }
-            }
-        });
+        const dark = document.documentElement.classList.contains('dark');
+        const grid = dark ? 'rgba(255,255,255,.08)' : 'rgba(15,23,42,.1)';
+        const text = dark ? 'rgba(255,255,255,.72)' : 'rgba(15,23,42,.72)';
+        const datasets = [{ label: data.label, data: data.values, borderColor: 'rgb(37,99,235)', backgroundColor: data.type === 'bar' ? 'rgba(37,99,235,.65)' : 'rgba(37,99,235,.12)', borderWidth: 2.5, fill: data.type !== 'bar', tension: .28 }];
+        if (data.secondary && data.secondary.length) datasets.push({ label: 'Максимальная температура', data: data.secondary, borderColor: 'rgb(239,68,68)', borderWidth: 2, pointRadius: 0, tension: .28 });
+        new Chart(canvas.getContext('2d'), { type: data.type, data: { labels: data.labels, datasets }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { labels: { color: text } }, tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.formattedValue} ${data.unit}` } } }, scales: { x: { grid: { color: grid }, ticks: { color: text, maxTicksLimit: 12 } }, y: { grid: { color: grid }, ticks: { color: text } } } } });
     }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        initInsightsRainChart(document);
-    });
-    document.body.addEventListener('htmx:afterSwap', function(event) {
-        if (event.detail.target && event.detail.target.id === 'insights-content') {
-            initInsightsRainChart(event.detail.target);
-        }
-    });
+    document.addEventListener('DOMContentLoaded', () => initArchiveChart(document));
+    document.body.addEventListener('htmx:afterSwap', event => { if (event.detail.target && event.detail.target.id === 'insights-content') initArchiveChart(event.detail.target); });
 </script>
 {{end}}

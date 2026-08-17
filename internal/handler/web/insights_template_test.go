@@ -23,8 +23,9 @@ func TestInsightsTemplateRendersArchiveControls(t *testing.T) {
 
 	tempMin, tempAvg, tempMax, rain := float32(12.3), float32(18.4), float32(25.6), float32(3.7)
 	var output bytes.Buffer
-	data := PageData{ActivePage: "insights", Data: &models.WeatherInsightsPage{
-		CurrentMonth: models.MonthlyWeatherInsights{DaysWithData: 1, DaysInPeriod: 1},
+	data := PageData{ActivePage: "insights", Data: &models.WeatherArchivePage{
+		Period: "month", Metric: "all", PeriodLabel: "Август 2026", MonthParam: "2026-08", YearParam: 2026,
+		Summary: models.WeatherArchiveSummary{DaysWithData: 1, DaysInPeriod: 1, HasTemp: true, HasRain: true},
 		Daily: []models.DailyWeatherInsight{{
 			Date:    time.Date(2026, time.August, 1, 0, 0, 0, 0, time.UTC),
 			TempMin: &tempMin, TempAvg: &tempAvg, TempMax: &tempMax, RainTotal: &rain,
