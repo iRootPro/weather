@@ -31,41 +31,24 @@ type WeatherArchiveSummary struct {
 	HasSun            bool    `json:"has_sun"`
 }
 
-// WeatherArchiveChart is a compact chart payload generated from daily aggregates.
-type WeatherArchiveChart struct {
-	Labels    []string  `json:"labels"`
-	Values    []float64 `json:"values"`
-	Secondary []float64 `json:"secondary,omitempty"`
-	Label     string    `json:"label"`
-	Unit      string    `json:"unit"`
-	Type      string    `json:"type"`
-}
-
 // WeatherArchivePage is the data contract for the interactive HTMX weather archive.
 type WeatherArchivePage struct {
 	GeneratedAt time.Time `json:"generated_at"`
 
-	Period      string `json:"period"`
-	Metric      string `json:"metric"`
-	PeriodLabel string `json:"period_label"`
-	FromParam   string `json:"from_param"`
-	ToParam     string `json:"to_param"`
-	MonthParam  string `json:"month_param"`
-	SeasonParam string `json:"season_param"`
-	YearParam   int    `json:"year_param"`
+	Period         string `json:"period"`
+	Metric         string `json:"metric"`
+	PeriodLabel    string `json:"period_label"`
+	FromParam      string `json:"from_param"`
+	ToParam        string `json:"to_param"`
+	FirstDateParam string `json:"first_date_param"`
+	LastDateParam  string `json:"last_date_param"`
+	MonthParam     string `json:"month_param"`
+	SeasonParam    string `json:"season_param"`
+	YearParam      int    `json:"year_param"`
 
 	SeasonOptions []WeatherInsightsPeriodOption `json:"season_options"`
 	YearOptions   []int                         `json:"year_options"`
 
-	Summary             WeatherArchiveSummary `json:"summary"`
-	PreviousSummary     WeatherArchiveSummary `json:"previous_summary"`
-	PreviousPeriodLabel string                `json:"previous_period_label"`
-	HasPreviousPeriod   bool                  `json:"has_previous_period"`
-	TemperatureDelta    float64               `json:"temperature_delta"`
-	PrecipitationDelta  float64               `json:"precipitation_delta"`
-	WindGustDelta       float64               `json:"wind_gust_delta"`
-	HumidityDelta       float64               `json:"humidity_delta"`
-	PressureDelta       float64               `json:"pressure_delta"`
-	Daily               []DailyWeatherInsight `json:"daily"`
-	Chart               WeatherArchiveChart   `json:"chart"`
+	Summary WeatherArchiveSummary `json:"summary"`
+	Daily   []DailyWeatherInsight `json:"daily"`
 }

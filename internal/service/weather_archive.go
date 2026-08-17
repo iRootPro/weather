@@ -16,10 +16,9 @@ var (
 	ErrInvalidArchiveRange  = errors.New("invalid archive date range")
 )
 
-const archiveFirstYear = 2023
+const archiveAvailabilityYears = 10
 
 // GetArchive returns station observations for a calendar period or an inclusive custom range.
-// Comparisons always use a previous equivalent period; this is not a climatic normal.
 func (s *WeatherService) GetArchive(ctx context.Context, period, metric, monthParam, seasonParam, yearParam, fromParam, toParam string) (*models.WeatherArchivePage, error) {
 	loc := s.location
 	if loc == nil {
@@ -33,7 +32,7 @@ func (s *WeatherService) GetArchive(ctx context.Context, period, metric, monthPa
 	}
 	metric = normalizeArchiveMetric(metric)
 
-	start, end, label, previousLabel, err := resolveArchivePeriod(period, monthParam, seasonParam, yearParam, fromParam, toParam, now, loc)
+	start, end, label, err := resolveArchivePeriod(period, monthParam, seasonParam, yearParam, fromParam, toParam, now, loc)
 	if err != nil {
 		return nil, err
 	}
@@ -55,43 +54,34 @@ func (s *WeatherService) GetArchive(ctx context.Context, period, metric, monthPa
 	if err != nil {
 		return nil, err
 	}
-
-	previousStart, previousEnd := archivePreviousPeriod(period, start, end, daysInPeriod, loc)
-	previousDays, err := s.repo.GetDailyInsights(ctx, previousStart, previousEnd, s.timezone)
+	availabilityStart := time.Date(now.Year()-archiveAvailabilityYears, time.January, 1, 0, 0, 0, 0, loc)
+	availabilityDays, err := s.repo.GetDailyInsights(ctx, availabilityStart, now, s.timezone)
 	if err != nil {
 		return nil, err
 	}
+	firstDate, lastDate := archiveDateBounds(availabilityDays, now, loc)
 
-	summary := buildArchiveSummary(currentDays, daysInPeriod)
-	previous := buildArchiveSummary(previousDays, daysBetween(previousStart, previousEnd))
 	page := &models.WeatherArchivePage{
-		GeneratedAt:         now,
-		Period:              period,
-		Metric:              metric,
-		PeriodLabel:         label,
-		FromParam:           start.Format("2006-01-02"),
-		ToParam:             calendarEnd.AddDate(0, 0, -1).Format("2006-01-02"),
-		MonthParam:          start.Format("2006-01"),
-		SeasonParam:         seasonParamForDate(start, loc),
-		YearParam:           start.Year(),
-		SeasonOptions:       archiveSeasonOptions(now, loc),
-		YearOptions:         archiveYearOptions(now.Year()),
-		Summary:             summary,
-		PreviousSummary:     previous,
-		PreviousPeriodLabel: previousLabel,
-		HasPreviousPeriod:   previous.DaysWithData > 0,
-		TemperatureDelta:    summary.TempAvg - previous.TempAvg,
-		PrecipitationDelta:  summary.RainTotal - previous.RainTotal,
-		WindGustDelta:       summary.WindGustMax - previous.WindGustMax,
-		HumidityDelta:       summary.HumidityAvg - previous.HumidityAvg,
-		PressureDelta:       summary.PressureAvg - previous.PressureAvg,
-		Daily:               currentDays,
-		Chart:               buildArchiveChart(currentDays, metric),
+		GeneratedAt:    now,
+		Period:         period,
+		Metric:         metric,
+		PeriodLabel:    label,
+		FromParam:      start.Format("2006-01-02"),
+		ToParam:        calendarEnd.AddDate(0, 0, -1).Format("2006-01-02"),
+		FirstDateParam: firstDate.Format("2006-01-02"),
+		LastDateParam:  lastDate.Format("2006-01-02"),
+		MonthParam:     start.Format("2006-01"),
+		SeasonParam:    seasonParamForDate(start, loc),
+		YearParam:      start.Year(),
+		SeasonOptions:  archiveSeasonOptions(availabilityDays, now, loc),
+		YearOptions:    archiveYearOptions(availabilityDays, now),
+		Summary:        buildArchiveSummary(currentDays, daysInPeriod),
+		Daily:          currentDays,
 	}
 	return page, nil
 }
 
-func resolveArchivePeriod(period, monthParam, seasonParam, yearParam, fromParam, toParam string, now time.Time, loc *time.Location) (time.Time, time.Time, string, string, error) {
+func resolveArchivePeriod(period, monthParam, seasonParam, yearParam, fromParam, toParam string, now time.Time, loc *time.Location) (time.Time, time.Time, string, error) {
 	currentMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, loc)
 	switch period {
 	case "month":
@@ -99,78 +89,85 @@ func resolveArchivePeriod(period, monthParam, seasonParam, yearParam, fromParam,
 		if monthParam != "" {
 			parsed, err := time.ParseInLocation("2006-01", monthParam, loc)
 			if err != nil {
-				return time.Time{}, time.Time{}, "", "", ErrInvalidArchivePeriod
+				return time.Time{}, time.Time{}, "", ErrInvalidArchivePeriod
 			}
 			start = parsed
 		}
 		if start.After(currentMonth) {
-			return time.Time{}, time.Time{}, "", "", ErrInvalidArchiveRange
+			return time.Time{}, time.Time{}, "", ErrInvalidArchiveRange
 		}
-		return start, start.AddDate(0, 1, 0), russianMonthYear(start), "Тот же месяц год назад", nil
+		return start, start.AddDate(0, 1, 0), russianMonthYear(start), nil
 	case "season":
 		start, end := seasonBounds(now, loc)
 		selectedYear, selectedCode := seasonIDFromStart(start)
 		if seasonParam != "" {
 			parsedYear, parsedCode, err := parseSeasonParam(seasonParam)
 			if err != nil {
-				return time.Time{}, time.Time{}, "", "", ErrInvalidArchivePeriod
+				return time.Time{}, time.Time{}, "", ErrInvalidArchivePeriod
 			}
 			candidateStart, candidateEnd := seasonBoundsByID(parsedYear, parsedCode, loc)
 			if candidateStart.After(start) {
-				return time.Time{}, time.Time{}, "", "", ErrInvalidArchiveRange
+				return time.Time{}, time.Time{}, "", ErrInvalidArchiveRange
 			}
 			start, end, selectedYear, selectedCode = candidateStart, candidateEnd, parsedYear, parsedCode
 		}
-		return start, end, seasonLabel(selectedYear, selectedCode), "Тот же сезон год назад", nil
+		return start, end, seasonLabel(selectedYear, selectedCode), nil
 	case "year":
 		year := now.Year()
 		if yearParam != "" {
-			if _, err := fmt.Sscanf(yearParam, "%d", &year); err != nil || year < archiveFirstYear || year > now.Year() {
-				return time.Time{}, time.Time{}, "", "", ErrInvalidArchivePeriod
+			if _, err := fmt.Sscanf(yearParam, "%d", &year); err != nil || year < 2000 || year > now.Year() {
+				return time.Time{}, time.Time{}, "", ErrInvalidArchivePeriod
 			}
 		}
 		start := time.Date(year, time.January, 1, 0, 0, 0, 0, loc)
-		return start, start.AddDate(1, 0, 0), fmt.Sprintf("%d год", year), "Предыдущий год", nil
+		return start, start.AddDate(1, 0, 0), fmt.Sprintf("%d год", year), nil
 	case "range":
 		start, errStart := time.ParseInLocation("2006-01-02", fromParam, loc)
 		endDate, errEnd := time.ParseInLocation("2006-01-02", toParam, loc)
 		if errStart != nil || errEnd != nil || endDate.Before(start) || daysBetween(start, endDate.AddDate(0, 0, 1)) > 366 {
-			return time.Time{}, time.Time{}, "", "", ErrInvalidArchiveRange
+			return time.Time{}, time.Time{}, "", ErrInvalidArchiveRange
 		}
-		return start, endDate.AddDate(0, 0, 1), fmt.Sprintf("%s — %s", start.Format("02.01.2006"), endDate.Format("02.01.2006")), "Предыдущий равный диапазон", nil
+		return start, endDate.AddDate(0, 0, 1), fmt.Sprintf("%s — %s", start.Format("02.01.2006"), endDate.Format("02.01.2006")), nil
 	default:
-		return time.Time{}, time.Time{}, "", "", ErrInvalidArchivePeriod
+		return time.Time{}, time.Time{}, "", ErrInvalidArchivePeriod
 	}
 }
 
-func archivePreviousPeriod(period string, start, end time.Time, days int, loc *time.Location) (time.Time, time.Time) {
-	switch period {
-	case "month":
-		previousStart := start.AddDate(-1, 0, 0)
-		previousEnd := minTime(previousStart.AddDate(0, 0, days), previousStart.AddDate(0, 1, 0))
-		return previousStart, previousEnd
-	case "season":
-		year, code := seasonIDFromStart(start)
-		previousStart, previousFullEnd := seasonBoundsByID(year-1, code, loc)
-		return previousStart, minTime(previousStart.AddDate(0, 0, days), previousFullEnd)
-	case "year":
-		previousStart := start.AddDate(-1, 0, 0)
-		return previousStart, previousStart.AddDate(0, 0, days)
-	default: // custom range: immediately preceding range of equal length
-		return start.AddDate(0, 0, -days), start
+func archiveDateBounds(days []models.DailyWeatherInsight, now time.Time, loc *time.Location) (time.Time, time.Time) {
+	if len(days) == 0 {
+		return dayStart(now, loc), dayStart(now, loc)
 	}
+	return days[0].Date.In(loc), days[len(days)-1].Date.In(loc)
 }
 
-func archiveSeasonOptions(now time.Time, loc *time.Location) []models.WeatherInsightsPeriodOption {
+func archiveSeasonOptions(days []models.DailyWeatherInsight, now time.Time, loc *time.Location) []models.WeatherInsightsPeriodOption {
+	available := make(map[string]bool)
+	for _, day := range days {
+		available[seasonParamForDate(day.Date, loc)] = true
+	}
+	options := make([]models.WeatherInsightsPeriodOption, 0, len(available))
 	start, _ := seasonBounds(now, loc)
-	year, code := seasonIDFromStart(start)
-	return buildSeasonOptions(year, code)
+	for len(options) < len(available) {
+		year, code := seasonIDFromStart(start)
+		param := formatSeasonParam(year, code)
+		if available[param] {
+			options = append(options, models.WeatherInsightsPeriodOption{Value: param, Label: seasonLabel(year, code)})
+		}
+		start = start.AddDate(0, -3, 0)
+	}
+	return options
 }
 
-func archiveYearOptions(currentYear int) []int {
-	years := make([]int, 0, currentYear-archiveFirstYear+1)
-	for year := currentYear; year >= archiveFirstYear; year-- {
-		years = append(years, year)
+func archiveYearOptions(days []models.DailyWeatherInsight, now time.Time) []int {
+	available := make(map[int]bool)
+	for _, day := range days {
+		available[day.Date.Year()] = true
+	}
+	years := make([]int, 0, len(available))
+	for year := now.Year(); year >= 2000; year-- {
+		if available[year] {
+			years = append(years, year)
+		}
 	}
 	return years
 }
@@ -256,44 +253,4 @@ func buildArchiveSummary(days []models.DailyWeatherInsight, daysInPeriod int) mo
 		summary.PressureAvg = pressureSum / float64(pressureCount)
 	}
 	return summary
-}
-
-func buildArchiveChart(days []models.DailyWeatherInsight, metric string) models.WeatherArchiveChart {
-	chart := models.WeatherArchiveChart{Labels: make([]string, 0, len(days)), Values: make([]float64, 0, len(days)), Type: "line"}
-	if metric == "precipitation" {
-		chart.Label, chart.Unit, chart.Type = "Осадки за сутки", "мм", "bar"
-	} else if metric == "wind" {
-		chart.Label, chart.Unit = "Максимальный порыв", "м/с"
-	} else if metric == "air" {
-		chart.Label, chart.Unit = "Среднее давление", "гПа"
-	} else if metric == "sun" {
-		chart.Label, chart.Unit = "Максимальный UV", "UV"
-	} else {
-		chart.Label, chart.Unit = "Средняя температура", "°C"
-		chart.Secondary = make([]float64, 0, len(days))
-	}
-	for _, day := range days {
-		chart.Labels = append(chart.Labels, day.Date.Format("02.01"))
-		switch metric {
-		case "precipitation":
-			chart.Values = append(chart.Values, archiveFloat32(day.RainTotal))
-		case "wind":
-			chart.Values = append(chart.Values, archiveFloat32(day.WindGustMax))
-		case "air":
-			chart.Values = append(chart.Values, archiveFloat32(day.PressureAvg))
-		case "sun":
-			chart.Values = append(chart.Values, archiveFloat32(day.UVIndexMax))
-		default:
-			chart.Values = append(chart.Values, archiveFloat32(day.TempAvg))
-			chart.Secondary = append(chart.Secondary, archiveFloat32(day.TempMax))
-		}
-	}
-	return chart
-}
-
-func archiveFloat32(value *float32) float64 {
-	if value == nil {
-		return 0
-	}
-	return float64(*value)
 }

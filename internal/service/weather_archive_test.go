@@ -11,11 +11,10 @@ func TestResolveArchivePeriod(t *testing.T) {
 	loc := time.FixedZone("test", 3*60*60)
 	now := time.Date(2026, time.August, 17, 12, 0, 0, 0, loc)
 	tests := []struct {
-		name               string
-		period, month      string
-		season, year       string
-		from, to           string
-		wantStart, wantEnd string
+		name                  string
+		period, month, season string
+		year, from, to        string
+		wantStart, wantEnd    string
 	}{
 		{name: "month", period: "month", month: "2026-02", wantStart: "2026-02-01", wantEnd: "2026-03-01"},
 		{name: "winter", period: "season", season: "2026-winter", wantStart: "2025-12-01", wantEnd: "2026-03-01"},
@@ -24,7 +23,7 @@ func TestResolveArchivePeriod(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			start, end, _, _, err := resolveArchivePeriod(tt.period, tt.month, tt.season, tt.year, tt.from, tt.to, now, loc)
+			start, end, _, err := resolveArchivePeriod(tt.period, tt.month, tt.season, tt.year, tt.from, tt.to, now, loc)
 			if err != nil {
 				t.Fatalf("resolveArchivePeriod() error = %v", err)
 			}
@@ -40,9 +39,26 @@ func TestResolveArchivePeriod(t *testing.T) {
 
 func TestResolveArchivePeriodRejectsLongRange(t *testing.T) {
 	loc := time.UTC
-	_, _, _, _, err := resolveArchivePeriod("range", "", "", "", "2024-01-01", "2025-01-02", time.Date(2026, 1, 1, 0, 0, 0, 0, loc), loc)
+	_, _, _, err := resolveArchivePeriod("range", "", "", "", "2024-01-01", "2025-01-02", time.Date(2026, 1, 1, 0, 0, 0, 0, loc), loc)
 	if err != ErrInvalidArchiveRange {
 		t.Fatalf("error = %v, want %v", err, ErrInvalidArchiveRange)
+	}
+}
+
+func TestArchiveOptionsOnlyContainYearsAndSeasonsWithData(t *testing.T) {
+	loc := time.UTC
+	days := []models.DailyWeatherInsight{
+		{Date: time.Date(2026, time.January, 10, 0, 0, 0, 0, loc)},
+		{Date: time.Date(2026, time.April, 10, 0, 0, 0, 0, loc)},
+		{Date: time.Date(2026, time.August, 10, 0, 0, 0, 0, loc)},
+	}
+	years := archiveYearOptions(days, time.Date(2026, time.August, 17, 0, 0, 0, 0, loc))
+	if len(years) != 1 || years[0] != 2026 {
+		t.Fatalf("years = %v, want [2026]", years)
+	}
+	seasons := archiveSeasonOptions(days, time.Date(2026, time.August, 17, 0, 0, 0, 0, loc), loc)
+	if len(seasons) != 3 || seasons[0].Value != "2026-summer" || seasons[2].Value != "2026-winter" {
+		t.Fatalf("unexpected seasons = %#v", seasons)
 	}
 }
 
