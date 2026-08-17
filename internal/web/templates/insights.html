@@ -26,7 +26,7 @@
             <a href="/insights?period=range&amp;from={{.Data.FromParam}}&amp;to={{.Data.ToParam}}&amp;metric={{.Data.Metric}}" hx-boost="true" hx-target="#insights-content" hx-select="#insights-content" hx-swap="outerHTML" hx-push-url="true" class="rounded-lg px-4 py-2 text-sm font-semibold {{if eq .Data.Period "range"}}bg-blue-600 text-white shadow-sm{{else}}bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-gray-700 dark:text-gray-200{{end}}">Диапазон</a>
         </div>
 
-        <form method="get" action="/insights" class="mt-4 flex flex-col gap-4 xl:flex-row xl:items-end" hx-get="/insights" hx-target="#insights-content" hx-select="#insights-content" hx-swap="outerHTML" hx-push-url="true" hx-indicator="#archive-loading">
+        <form method="get" action="/insights" class="mt-4 flex flex-col gap-4 md:flex-row md:flex-wrap md:items-end" hx-get="/insights" hx-target="#insights-content" hx-select="#insights-content" hx-swap="outerHTML" hx-push-url="true" hx-indicator="#archive-loading">
             <input type="hidden" name="period" value="{{.Data.Period}}">
             {{if eq .Data.Period "month"}}
             <label class="block min-w-48 text-sm font-semibold text-slate-700 dark:text-gray-200">Месяц
