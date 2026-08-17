@@ -60,6 +60,7 @@ func (s *WeatherService) GetArchive(ctx context.Context, period, metric, monthPa
 		return nil, err
 	}
 	firstDate, lastDate := archiveDateBounds(availabilityDays, now, loc)
+	coverage := buildArchiveCoverage(start, calendarEnd, currentDays, availabilityDays, loc)
 
 	page := &models.WeatherArchivePage{
 		GeneratedAt:    now,
@@ -76,6 +77,7 @@ func (s *WeatherService) GetArchive(ctx context.Context, period, metric, monthPa
 		SeasonOptions:  archiveSeasonOptions(availabilityDays, now, loc),
 		YearOptions:    archiveYearOptions(availabilityDays, now),
 		Summary:        buildArchiveSummary(currentDays, daysInPeriod),
+		Coverage:       coverage,
 		Daily:          currentDays,
 	}
 	return page, nil
@@ -176,6 +178,45 @@ func seasonParamForDate(date time.Time, loc *time.Location) string {
 	start, _ := seasonBounds(date, loc)
 	year, code := seasonIDFromStart(start)
 	return formatSeasonParam(year, code)
+}
+
+func buildArchiveCoverage(start, end time.Time, periodDays, availabilityDays []models.DailyWeatherInsight, loc *time.Location) models.WeatherArchiveCoverage {
+	coverage := models.WeatherArchiveCoverage{
+		ExpectedDays: daysBetween(start, end),
+		CoveredDays:  len(periodDays),
+		Gaps:         make([]models.WeatherArchiveGap, 0),
+	}
+	if len(availabilityDays) > 0 {
+		coverage.FirstObserved = availabilityDays[0].Date.In(loc)
+		coverage.LastObserved = availabilityDays[len(availabilityDays)-1].Date.In(loc)
+	}
+
+	available := make(map[string]bool, len(periodDays))
+	for _, day := range periodDays {
+		available[day.Date.In(loc).Format("2006-01-02")] = true
+	}
+	var gapStart time.Time
+	for day := start; day.Before(end); day = day.AddDate(0, 0, 1) {
+		if available[day.Format("2006-01-02")] {
+			if !gapStart.IsZero() {
+				gapDays := daysBetween(gapStart, day)
+				coverage.Gaps = append(coverage.Gaps, models.WeatherArchiveGap{From: gapStart, To: day.AddDate(0, 0, -1), Days: gapDays})
+				coverage.LongestGapDays = maxInt(coverage.LongestGapDays, gapDays)
+				gapStart = time.Time{}
+			}
+			continue
+		}
+		coverage.MissingDays++
+		if gapStart.IsZero() {
+			gapStart = day
+		}
+	}
+	if !gapStart.IsZero() {
+		gapDays := daysBetween(gapStart, end)
+		coverage.Gaps = append(coverage.Gaps, models.WeatherArchiveGap{From: gapStart, To: end.AddDate(0, 0, -1), Days: gapDays})
+		coverage.LongestGapDays = maxInt(coverage.LongestGapDays, gapDays)
+	}
+	return coverage
 }
 
 func normalizeArchiveMetric(metric string) string {

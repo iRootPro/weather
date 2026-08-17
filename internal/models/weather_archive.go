@@ -31,6 +31,24 @@ type WeatherArchiveSummary struct {
 	HasSun            bool    `json:"has_sun"`
 }
 
+// WeatherArchiveGap is a consecutive interval with no station measurements.
+type WeatherArchiveGap struct {
+	From time.Time `json:"from"`
+	To   time.Time `json:"to"`
+	Days int       `json:"days"`
+}
+
+// WeatherArchiveCoverage describes daily availability, not sensor calibration or accuracy.
+type WeatherArchiveCoverage struct {
+	ExpectedDays   int                 `json:"expected_days"`
+	CoveredDays    int                 `json:"covered_days"`
+	MissingDays    int                 `json:"missing_days"`
+	LongestGapDays int                 `json:"longest_gap_days"`
+	FirstObserved  time.Time           `json:"first_observed"`
+	LastObserved   time.Time           `json:"last_observed"`
+	Gaps           []WeatherArchiveGap `json:"gaps"`
+}
+
 // WeatherArchivePage is the data contract for the interactive HTMX weather archive.
 type WeatherArchivePage struct {
 	GeneratedAt time.Time `json:"generated_at"`
@@ -49,6 +67,7 @@ type WeatherArchivePage struct {
 	SeasonOptions []WeatherInsightsPeriodOption `json:"season_options"`
 	YearOptions   []int                         `json:"year_options"`
 
-	Summary WeatherArchiveSummary `json:"summary"`
-	Daily   []DailyWeatherInsight `json:"daily"`
+	Summary  WeatherArchiveSummary  `json:"summary"`
+	Coverage WeatherArchiveCoverage `json:"coverage"`
+	Daily    []DailyWeatherInsight  `json:"daily"`
 }

@@ -62,6 +62,23 @@ func TestArchiveOptionsOnlyContainYearsAndSeasonsWithData(t *testing.T) {
 	}
 }
 
+func TestBuildArchiveCoverageFindsConsecutiveMissingDays(t *testing.T) {
+	loc := time.UTC
+	start := time.Date(2026, time.August, 1, 0, 0, 0, 0, loc)
+	periodDays := []models.DailyWeatherInsight{
+		{Date: start},
+		{Date: start.AddDate(0, 0, 3)},
+		{Date: start.AddDate(0, 0, 4)},
+	}
+	coverage := buildArchiveCoverage(start, start.AddDate(0, 0, 5), periodDays, periodDays, loc)
+	if coverage.ExpectedDays != 5 || coverage.CoveredDays != 3 || coverage.MissingDays != 2 {
+		t.Fatalf("unexpected coverage: %#v", coverage)
+	}
+	if len(coverage.Gaps) != 1 || coverage.Gaps[0].Days != 2 || coverage.LongestGapDays != 2 {
+		t.Fatalf("unexpected gaps: %#v", coverage.Gaps)
+	}
+}
+
 func TestBuildArchiveSummaryUsesDailyValues(t *testing.T) {
 	min1, avg1, max1, rain1, humidity1, pressure1 := float32(10), float32(15), float32(20), float32(2), int16(40), float32(750)
 	min2, avg2, max2, rain2, humidity2, pressure2 := float32(5), float32(25), float32(30), float32(0), int16(60), float32(770)
