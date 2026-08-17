@@ -223,10 +223,11 @@ func (h *Handler) Insights(w http.ResponseWriter, r *http.Request) {
 		r.Context(),
 		query.Get("period"), query.Get("metric"), query.Get("month"), query.Get("season"),
 		query.Get("year"), query.Get("from"), query.Get("to"),
+		query.Get("search_field"), query.Get("search_comparison"), query.Get("search_threshold"),
 	)
 	if err != nil {
-		if errors.Is(err, service.ErrInvalidArchivePeriod) || errors.Is(err, service.ErrInvalidArchiveRange) {
-			http.Error(w, "Некорректный период архива", http.StatusBadRequest)
+		if errors.Is(err, service.ErrInvalidArchivePeriod) || errors.Is(err, service.ErrInvalidArchiveRange) || errors.Is(err, service.ErrInvalidArchiveSearch) {
+			http.Error(w, "Некорректные параметры архива", http.StatusBadRequest)
 			return
 		}
 		slog.Error("failed to get weather archive", "error", err)

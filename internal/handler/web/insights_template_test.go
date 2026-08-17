@@ -41,6 +41,9 @@ func TestInsightsTemplateRendersArchiveControls(t *testing.T) {
 	if !bytes.Contains(output.Bytes(), []byte(`hx-get="/insights"`)) {
 		t.Fatal("archive period form is not HTMX-enabled")
 	}
+	if !bytes.Contains(output.Bytes(), []byte(`name="search_field"`)) || !bytes.Contains(output.Bytes(), []byte("Найти дни по условию")) {
+		t.Fatal("archive day search controls are missing")
+	}
 	if !bytes.Contains(output.Bytes(), []byte("12.3°")) || !bytes.Contains(output.Bytes(), []byte("3.7 мм")) {
 		t.Fatal("daily pointer values were not rendered as measurements")
 	}

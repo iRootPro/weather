@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"strconv"
 	"strings"
 	"time"
 
@@ -14,12 +15,13 @@ import (
 var (
 	ErrInvalidArchivePeriod = errors.New("invalid archive period")
 	ErrInvalidArchiveRange  = errors.New("invalid archive date range")
+	ErrInvalidArchiveSearch = errors.New("invalid archive day search")
 )
 
 const archiveAvailabilityYears = 10
 
 // GetArchive returns station observations for a calendar period or an inclusive custom range.
-func (s *WeatherService) GetArchive(ctx context.Context, period, metric, monthParam, seasonParam, yearParam, fromParam, toParam string) (*models.WeatherArchivePage, error) {
+func (s *WeatherService) GetArchive(ctx context.Context, period, metric, monthParam, seasonParam, yearParam, fromParam, toParam, searchField, searchComparison, searchThreshold string) (*models.WeatherArchivePage, error) {
 	loc := s.location
 	if loc == nil {
 		loc = time.Local
@@ -31,6 +33,10 @@ func (s *WeatherService) GetArchive(ctx context.Context, period, metric, monthPa
 		period = "month"
 	}
 	metric = normalizeArchiveMetric(metric)
+	search, err := resolveArchiveDaySearch(searchField, searchComparison, searchThreshold)
+	if err != nil {
+		return nil, err
+	}
 
 	start, end, label, err := resolveArchivePeriod(period, monthParam, seasonParam, yearParam, fromParam, toParam, now, loc)
 	if err != nil {
@@ -61,6 +67,8 @@ func (s *WeatherService) GetArchive(ctx context.Context, period, metric, monthPa
 	}
 	firstDate, lastDate := archiveDateBounds(availabilityDays, now, loc)
 	coverage := buildArchiveCoverage(start, calendarEnd, currentDays, availabilityDays, loc)
+	displayDays := filterArchiveDays(currentDays, search)
+	search.MatchedDays = len(displayDays)
 
 	page := &models.WeatherArchivePage{
 		GeneratedAt:    now,
@@ -78,7 +86,8 @@ func (s *WeatherService) GetArchive(ctx context.Context, period, metric, monthPa
 		YearOptions:    archiveYearOptions(availabilityDays, now),
 		Summary:        buildArchiveSummary(currentDays, daysInPeriod),
 		Coverage:       coverage,
-		Daily:          currentDays,
+		Search:         search,
+		Daily:          displayDays,
 	}
 	return page, nil
 }
@@ -217,6 +226,94 @@ func buildArchiveCoverage(start, end time.Time, periodDays, availabilityDays []m
 		coverage.LongestGapDays = maxInt(coverage.LongestGapDays, gapDays)
 	}
 	return coverage
+}
+
+func resolveArchiveDaySearch(field, comparison, thresholdParam string) (models.WeatherArchiveDaySearch, error) {
+	field = strings.ToLower(strings.TrimSpace(field))
+	if field == "" {
+		return models.WeatherArchiveDaySearch{}, nil
+	}
+	labels := map[string]string{
+		"temp_max": "максимальная температура",
+		"temp_min": "минимальная температура",
+		"rain":     "осадки за сутки",
+		"gust":     "максимальный порыв",
+		"uv":       "максимальный UV-индекс",
+	}
+	label, ok := labels[field]
+	if !ok {
+		return models.WeatherArchiveDaySearch{}, ErrInvalidArchiveSearch
+	}
+	comparison = strings.ToLower(strings.TrimSpace(comparison))
+	if comparison != "gte" && comparison != "lte" {
+		return models.WeatherArchiveDaySearch{}, ErrInvalidArchiveSearch
+	}
+	threshold, err := strconv.ParseFloat(strings.TrimSpace(thresholdParam), 64)
+	if err != nil || math.IsNaN(threshold) || math.IsInf(threshold, 0) {
+		return models.WeatherArchiveDaySearch{}, ErrInvalidArchiveSearch
+	}
+	operator := "≥"
+	if comparison == "lte" {
+		operator = "≤"
+	}
+	units := map[string]string{"temp_max": "°C", "temp_min": "°C", "rain": "мм", "gust": "м/с", "uv": ""}
+	description := fmt.Sprintf("%s %s %s", label, operator, formatArchiveSearchThreshold(threshold, units[field]))
+	return models.WeatherArchiveDaySearch{Active: true, Field: field, Comparison: comparison, Threshold: threshold, Description: description}, nil
+}
+
+func formatArchiveSearchThreshold(value float64, unit string) string {
+	formatted := strings.TrimRight(strings.TrimRight(fmt.Sprintf("%.2f", value), "0"), ".")
+	if unit != "" {
+		formatted += " " + unit
+	}
+	return formatted
+}
+
+func filterArchiveDays(days []models.DailyWeatherInsight, search models.WeatherArchiveDaySearch) []models.DailyWeatherInsight {
+	if !search.Active {
+		return days
+	}
+	matches := make([]models.DailyWeatherInsight, 0)
+	for _, day := range days {
+		value, ok := archiveDaySearchValue(day, search.Field)
+		if !ok {
+			continue
+		}
+		matchesCondition := value >= search.Threshold
+		if search.Comparison == "lte" {
+			matchesCondition = value <= search.Threshold
+		}
+		if matchesCondition {
+			matches = append(matches, day)
+		}
+	}
+	return matches
+}
+
+func archiveDaySearchValue(day models.DailyWeatherInsight, field string) (float64, bool) {
+	switch field {
+	case "temp_max":
+		if day.TempMax != nil {
+			return float64(*day.TempMax), true
+		}
+	case "temp_min":
+		if day.TempMin != nil {
+			return float64(*day.TempMin), true
+		}
+	case "rain":
+		if day.RainTotal != nil {
+			return float64(*day.RainTotal), true
+		}
+	case "gust":
+		if day.WindGustMax != nil {
+			return float64(*day.WindGustMax), true
+		}
+	case "uv":
+		if day.UVIndexMax != nil {
+			return float64(*day.UVIndexMax), true
+		}
+	}
+	return 0, false
 }
 
 func normalizeArchiveMetric(metric string) string {

@@ -49,6 +49,16 @@ type WeatherArchiveCoverage struct {
 	Gaps           []WeatherArchiveGap `json:"gaps"`
 }
 
+// WeatherArchiveDaySearch is an optional condition used to find matching days.
+type WeatherArchiveDaySearch struct {
+	Active      bool    `json:"active"`
+	Field       string  `json:"field"`
+	Comparison  string  `json:"comparison"`
+	Threshold   float64 `json:"threshold"`
+	Description string  `json:"description"`
+	MatchedDays int     `json:"matched_days"`
+}
+
 // WeatherArchivePage is the data contract for the interactive HTMX weather archive.
 type WeatherArchivePage struct {
 	GeneratedAt time.Time `json:"generated_at"`
@@ -67,7 +77,8 @@ type WeatherArchivePage struct {
 	SeasonOptions []WeatherInsightsPeriodOption `json:"season_options"`
 	YearOptions   []int                         `json:"year_options"`
 
-	Summary  WeatherArchiveSummary  `json:"summary"`
-	Coverage WeatherArchiveCoverage `json:"coverage"`
-	Daily    []DailyWeatherInsight  `json:"daily"`
+	Summary  WeatherArchiveSummary   `json:"summary"`
+	Coverage WeatherArchiveCoverage  `json:"coverage"`
+	Search   WeatherArchiveDaySearch `json:"search"`
+	Daily    []DailyWeatherInsight   `json:"daily"`
 }

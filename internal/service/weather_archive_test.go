@@ -62,6 +62,30 @@ func TestArchiveOptionsOnlyContainYearsAndSeasonsWithData(t *testing.T) {
 	}
 }
 
+func TestArchiveDaySearchFiltersMatchingMeasurements(t *testing.T) {
+	max30, max25, rain5 := float32(30), float32(25), float32(5)
+	search, err := resolveArchiveDaySearch("temp_max", "gte", "28")
+	if err != nil {
+		t.Fatalf("resolveArchiveDaySearch() error = %v", err)
+	}
+	matches := filterArchiveDays([]models.DailyWeatherInsight{{TempMax: &max30}, {TempMax: &max25}, {RainTotal: &rain5}}, search)
+	if len(matches) != 1 || matches[0].TempMax == nil || *matches[0].TempMax != 30 {
+		t.Fatalf("unexpected matches: %#v", matches)
+	}
+	if search.Description != "максимальная температура ≥ 28 °C" {
+		t.Fatalf("unexpected description: %q", search.Description)
+	}
+}
+
+func TestArchiveDaySearchRejectsInvalidInput(t *testing.T) {
+	if _, err := resolveArchiveDaySearch("rain", "gte", "many"); err != ErrInvalidArchiveSearch {
+		t.Fatalf("error = %v, want %v", err, ErrInvalidArchiveSearch)
+	}
+	if _, err := resolveArchiveDaySearch("unknown", "gte", "1"); err != ErrInvalidArchiveSearch {
+		t.Fatalf("error = %v, want %v", err, ErrInvalidArchiveSearch)
+	}
+}
+
 func TestBuildArchiveCoverageFindsConsecutiveMissingDays(t *testing.T) {
 	loc := time.UTC
 	start := time.Date(2026, time.August, 1, 0, 0, 0, 0, loc)
