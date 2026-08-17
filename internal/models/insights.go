@@ -245,6 +245,7 @@ type WeatherInsightsPage struct {
 	UVInsight       WeatherFactorInsight     `json:"uv_insight"`
 	Timeline        []WeatherTimelineEvent   `json:"timeline"`
 	SeasonMonths    []MonthlyWeatherInsights `json:"season_months"`
+	Daily           []DailyWeatherInsight    `json:"daily"`
 
 	CurrentDryStreak  int       `json:"current_dry_streak"`
 	HasLastRain       bool      `json:"has_last_rain"`
