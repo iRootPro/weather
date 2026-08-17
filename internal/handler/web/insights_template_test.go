@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"testing"
+	"time"
 
 	"github.com/iRootPro/weather/internal/models"
 )
@@ -20,8 +21,15 @@ func TestInsightsTemplateRendersArchiveControls(t *testing.T) {
 		t.Fatalf("parseTemplate() error = %v", err)
 	}
 
+	tempMin, tempAvg, tempMax, rain := float32(12.3), float32(18.4), float32(25.6), float32(3.7)
 	var output bytes.Buffer
-	data := PageData{ActivePage: "insights", Data: &models.WeatherInsightsPage{}}
+	data := PageData{ActivePage: "insights", Data: &models.WeatherInsightsPage{
+		CurrentMonth: models.MonthlyWeatherInsights{DaysWithData: 1, DaysInPeriod: 1},
+		Daily: []models.DailyWeatherInsight{{
+			Date:    time.Date(2026, time.August, 1, 0, 0, 0, 0, time.UTC),
+			TempMin: &tempMin, TempAvg: &tempAvg, TempMax: &tempMax, RainTotal: &rain,
+		}},
+	}}
 	if err := tmpl.Execute(&output, data); err != nil {
 		t.Fatalf("Execute() error = %v", err)
 	}
@@ -31,5 +39,8 @@ func TestInsightsTemplateRendersArchiveControls(t *testing.T) {
 	}
 	if !bytes.Contains(output.Bytes(), []byte(`hx-get="/insights"`)) {
 		t.Fatal("archive period form is not HTMX-enabled")
+	}
+	if !bytes.Contains(output.Bytes(), []byte("12.3°")) || !bytes.Contains(output.Bytes(), []byte("3.7 мм")) {
+		t.Fatal("daily pointer values were not rendered as measurements")
 	}
 }

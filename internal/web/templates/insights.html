@@ -642,10 +642,10 @@
                     {{range .Data.Daily}}
                     <tr class="text-gray-700 hover:bg-blue-50/50 dark:text-gray-200 dark:hover:bg-blue-900/10">
                         <th scope="row" class="whitespace-nowrap px-5 py-3 text-left font-semibold text-gray-900 dark:text-white">{{russianDate .Date "short"}}</th>
-                        <td class="px-4 py-3 text-right text-sky-700 dark:text-sky-300">{{if .TempMin}}{{printf "%.1f" .TempMin}}°{{else}}—{{end}}</td>
-                        <td class="px-4 py-3 text-right font-semibold">{{if .TempAvg}}{{printf "%.1f" .TempAvg}}°{{else}}—{{end}}</td>
-                        <td class="px-4 py-3 text-right text-red-700 dark:text-red-300">{{if .TempMax}}{{printf "%.1f" .TempMax}}°{{else}}—{{end}}</td>
-                        <td class="px-5 py-3 text-right text-blue-700 dark:text-blue-300">{{if .RainTotal}}{{printf "%.1f" .RainTotal}} мм{{else}}—{{end}}</td>
+                        <td class="px-4 py-3 text-right text-sky-700 dark:text-sky-300">{{if .TempMin}}{{printf "%.1f" (deref .TempMin)}}°{{else}}—{{end}}</td>
+                        <td class="px-4 py-3 text-right font-semibold">{{if .TempAvg}}{{printf "%.1f" (deref .TempAvg)}}°{{else}}—{{end}}</td>
+                        <td class="px-4 py-3 text-right text-red-700 dark:text-red-300">{{if .TempMax}}{{printf "%.1f" (deref .TempMax)}}°{{else}}—{{end}}</td>
+                        <td class="px-5 py-3 text-right text-blue-700 dark:text-blue-300">{{if .RainTotal}}{{printf "%.1f" (deref .RainTotal)}} мм{{else}}—{{end}}</td>
                     </tr>
                     {{end}}
                 </tbody>
