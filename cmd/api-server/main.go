@@ -142,6 +142,7 @@ func main() {
 	mux.HandleFunc("GET /api/weather/history", weatherHandler.GetHistory)
 	mux.HandleFunc("GET /api/weather/stats", weatherHandler.GetStats)
 	mux.HandleFunc("GET /api/weather/chart", weatherHandler.GetChartData)
+	mux.HandleFunc("GET /api/weather/archive", weatherHandler.GetArchive)
 	mux.HandleFunc("GET /api/weather/events", weatherHandler.GetEvents)
 
 	// Sensors API

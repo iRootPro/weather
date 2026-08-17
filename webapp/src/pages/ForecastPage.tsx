@@ -1,25 +1,17 @@
 import type { UseQueryResult } from '@tanstack/react-query';
 import type { DashboardSnapshot, NearForecastItem } from '../api/dashboard';
 import { getDashboardScenarioLabel, type DashboardScenario } from '../api/mockDashboard';
+import { ApiErrorCard } from '../components/ApiErrorCard';
+import { AppTabs, withScenario } from '../components/AppTabs';
 import { DashboardSkeleton } from '../components/Skeleton';
+import { WeatherGlyph } from '../components/WeatherGlyph';
 import { formatClock } from '../utils/time';
 import { buildEveningInsight, displayForecastIcon } from './DashboardPage';
 
 export function ForecastPage({ query, scenario }: { query: UseQueryResult<DashboardSnapshot, Error>; scenario?: DashboardScenario }) {
   if (query.isLoading) return <DashboardSkeleton />;
 
-  if (query.isError) {
-    return (
-      <main className="page-shell error-shell">
-        <section className="error-card">
-          <span>⚠️</span>
-          <h1>Не удалось загрузить прогноз</h1>
-          <p>{query.error.message}</p>
-          <button onClick={() => query.refetch()}>Попробовать ещё раз</button>
-        </section>
-      </main>
-    );
-  }
+  if (query.isError) return <ApiErrorCard title="Не удалось загрузить прогноз" message={query.error.message} onRetry={() => query.refetch()} />;
 
   const snapshot = query.data;
   if (!snapshot) return null;
@@ -41,9 +33,10 @@ export function ForecastPage({ query, scenario }: { query: UseQueryResult<Dashbo
         </div>
         <div className="topbar-actions">
           {scenario && <span className="scenario-badge">сценарий: {getDashboardScenarioLabel(scenario)}</span>}
-          <a className="refresh-button" href={scenario ? `/app/?scenario=${scenario}` : '/app/'}>Назад</a>
+          <a className="refresh-button" href={withScenario('/app/', scenario)}>Назад</a>
         </div>
       </header>
+      <AppTabs active="forecast" scenario={scenario} />
 
       <section className="forecast-hero">
         <span className="headline-kicker">Армавир · ближайшие часы</span>
@@ -72,7 +65,7 @@ function ForecastRow({ item }: { item: NearForecastItem }) {
         <time>{formatClock(item.time)}</time>
         <span>{formatDay(item.time)}</span>
       </div>
-      <span className="forecast-row-icon" aria-hidden="true">{displayForecastIcon(item)}</span>
+      <WeatherGlyph icon={displayForecastIcon(item)} className="forecast-row-icon" />
       <div className="forecast-row-main">
         <strong>{Math.round(item.temperature)}°</strong>
         <span>{item.weather_description || 'прогноз'}</span>

@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { registerSW } from 'virtual:pwa-register';
 import App from './App';
 import './styles.css';
+import './theme-nimbus.css';
 
 const queryClient = new QueryClient({
   defaultOptions: {

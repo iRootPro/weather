@@ -2,9 +2,15 @@ import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchDashboardSnapshot } from './api/dashboard';
 import { getMockDashboardSnapshot, parseDashboardScenario } from './api/mockDashboard';
+import { LiveRefreshBadge } from './components/LiveRefreshBadge';
+import { PwaInstallPrompt } from './components/PwaInstallPrompt';
+import { ArchivePage } from './pages/ArchivePage';
+import { CurrentDetailPage } from './pages/CurrentDetailPage';
 import { DashboardPage } from './pages/DashboardPage';
+import { EveningPage } from './pages/EveningPage';
 import { ForecastPage } from './pages/ForecastPage';
 import { RiskDetailPage, type RiskKind } from './pages/RiskDetailPage';
+import { RisksOverviewPage } from './pages/RisksOverviewPage';
 
 const riskRoutes: Record<string, RiskKind> = {
   '/app/geomagnetic': 'geomagnetic',
@@ -18,9 +24,16 @@ const riskRoutes: Record<string, RiskKind> = {
 type SWUpdater = (reloadPage?: boolean) => Promise<void>;
 
 export default function App() {
-  const scenario = useMemo(() => parseDashboardScenario(new URLSearchParams(window.location.search).get('scenario')), []);
-  const route = window.location.pathname.replace(/\/+$/, '') || '/app';
+  const [locationKey, setLocationKey] = useState(() => `${window.location.pathname}${window.location.search}`);
+  const scenario = useMemo(() => parseDashboardScenario(new URLSearchParams(window.location.search).get('scenario')), [locationKey]);
+  const route = useMemo(() => window.location.pathname.replace(/\/+$/, '') || '/app', [locationKey]);
   const [updateSW, setUpdateSW] = useState<SWUpdater | null>(null);
+
+  useEffect(() => {
+    const onRouteChange = () => setLocationKey(`${window.location.pathname}${window.location.search}`);
+    window.addEventListener('popstate', onRouteChange);
+    return () => window.removeEventListener('popstate', onRouteChange);
+  }, []);
 
   useEffect(() => {
     const onUpdateReady = (event: Event) => {
@@ -40,6 +53,22 @@ export default function App() {
       return <ForecastPage query={query} scenario={scenario} />;
     }
 
+    if (route === '/app/archive') {
+      return <ArchivePage scenario={scenario} />;
+    }
+
+    if (route === '/app/evening') {
+      return <EveningPage query={query} scenario={scenario} />;
+    }
+
+    if (route === '/app/risks') {
+      return <RisksOverviewPage query={query} scenario={scenario} />;
+    }
+
+    if (route === '/app/current') {
+      return <CurrentDetailPage query={query} scenario={scenario} />;
+    }
+
     const riskKind = riskRoutes[route];
     if (riskKind) {
       return <RiskDetailPage query={query} scenario={scenario} kind={riskKind} />;
@@ -51,6 +80,8 @@ export default function App() {
   return (
     <>
       {page}
+      {!scenario && <LiveRefreshBadge snapshot={query.data} isFetching={query.isFetching} />}
+      <PwaInstallPrompt />
       {updateSW && (
         <div className="update-toast" role="status">
           <span>Доступна новая версия приложения</span>

@@ -23,6 +23,44 @@ type DailyWeatherInsight struct {
 	HumidityAvg *int16   `json:"humidity_avg,omitempty"`
 }
 
+// WeatherArchiveDay is one daily row in the station archive API.
+type WeatherArchiveDay struct {
+	Date      time.Time `json:"date"`
+	TempMin   *float32  `json:"temp_min,omitempty"`
+	TempAvg   *float32  `json:"temp_avg,omitempty"`
+	TempMax   *float32  `json:"temp_max,omitempty"`
+	RainTotal *float32  `json:"rain_total,omitempty"`
+}
+
+// WeatherArchiveSummary contains the compact aggregate for a calendar period.
+type WeatherArchiveSummary struct {
+	TempAvg         *float64 `json:"temp_avg,omitempty"`
+	TempMin         *float64 `json:"temp_min,omitempty"`
+	TempMax         *float64 `json:"temp_max,omitempty"`
+	RainTotal       float64  `json:"rain_total"`
+	DaysInPeriod    int      `json:"days_in_period"`
+	DaysWithData    int      `json:"days_with_data"`
+	CoveragePercent int      `json:"coverage_percent"`
+}
+
+// WeatherArchiveComparison makes clear that the baseline is the preceding equivalent period.
+type WeatherArchiveComparison struct {
+	Label     string                `json:"label"`
+	Available bool                  `json:"available"`
+	Summary   WeatherArchiveSummary `json:"summary"`
+}
+
+// WeatherArchive contains the station's daily archive report for one selected period.
+type WeatherArchive struct {
+	Period     string                   `json:"period"`
+	Label      string                   `json:"label"`
+	StartDate  time.Time                `json:"start_date"`
+	EndDate    time.Time                `json:"end_date"`
+	Summary    WeatherArchiveSummary    `json:"summary"`
+	Comparison WeatherArchiveComparison `json:"comparison"`
+	Days       []WeatherArchiveDay      `json:"days"`
+}
+
 // DayInsightValue represents a notable day with a metric value.
 type DayInsightValue struct {
 	Date  time.Time `json:"date"`

@@ -1,0 +1,795 @@
+
+/* ═══════════════════════════════════════════════════════════════
+   Nimbus v36 — минималистичный тёмный weather UI
+   ═══════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap');
+
+:root {
+  color-scheme: dark !important;
+  --bg: #090b0f !important;
+  --bg-2: #111418 !important;
+  --panel: #111418 !important;
+  --panel-strong: #171b21 !important;
+  --line: rgba(255, 255, 255, 0.06) !important;
+  --text: #e4e6ea !important;
+  --muted: #9ca3af !important;
+  --muted-2: #6b7280 !important;
+  --calm: #5ec98a !important;
+  --normal: #6eb5e8 !important;
+  --info: #a8b4c4 !important;
+  --warning: #e8a54b !important;
+  --danger: #e85d6c !important;
+  --shadow: none !important;
+  --color-primary: #6eb5e8 !important;
+  --color-text-primary: #e4e6ea !important;
+  --color-text-secondary: #9ca3af !important;
+  --color-text-tertiary: #6b7280 !important;
+  --color-border: rgba(255, 255, 255, 0.06) !important;
+  --color-surface: #111418 !important;
+  --color-background: #090b0f !important;
+  --font-family: 'DM Sans', system-ui, -apple-system, sans-serif !important;
+}
+
+html,
+body {
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif !important;
+  color: var(--text) !important;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(110, 181, 232, 0.07), transparent),
+    #090b0f !important;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::before,
+body::after {
+  display: none !important;
+}
+
+.sky-noise {
+  opacity: 0.25 !important;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.035) 0.5px, transparent 0.5px) !important;
+  background-size: 24px 24px !important;
+  mask-image: none !important;
+}
+
+.page-shell {
+  width: min(1080px, 100%) !important;
+  max-width: none !important;
+  min-height: 100vh !important;
+  margin: 0 auto !important;
+  padding: max(24px, env(safe-area-inset-top)) 20px 48px !important;
+  border-radius: 0 !important;
+}
+
+/* ── Header ── */
+
+.topbar {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  margin-bottom: 28px !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.topbar h1,
+.topbar strong {
+  font-family: 'DM Sans', system-ui, sans-serif !important;
+  font-size: clamp(1.25rem, 3vw, 1.5rem) !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.02em !important;
+  color: var(--text) !important;
+  margin: 0 !important;
+}
+
+.topbar-meta,
+.app-label,
+.assistant-note span,
+.section-heading span,
+.watch-kicker,
+.headline-kicker {
+  color: var(--muted-2) !important;
+  font-size: 0.68rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+}
+
+.topbar-actions {
+  gap: 8px !important;
+}
+
+.refresh-button,
+.error-card button {
+  border: 1px solid var(--line) !important;
+  border-radius: 8px !important;
+  padding: 0.55rem 0.85rem !important;
+  font-size: 0.82rem !important;
+  font-weight: 500 !important;
+  color: var(--muted) !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+  transition: color 150ms, border-color 150ms, background 150ms !important;
+}
+
+.refresh-button:hover,
+.error-card button:hover {
+  transform: none !important;
+  color: var(--text) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+.scenario-badge {
+  border: 1px solid rgba(232, 165, 75, 0.2) !important;
+  border-radius: 6px !important;
+  padding: 0.4rem 0.6rem !important;
+  color: var(--warning) !important;
+  background: rgba(232, 165, 75, 0.08) !important;
+  font-size: 0.72rem !important;
+  font-weight: 600 !important;
+}
+
+/* ── Navigation ── */
+
+.section-nav,
+.app-tabs {
+  display: flex !important;
+  gap: 4px !important;
+  margin: 0 0 24px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-bottom: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+  position: static !important;
+  width: auto !important;
+}
+
+.section-nav a,
+.app-tabs a {
+  border-radius: 8px !important;
+  padding: 8px 14px !important;
+  font-size: 0.82rem !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  color: var(--muted-2) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transition: color 150ms, background 150ms !important;
+}
+
+.section-nav a::after {
+  display: none !important;
+}
+
+.section-nav a:hover,
+.app-tabs a:hover {
+  color: var(--text) !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+.section-nav a.active,
+.app-tabs a.active {
+  color: var(--text) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* ── Meta row ── */
+
+.meta-row {
+  margin: -8px 0 20px !important;
+  color: var(--muted-2) !important;
+  font-size: 0.78rem !important;
+  font-weight: 500 !important;
+}
+
+/* ── Cards base ── */
+
+.weather-now,
+.attention-card,
+.calm-card,
+.handoff-insight-card,
+.quiet-summary,
+.error-card,
+.risk-panel,
+.forecast-strip-section,
+.metric-detail-card,
+.spark-card,
+.current-hero,
+.evening-hero,
+.forecast-hero,
+.risks-hero {
+  border: 1px solid var(--line) !important;
+  border-radius: 16px !important;
+  background: var(--panel) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+.weather-now::before,
+.attention-card::before,
+.calm-card::before,
+.handoff-insight-card::before {
+  display: none !important;
+}
+
+/* ── Weather now hero ── */
+
+.calm-overview,
+.now-overview {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.85fr) !important;
+  gap: 12px !important;
+  align-items: start !important;
+}
+
+.weather-now {
+  display: grid !important;
+  padding: 24px !important;
+  transition: border-color 150ms !important;
+}
+
+.weather-now:hover {
+  transform: none !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background: var(--panel-strong) !important;
+}
+
+.weather-now h2,
+.calm-card h2,
+.signal-focus h2 {
+  font-family: 'DM Sans', system-ui, sans-serif !important;
+  font-size: clamp(1.2rem, 3vw, 1.5rem) !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.02em !important;
+  line-height: 1.2 !important;
+}
+
+.weather-now p,
+.calm-card p {
+  color: var(--muted) !important;
+  font-size: 0.88rem !important;
+  line-height: 1.5 !important;
+}
+
+.weather-temp span {
+  font-size: clamp(3.5rem, 8vw, 4.5rem) !important;
+  font-weight: 300 !important;
+  letter-spacing: -0.05em !important;
+  font-variant-numeric: tabular-nums !important;
+  color: var(--text) !important;
+}
+
+.weather-temp small {
+  font-size: 1.25rem !important;
+  font-weight: 400 !important;
+  color: var(--muted-2) !important;
+}
+
+.weather-temp b {
+  font-size: 0.78rem !important;
+  font-weight: 500 !important;
+  color: var(--muted-2) !important;
+}
+
+.weather-icon,
+.current-temp-icon {
+  font-size: 1.75rem !important;
+  filter: none !important;
+}
+
+/* ── Severity pills ── */
+
+.severity-pill {
+  border: 0 !important;
+  border-radius: 6px !important;
+  padding: 0.3rem 0.55rem !important;
+  font-size: 0.62rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.06em !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+.severity-calm { color: var(--calm) !important; background: rgba(94, 201, 138, 0.1) !important; }
+.severity-normal { color: var(--normal) !important; background: rgba(110, 181, 232, 0.1) !important; }
+.severity-info { color: var(--info) !important; background: rgba(168, 180, 196, 0.1) !important; }
+.severity-warning { color: var(--warning) !important; background: rgba(232, 165, 75, 0.1) !important; }
+.severity-danger { color: var(--danger) !important; background: rgba(232, 93, 108, 0.1) !important; }
+
+/* ── Story & facts ── */
+
+.weather-summary,
+.now-story p {
+  font-size: 0.88rem !important;
+  color: var(--muted) !important;
+  line-height: 1.5 !important;
+}
+
+.now-story-details span {
+  border: 1px solid var(--line) !important;
+  border-radius: 6px !important;
+  padding: 0.35rem 0.55rem !important;
+  font-size: 0.72rem !important;
+  font-weight: 500 !important;
+  color: var(--muted) !important;
+  background: transparent !important;
+}
+
+.now-story-next,
+.now-story-action,
+.signal-focus-action,
+.weather-primary-signal,
+.card-action,
+.handoff-insight-action {
+  border: 0 !important;
+  border-radius: 10px !important;
+  padding: 0.75rem 0.85rem !important;
+  background: rgba(110, 181, 232, 0.08) !important;
+  border: 1px solid rgba(110, 181, 232, 0.12) !important;
+  color: #d1d5db !important;
+  line-height: 1.45 !important;
+}
+
+.now-story-next span,
+.now-story-action span,
+.signal-focus-action span,
+.weather-primary-signal span,
+.card-action span,
+.handoff-insight-action span {
+  color: var(--normal) !important;
+  font-size: 0.62rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.08em !important;
+}
+
+.trend-chip {
+  border-radius: 6px !important;
+  padding: 0.25rem 0.5rem !important;
+  font-size: 0.72rem !important;
+  font-weight: 500 !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid var(--line) !important;
+}
+
+.trend-up { color: var(--danger) !important; }
+.trend-down { color: var(--normal) !important; }
+.trend-flat { color: var(--muted-2) !important; }
+
+.weather-facts {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 6px !important;
+}
+
+.weather-facts span {
+  border: 1px solid var(--line) !important;
+  border-radius: 10px !important;
+  padding: 0.65rem 0.75rem !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.weather-facts span.primary {
+  border-color: rgba(110, 181, 232, 0.2) !important;
+  background: rgba(110, 181, 232, 0.06) !important;
+}
+
+.weather-facts small {
+  color: var(--muted-2) !important;
+  font-size: 0.62rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+}
+
+.weather-facts b {
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+.weather-facts svg {
+  width: 14px !important;
+  height: 14px !important;
+  color: var(--muted-2) !important;
+}
+
+.weather-now-footer {
+  color: var(--muted-2) !important;
+  font-size: 0.72rem !important;
+  border-top: 1px solid var(--line) !important;
+  padding-top: 12px !important;
+  margin-top: 4px !important;
+}
+
+.weather-now-footer span:last-child {
+  color: var(--normal) !important;
+}
+
+.weather-now-footer span:last-child::after {
+  content: ' →' !important;
+}
+
+/* ── Side column cards ── */
+
+.calm-column {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+}
+
+.calm-card {
+  padding: 18px 20px !important;
+}
+
+.calm-card h2 {
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  margin: 6px 0 4px !important;
+}
+
+.calm-card p {
+  font-size: 0.82rem !important;
+  margin: 0 !important;
+}
+
+.daily-summary-card dl {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 8px !important;
+  margin: 12px 0 0 !important;
+}
+
+.daily-summary-card dt {
+  font-size: 0.62rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  color: var(--muted-2) !important;
+}
+
+.daily-summary-card dd {
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  margin: 2px 0 0 !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+.quiet-focus .quiet-mark {
+  color: var(--calm) !important;
+  background: rgba(94, 201, 138, 0.1) !important;
+  border-radius: 8px !important;
+  width: 28px !important;
+  height: 28px !important;
+  display: grid !important;
+  place-items: center !important;
+  font-size: 0.85rem !important;
+}
+
+.quiet-pills span {
+  border: 1px solid var(--line) !important;
+  border-radius: 6px !important;
+  padding: 0.3rem 0.55rem !important;
+  font-size: 0.72rem !important;
+  color: var(--muted) !important;
+  background: transparent !important;
+}
+
+/* ── Signal focus ── */
+
+.signal-focus {
+  padding: 20px !important;
+  margin-bottom: 0 !important;
+}
+
+.signal-focus:hover {
+  transform: none !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.attention-warning.signal-focus,
+.handoff-insight-warning {
+  border-color: rgba(232, 165, 75, 0.2) !important;
+}
+
+.attention-danger.signal-focus,
+.handoff-insight-danger {
+  border-color: rgba(232, 93, 108, 0.2) !important;
+}
+
+/* ── Section blocks ── */
+
+.section-block {
+  margin-top: 28px !important;
+}
+
+.section-heading {
+  display: flex !important;
+  align-items: baseline !important;
+  gap: 12px !important;
+  margin-bottom: 12px !important;
+}
+
+.section-heading h2 {
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+  margin: 0 !important;
+  color: var(--text) !important;
+}
+
+.section-heading span {
+  font-size: 0.62rem !important;
+  opacity: 0.5 !important;
+}
+
+.cards-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.attention-card {
+  padding: 18px !important;
+  min-height: auto !important;
+}
+
+.attention-card:hover {
+  transform: none !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background: var(--panel-strong) !important;
+}
+
+.card-main h3 {
+  font-family: 'DM Sans', system-ui, sans-serif !important;
+  font-size: 1.1rem !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.02em !important;
+}
+
+.card-subtitle {
+  color: var(--muted) !important;
+  font-size: 0.82rem !important;
+}
+
+.metric-value {
+  font-size: 1.75rem !important;
+  font-weight: 500 !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+.card-footer {
+  color: var(--muted-2) !important;
+  font-size: 0.72rem !important;
+  border-top: 1px solid var(--line) !important;
+  padding-top: 10px !important;
+  margin-top: auto !important;
+}
+
+/* ── Handoff insight cards ── */
+
+.handoff-insight-card {
+  padding: 16px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  transition: border-color 150ms !important;
+}
+
+.handoff-insight-card:hover {
+  transform: none !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.handoff-insight-body h3 {
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  margin: 0 !important;
+}
+
+.handoff-insight-body p {
+  font-size: 0.78rem !important;
+  color: var(--muted) !important;
+  margin: 4px 0 0 !important;
+}
+
+.handoff-insight-foot {
+  font-size: 0.68rem !important;
+  color: var(--muted-2) !important;
+  margin: 0 !important;
+}
+
+/* ── Forecast strip ── */
+
+.forecast-strip-section {
+  margin-top: 12px !important;
+  padding: 18px 20px !important;
+}
+
+.forecast-heading a {
+  font-size: 0.78rem !important;
+  font-weight: 500 !important;
+  color: var(--normal) !important;
+}
+
+.forecast-strip {
+  display: flex !important;
+  gap: 4px !important;
+  overflow-x: auto !important;
+  padding: 4px 0 !important;
+  scrollbar-width: none !important;
+}
+
+.forecast-hour {
+  flex: 0 0 auto !important;
+  min-width: 68px !important;
+  padding: 10px 8px !important;
+  border-radius: 10px !important;
+  text-align: center !important;
+  border: 0 !important;
+  background: transparent !important;
+  transition: background 150ms !important;
+}
+
+.forecast-hour:hover {
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+.forecast-hour-rain {
+  background: rgba(110, 181, 232, 0.08) !important;
+}
+
+.forecast-hour time {
+  font-size: 0.68rem !important;
+  color: var(--muted-2) !important;
+  font-weight: 500 !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+.forecast-hour strong {
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+.forecast-hour small {
+  font-size: 0.62rem !important;
+  color: var(--normal) !important;
+}
+
+.forecast-icon {
+  font-size: 1.25rem !important;
+  margin: 4px 0 !important;
+}
+
+/* ── Quiet summary ── */
+
+.quiet-summary {
+  margin-top: 12px !important;
+  padding: 16px 18px !important;
+  font-size: 0.82rem !important;
+  color: var(--muted) !important;
+}
+
+/* ── Toasts & prompts ── */
+
+.update-toast,
+.install-prompt {
+  border: 1px solid var(--line) !important;
+  border-radius: 12px !important;
+  background: var(--panel-strong) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+  backdrop-filter: none !important;
+  font-size: 0.85rem !important;
+}
+
+.update-toast button,
+.install-prompt button {
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+}
+
+/* ── Skeleton ── */
+
+.skeleton-block,
+.skeleton-line {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-radius: 8px !important;
+}
+
+/* ── Error card ── */
+
+.error-card {
+  padding: 24px !important;
+  text-align: center !important;
+}
+
+.error-card h2 {
+  font-size: 1.1rem !important;
+  font-weight: 600 !important;
+}
+
+/* ── Scenario switcher ── */
+
+.scenario-switcher {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 6px !important;
+  margin-bottom: 16px !important;
+}
+
+.scenario-switcher a {
+  border: 1px solid var(--line) !important;
+  border-radius: 6px !important;
+  padding: 0.35rem 0.6rem !important;
+  font-size: 0.72rem !important;
+  color: var(--muted-2) !important;
+  background: transparent !important;
+}
+
+.scenario-switcher a.active {
+  color: var(--text) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* ── Live refresh badge ── */
+
+.live-refresh-badge {
+  border: 1px solid var(--line) !important;
+  border-radius: 8px !important;
+  background: var(--panel) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
+  font-size: 0.72rem !important;
+  font-weight: 500 !important;
+  color: var(--muted-2) !important;
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 1040px) {
+  .calm-overview,
+  .now-overview {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .page-shell {
+    padding: max(16px, env(safe-area-inset-top)) 16px 32px !important;
+  }
+
+  .topbar {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+
+  .weather-now {
+    padding: 18px !important;
+  }
+
+  .weather-temp span {
+    font-size: 3.25rem !important;
+  }
+
+  .cards-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition-duration: 0ms !important;
+  }
+}

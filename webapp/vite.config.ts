@@ -8,7 +8,9 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      injectRegister: 'auto',
       includeAssets: ['favicon.svg'],
+      cleanupOutdatedCaches: true,
       manifest: {
         name: 'Метеостанция Армавир',
         short_name: 'Погода',
@@ -31,6 +33,8 @@ export default defineConfig({
       },
       workbox: {
         navigateFallback: '/app/index.html',
+        skipWaiting: true,
+        clientsClaim: true,
         runtimeCaching: [
           {
             urlPattern: ({ url }) => url.pathname.startsWith('/api/dashboard/snapshot'),
@@ -39,6 +43,15 @@ export default defineConfig({
               cacheName: 'dashboard-snapshot',
               networkTimeoutSeconds: 4,
               expiration: { maxEntries: 8, maxAgeSeconds: 60 * 60 }
+            }
+          },
+          {
+            urlPattern: ({ url }) => url.pathname.startsWith('/api/weather/chart'),
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'weather-chart-24h',
+              networkTimeoutSeconds: 4,
+              expiration: { maxEntries: 12, maxAgeSeconds: 20 * 60 }
             }
           }
         ]

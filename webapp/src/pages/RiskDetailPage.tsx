@@ -1,6 +1,8 @@
 import type { UseQueryResult } from '@tanstack/react-query';
 import type { AttentionCard, DashboardSnapshot } from '../api/dashboard';
 import { getDashboardScenarioLabel, type DashboardScenario } from '../api/mockDashboard';
+import { ApiErrorCard } from '../components/ApiErrorCard';
+import { AppTabs, withScenario } from '../components/AppTabs';
 import { DashboardSkeleton } from '../components/Skeleton';
 import { formatClock } from '../utils/time';
 
@@ -54,18 +56,7 @@ const riskCopy: Record<RiskKind, { title: string; domain: string[]; icon: string
 export function RiskDetailPage({ query, scenario, kind }: { query: UseQueryResult<DashboardSnapshot, Error>; scenario?: DashboardScenario; kind: RiskKind }) {
   if (query.isLoading) return <DashboardSkeleton />;
 
-  if (query.isError) {
-    return (
-      <main className="page-shell error-shell">
-        <section className="error-card">
-          <span>⚠️</span>
-          <h1>Не удалось загрузить раздел</h1>
-          <p>{query.error.message}</p>
-          <button onClick={() => query.refetch()}>Попробовать ещё раз</button>
-        </section>
-      </main>
-    );
-  }
+  if (query.isError) return <ApiErrorCard title="Не удалось загрузить раздел" message={query.error.message} onRetry={() => query.refetch()} />;
 
   const snapshot = query.data;
   if (!snapshot) return null;
@@ -85,9 +76,10 @@ export function RiskDetailPage({ query, scenario, kind }: { query: UseQueryResul
         </div>
         <div className="topbar-actions">
           {scenario && <span className="scenario-badge">сценарий: {getDashboardScenarioLabel(scenario)}</span>}
-          <a className="refresh-button" href={scenario ? `/app/?scenario=${scenario}` : '/app/'}>Назад</a>
+          <a className="refresh-button" href={withScenario('/app/risks', scenario)}>Все риски</a>
         </div>
       </header>
+      <AppTabs active="risks" scenario={scenario} />
 
       <section className={`risk-hero attention-${severity}`}>
         <span className="risk-hero-icon" aria-hidden="true">{primary?.icon || copy.icon}</span>
