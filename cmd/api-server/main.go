@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 	"time"
 
@@ -142,7 +141,6 @@ func main() {
 	mux.HandleFunc("GET /api/weather/history", weatherHandler.GetHistory)
 	mux.HandleFunc("GET /api/weather/stats", weatherHandler.GetStats)
 	mux.HandleFunc("GET /api/weather/chart", weatherHandler.GetChartData)
-	mux.HandleFunc("GET /api/weather/archive", weatherHandler.GetArchive)
 	mux.HandleFunc("GET /api/weather/events", weatherHandler.GetEvents)
 
 	// Sensors API
@@ -184,16 +182,6 @@ func main() {
 	mux.HandleFunc("GET /widgets/forecast", webHandler.ForecastWidget)
 	mux.HandleFunc("GET /widgets/water-level", webHandler.WaterLevelWidget)
 	mux.HandleFunc("GET /widgets/narodmon-status", webHandler.NarodmonStatusWidget)
-
-	// React/PWA app - Docker path first, then local development build path
-	webappDir := "webapp/dist"
-	if _, err := os.Stat(webappDir); os.IsNotExist(err) {
-		webappDir = "webapp"
-	}
-	mux.HandleFunc("GET /app", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/app/", http.StatusMovedPermanently)
-	})
-	mux.Handle("GET /app/", spaHandler("/app/", http.Dir(webappDir)))
 
 	// Static files
 	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.Dir(staticDir))))
@@ -238,48 +226,6 @@ func main() {
 func healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
-}
-
-func spaHandler(prefix string, fs http.FileSystem) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		path := strings.TrimPrefix(r.URL.Path, prefix)
-		if path == "" {
-			serveFileFromFS(w, r, fs, "index.html")
-			return
-		}
-
-		file, err := fs.Open(path)
-		if err != nil {
-			serveFileFromFS(w, r, fs, "index.html")
-			return
-		}
-		defer file.Close()
-
-		stat, err := file.Stat()
-		if err != nil || stat.IsDir() {
-			serveFileFromFS(w, r, fs, "index.html")
-			return
-		}
-
-		http.ServeContent(w, r, path, stat.ModTime(), file)
-	})
-}
-
-func serveFileFromFS(w http.ResponseWriter, r *http.Request, fs http.FileSystem, name string) {
-	file, err := fs.Open(name)
-	if err != nil {
-		http.NotFound(w, r)
-		return
-	}
-	defer file.Close()
-
-	stat, err := file.Stat()
-	if err != nil || stat.IsDir() {
-		http.NotFound(w, r)
-		return
-	}
-
-	http.ServeContent(w, r, name, stat.ModTime(), file)
 }
 
 func loggingMiddleware(next http.Handler) http.Handler {

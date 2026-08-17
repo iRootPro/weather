@@ -458,7 +458,7 @@ func buildForecastRainCard(forecast []models.HourlyForecast, current *models.Wea
 		Reason:    "в прогнозе на ближайшие часы есть осадки",
 		Action:    "Закрой окна и забери вещи с улицы до начала дождя",
 		Icon:      "🌧️",
-		DetailURL: "/app/forecast",
+		DetailURL: "/history",
 	}
 }
 

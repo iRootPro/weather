@@ -94,35 +94,6 @@ func (h *WeatherHandler) GetChartData(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, data)
 }
 
-// GET /api/weather/archive?period=month|season|year&month=2026-08
-func (h *WeatherHandler) GetArchive(w http.ResponseWriter, r *http.Request) {
-	period := r.URL.Query().Get("period")
-	if period == "" {
-		period = "month"
-	}
-	if period != "month" && period != "season" && period != "year" {
-		http.Error(w, "period must be month, season, or year", http.StatusBadRequest)
-		return
-	}
-
-	var anchor time.Time
-	if month := r.URL.Query().Get("month"); month != "" {
-		var err error
-		anchor, err = time.Parse("2006-01", month)
-		if err != nil {
-			http.Error(w, "month must use YYYY-MM", http.StatusBadRequest)
-			return
-		}
-	}
-
-	archive, err := h.weatherService.GetArchive(r.Context(), period, anchor)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	respondJSON(w, archive)
-}
-
 // GET /api/weather/events?hours=24
 func (h *WeatherHandler) GetEvents(w http.ResponseWriter, r *http.Request) {
 	hours := 24 // default

@@ -39,7 +39,6 @@ WORKDIR /app
 COPY --from=builder /bin/api-server /app/api-server
 COPY --from=builder /app/internal/web/templates /app/templates
 COPY --from=builder /app/internal/web/static /app/static
-COPY webapp/dist /app/webapp
 EXPOSE 8080
 CMD ["/app/api-server"]
 

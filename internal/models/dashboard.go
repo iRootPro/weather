@@ -13,8 +13,8 @@ const (
 	DashboardSeverityDanger  DashboardSeverity = "danger"
 )
 
-// DashboardSnapshot — агрегированная модель главного экрана для React/PWA,
-// ботов и будущих мобильных приложений. Backend уже решает, что важно сейчас.
+// DashboardSnapshot — агрегированная модель для API, ботов и будущих клиентов.
+// Backend уже решает, что важно сейчас.
 type DashboardSnapshot struct {
 	GeneratedAt    time.Time              `json:"generated_at"`
 	StationStatus  StationStatus          `json:"station_status"`
