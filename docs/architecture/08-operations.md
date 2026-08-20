@@ -17,7 +17,7 @@ make deploy-logs
 docker compose -f docker-compose.prod.yml ps
 docker compose -f docker-compose.prod.yml logs --tail=100 api-server mqtt-consumer
 docker compose -f docker-compose.prod.yml exec postgres sh -c 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
-curl -fsS http://127.0.0.1:8080/health
+docker compose -f docker-compose.prod.yml exec api-server wget -qO- http://127.0.0.1:8080/health
 ```
 
 `postgres` имеет formal Docker healthcheck, `api-server` — HTTP `/health`. Endpoint API подтверждает только работу HTTP process и не проверяет DB; поэтому его нужно сочетать с `pg_isready` и freshness queries. Остальные application containers не имеют Compose healthcheck: их состояние определяется process status, logs и свежестью принадлежащих им данных.

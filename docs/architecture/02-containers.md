@@ -43,11 +43,11 @@ flowchart TB
     end
 
     ecowitt -->|"MQTT"| mqtt
-    ext -->|"HTTPS"| forecast
-    ext -->|"HTTPS"| geomag
-    ext -->|"HTTPS"| hydro
+    forecast -->|"HTTPS request / response"| ext
+    geomag -->|"HTTPS request / response"| ext
+    hydro -->|"HTTPS request / response"| ext
     sender -->|"TCP payload"| narodmon
-    web_user <-->|"HTTP 8080 / HTML / HTMX / JSON"| api
+    web_user <-->|"HTTP configurable host port / HTML / HTMX / JSON"| api
     tui <-->|"HTTP / JSON"| api
     telegram <-->|"HTTPS Bot API"| messengers
     maxbot <-->|"HTTPS Bot API"| messengers

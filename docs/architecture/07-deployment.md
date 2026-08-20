@@ -8,7 +8,8 @@
 ```mermaid
 flowchart TB
     web_users["Web users"]
-    source_apis["Open-Meteo / XRAS / Emercom / IPGeolocation"]
+    source_apis["Open-Meteo / XRAS / Emercom"]
+    astronomy_api["IPGeolocation Astronomy API"]
     bot_apis["Telegram Bot API / Max Bot API"]
     narodmon_ext["Narodmon"]
     mqtt_ext["External MQTT broker"]
@@ -55,8 +56,9 @@ flowchart TB
         telegram <-->|"file read/write"| photovol
     end
 
-    web_users -->|"HTTP :8080"| api
-    api -->|"optional IPGeolocation HTTPS"| source_apis
+    web_users -->|"HTTP configurable host port -> 8080"| api
+    api -->|"optional astronomy HTTPS"| astronomy_api
+    telegram -->|"optional astronomy HTTPS"| astronomy_api
     fetchers -->|"Open-Meteo / XRAS / Emercom HTTPS"| source_apis
     sender -->|"TCP payload"| narodmon_ext
     telegram <-->|"Telegram Bot API HTTPS"| bot_apis
@@ -109,17 +111,17 @@ make migrate-status
 Production automation:
 
 > [!WARNING]
-> `make deploy` предназначен только для выделенного deployment checkout. Скрипт выполняет `git reset --hard` и `git clean -fd`: все остальные tracked changes и untracked files удаляются, кроме явно исключённых `.env`, backup-файлов, `backups/` и `photos/`. До и после deployment также удаляются unused Docker images и build cache; их нельзя считать rollback-механизмом.
+> `make deploy` предназначен только для выделенного deployment checkout. Скрипт выполняет `git reset --hard` и удаляет non-ignored untracked files через `git clean -fd`, кроме точных исключений `.env`, `.env.bak*`, `backup-prepare.sh`, `backups/` и `photos/`. Произвольный backup-файл вне этих путей будет удалён. Git-ignored файлы, включая `deploy.conf` и `*.log`, команда `git clean -fd` не удаляет, но они не являются резервной копией. До и после deployment также удаляются unused Docker images и build cache; их нельзя считать rollback-механизмом.
 
 ```bash
 make deploy           # scripts/deploy.sh: fetch/reset, build and restart
 make deploy-status    # docker compose ps на host
 make deploy-logs      # aggregated production logs
 make deploy-check     # count и MAX(time), только для default weather/weather
-make deploy-db-size
+make deploy-db-size   # размер, только для default weather/weather
 ```
 
-Deployment script сохраняет только явно перечисленные `.env`, backup-файлы, `backups/` и `photos/`; остальное локальное состояние server checkout не сохраняется. Источником production-кода является настроенная remote branch.
+Намеренный preservation contract скрипта ограничен `.env`, `.env.bak*`, `backup-prepare.sh`, `backups/` и `photos/`. Ignored files также переживают `git clean -fd`, но на это нельзя полагаться как на backup policy. Источником production-кода является настроенная remote branch.
 
 ## Группы конфигурации
 
