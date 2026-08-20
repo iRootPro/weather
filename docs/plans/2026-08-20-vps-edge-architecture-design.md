@@ -135,17 +135,17 @@ sequenceDiagram
   "station_id": "ecowitt-main",
   "observed_at": "2026-08-20T10:15:00Z",
   "received_at_edge": "2026-08-20T10:15:02Z",
-  "payload": "raw MQTT payload"
+  "payload": "sanitized URL-encoded MQTT payload"
 }
 ```
 
 Правила:
 
-1. Если EcoWitt payload содержит station timestamp (`dateutc` или подтверждённый аналог), он становится `observed_at`.
-2. Иначе используется `received_at_edge`, но никогда время получения на VPS.
-3. `event_id = SHA-256(station_id || observed_at || raw payload)`.
-4. Одинаковая MQTT-доставка создаёт тот же ID.
-5. До реализации нужно подтвердить реальный payload, timestamp field, publish interval, QoS и максимальный размер сообщения.
+1. Подтверждённое поле `dateutc` становится `observed_at`.
+2. Если source timestamp отсутствует, используется `received_at_edge`, но никогда время получения на VPS.
+3. До записи на диск relay удаляет credential/technical fields, включая `PASSKEY`; sensitive raw payload не хранится, не отправляется и не логируется.
+4. `event_id = SHA-256(station_id || observed_at || canonical sanitized payload)`.
+5. Одинаковая MQTT-доставка создаёт тот же ID.
 
 ## SQLite outbox
 
@@ -296,17 +296,39 @@ VPS контролирует freshness по `MAX(weather_data.time)`/station, in
 
 ## Проверка
 
-### Discovery
+### Read-only discovery results
 
-Перед кодом снять с реального broker:
+Discovery выполнен через отдельную clean-session subscription без publish, retained-message mutation, restart или изменения broker config.
 
-- sample payload без секретов;
-- source timestamp field и формат;
-- publish QoS;
-- средний/максимальный payload size;
-- сообщения в минуту/сутки;
-- поведение при restart relay и broker;
-- текущие Mosquitto persistence/queue settings.
+| Факт | Наблюдение |
+|---|---|
+| Topic | `ecowitt/ws90` |
+| Payload | URL-encoded EcoWitt data |
+| Source time | `dateutc`, UTC, совпадает с capture time после timezone conversion |
+| Publish QoS | QoS 0 |
+| Retain | `false` |
+| Интервал | 60 секунд; подтверждён тремя последовательными сообщениями |
+| Размер | 607 bytes в каждом из трёх samples |
+| Суточный raw volume | 1 440 сообщений, около 0.834 MiB payload |
+| Оценка с envelope | Около 1.314 MiB/сутки до SQLite page/index overhead |
+| Broker | Mosquitto 2.0.20 в отдельном Debian LXC |
+| Broker runtime | Active, без process restarts с текущего запуска |
+| Persistence | `persistence true`; persistence DB существует и обновляется |
+| Disk | Около 2.9 GiB свободно в broker LXC |
+| Authentication | Anonymous access выключен, password authentication включена, listener `1883` только для LAN |
+| Offline QoS 0 queue | Не включена; Mosquitto default `queue_qos0_messages=false` |
+| Queue count limit | Не переопределён; default `max_queued_messages=1000` |
+| Persistence autosave | Не переопределён; default 1800 секунд |
+
+Ключевые последствия:
+
+- `dateutc` позволяет сохранить реальное время измерения после offline backlog.
+- Из-за QoS 0 persistent subscription relay по умолчанию не получит сообщения, опубликованные во время его остановки.
+- Даже после включения QoS 0 queue default limit 1000 покрывает только 16 ч 40 мин при интервале 60 секунд, меньше требования 24 часа.
+- Для защиты короткого relay outage потребуется `queue_qos0_messages true`, persistent client session и queue limit больше 1440; целевой запас определяется implementation plan.
+- Raw payload содержит credential-like `PASSKEY`; edge-relay обязан санитизировать его до SQLite, transport и logs.
+- Broker/restart outage намеренно не симулировался на рабочей системе. Это проверяется позже в staging LXC с копией конфигурации.
+- Read-only capture вывел текущие MQTT/EcoWitt credentials в локальный diagnostic transcript. Они не изменялись, чтобы не нарушить production, но перед rollout их нужно ротировать в контролируемое окно и обновить station, broker и clients согласованно.
 
 ### Unit tests
 
