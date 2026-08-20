@@ -29,7 +29,7 @@ flowchart LR
     narodmon["Narodmon"]
     telegram_api["Telegram Bot API"]
     max_api["Max Bot API"]
-    geo_api["IP geolocation API"]
+    geo_api["IPGeolocation Astronomy API"]
 
     station -->|"MQTT telemetry"| broker
     broker -->|"MQTT subscription"| weather
@@ -69,7 +69,7 @@ flowchart LR
 | Open-Meteo | Входящее | Прогноз погоды для заданных координат. |
 | XRAS | Входящее | Геомагнитный прогноз и фактические значения Kp. |
 | Источник МЧС | Входящее | Уровни воды гидрологических постов. |
-| IP geolocation API | Исходящее чтение | Географический контекст по IP для отдельных пользовательских сценариев. |
+| IPGeolocation Astronomy API | Исходящее чтение | Данные Солнца и Луны по координатам и дате; используется optional, с локальным fallback. |
 | Telegram Bot API | Двунаправленное | Long polling/updates, команды, callback, сообщения и фотографии. |
 | Max Bot API | Двунаправленное | Long polling, команды, callback и исходящие сообщения. |
 | Narodmon | Исходящее | Публикация последних измерений станции. |
