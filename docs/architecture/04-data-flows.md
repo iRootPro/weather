@@ -1,6 +1,6 @@
 # Основные потоки данных
 
-**Последняя сверка:** 2026-08-20  
+**Последняя сверка:** 2026-08-20
 **Источники истины:** `cmd/*/main.go`, `internal/mqtt/`, `internal/handler/`, `internal/service/`, `internal/repository/`, `internal/telegram/`, `internal/maxbot/`
 
 ## 1. Приём телеметрии EcoWitt

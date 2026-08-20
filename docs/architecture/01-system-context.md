@@ -1,6 +1,6 @@
 # Системный контекст
 
-**Последняя сверка:** 2026-08-20  
+**Последняя сверка:** 2026-08-20
 **Источники истины:** `cmd/*/main.go`, `pkg/*/client.go`, `internal/telegram/`, `internal/maxbot/`
 
 ## Назначение системы
@@ -33,9 +33,9 @@ flowchart LR
 
     station -->|"MQTT telemetry"| broker
     broker -->|"MQTT subscription"| weather
-    openmeteo -->|"HTTPS forecast"| weather
-    xras -->|"HTTPS geomagnetic data"| weather
-    emercit -->|"HTTPS hydrology data"| weather
+    weather <-->|"HTTPS request / response"| openmeteo
+    weather <-->|"HTTPS request / response"| xras
+    weather <-->|"HTTPS request / response"| emercit
     weather -->|"TCP payload"| narodmon
 
     visitor <-->|"HTTP / HTML / HTMX"| weather
@@ -66,17 +66,17 @@ flowchart LR
 | Система | Направление относительно сервиса | Назначение |
 |---|---|---|
 | EcoWitt station и MQTT broker | Входящее | Основной поток локальных погодных измерений. Broker остаётся внешней инфраструктурой. |
-| Open-Meteo | Входящее | Прогноз погоды для заданных координат. |
-| XRAS | Входящее | Геомагнитный прогноз и фактические значения Kp. |
-| Источник МЧС | Входящее | Уровни воды гидрологических постов. |
-| IPGeolocation Astronomy API | Исходящее чтение | Данные Солнца и Луны по координатам и дате; используется optional, с локальным fallback. |
+| Open-Meteo | Исходящий HTTPS-запрос / входящий ответ | Прогноз погоды для заданных координат. |
+| XRAS | Исходящий HTTPS-запрос / входящий ответ | Геомагнитный прогноз и фактические значения Kp. |
+| Источник МЧС | Исходящий HTTPS-запрос / входящий ответ | Уровни воды гидрологических постов. |
+| IPGeolocation Astronomy API | Исходящий HTTPS-запрос / входящий ответ | Опциональные moonrise/moonset по координатам и дате; при отсутствии клиента используется локальный fallback. |
 | Telegram Bot API | Двунаправленное | Long polling/updates, команды, callback, сообщения и фотографии. |
 | Max Bot API | Двунаправленное | Long polling, команды, callback и исходящие сообщения. |
 | Narodmon | Исходящее | Публикация последних измерений станции. |
 
 ## Границы ответственности
 
-Сервис гарантирует обработку данных после их получения и фиксирует ошибки интеграций в логах. Он не гарантирует:
+Телеметрия становится durable только после успешной записи в `weather_data`. MQTT callback не имеет application queue или replay: malformed payload и ошибка записи логируются, но сообщение может быть потеряно. Система не гарантирует:
 
 - доставку телеметрии до внешнего MQTT broker;
 - доступность, полноту и точность сторонних прогнозов;

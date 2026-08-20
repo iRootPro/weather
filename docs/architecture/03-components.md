@@ -1,6 +1,6 @@
 # Внутренние компоненты Go-приложения
 
-**Последняя сверка:** 2026-08-20  
+**Последняя сверка:** 2026-08-20
 **Источники истины:** `cmd/`, `internal/handler/`, `internal/service/`, `internal/repository/`, `internal/models/`, `internal/mqtt/`, `internal/telegram/`, `internal/maxbot/`, `pkg/`
 
 ## Основное направление зависимостей

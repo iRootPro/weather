@@ -1,6 +1,6 @@
 # Внешние интеграции
 
-**Последняя сверка:** 2026-08-20  
+**Последняя сверка:** 2026-08-20
 **Источники истины:** `pkg/openmeteo/`, `pkg/narodmon/`, `pkg/xras/`, `pkg/emercit/`, `pkg/ipgeolocation/`, `pkg/mqttclient/`, `internal/telegram/`, `internal/maxbot/`, `internal/config/config.go`
 
 ## Карта интеграций
@@ -8,10 +8,10 @@
 | Система | Направление | Протокол и auth | Клиент | Потребитель | Частота |
 |---|---|---|---|---|---|
 | MQTT broker / EcoWitt | Входящее | MQTT over TCP; optional username/password | Eclipse Paho wrapper `pkg/mqttclient` | `mqtt-consumer` | Непрерывная subscription |
-| Open-Meteo | Входящее | HTTPS GET; без auth | `pkg/openmeteo` | `forecast-fetcher` | При старте и каждые `FORECAST_UPDATE_INTERVAL` |
-| XRAS | Входящее | HTTPS GET; без auth; optional proxy | `pkg/xras` | `geomagnetic-fetcher` | При старте и каждые `GEOMAGNETIC_UPDATE_INTERVAL` |
-| Emercom public service | Входящее | HTTPS; JWT bearer после login | `pkg/emercit` | `hydro-fetcher` | При старте и каждые `HYDRO_UPDATE_INTERVAL` |
-| IPGeolocation astronomy | Входящее optional | HTTPS GET; API key query parameter | `pkg/ipgeolocation` | Moon service в API и Telegram | По пользовательскому запросу/формированию данных; local fallback без key |
+| Open-Meteo | Исходящий HTTPS-запрос / входящий ответ | HTTPS GET; без auth | `pkg/openmeteo` | `forecast-fetcher` | При старте и каждые `FORECAST_UPDATE_INTERVAL` |
+| XRAS | Исходящий HTTPS-запрос / входящий ответ | HTTPS GET; без auth; optional proxy | `pkg/xras` | `geomagnetic-fetcher` | При старте и каждые `GEOMAGNETIC_UPDATE_INTERVAL` |
+| Emercom public service | Исходящий HTTPS-запрос / входящий ответ | HTTPS; JWT bearer после login | `pkg/emercit` | `hydro-fetcher` | При старте и каждые `HYDRO_UPDATE_INTERVAL` |
+| IPGeolocation astronomy | Исходящий HTTPS-запрос / входящий ответ | HTTPS GET; API key query parameter | `pkg/ipgeolocation` | Moon service в API и Telegram | По пользовательскому запросу/формированию данных; local fallback без key |
 | Telegram Bot API | Двунаправленное | HTTPS; bot token | Telegram Go SDK | `telegram-bot` | Long polling + исходящие сообщения |
 | Max Bot API | Двунаправленное | HTTPS JSON; Authorization token | `internal/maxbot.Client` | `max-bot` | Long polling + исходящие сообщения |
 | Narodmon | Исходящее | Собственный text protocol over TCP; device MAC/name | `pkg/narodmon` | `narodmon-sender` | При старте и каждые `NARODMON_INTERVAL` |

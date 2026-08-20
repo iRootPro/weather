@@ -1,6 +1,6 @@
 # Логическая модель данных
 
-**Последняя сверка:** 2026-08-20  
+**Последняя сверка:** 2026-08-20
 **Источники истины:** `migrations/001_initial.sql`–`010_create_hydro_levels.sql`, `internal/models/`, `internal/repository/`
 
 PostgreSQL 16 с TimescaleDB — общий источник истины. Schema содержит 15 прикладных таблиц; файлы фотографий находятся вне БД, а таблица `photos` хранит metadata и путь.

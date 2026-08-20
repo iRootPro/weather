@@ -1,21 +1,27 @@
 # Deployment и конфигурация
 
-**Последняя сверка:** 2026-08-20  
+**Последняя сверка:** 2026-08-20
 **Источники истины:** `Dockerfile`, `docker-compose.yml`, `docker-compose.prod.yml`, `.env.example`, `internal/config/config.go`, `pkg/database/postgres.go`, `Makefile`, `DEPLOY.md`, `scripts/deploy.sh`
 
 ## Production topology
 
 ```mermaid
 flowchart TB
-    internet["Users and external APIs"]
+    web_users["Web users"]
+    source_apis["Open-Meteo / XRAS / Emercom / IPGeolocation"]
+    bot_apis["Telegram Bot API / Max Bot API"]
+    narodmon_ext["Narodmon"]
     mqtt_ext["External MQTT broker"]
     operator["Operator workstation"]
 
     subgraph server["Production host"]
         docker["Docker Compose project"]
         api["api-server :8080"]
-        workers["mqtt / forecast / geomagnetic / hydro / Narodmon"]
-        bots["Telegram bot / Max bot"]
+        mqtt["mqtt-consumer"]
+        fetchers["forecast / geomagnetic / hydro fetchers"]
+        sender["narodmon-sender"]
+        telegram["telegram-bot"]
+        maxbot["max-bot"]
         migrator["migrator one-shot job"]
         postgres["TimescaleDB :5432\nloopback host binding"]
         pgvol[("postgres_data")]
@@ -23,27 +29,39 @@ flowchart TB
         env[".env\nsecrets and runtime config"]
 
         docker --> api
-        docker --> workers
-        docker --> bots
+        docker --> mqtt
+        docker --> fetchers
+        docker --> sender
+        docker --> telegram
+        docker --> maxbot
         docker --> migrator
         docker --> postgres
         env --> api
-        env --> workers
-        env --> bots
+        env --> mqtt
+        env --> fetchers
+        env --> sender
+        env --> telegram
+        env --> maxbot
         env --> migrator
         migrator --> postgres
-        workers --> postgres
-        bots --> postgres
+        mqtt --> postgres
+        fetchers --> postgres
+        sender --> postgres
+        telegram --> postgres
+        maxbot --> postgres
         api --> postgres
         postgres --> pgvol
-        api --> photovol
-        bots --> photovol
+        api -->|"file read"| photovol
+        telegram <-->|"file read/write"| photovol
     end
 
-    internet <-->|"HTTP :8080 and outbound HTTPS/TCP"| api
-    internet <-->|"Bot APIs and source APIs"| workers
-    internet <-->|"Bot APIs"| bots
-    mqtt_ext -->|"MQTT TCP"| workers
+    web_users -->|"HTTP :8080"| api
+    api -->|"optional IPGeolocation HTTPS"| source_apis
+    fetchers -->|"Open-Meteo / XRAS / Emercom HTTPS"| source_apis
+    sender -->|"TCP payload"| narodmon_ext
+    telegram <-->|"Telegram Bot API HTTPS"| bot_apis
+    maxbot <-->|"Max Bot API HTTPS"| bot_apis
+    mqtt_ext -->|"MQTT TCP"| mqtt
     operator -->|"SSH / make deploy-*"| server
 ```
 
@@ -90,15 +108,18 @@ make migrate-status
 
 Production automation:
 
+> [!WARNING]
+> `make deploy` предназначен только для выделенного deployment checkout. Скрипт выполняет `git reset --hard` и `git clean -fd`: все остальные tracked changes и untracked files удаляются, кроме явно исключённых `.env`, backup-файлов, `backups/` и `photos/`. До и после deployment также удаляются unused Docker images и build cache; их нельзя считать rollback-механизмом.
+
 ```bash
 make deploy           # scripts/deploy.sh: fetch/reset, build and restart
 make deploy-status    # docker compose ps на host
 make deploy-logs      # aggregated production logs
-make deploy-check     # count и MAX(time) для weather_data
+make deploy-check     # count и MAX(time), только для default weather/weather
 make deploy-db-size
 ```
 
-Deployment script сохраняет `.env`, `backups/` и `photos/` при очистке server worktree. Источником production-кода является настроенная remote branch.
+Deployment script сохраняет только явно перечисленные `.env`, backup-файлы, `backups/` и `photos/`; остальное локальное состояние server checkout не сохраняется. Источником production-кода является настроенная remote branch.
 
 ## Группы конфигурации
 
@@ -141,6 +162,6 @@ Deployment script сохраняет `.env`, `backups/` и `photos/` при оч
 | Конфигурация | Host `.env`, `deploy.conf` | Защищённая копия вне Git |
 | Source code | Git remote | Не заменяет backup данных |
 
-Базовые команды DB backup/restore находятся в `DEPLOY.md`. Restore должен выполняться на совместимую schema/version и тестироваться отдельно. Фото и `photos` metadata нужно восстанавливать согласованно; один `pg_dump` не восстанавливает бинарные файлы.
+Базовые команды DB backup/restore находятся в [DEPLOY.md](../../DEPLOY.md). Restore должен выполняться на совместимую schema/version и тестироваться отдельно. Фото и `photos` metadata нужно восстанавливать согласованно; один `pg_dump` не восстанавливает бинарные файлы.
 
 См. [контейнеры](02-containers.md) и [эксплуатационный runbook](08-operations.md).

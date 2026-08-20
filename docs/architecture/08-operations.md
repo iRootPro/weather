@@ -1,13 +1,13 @@
 # Эксплуатационный runbook
 
-**Последняя сверка:** 2026-08-20  
+**Последняя сверка:** 2026-08-20
 **Источники истины:** `docker-compose.prod.yml`, `cmd/*/main.go`, `internal/config/config.go`, `pkg/logger/`, `Makefile`, `DEPLOY.md`, `docs/CLEANUP.md`
 
 ## Быстрая проверка
 
 ```bash
 make deploy-status
-make deploy-check
+make deploy-check  # использует default DB user/name weather/weather
 make deploy-logs
 ```
 
@@ -16,7 +16,7 @@ make deploy-logs
 ```bash
 docker compose -f docker-compose.prod.yml ps
 docker compose -f docker-compose.prod.yml logs --tail=100 api-server mqtt-consumer
-docker exec weather-postgres pg_isready -U weather -d weather
+docker compose -f docker-compose.prod.yml exec postgres sh -c 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
 curl -fsS http://127.0.0.1:8080/health
 ```
 
@@ -97,7 +97,7 @@ docker compose -f docker-compose.prod.yml restart mqtt-consumer
 1. Проверить, включена ли интеграция и какой interval задан в `.env`.
 2. Прочитать logs конкретного fetcher: HTTP status, timeout, parse/auth error.
 3. Для XRAS проверить optional proxy; для Emercom — credentials и station UUID; для Open-Meteo — coordinates/timezone.
-4. После исправления выполнить restart только нужного worker. Он делает fetch сразу при старте.
+4. Если исправлена только transient-проблема, выполнить `restart` нужного worker. Если изменён `.env`, пересоздать container через `up -d --force-recreate` по инструкции ниже. Worker делает fetch сразу при старте.
 5. Проверить `MAX(fetched_at)` и count новых rows.
 
 Старые успешно сохранённые данные остаются доступны; outage fetcher не требует остановки API.
@@ -108,7 +108,7 @@ docker compose -f docker-compose.prod.yml restart mqtt-consumer
 2. Проверить наличие token без вывода его значения.
 3. Проверить outbound HTTPS/DNS до Bot API.
 4. Проверить DB connectivity и состояние user/subscription tables.
-5. Перезапустить только нужный bot. Для Max постоянные `GetUpdates` errors должны сопровождаться 5-second retry; для пустого Max token process находится в disabled state.
+5. Если конфигурация не менялась, перезапустить только нужный bot. После изменения token или другого значения `.env` пересоздать container. Для Max постоянные `GetUpdates` errors должны сопровождаться 5-second retry; при пустом token process находится в disabled state.
 
 ### Фото не открываются или не загружаются
 
@@ -117,12 +117,19 @@ docker compose -f docker-compose.prod.yml restart mqtt-consumer
 3. Не удалять строку или файл до backup: metadata и binary должны оставаться согласованными.
 4. После восстановления volume проверить `/photos/` и gallery.
 
-## Безопасный restart
+## Restart и применение конфигурации
 
-Restart должен быть минимальным:
+При неизменной конфигурации перезапускайте только затронутый process:
 
 ```bash
 docker compose -f docker-compose.prod.yml restart <service>
+docker compose -f docker-compose.prod.yml logs -f --tail=100 <service>
+```
+
+`restart` не перечитывает `.env` и не пересоздаёт container. После изменения `.env`, image или Compose definition используйте:
+
+```bash
+docker compose -f docker-compose.prod.yml up -d --force-recreate <service>
 docker compose -f docker-compose.prod.yml logs -f --tail=100 <service>
 ```
 
@@ -149,8 +156,8 @@ docker compose -f docker-compose.prod.yml up -d
 
 ## Backup, restore и cleanup
 
-- DB backup/restore команды: `DEPLOY.md`.
-- Docker image/build-cache cleanup: `docs/CLEANUP.md` и `make deploy-clean`.
+- DB backup/restore команды: [DEPLOY.md](../../DEPLOY.md).
+- Docker image/build-cache cleanup: [docs/CLEANUP.md](../CLEANUP.md) и `make deploy-clean`.
 - `make deploy-clean-logs` необратимо обнуляет Docker JSON logs; сначала сохранить нужные incident logs.
 - `make deploy-clean-all` объединяет image/cache и log cleanup; это не routine health action.
 - Фото требуют отдельного backup `photos_data`; DB dump их не содержит.
