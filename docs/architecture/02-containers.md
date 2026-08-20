@@ -38,7 +38,7 @@ flowchart TB
         sender -->|"SQL latest weather"| db
         telegram <-->|"SQL users / subscriptions / data"| db
         maxbot <-->|"SQL users / subscriptions / data"| db
-        api <-->|"file read/write"| photos
+        api -->|"file read"| photos
         telegram <-->|"file read/write"| photos
     end
 
@@ -62,12 +62,12 @@ flowchart TB
 | `postgres` | Транзакционные данные и временные ряды TimescaleDB | SQL от сервисов | SQL result sets | `postgres_data` | Нет; healthcheck открывает запуск остальных |
 | `migrator` | Применяет `migrations/*.sql` через Goose | Файлы миграций, DB config | Изменённая schema | Таблицы Goose в DB | Healthy PostgreSQL |
 | `mqtt-consumer` | Парсит MQTT telemetry и сохраняет измерения/сенсоры | MQTT messages | SQL inserts/updates | PostgreSQL | Migrator completed в production |
-| `api-server` | REST API, HTML, HTMX partials, static assets и фото | HTTP requests | HTML/JSON/files | PostgreSQL, `photos_data` | Migrator completed в production |
+| `api-server` | REST API, HTML, HTMX partials, static assets и фото | HTTP requests | HTML/JSON/files | PostgreSQL, чтение `photos_data` | Migrator completed в production |
 | `forecast-fetcher` | Периодически загружает прогноз | Open-Meteo HTTPS | SQL upsert forecast | PostgreSQL | Migrator completed в production |
 | `geomagnetic-fetcher` | Периодически загружает геомагнитные данные | XRAS HTTPS | SQL upsert geomagnetic | PostgreSQL | Migrator completed в production |
 | `hydro-fetcher` | Периодически загружает уровни воды | МЧС HTTPS | SQL upsert hydro levels | PostgreSQL | Migrator completed в production |
 | `narodmon-sender` | Публикует последние измерения | SQL latest weather | TCP payload в Narodmon; лог отправки | PostgreSQL | Migrator completed в production |
-| `telegram-bot` | Обрабатывает updates, команды, фото, подписки и фоновые уведомления | Telegram Bot API, SQL | Telegram messages, SQL, files | PostgreSQL, `photos_data` | Migrator completed в production |
+| `telegram-bot` | Обрабатывает updates, команды, фото, подписки и фоновые уведомления | Telegram Bot API, SQL | Telegram messages, SQL, files | PostgreSQL, чтение/запись `photos_data` | Migrator completed в production |
 | `max-bot` | Обрабатывает long polling, команды, подписки и уведомления | Max Bot API, SQL | Max messages, SQL | PostgreSQL | Migrator completed в production |
 | `weather-tui` | Терминальное представление погодных данных | REST API | Интерактивный terminal UI | Не хранит | Доступный `api-server` |
 

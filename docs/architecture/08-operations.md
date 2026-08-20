@@ -52,6 +52,8 @@ curl -fsS http://127.0.0.1:8080/health
 | Max notifier | 300 s | Weather events/subscriptions | Max + notification rows | Poll/send errors, нет dedup history |
 | Daily summaries | 07:00 local | Weather/forecast/astronomy | Telegram и Max | Нет сообщения после scheduled window |
 
+`narodmon-sender`, `geomagnetic-fetcher` и `hydro-fetcher` завершаются с code 0, если соответствующий `*_ENABLED=false`. При `restart: unless-stopped` это может выглядеть как restart loop. Production Compose рассчитан на включённые workers; для намеренного отключения нужно также остановить/не запускать соответствующий service, а не только менять flag.
+
 ## Диагностические SQL-запросы
 
 Выполнять через `psql` внутри PostgreSQL container с production credentials.
