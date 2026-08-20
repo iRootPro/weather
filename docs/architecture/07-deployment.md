@@ -17,7 +17,7 @@ flowchart TB
 
     subgraph server["Production host"]
         docker["Docker Compose project"]
-        api["api-server :8080"]
+        api["api-server internal :8080\nproduction constraint"]
         mqtt["mqtt-consumer"]
         fetchers["forecast / geomagnetic / hydro fetchers"]
         sender["narodmon-sender"]
@@ -56,7 +56,7 @@ flowchart TB
         telegram <-->|"file read/write"| photovol
     end
 
-    web_users -->|"HTTP configurable host port -> 8080"| api
+    web_users -->|"HTTP host 8080 -> container 8080"| api
     api -->|"optional astronomy HTTPS"| astronomy_api
     telegram -->|"optional astronomy HTTPS"| astronomy_api
     fetchers -->|"Open-Meteo / XRAS / Emercom HTTPS"| source_apis
@@ -68,6 +68,8 @@ flowchart TB
 ```
 
 Compose не содержит reverse proxy/TLS container. `api-server` публикует `${HTTP_PORT:-8080}:8080`; внешний TLS/reverse proxy, если используется, находится вне этого репозитория. PostgreSQL в production доступен на host только через `127.0.0.1:${DB_PORT}`.
+
+Текущее production-ограничение: `HTTP_PORT` должен оставаться `8080`. Одна переменная одновременно задаёт listen port приложения и левую сторону mapping, тогда как container target в Compose жёстко равен `8080`. Другое значение заставит приложение слушать другой внутренний port и сломает host mapping. Поддержка отдельного host port потребует изменения Compose-контракта.
 
 ## Порядок запуска
 
@@ -131,7 +133,7 @@ make deploy-db-size   # размер, только для default weather/weathe
 |---|---|---|
 | `DB_*` | Все DB-backed процессы | Host, port, database, user/password, SSL mode; pool limits читаются `pkg/database` |
 | `MQTT_*` | MQTT consumer | Broker address, credentials, topic, client ID |
-| `HTTP_*`, `API_URL` | API server, TUI | Listen address/port и URL REST API |
+| `HTTP_*`, `API_URL` | API server, TUI | Listen address/port и URL REST API; production Compose сейчас требует `HTTP_PORT=8080` |
 | `LOCATION_*` | Forecast, API, боты | Координаты и timezone станции |
 | `TELEGRAM_*`, `WEBSITE_URL` | Telegram bot | Token, polling/notify intervals, retries, admins, summary time |
 | `MAX_*` | Max bot | Token, polling/notify intervals, summary time |
