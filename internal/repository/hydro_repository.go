@@ -61,13 +61,13 @@ func (r *hydroRepository) SaveReadingsBatch(ctx context.Context, data []models.H
 	query := `
 		INSERT INTO hydro_level_readings (
 			observed_at, station_uuid, waterlevel_uuid, level_bs_m, level_zero_m,
-			change_cm_per_hour, lead_text, state_code, level_code, raw_data, fetched_at
+			source_hdi_ihr, lead_text, state_code, level_code, raw_data, fetched_at
 		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
 		ON CONFLICT (observed_at, station_uuid) DO UPDATE SET
 			waterlevel_uuid = EXCLUDED.waterlevel_uuid,
 			level_bs_m = EXCLUDED.level_bs_m,
 			level_zero_m = EXCLUDED.level_zero_m,
-			change_cm_per_hour = COALESCE(EXCLUDED.change_cm_per_hour, hydro_level_readings.change_cm_per_hour),
+			source_hdi_ihr = COALESCE(EXCLUDED.source_hdi_ihr, hydro_level_readings.source_hdi_ihr),
 			lead_text = COALESCE(EXCLUDED.lead_text, hydro_level_readings.lead_text),
 			state_code = COALESCE(EXCLUDED.state_code, hydro_level_readings.state_code),
 			level_code = COALESCE(EXCLUDED.level_code, hydro_level_readings.level_code),
@@ -77,7 +77,7 @@ func (r *hydroRepository) SaveReadingsBatch(ctx context.Context, data []models.H
 	batch := &pgx.Batch{}
 	for _, d := range data {
 		batch.Queue(query, d.ObservedAt, d.StationUUID, d.WaterLevelUUID, d.LevelBSM, d.LevelZeroM,
-			d.ChangeCmPerHour, d.LeadText, d.StateCode, d.LevelCode, d.RawData, d.FetchedAt)
+			d.SourceHDIIHR, d.LeadText, d.StateCode, d.LevelCode, d.RawData, d.FetchedAt)
 	}
 	br := r.pool.SendBatch(ctx, batch)
 	defer br.Close()
@@ -109,7 +109,7 @@ func (r *hydroRepository) GetGauge(ctx context.Context, stationUUID string) (*mo
 
 func (r *hydroRepository) GetLatest(ctx context.Context, stationUUID string) (*models.HydroLevelReading, error) {
 	query := `SELECT observed_at, station_uuid, waterlevel_uuid, level_bs_m, level_zero_m,
-		change_cm_per_hour, lead_text, state_code, level_code, raw_data, fetched_at
+		source_hdi_ihr, lead_text, state_code, level_code, raw_data, fetched_at
 		FROM hydro_level_readings WHERE station_uuid = $1 ORDER BY observed_at DESC LIMIT 1`
 	rows, err := r.queryReadings(ctx, query, stationUUID)
 	if err != nil {
@@ -121,11 +121,11 @@ func (r *hydroRepository) GetLatest(ctx context.Context, stationUUID string) (*m
 	return &rows[0], nil
 }
 
-func (r *hydroRepository) GetPreviousBefore(ctx context.Context, stationUUID string, before time.Time) (*models.HydroLevelReading, error) {
+func (r *hydroRepository) GetPreviousBefore(ctx context.Context, stationUUID, waterLevelUUID string, before time.Time) (*models.HydroLevelReading, error) {
 	query := `SELECT observed_at, station_uuid, waterlevel_uuid, level_bs_m, level_zero_m,
-		change_cm_per_hour, lead_text, state_code, level_code, raw_data, fetched_at
-		FROM hydro_level_readings WHERE station_uuid = $1 AND observed_at < $2 ORDER BY observed_at DESC LIMIT 1`
-	rows, err := r.queryReadings(ctx, query, stationUUID, before)
+		source_hdi_ihr, lead_text, state_code, level_code, raw_data, fetched_at
+		FROM hydro_level_readings WHERE station_uuid = $1 AND waterlevel_uuid = $2 AND observed_at < $3 ORDER BY observed_at DESC LIMIT 1`
+	rows, err := r.queryReadings(ctx, query, stationUUID, waterLevelUUID, before)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +137,7 @@ func (r *hydroRepository) GetPreviousBefore(ctx context.Context, stationUUID str
 
 func (r *hydroRepository) GetNearBefore(ctx context.Context, stationUUID string, target time.Time, window time.Duration) (*models.HydroLevelReading, error) {
 	query := `SELECT observed_at, station_uuid, waterlevel_uuid, level_bs_m, level_zero_m,
-		change_cm_per_hour, lead_text, state_code, level_code, raw_data, fetched_at
+		source_hdi_ihr, lead_text, state_code, level_code, raw_data, fetched_at
 		FROM hydro_level_readings
 		WHERE station_uuid = $1 AND observed_at <= $2 AND observed_at >= $3
 		ORDER BY observed_at DESC LIMIT 1`
@@ -153,7 +153,7 @@ func (r *hydroRepository) GetNearBefore(ctx context.Context, stationUUID string,
 
 func (r *hydroRepository) GetRange(ctx context.Context, stationUUID string, from, to time.Time) ([]models.HydroLevelReading, error) {
 	query := `SELECT observed_at, station_uuid, waterlevel_uuid, level_bs_m, level_zero_m,
-		change_cm_per_hour, lead_text, state_code, level_code, raw_data, fetched_at
+		source_hdi_ihr, lead_text, state_code, level_code, raw_data, fetched_at
 		FROM hydro_level_readings
 		WHERE station_uuid = $1 AND observed_at >= $2 AND observed_at <= $3
 		ORDER BY observed_at ASC`
@@ -179,7 +179,7 @@ func (r *hydroRepository) queryReadings(ctx context.Context, query string, args 
 	for rows.Next() {
 		var d models.HydroLevelReading
 		if err := rows.Scan(&d.ObservedAt, &d.StationUUID, &d.WaterLevelUUID, &d.LevelBSM, &d.LevelZeroM,
-			&d.ChangeCmPerHour, &d.LeadText, &d.StateCode, &d.LevelCode, &d.RawData, &d.FetchedAt); err != nil {
+			&d.SourceHDIIHR, &d.LeadText, &d.StateCode, &d.LevelCode, &d.RawData, &d.FetchedAt); err != nil {
 			return nil, fmt.Errorf("failed to scan hydro reading: %w", err)
 		}
 		out = append(out, d)

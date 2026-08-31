@@ -671,8 +671,8 @@ func (s *DashboardService) buildHydroAttentionCard(ctx context.Context, now time
 			subtitle = fmt.Sprintf("Неблагоприятный уровень превышен на %.2f м", math.Abs(float64(*snap.ToPreventionM)))
 		}
 	}
-	if snap.Current.ChangeCmPerHour != nil {
-		change := *snap.Current.ChangeCmPerHour
+	if snap.ChangeCmPerHour != nil {
+		change := *snap.ChangeCmPerHour
 		switch {
 		case change >= 3:
 			priority += 18
@@ -705,7 +705,7 @@ func (s *DashboardService) buildHydroAttentionCard(ctx context.Context, now time
 		Severity:  string(severity),
 		Priority:  models.ClampPriority(priority),
 		Reason:    "уровень воды и расстояние до неблагоприятного порога",
-		Action:    hydroAction(priority, snap.Current.ChangeCmPerHour),
+		Action:    hydroAction(priority, snap.ChangeCmPerHour),
 		Icon:      icon,
 		DetailURL: "/detail/water-level",
 	}

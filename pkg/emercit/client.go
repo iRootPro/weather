@@ -161,45 +161,44 @@ func (c *Client) Login(ctx context.Context) error {
 }
 
 func (c *Client) GetActual(ctx context.Context) (ActualResponse, error) {
-	if c.access == "" {
-		if err := c.Login(ctx); err != nil {
-			return nil, err
-		}
-	}
 	var out ActualResponse
-	if err := c.getJSON(ctx, "/api/actual/", c.access, &out); err != nil {
-		// JWT у публичного пользователя короткоживущий; один раз перелогиниваемся.
-		if strings.Contains(err.Error(), "status 401") || strings.Contains(err.Error(), "status 403") {
-			c.access = ""
-			if loginErr := c.Login(ctx); loginErr != nil {
-				return nil, loginErr
-			}
-			if retryErr := c.getJSON(ctx, "/api/actual/", c.access, &out); retryErr != nil {
-				return nil, retryErr
-			}
-			return out, nil
-		}
+	if err := c.getAuthenticatedJSON(ctx, "/api/actual/", &out); err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
 func (c *Client) GetWaterLevelHistory(ctx context.Context, waterLevelUUID string, from, to time.Time) (HistoryResponse, error) {
-	if c.access == "" {
-		if err := c.Login(ctx); err != nil {
-			return nil, err
-		}
-	}
 	path := fmt.Sprintf("/api/mchs/waterlevel/%s/?dtime_from=%s&dtime_to=%s",
 		url.PathEscape(waterLevelUUID),
 		url.QueryEscape(from.Format(time.RFC3339)),
 		url.QueryEscape(to.Format(time.RFC3339)),
 	)
 	var out HistoryResponse
-	if err := c.getJSON(ctx, path, c.access, &out); err != nil {
+	if err := c.getAuthenticatedJSON(ctx, path, &out); err != nil {
 		return nil, err
 	}
 	return out, nil
+}
+
+func (c *Client) getAuthenticatedJSON(ctx context.Context, path string, out any) error {
+	if c.access == "" {
+		if err := c.Login(ctx); err != nil {
+			return err
+		}
+	}
+	if err := c.getJSON(ctx, path, c.access, out); err != nil {
+		if !strings.Contains(err.Error(), "status 401") && !strings.Contains(err.Error(), "status 403") {
+			return err
+		}
+		// JWT публичного пользователя короткоживущий; один раз перелогиниваемся.
+		c.access = ""
+		if loginErr := c.Login(ctx); loginErr != nil {
+			return loginErr
+		}
+		return c.getJSON(ctx, path, c.access, out)
+	}
+	return nil
 }
 
 func (c *Client) getJSON(ctx context.Context, path, bearer string, out any) error {

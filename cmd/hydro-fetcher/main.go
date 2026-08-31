@@ -197,17 +197,17 @@ func buildActualReading(stationUUID, waterLevelUUID string, mch emercit.MCH, fet
 	raw, _ := json.Marshal(mch)
 	level := float32(*last.BS)
 	return &models.HydroLevelReading{
-		StationUUID:     stationUUID,
-		WaterLevelUUID:  waterLevelUUID,
-		ObservedAt:      observedAt,
-		LevelBSM:        level,
-		LevelZeroM:      emercit.Float32Ptr(last.Zero),
-		ChangeCmPerHour: emercit.Float32Ptr(last.HDIIHR),
-		LeadText:        last.HDILead,
-		StateCode:       mch.State.StateCode,
-		LevelCode:       mch.State.LevelCode,
-		RawData:         raw,
-		FetchedAt:       fetchedAt,
+		StationUUID:    stationUUID,
+		WaterLevelUUID: waterLevelUUID,
+		ObservedAt:     observedAt,
+		LevelBSM:       level,
+		LevelZeroM:     emercit.Float32Ptr(last.Zero),
+		SourceHDIIHR:   emercit.Float32Ptr(last.HDIIHR),
+		LeadText:       last.HDILead,
+		StateCode:      mch.State.StateCode,
+		LevelCode:      mch.State.LevelCode,
+		RawData:        raw,
+		FetchedAt:      fetchedAt,
 	}, nil
 }
 

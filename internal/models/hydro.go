@@ -24,17 +24,18 @@ type HydroGauge struct {
 
 // HydroLevelReading — измерение уровня воды.
 type HydroLevelReading struct {
-	StationUUID     string    `json:"station_uuid"`
-	WaterLevelUUID  string    `json:"waterlevel_uuid"`
-	ObservedAt      time.Time `json:"observed_at"`
-	LevelBSM        float32   `json:"level_bs_m"` // метры, Балтийская система высот
-	LevelZeroM      *float32  `json:"level_zero_m,omitempty"`
-	ChangeCmPerHour *float32  `json:"change_cm_per_hour,omitempty"`
-	LeadText        *string   `json:"lead_text,omitempty"`
-	StateCode       *int      `json:"state_code,omitempty"`
-	LevelCode       *int      `json:"level_code,omitempty"`
-	RawData         []byte    `json:"raw_data,omitempty"`
-	FetchedAt       time.Time `json:"fetched_at"`
+	StationUUID    string    `json:"station_uuid"`
+	WaterLevelUUID string    `json:"waterlevel_uuid"`
+	ObservedAt     time.Time `json:"observed_at"`
+	LevelBSM       float32   `json:"level_bs_m"` // метры, Балтийская система высот
+	LevelZeroM     *float32  `json:"level_zero_m,omitempty"`
+	// SourceHDIIHR — непрозрачный индекс источника Эмерсит, не скорость изменения в см/ч.
+	SourceHDIIHR *float32  `json:"source_hdi_ihr,omitempty"`
+	LeadText     *string   `json:"lead_text,omitempty"`
+	StateCode    *int      `json:"state_code,omitempty"`
+	LevelCode    *int      `json:"level_code,omitempty"`
+	RawData      []byte    `json:"raw_data,omitempty"`
+	FetchedAt    time.Time `json:"fetched_at"`
 }
 
 // HydroSnapshot — данные для карточки/текущего состояния.
@@ -44,6 +45,7 @@ type HydroSnapshot struct {
 	Previous        *HydroLevelReading `json:"previous,omitempty"`
 	DayAgo          *HydroLevelReading `json:"day_ago,omitempty"`
 	ChangeM         *float32           `json:"change_m,omitempty"`
+	ChangeCmPerHour *float32           `json:"change_cm_per_hour,omitempty"`
 	Change24hM      *float32           `json:"change_24h_m,omitempty"`
 	RelativeLevelCm *float32           `json:"relative_level_cm,omitempty"`
 	ToPreventionM   *float32           `json:"to_prevention_m,omitempty"`

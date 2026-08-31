@@ -60,7 +60,7 @@ func (s *HydroService) getSnapshotForStation(ctx context.Context, stationUUID st
 		snap.RelativeLevelCm = &v
 	}
 
-	previous, err := s.repo.GetPreviousBefore(ctx, stationUUID, current.ObservedAt)
+	previous, err := s.repo.GetPreviousBefore(ctx, stationUUID, current.WaterLevelUUID, current.ObservedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -68,6 +68,11 @@ func (s *HydroService) getSnapshotForStation(ctx context.Context, stationUUID st
 	if previous != nil {
 		v := current.LevelBSM - previous.LevelBSM
 		snap.ChangeM = &v
+		elapsedHours := float32(current.ObservedAt.Sub(previous.ObservedAt).Hours())
+		if elapsedHours > 0 {
+			rate := v * 100 / elapsedHours
+			snap.ChangeCmPerHour = &rate
+		}
 	}
 
 	dayAgo, err := s.repo.GetNearBefore(ctx, stationUUID, current.ObservedAt.Add(-24*time.Hour), 2*time.Hour)

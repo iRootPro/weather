@@ -107,9 +107,9 @@ func (h *Handler) buildWaterLevelCard(r *http.Request) WaterLevelCardData {
 		}
 		card.ObjectName = snap.Gauge.MonitoringObject
 	}
-	if snap.Current.ChangeCmPerHour != nil {
-		card.ChangeText = formatSignedFloat(*snap.Current.ChangeCmPerHour, "%.0f см/ч")
-		card.ChangeClass = changeClass(*snap.Current.ChangeCmPerHour)
+	if snap.ChangeCmPerHour != nil {
+		card.ChangeText = formatSignedFloat(*snap.ChangeCmPerHour, "%.0f см/ч")
+		card.ChangeClass = changeClass(*snap.ChangeCmPerHour)
 	} else if snap.ChangeM != nil {
 		cm := *snap.ChangeM * 100
 		card.ChangeText = formatSignedFloat(cm, "%.0f см")
@@ -139,8 +139,8 @@ func (h *Handler) buildWaterLevelCard(r *http.Request) WaterLevelCardData {
 		card.RiskHeadline = fmt.Sprintf("%.3f м", snap.Current.LevelBSM)
 		card.RiskCaption = "текущая отметка уровня"
 	}
-	card.TrendText, card.TrendClass = trendLabel(snap.Current.ChangeCmPerHour, snap.Change24hM)
-	card.StatusNote = hydroStatusNote(snap.Status, snap.Current.ChangeCmPerHour, snap.Change24hM)
+	card.TrendText, card.TrendClass = trendLabel(snap.ChangeCmPerHour, snap.Change24hM)
+	card.StatusNote = hydroStatusNote(snap.Status, snap.ChangeCmPerHour, snap.Change24hM)
 	upstream, err := h.hydroService.GetUpstreamSnapshots(r.Context(), time.Now())
 	if err != nil {
 		slog.Warn("failed to get upstream hydro snapshots", "error", err)
@@ -191,9 +191,9 @@ func buildWaterLevelMini(snap *models.HydroSnapshot) *WaterLevelMiniData {
 		mini.ObjectName = snap.Gauge.MonitoringObject
 		mini.Role = hydroStationRole(mini.ObjectName)
 	}
-	if snap.Current.ChangeCmPerHour != nil {
-		mini.ChangeText = formatSignedFloat(*snap.Current.ChangeCmPerHour, "%.0f см/ч")
-		mini.ChangeClass = changeClass(*snap.Current.ChangeCmPerHour)
+	if snap.ChangeCmPerHour != nil {
+		mini.ChangeText = formatSignedFloat(*snap.ChangeCmPerHour, "%.0f см/ч")
+		mini.ChangeClass = changeClass(*snap.ChangeCmPerHour)
 	} else if snap.ChangeM != nil {
 		cm := *snap.ChangeM * 100
 		mini.ChangeText = formatSignedFloat(cm, "%.0f см")
@@ -214,7 +214,7 @@ func buildWaterLevelMini(snap *models.HydroSnapshot) *WaterLevelMiniData {
 	if snap.ToDangerM != nil {
 		mini.ToDanger = formatDistanceToThreshold(*snap.ToDangerM)
 	}
-	mini.TrendText, mini.TrendClass = trendLabel(snap.Current.ChangeCmPerHour, snap.Change24hM)
+	mini.TrendText, mini.TrendClass = trendLabel(snap.ChangeCmPerHour, snap.Change24hM)
 	return mini
 }
 
