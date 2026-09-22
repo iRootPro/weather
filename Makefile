@@ -1,4 +1,4 @@
-.PHONY: build build-consumer build-api build-migrator build-tui build-bot build-max-bot build-forecast build-hydro run-consumer run-api run-tui run-bot run-max-bot run-forecast run-hydro test lint migrate-up migrate-down docker-up docker-down tidy deploy deploy-logs deploy-status deploy-stop deploy-init deploy-check deploy-db-size deploy-clean deploy-clean-logs deploy-clean-all
+.PHONY: build build-consumer build-api build-migrator build-tui build-bot build-max-bot build-forecast build-hydro run-consumer run-api run-tui run-bot run-max-bot run-forecast run-hydro test lint migrate-up migrate-down docker-up docker-down tidy deploy deploy-backup deploy-logs deploy-status deploy-stop deploy-init deploy-check deploy-db-size deploy-clean deploy-clean-logs deploy-clean-all
 
 # Сборка
 build:
@@ -107,6 +107,10 @@ SSH_CMD := ssh -p $(or $(DEPLOY_PORT),22) $(DEPLOY_USER)@$(DEPLOY_HOST)
 deploy:
 	@chmod +x scripts/deploy.sh
 	@./scripts/deploy.sh
+
+# Проверенный backup БД перед production-деплоем
+deploy-backup:
+	@$(SSH_CMD) "set -eu; cd $(DEPLOY_PATH); mkdir -p backups; backup=backups/weather-predeploy-$$(date +%Y%m%d-%H%M%S).dump; docker exec weather-postgres pg_dump -U weather -d weather -Fc > $$backup; test -s $$backup; docker exec -i weather-postgres pg_restore -l < $$backup >/dev/null; echo backup-verified: $$backup"
 
 # Первоначальная настройка сервера
 deploy-init:
