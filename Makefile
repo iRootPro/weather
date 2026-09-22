@@ -1,4 +1,4 @@
-.PHONY: build build-consumer build-api build-migrator build-tui build-bot build-max-bot build-forecast build-hydro run-consumer run-api run-tui run-bot run-max-bot run-forecast run-hydro test lint migrate-up migrate-down docker-up docker-down tidy deploy deploy-backup deploy-logs deploy-status deploy-stop deploy-init deploy-check deploy-db-size deploy-clean deploy-clean-logs deploy-clean-all
+.PHONY: build build-consumer build-api build-migrator build-tui build-bot build-max-bot build-forecast build-hydro run-consumer run-api run-tui run-bot run-max-bot run-forecast run-hydro test lint migrate-up migrate-down docker-up docker-down tidy deploy deploy-backup deploy-prune-backups deploy-logs deploy-status deploy-stop deploy-init deploy-check deploy-db-size deploy-disk-usage deploy-clean deploy-clean-logs deploy-clean-all
 
 # Сборка
 build:
@@ -112,6 +112,9 @@ deploy:
 deploy-backup:
 	@$(SSH_CMD) "set -eu; cd $(DEPLOY_PATH); mkdir -p backups; backup=backups/weather-predeploy-$$(date +%Y%m%d-%H%M%S).dump; docker exec weather-postgres pg_dump -U weather -d weather -Fc > \$$backup; test -s \$$backup; docker exec -i weather-postgres pg_restore -l < \$$backup >/dev/null; echo backup-verified: \$$backup"
 
+deploy-prune-backups:
+	@$(SSH_CMD) "set -eu; cd $(DEPLOY_PATH)/backups; find . -maxdepth 1 -type f -name '*.dump' -printf '%T@ %p\n' | sort -nr | tail -n +3 | cut -d' ' -f2- | xargs -r rm -f --; echo 'retained two newest dump files'"
+
 # Первоначальная настройка сервера
 deploy-init:
 	@echo "=== Первоначальная настройка сервера ==="
@@ -146,6 +149,9 @@ deploy-check:
 deploy-db-size:
 	@echo "=== Размер базы данных ==="
 	$(SSH_CMD) "docker exec weather-postgres psql -U weather -d weather -c \"SELECT pg_size_pretty(pg_database_size('weather')) as db_size;\""
+
+deploy-disk-usage:
+	@$(SSH_CMD) "df -h /; echo '=== Largest root directories ==='; du -xhd1 / 2>/dev/null | sort -h; echo '=== Weather, Docker, and logs ==='; du -xhd1 /opt/weather /var/lib/docker /var/log 2>/dev/null | sort -h"
 
 # Очистка Docker (удаление неиспользуемых образов и кеша)
 deploy-clean:
