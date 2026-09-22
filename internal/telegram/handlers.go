@@ -121,7 +121,9 @@ func (h *BotHandler) handleStart(ctx context.Context, msg *tgbotapi.Message) {
 		reply.ReplyMarkup = GetReplyKeyboard()
 	}
 
-	h.bot.Send(reply)
+	if _, err := h.bot.Send(reply); err != nil {
+		h.logger.Error("failed to send start reply", "chat_id", msg.Chat.ID, "error", err)
+	}
 }
 
 func (h *BotHandler) handleHelp(ctx context.Context, msg *tgbotapi.Message) {
@@ -185,7 +187,9 @@ func (h *BotHandler) handleHelp(ctx context.Context, msg *tgbotapi.Message) {
 	reply := tgbotapi.NewMessage(msg.Chat.ID, text)
 	reply.ParseMode = "Markdown"
 	reply.ReplyMarkup = GetReplyKeyboard()
-	h.bot.Send(reply)
+	if _, err := h.bot.Send(reply); err != nil {
+		h.logger.Error("failed to send help reply", "chat_id", msg.Chat.ID, "error", err)
+	}
 }
 
 func (h *BotHandler) handleCurrentWeather(ctx context.Context, msg *tgbotapi.Message) {
@@ -219,7 +223,9 @@ func (h *BotHandler) handleCurrentWeather(ctx context.Context, msg *tgbotapi.Mes
 	reply := tgbotapi.NewMessage(msg.Chat.ID, text)
 	reply.ParseMode = "Markdown"
 	reply.ReplyMarkup = GetWeatherDetailKeyboard()
-	h.bot.Send(reply)
+	if _, err := h.bot.Send(reply); err != nil {
+		h.logger.Error("failed to send weather reply", "chat_id", msg.Chat.ID, "error", err)
+	}
 }
 
 func (h *BotHandler) handleStats(ctx context.Context, msg *tgbotapi.Message) {
@@ -241,7 +247,9 @@ func (h *BotHandler) handleStats(ctx context.Context, msg *tgbotapi.Message) {
 	reply := tgbotapi.NewMessage(msg.Chat.ID, text)
 	reply.ParseMode = "Markdown"
 	reply.ReplyMarkup = GetStatsKeyboard()
-	h.bot.Send(reply)
+	if _, err := h.bot.Send(reply); err != nil {
+		h.logger.Error("failed to send stats reply", "chat_id", msg.Chat.ID, "error", err)
+	}
 }
 
 func (h *BotHandler) handleRecords(ctx context.Context, msg *tgbotapi.Message) {
@@ -257,7 +265,9 @@ func (h *BotHandler) handleRecords(ctx context.Context, msg *tgbotapi.Message) {
 	reply := tgbotapi.NewMessage(msg.Chat.ID, text)
 	reply.ParseMode = "Markdown"
 	reply.ReplyMarkup = GetMainKeyboard()
-	h.bot.Send(reply)
+	if _, err := h.bot.Send(reply); err != nil {
+		h.logger.Error("failed to send records reply", "chat_id", msg.Chat.ID, "error", err)
+	}
 }
 
 func (h *BotHandler) handleHistory(ctx context.Context, msg *tgbotapi.Message) {
@@ -272,7 +282,7 @@ func (h *BotHandler) handleSun(ctx context.Context, msg *tgbotapi.Message) {
 	reply := tgbotapi.NewMessage(msg.Chat.ID, text)
 	reply.ParseMode = "Markdown"
 	reply.ReplyMarkup = GetMainKeyboard()
-	h.bot.Send(reply)
+	h.sendAndLog(reply, "sun reply")
 }
 
 func (h *BotHandler) handleMoon(ctx context.Context, msg *tgbotapi.Message) {
@@ -283,13 +293,13 @@ func (h *BotHandler) handleMoon(ctx context.Context, msg *tgbotapi.Message) {
 	reply := tgbotapi.NewMessage(msg.Chat.ID, text)
 	reply.ParseMode = "Markdown"
 	reply.ReplyMarkup = GetMainKeyboard()
-	h.bot.Send(reply)
+	h.sendAndLog(reply, "moon reply")
 }
 
 func (h *BotHandler) handleSubscribe(ctx context.Context, msg *tgbotapi.Message) {
 	reply := tgbotapi.NewMessage(msg.Chat.ID, "Выберите тип уведомлений:")
 	reply.ReplyMarkup = GetSubscriptionKeyboard()
-	h.bot.Send(reply)
+	h.sendAndLog(reply, "subscription keyboard")
 }
 
 func (h *BotHandler) handleUnsubscribe(ctx context.Context, msg *tgbotapi.Message) {
@@ -312,7 +322,9 @@ func (h *BotHandler) handleCallbackQuery(ctx context.Context, callback *tgbotapi
 	data := callback.Data
 
 	// Подтверждаем получение callback
-	h.bot.Request(tgbotapi.NewCallback(callback.ID, ""))
+	if _, err := h.bot.Request(tgbotapi.NewCallback(callback.ID, "")); err != nil {
+		h.logger.Warn("failed to acknowledge callback", "callback_id", callback.ID, "error", err)
+	}
 
 	user, err := h.userRepo.GetByChatID(ctx, callback.Message.Chat.ID)
 	if err != nil {
@@ -336,7 +348,9 @@ func (h *BotHandler) handleCallbackQuery(ctx context.Context, callback *tgbotapi
 		}
 
 		text := fmt.Sprintf("✅ Вы подписались на уведомления: %s", GetEventTypeName(eventType))
-		h.bot.Send(tgbotapi.NewMessage(callback.Message.Chat.ID, text))
+		if _, err := h.bot.Send(tgbotapi.NewMessage(callback.Message.Chat.ID, text)); err != nil {
+			h.logger.Error("failed to confirm subscription", "chat_id", callback.Message.Chat.ID, "error", err)
+		}
 		return
 	}
 
@@ -345,12 +359,22 @@ func (h *BotHandler) handleCallbackQuery(ctx context.Context, callback *tgbotapi
 		eventType := strings.TrimPrefix(data, "unsub_")
 
 		if eventType == "all" {
-			h.subRepo.DeleteAll(ctx, user.ID)
-			h.bot.Send(tgbotapi.NewMessage(callback.Message.Chat.ID, "✅ Вы отписались от всех уведомлений"))
+			if err := h.subRepo.DeleteAll(ctx, user.ID); err != nil {
+				h.logger.Error("failed to unsubscribe from all events", "user_id", user.ID, "error", err)
+				return
+			}
+			if _, err := h.bot.Send(tgbotapi.NewMessage(callback.Message.Chat.ID, "✅ Вы отписались от всех уведомлений")); err != nil {
+				h.logger.Error("failed to confirm unsubscription", "chat_id", callback.Message.Chat.ID, "error", err)
+			}
 		} else {
-			h.subRepo.Delete(ctx, user.ID, eventType)
+			if err := h.subRepo.Delete(ctx, user.ID, eventType); err != nil {
+				h.logger.Error("failed to unsubscribe from event", "user_id", user.ID, "event_type", eventType, "error", err)
+				return
+			}
 			text := fmt.Sprintf("✅ Вы отписались от: %s", GetEventTypeName(eventType))
-			h.bot.Send(tgbotapi.NewMessage(callback.Message.Chat.ID, text))
+			if _, err := h.bot.Send(tgbotapi.NewMessage(callback.Message.Chat.ID, text)); err != nil {
+				h.logger.Error("failed to confirm event unsubscription", "chat_id", callback.Message.Chat.ID, "error", err)
+			}
 		}
 		return
 	}
@@ -496,7 +520,7 @@ func (h *BotHandler) handleTestSummary(ctx context.Context, msg *tgbotapi.Messag
 
 	reply := tgbotapi.NewMessage(msg.Chat.ID, text+testNote)
 	reply.ParseMode = "Markdown"
-	h.bot.Send(reply)
+	h.sendAndLog(reply, "test daily summary")
 
 	h.logger.Info("test summary sent", "chat_id", msg.Chat.ID)
 }
@@ -525,7 +549,7 @@ func (h *BotHandler) handleForecast(ctx context.Context, msg *tgbotapi.Message) 
 	reply := tgbotapi.NewMessage(msg.Chat.ID, text)
 	reply.ParseMode = "Markdown"
 	reply.ReplyMarkup = GetMainKeyboard()
-	h.bot.Send(reply)
+	h.sendAndLog(reply, "forecast reply")
 }
 
 func (h *BotHandler) handleMessage(ctx context.Context, msg *tgbotapi.Message) {
@@ -567,7 +591,10 @@ func (h *BotHandler) handlePhotoDocument(ctx context.Context, msg *tgbotapi.Mess
 	// Отправляем уведомление о начале обработки
 	processingMsg := tgbotapi.NewMessage(msg.Chat.ID, "⏳ Обрабатываю фотографию...")
 	processingMsg.ParseMode = "Markdown"
-	sentMsg, _ := h.bot.Send(processingMsg)
+	sentMsg, sendErr := h.bot.Send(processingMsg)
+	if sendErr != nil {
+		h.logger.Warn("failed to send photo processing message", "chat_id", msg.Chat.ID, "error", sendErr)
+	}
 
 	document := msg.Document
 
@@ -597,7 +624,11 @@ func (h *BotHandler) handlePhotoDocument(ctx context.Context, msg *tgbotapi.Mess
 		h.sendMessage(msg.Chat.ID, "❌ Ошибка при скачивании фотографии")
 		return
 	}
-	defer httpResp.Body.Close()
+	defer func() {
+		if err := httpResp.Body.Close(); err != nil {
+			h.logger.Warn("failed to close downloaded photo", "error", err)
+		}
+	}()
 
 	// Читаем данные в буфер
 	fileData := new(bytes.Buffer)
@@ -634,7 +665,11 @@ func (h *BotHandler) handlePhotoDocument(ctx context.Context, msg *tgbotapi.Mess
 	}
 
 	bytesWritten, err := io.Copy(tempFile, bytes.NewReader(fileData.Bytes()))
-	tempFile.Close()
+	if closeErr := tempFile.Close(); closeErr != nil {
+		h.logger.Error("failed to close temp file", "error", closeErr, "filepath", tempFilepath)
+		h.sendMessage(msg.Chat.ID, "❌ Ошибка при сохранении фотографии")
+		return
+	}
 	if err != nil {
 		h.logger.Error("failed to write temp file", "error", err)
 		h.sendMessage(msg.Chat.ID, "❌ Ошибка при сохранении фотографии")
@@ -682,14 +717,18 @@ func (h *BotHandler) handlePhotoDocument(ctx context.Context, msg *tgbotapi.Mess
 			h.logger.Error("failed to convert HEIC to JPEG", "error", err, "output", string(convertOutput))
 			h.sendMessage(msg.Chat.ID, "❌ Ошибка при конвертации HEIC в JPEG")
 			// Удаляем временный файл
-			os.Remove(tempFilepath)
+			if removeErr := os.Remove(tempFilepath); removeErr != nil && !os.IsNotExist(removeErr) {
+				h.logger.Warn("failed to remove temporary HEIC file", "error", removeErr, "filepath", tempFilepath)
+			}
 			return
 		}
 
 		h.logger.Info("HEIC converted to JPEG successfully", "filepath", finalFilepath, "output", string(convertOutput))
 
 		// Удаляем временный HEIC файл после конвертации
-		os.Remove(tempFilepath)
+		if err := os.Remove(tempFilepath); err != nil && !os.IsNotExist(err) {
+			h.logger.Warn("failed to remove converted HEIC source", "error", err, "filepath", tempFilepath)
+		}
 	} else {
 		// Для других форматов просто используем временный файл как финальный
 		finalFilename = tempFilename
@@ -760,8 +799,10 @@ func (h *BotHandler) handlePhotoDocument(ctx context.Context, msg *tgbotapi.Mess
 	}
 
 	// Удаляем сообщение о обработке
-	deleteMsg := tgbotapi.NewDeleteMessage(msg.Chat.ID, sentMsg.MessageID)
-	h.bot.Send(deleteMsg)
+	if sendErr == nil {
+		deleteMsg := tgbotapi.NewDeleteMessage(msg.Chat.ID, sentMsg.MessageID)
+		h.sendAndLog(deleteMsg, "delete photo processing message")
+	}
 
 	var confirmText string
 	if isAdmin {
@@ -805,7 +846,7 @@ func (h *BotHandler) handlePhotoDocument(ctx context.Context, msg *tgbotapi.Mess
 
 	reply := tgbotapi.NewMessage(msg.Chat.ID, confirmText)
 	reply.ParseMode = "Markdown"
-	h.bot.Send(reply)
+	h.sendAndLog(reply, "photo upload confirmation")
 }
 
 func (h *BotHandler) handlePhoto(ctx context.Context, msg *tgbotapi.Message) {
@@ -825,7 +866,7 @@ func (h *BotHandler) handlePhoto(ctx context.Context, msg *tgbotapi.Message) {
 
 	reply := tgbotapi.NewMessage(msg.Chat.ID, instructionText)
 	reply.ParseMode = "Markdown"
-	h.bot.Send(reply)
+	h.sendAndLog(reply, "photo upload instructions")
 
 	h.logger.Info("rejected compressed photo upload", "chat_id", msg.Chat.ID, "username", msg.From.UserName)
 }
@@ -859,19 +900,19 @@ func formatWeatherDescription(w *models.WeatherData) string {
 func getFileExtension(mimeType, fileName string) string {
 	// Маппинг MIME типов на расширения
 	mimeToExt := map[string]string{
-		"image/jpeg":         ".jpg",
-		"image/jpg":          ".jpg",
-		"image/png":          ".png",
-		"image/heic":         ".heic",
-		"image/heif":         ".heic",
-		"image/webp":         ".webp",
-		"image/avif":         ".avif",
-		"image/bmp":          ".bmp",
-		"image/gif":          ".gif",
-		"image/tiff":         ".tiff",
-		"image/x-canon-cr2":  ".cr2",
-		"image/x-nikon-nef":  ".nef",
-		"image/x-sony-arw":   ".arw",
+		"image/jpeg":        ".jpg",
+		"image/jpg":         ".jpg",
+		"image/png":         ".png",
+		"image/heic":        ".heic",
+		"image/heif":        ".heic",
+		"image/webp":        ".webp",
+		"image/avif":        ".avif",
+		"image/bmp":         ".bmp",
+		"image/gif":         ".gif",
+		"image/tiff":        ".tiff",
+		"image/x-canon-cr2": ".cr2",
+		"image/x-nikon-nef": ".nef",
+		"image/x-sony-arw":  ".arw",
 	}
 
 	// Сначала пробуем по MIME типу
@@ -956,14 +997,13 @@ func (h *BotHandler) sendPhotoModerationToAdmins(ctx context.Context, photo *mod
 			continue
 		}
 
-		photoBytes := tgbotapi.FileBytes{
-			Name:  photo.Filename,
-			Bytes: func() []byte {
-				defer photoFile.Close()
-				data, _ := io.ReadAll(photoFile)
-				return data
-			}(),
+		photoData, readErr := io.ReadAll(photoFile)
+		closeErr := photoFile.Close()
+		if readErr != nil || closeErr != nil {
+			h.logger.Error("failed to read photo for moderation", "read_error", readErr, "close_error", closeErr, "filepath", filePath)
+			continue
 		}
+		photoBytes := tgbotapi.FileBytes{Name: photo.Filename, Bytes: photoData}
 
 		photoMsg := tgbotapi.NewPhoto(adminID, photoBytes)
 		photoMsg.Caption = moderationText
@@ -982,7 +1022,9 @@ func (h *BotHandler) sendPhotoModerationToAdmins(ctx context.Context, photo *mod
 func (h *BotHandler) handlePhotoApproval(ctx context.Context, callback *tgbotapi.CallbackQuery, data string) {
 	// Проверяем права админа
 	if !h.isAdmin(callback.Message.Chat.ID) {
-		h.bot.Request(tgbotapi.NewCallback(callback.ID, "❌ У вас нет прав для модерации"))
+		if _, err := h.bot.Request(tgbotapi.NewCallback(callback.ID, "❌ У вас нет прав для модерации")); err != nil {
+			h.logger.Warn("failed to reject non-admin callback", "callback_id", callback.ID, "error", err)
+		}
 		return
 	}
 
@@ -991,7 +1033,9 @@ func (h *BotHandler) handlePhotoApproval(ctx context.Context, callback *tgbotapi
 	photoID, err := strconv.ParseInt(photoIDStr, 10, 64)
 	if err != nil {
 		h.logger.Error("failed to parse photo ID", "error", err, "data", data)
-		h.bot.Request(tgbotapi.NewCallback(callback.ID, "❌ Ошибка обработки"))
+		if _, err := h.bot.Request(tgbotapi.NewCallback(callback.ID, "❌ Ошибка обработки")); err != nil {
+			h.logger.Warn("failed to report invalid photo callback", "callback_id", callback.ID, "error", err)
+		}
 		return
 	}
 
@@ -999,14 +1043,18 @@ func (h *BotHandler) handlePhotoApproval(ctx context.Context, callback *tgbotapi
 	photo, err := h.photoRepo.GetByID(ctx, photoID)
 	if err != nil {
 		h.logger.Error("failed to get photo", "error", err, "photo_id", photoID)
-		h.bot.Request(tgbotapi.NewCallback(callback.ID, "❌ Фото не найдено"))
+		if _, requestErr := h.bot.Request(tgbotapi.NewCallback(callback.ID, "❌ Фото не найдено")); requestErr != nil {
+			h.logger.Warn("failed to report missing photo", "callback_id", callback.ID, "error", requestErr)
+		}
 		return
 	}
 
 	// Одобряем фото (делаем видимым)
 	if err := h.photoRepo.UpdateVisibility(ctx, photoID, true); err != nil {
 		h.logger.Error("failed to approve photo", "error", err, "photo_id", photoID)
-		h.bot.Request(tgbotapi.NewCallback(callback.ID, "❌ Ошибка одобрения"))
+		if _, requestErr := h.bot.Request(tgbotapi.NewCallback(callback.ID, "❌ Ошибка одобрения")); requestErr != nil {
+			h.logger.Warn("failed to report photo approval error", "callback_id", callback.ID, "error", requestErr)
+		}
 		return
 	}
 
@@ -1021,7 +1069,7 @@ func (h *BotHandler) handlePhotoApproval(ctx context.Context, callback *tgbotapi
 			approvalMsg := tgbotapi.NewMessage(user.ChatID, approvalText)
 			approvalMsg.ParseMode = "Markdown"
 			approvalMsg.DisableWebPagePreview = false
-			h.bot.Send(approvalMsg)
+			h.sendAndLog(approvalMsg, "photo approval notification")
 		}
 	}
 
@@ -1029,10 +1077,12 @@ func (h *BotHandler) handlePhotoApproval(ctx context.Context, callback *tgbotapi
 	editText := callback.Message.Caption + "\n\n✅ *Фото одобрено*"
 	editMsg := tgbotapi.NewEditMessageCaption(callback.Message.Chat.ID, callback.Message.MessageID, editText)
 	editMsg.ParseMode = "Markdown"
-	h.bot.Send(editMsg)
+	h.sendAndLog(editMsg, "edit photo approval message")
 
 	// Подтверждаем callback
-	h.bot.Request(tgbotapi.NewCallback(callback.ID, "✅ Фото одобрено"))
+	if _, err := h.bot.Request(tgbotapi.NewCallback(callback.ID, "✅ Фото одобрено")); err != nil {
+		h.logger.Warn("failed to confirm photo approval", "callback_id", callback.ID, "error", err)
+	}
 
 	h.logger.Info("photo approved", "photo_id", photoID, "admin_id", callback.Message.Chat.ID)
 }
@@ -1041,7 +1091,7 @@ func (h *BotHandler) handlePhotoApproval(ctx context.Context, callback *tgbotapi
 func (h *BotHandler) handlePhotoRejection(ctx context.Context, callback *tgbotapi.CallbackQuery, data string) {
 	// Проверяем права админа
 	if !h.isAdmin(callback.Message.Chat.ID) {
-		h.bot.Request(tgbotapi.NewCallback(callback.ID, "❌ У вас нет прав для модерации"))
+		h.requestAndLog(tgbotapi.NewCallback(callback.ID, "❌ У вас нет прав для модерации"), "reject non-admin photo rejection")
 		return
 	}
 
@@ -1050,7 +1100,7 @@ func (h *BotHandler) handlePhotoRejection(ctx context.Context, callback *tgbotap
 	photoID, err := strconv.ParseInt(photoIDStr, 10, 64)
 	if err != nil {
 		h.logger.Error("failed to parse photo ID", "error", err, "data", data)
-		h.bot.Request(tgbotapi.NewCallback(callback.ID, "❌ Ошибка обработки"))
+		h.requestAndLog(tgbotapi.NewCallback(callback.ID, "❌ Ошибка обработки"), "reject invalid photo callback")
 		return
 	}
 
@@ -1058,7 +1108,7 @@ func (h *BotHandler) handlePhotoRejection(ctx context.Context, callback *tgbotap
 	photo, err := h.photoRepo.GetByID(ctx, photoID)
 	if err != nil {
 		h.logger.Error("failed to get photo", "error", err, "photo_id", photoID)
-		h.bot.Request(tgbotapi.NewCallback(callback.ID, "❌ Фото не найдено"))
+		h.requestAndLog(tgbotapi.NewCallback(callback.ID, "❌ Фото не найдено"), "reject missing photo")
 		return
 	}
 
@@ -1070,7 +1120,7 @@ func (h *BotHandler) handlePhotoRejection(ctx context.Context, callback *tgbotap
 	// Удаляем фото из БД
 	if err := h.photoRepo.Delete(ctx, photoID); err != nil {
 		h.logger.Error("failed to delete photo from db", "error", err, "photo_id", photoID)
-		h.bot.Request(tgbotapi.NewCallback(callback.ID, "❌ Ошибка удаления"))
+		h.requestAndLog(tgbotapi.NewCallback(callback.ID, "❌ Ошибка удаления"), "reject photo deletion error")
 		return
 	}
 
@@ -1088,7 +1138,7 @@ func (h *BotHandler) handlePhotoRejection(ctx context.Context, callback *tgbotap
 
 			rejectionMsg := tgbotapi.NewMessage(user.ChatID, rejectionText)
 			rejectionMsg.ParseMode = "Markdown"
-			h.bot.Send(rejectionMsg)
+			h.sendAndLog(rejectionMsg, "photo rejection notification")
 		}
 	}
 
@@ -1096,10 +1146,10 @@ func (h *BotHandler) handlePhotoRejection(ctx context.Context, callback *tgbotap
 	editText := callback.Message.Caption + "\n\n❌ *Фото отклонено и удалено*"
 	editMsg := tgbotapi.NewEditMessageCaption(callback.Message.Chat.ID, callback.Message.MessageID, editText)
 	editMsg.ParseMode = "Markdown"
-	h.bot.Send(editMsg)
+	h.sendAndLog(editMsg, "edit photo rejection message")
 
 	// Подтверждаем callback
-	h.bot.Request(tgbotapi.NewCallback(callback.ID, "❌ Фото отклонено"))
+	h.requestAndLog(tgbotapi.NewCallback(callback.ID, "❌ Фото отклонено"), "confirm photo rejection")
 
 	h.logger.Info("photo rejected and deleted", "photo_id", photoID, "admin_id", callback.Message.Chat.ID)
 }
@@ -1161,7 +1211,9 @@ func (h *BotHandler) handleAnnounce(ctx context.Context, msg *tgbotapi.Message) 
 
 			// Отметить неактивным если бот заблокирован
 			if strings.Contains(err.Error(), "bot was blocked") {
-				h.userRepo.UpdateActivity(ctx, user.ChatID, false)
+				if updateErr := h.userRepo.UpdateActivity(ctx, user.ChatID, false); updateErr != nil {
+					h.logger.Error("failed to mark blocked user inactive", "chat_id", user.ChatID, "error", updateErr)
+				}
 			}
 		} else {
 			h.logger.Debug("announcement sent", "chat_id", user.ChatID)

@@ -143,7 +143,7 @@ func (c *Client) Login(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to login: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(io.LimitReader(resp.Body, 1024))
 		return fmt.Errorf("login failed: status %d: %s", resp.StatusCode, strings.TrimSpace(string(body)))
@@ -214,7 +214,7 @@ func (c *Client) getJSON(ctx context.Context, path, bearer string, out any) erro
 	if err != nil {
 		return fmt.Errorf("failed to execute request %s: %w", path, err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		body, _ := io.ReadAll(io.LimitReader(resp.Body, 2048))
 		return fmt.Errorf("unexpected status %d for %s: %s", resp.StatusCode, path, strings.TrimSpace(string(body)))

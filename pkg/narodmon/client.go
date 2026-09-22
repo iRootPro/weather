@@ -38,7 +38,7 @@ func (c *Client) SendData(mac, deviceName string, sensors []Sensor) error {
 	if err != nil {
 		return fmt.Errorf("failed to connect to %s: %w", c.server, err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	// Устанавливаем таймаут для записи
 	if err := conn.SetWriteDeadline(time.Now().Add(c.timeout)); err != nil {
@@ -74,11 +74,11 @@ func (c *Client) buildPacket(mac, deviceName string, sensors []Sensor) string {
 	var sb strings.Builder
 
 	// Заголовок: #MAC#Название устройства
-	sb.WriteString(fmt.Sprintf("#%s#%s\n", mac, deviceName))
+	_, _ = fmt.Fprintf(&sb, "#%s#%s\n", mac, deviceName)
 
 	// Датчики: #ID#Value#Name
 	for _, sensor := range sensors {
-		sb.WriteString(fmt.Sprintf("#%s#%.2f#%s\n", sensor.ID, sensor.Value, sensor.Name))
+		_, _ = fmt.Fprintf(&sb, "#%s#%.2f#%s\n", sensor.ID, sensor.Value, sensor.Name)
 	}
 
 	// Завершающий маркер

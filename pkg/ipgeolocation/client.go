@@ -27,22 +27,22 @@ type AstronomyRequest struct {
 
 type AstronomyResponse struct {
 	// Location is an object, we don't need it so we ignore it
-	Date                string  `json:"date"`
-	CurrentTime         string  `json:"current_time"`
-	Sunrise             string  `json:"sunrise"`
-	Sunset              string  `json:"sunset"`
-	SunStatus           string  `json:"sun_status"`
-	SolarNoon           string  `json:"solar_noon"`
-	DayLength           string  `json:"day_length"`
-	SunAltitude         float64 `json:"sun_altitude"`
-	SunDistance         float64 `json:"sun_distance"`
-	SunAzimuth          float64 `json:"sun_azimuth"`
-	Moonrise            string  `json:"moonrise"`
-	Moonset             string  `json:"moonset"`
-	MoonStatus          string  `json:"moon_status"`
-	MoonAltitude        float64 `json:"moon_altitude"`
-	MoonDistance        float64 `json:"moon_distance"`
-	MoonAzimuth         float64 `json:"moon_azimuth"`
+	Date                 string  `json:"date"`
+	CurrentTime          string  `json:"current_time"`
+	Sunrise              string  `json:"sunrise"`
+	Sunset               string  `json:"sunset"`
+	SunStatus            string  `json:"sun_status"`
+	SolarNoon            string  `json:"solar_noon"`
+	DayLength            string  `json:"day_length"`
+	SunAltitude          float64 `json:"sun_altitude"`
+	SunDistance          float64 `json:"sun_distance"`
+	SunAzimuth           float64 `json:"sun_azimuth"`
+	Moonrise             string  `json:"moonrise"`
+	Moonset              string  `json:"moonset"`
+	MoonStatus           string  `json:"moon_status"`
+	MoonAltitude         float64 `json:"moon_altitude"`
+	MoonDistance         float64 `json:"moon_distance"`
+	MoonAzimuth          float64 `json:"moon_azimuth"`
 	MoonParallacticAngle float64 `json:"moon_parallactic_angle"`
 }
 
@@ -83,7 +83,7 @@ func (c *Client) GetAstronomy(ctx context.Context, req AstronomyRequest) (*Astro
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)

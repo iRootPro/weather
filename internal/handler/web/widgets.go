@@ -43,7 +43,8 @@ func (h *Handler) CurrentWeatherWidget(w http.ResponseWriter, r *http.Request) {
 
 	// Convert pointer values for template
 	templateData := struct {
-		Time             string
+		ObservationTime  string
+		UpdatedAt        string
 		TempOutdoor      float32
 		TempFeelsLike    float32
 		DewPoint         float32
@@ -70,20 +71,21 @@ func (h *Handler) CurrentWeatherWidget(w http.ResponseWriter, r *http.Request) {
 		PressureChange float32
 		HasHourlyData  bool
 		// Daily min/max
-		TempMin        float32
-		TempMax        float32
-		HumidityMin    int16
-		HumidityMax    int16
-		PressureMin    float32
-		PressureMax    float32
+		TempMin      float32
+		TempMax      float32
+		HumidityMin  int16
+		HumidityMax  int16
+		PressureMin  float32
+		PressureMax  float32
 		WindMax      float32
 		WindGustMax  float32
 		HasDailyData bool
 		// Геомагнитная активность
 		Geomagnetic GeomagneticCardData
 	}{
-		Time:        "Данные на " + data.Time.Format("15:04"),
-		Geomagnetic: h.buildGeomagneticCard(r.Context()),
+		ObservationTime: data.Time.Format("15:04"),
+		UpdatedAt:       time.Now().Format("15:04"),
+		Geomagnetic:     h.buildGeomagneticCard(r.Context()),
 	}
 
 	// Check if we have hourly comparison data
@@ -353,15 +355,15 @@ func (h *Handler) SunTimesWidget(w http.ResponseWriter, r *http.Request) {
 		DayChangePositive   bool
 		LightChangePositive bool
 		// Moon data
-		HasMoonData         bool
-		MoonPhase           string
-		MoonPhaseIcon       string
-		MoonIllumination    float64
-		MoonAge             float64
-		Moonrise            string
-		Moonset             string
-		DaysToNextPhase     float64
-		NextPhaseName       string
+		HasMoonData      bool
+		MoonPhase        string
+		MoonPhaseIcon    string
+		MoonIllumination float64
+		MoonAge          float64
+		Moonrise         string
+		Moonset          string
+		DaysToNextPhase  float64
+		NextPhaseName    string
 	}{
 		Date:                formatRussianDateShort(time.Now()),
 		Dawn:                sunTimes.Dawn.Format("15:04"),
@@ -392,12 +394,11 @@ func (h *Handler) SunTimesWidget(w http.ResponseWriter, r *http.Request) {
 
 		// Determine next major phase
 		// Key lunar phase ages (in days):
-		const newMoonAge = 0.0
-		const firstQuarterAge = 7.3825      // ~29.53/4
-		const fullMoonAge = 14.765          // ~29.53/2
-		const lastQuarterAge = 22.1475      // ~29.53*3/4
+		const firstQuarterAge = 7.3825 // ~29.53/4
+		const fullMoonAge = 14.765     // ~29.53/2
+		const lastQuarterAge = 22.1475 // ~29.53*3/4
 		const synodicMonth = 29.53
-		const phaseThreshold = 0.25         // if within 0.25 days (6 hours), it's "today"
+		const phaseThreshold = 0.25 // if within 0.25 days (6 hours), it's "today"
 
 		// Find the next phase and calculate days to it
 		age := moonData.Age

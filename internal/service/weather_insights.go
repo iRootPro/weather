@@ -764,7 +764,7 @@ func buildSeasonContext(now, start, end time.Time, seasonSummary models.MonthlyW
 
 	switch code {
 	case "winter":
-		ctx.Description = fmt.Sprintf("Зимой важнее смотреть на морозные дни, оттепели, ветер и резкие перепады давления. Осадки сравнивать с соседним месяцем особенно опасно: декабрь, январь и февраль ведут себя по-разному.")
+		ctx.Description = "Зимой важнее смотреть на морозные дни, оттепели, ветер и резкие перепады давления. Осадки сравнивать с соседним месяцем особенно опасно: декабрь, январь и февраль ведут себя по-разному."
 		ctx.FocusTitle = "Зимний режим наблюдений"
 		ctx.FocusText = fmt.Sprintf("За сезон уже %d морозных дней и %d дней с сильными порывами.", seasonSummary.FrostDays, seasonSummary.StrongWindDays)
 	case "spring":

@@ -376,6 +376,7 @@ func (h *Handler) DetailWaterLevel(w http.ResponseWriter, r *http.Request) {
 	card := h.buildWaterLevelCard(r)
 	data := PageData{
 		ActivePage: "dashboard",
+		HasCharts:  true,
 		Data: map[string]any{
 			"Card":      card,
 			"Gauge":     gauge,

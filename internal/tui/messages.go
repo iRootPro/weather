@@ -29,12 +29,9 @@ type chartDataMsg struct {
 
 // sunDataMsg is sent when sun times are fetched
 type sunDataMsg struct {
-	sunrise    time.Time
-	sunset     time.Time
-	dayLength  time.Duration
-	civilDawn  time.Time
-	civilDusk  time.Time
-	nautical   bool
+	sunrise   time.Time
+	sunset    time.Time
+	dayLength time.Duration
 }
 
 // errMsg is sent when an error occurs

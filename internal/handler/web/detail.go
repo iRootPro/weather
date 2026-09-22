@@ -67,17 +67,19 @@ func (h *Handler) DetailTemperature(w http.ResponseWriter, r *http.Request) {
 	// Prepare template data
 	templateData := struct {
 		ActivePage string
+		HasCharts  bool
 		Data       interface{}
 	}{
 		ActivePage: "dashboard",
+		HasCharts:  true,
 		Data: map[string]interface{}{
 			// Current readings
-			"Current":     getFloat32Value(current.TempOutdoor),
-			"FeelsLike":   getFloat32Value(current.TempFeelsLike),
-			"DewPoint":    getFloat32Value(current.DewPoint),
-			"IndoorTemp":  getFloat32Value(current.TempIndoor),
-			"UpdateTime":  current.Time.Format("15:04"),
-			"UpdateDate":  formatRussianDate(current.Time),
+			"Current":    getFloat32Value(current.TempOutdoor),
+			"FeelsLike":  getFloat32Value(current.TempFeelsLike),
+			"DewPoint":   getFloat32Value(current.DewPoint),
+			"IndoorTemp": getFloat32Value(current.TempIndoor),
+			"UpdateTime": current.Time.Format("15:04"),
+			"UpdateDate": formatRussianDate(current.Time),
 
 			// Calculate differences
 			"IndoorDiff": calculateDiff(current.TempOutdoor, current.TempIndoor),
@@ -283,9 +285,11 @@ func (h *Handler) DetailHumidity(w http.ResponseWriter, r *http.Request) {
 	// Prepare template data
 	templateData := struct {
 		ActivePage string
+		HasCharts  bool
 		Data       interface{}
 	}{
 		ActivePage: "dashboard",
+		HasCharts:  true,
 		Data: map[string]interface{}{
 			// Current readings
 			"Current":    getInt16Value(current.HumidityOutdoor),
@@ -294,9 +298,9 @@ func (h *Handler) DetailHumidity(w http.ResponseWriter, r *http.Request) {
 			"UpdateDate": formatRussianDate(current.Time),
 
 			// Changes
-			"ChangeHour": calculateHumidityChange(current.HumidityOutdoor, hourAgo),
-			"ChangeDay":  calculateHumidityChange(current.HumidityOutdoor, dayAgo),
-			"ChangeWeek": calculateHumidityChange(current.HumidityOutdoor, weekAgo),
+			"ChangeHour":  calculateHumidityChange(current.HumidityOutdoor, hourAgo),
+			"ChangeDay":   calculateHumidityChange(current.HumidityOutdoor, dayAgo),
+			"ChangeWeek":  calculateHumidityChange(current.HumidityOutdoor, weekAgo),
 			"HasHourData": hourAgo != nil && hourAgo.HumidityOutdoor != nil,
 			"HasDayData":  dayAgo != nil && dayAgo.HumidityOutdoor != nil,
 			"HasWeekData": weekAgo != nil && weekAgo.HumidityOutdoor != nil,
@@ -391,9 +395,11 @@ func (h *Handler) DetailPressure(w http.ResponseWriter, r *http.Request) {
 	// Prepare template data
 	templateData := struct {
 		ActivePage string
+		HasCharts  bool
 		Data       interface{}
 	}{
 		ActivePage: "dashboard",
+		HasCharts:  true,
 		Data: map[string]interface{}{
 			// Current readings
 			"Current":    getFloat32Value(current.PressureRelative),
@@ -402,9 +408,9 @@ func (h *Handler) DetailPressure(w http.ResponseWriter, r *http.Request) {
 			"UpdateDate": formatRussianDate(current.Time),
 
 			// Changes
-			"ChangeHour": calculatePressureChange(current.PressureRelative, hourAgo),
-			"ChangeDay":  calculatePressureChange(current.PressureRelative, dayAgo),
-			"ChangeWeek": calculatePressureChange(current.PressureRelative, weekAgo),
+			"ChangeHour":  calculatePressureChange(current.PressureRelative, hourAgo),
+			"ChangeDay":   calculatePressureChange(current.PressureRelative, dayAgo),
+			"ChangeWeek":  calculatePressureChange(current.PressureRelative, weekAgo),
 			"HasHourData": hourAgo != nil && hourAgo.PressureRelative != nil,
 			"HasDayData":  dayAgo != nil && dayAgo.PressureRelative != nil,
 			"HasWeekData": weekAgo != nil && weekAgo.PressureRelative != nil,
@@ -505,30 +511,32 @@ func (h *Handler) DetailWind(w http.ResponseWriter, r *http.Request) {
 	// Prepare template data
 	templateData := struct {
 		ActivePage string
+		HasCharts  bool
 		Data       interface{}
 	}{
 		ActivePage: "dashboard",
+		HasCharts:  true,
 		Data: map[string]interface{}{
 			// Current readings
-			"Current":          getFloat32Value(current.WindSpeed),
-			"Gust":             getFloat32Value(current.WindGust),
-			"Direction":        getInt16Value(current.WindDirection),
-			"DirectionStr":     windDir,
-			"UpdateTime":       current.Time.Format("15:04"),
-			"UpdateDate":       formatRussianDate(current.Time),
+			"Current":      getFloat32Value(current.WindSpeed),
+			"Gust":         getFloat32Value(current.WindGust),
+			"Direction":    getInt16Value(current.WindDirection),
+			"DirectionStr": windDir,
+			"UpdateTime":   current.Time.Format("15:04"),
+			"UpdateDate":   formatRussianDate(current.Time),
 
 			// Changes
-			"ChangeHour": calculateWindChange(current.WindSpeed, hourAgo),
-			"ChangeDay":  calculateWindChange(current.WindSpeed, dayAgo),
-			"ChangeWeek": calculateWindChange(current.WindSpeed, weekAgo),
+			"ChangeHour":  calculateWindChange(current.WindSpeed, hourAgo),
+			"ChangeDay":   calculateWindChange(current.WindSpeed, dayAgo),
+			"ChangeWeek":  calculateWindChange(current.WindSpeed, weekAgo),
 			"HasHourData": hourAgo != nil && hourAgo.WindSpeed != nil,
 			"HasDayData":  dayAgo != nil && dayAgo.WindSpeed != nil,
 			"HasWeekData": weekAgo != nil && weekAgo.WindSpeed != nil,
 
 			// Today's stats
-			"TodayMax":         getFloat32Value(dailyMinMax.WindMax),
-			"TodayGustMax":     getFloat32Value(dailyMinMax.GustMax),
-			"HasDailyData":     dailyMinMax != nil,
+			"TodayMax":     getFloat32Value(dailyMinMax.WindMax),
+			"TodayGustMax": getFloat32Value(dailyMinMax.GustMax),
+			"HasDailyData": dailyMinMax != nil,
 
 			// Records
 			"RecordSpeed":     records.WindSpeedMax.Value,
@@ -613,9 +621,11 @@ func (h *Handler) DetailRain(w http.ResponseWriter, r *http.Request) {
 	// Prepare template data
 	templateData := struct {
 		ActivePage string
+		HasCharts  bool
 		Data       interface{}
 	}{
 		ActivePage: "dashboard",
+		HasCharts:  true,
 		Data: map[string]interface{}{
 			// Current readings
 			"Daily":      getFloat32Value(current.RainDaily),
@@ -625,9 +635,9 @@ func (h *Handler) DetailRain(w http.ResponseWriter, r *http.Request) {
 			"UpdateDate": formatRussianDate(current.Time),
 
 			// Changes (for daily rain)
-			"ChangeHour": calculateRainChange(current.RainDaily, hourAgo),
-			"ChangeDay":  calculateRainChange(current.RainDaily, dayAgo),
-			"ChangeWeek": calculateRainChange(current.RainDaily, weekAgo),
+			"ChangeHour":  calculateRainChange(current.RainDaily, hourAgo),
+			"ChangeDay":   calculateRainChange(current.RainDaily, dayAgo),
+			"ChangeWeek":  calculateRainChange(current.RainDaily, weekAgo),
 			"HasHourData": hourAgo != nil && hourAgo.RainDaily != nil,
 			"HasDayData":  dayAgo != nil && dayAgo.RainDaily != nil,
 			"HasWeekData": weekAgo != nil && weekAgo.RainDaily != nil,
@@ -716,9 +726,11 @@ func (h *Handler) DetailSolar(w http.ResponseWriter, r *http.Request) {
 	// Prepare template data
 	templateData := struct {
 		ActivePage string
+		HasCharts  bool
 		Data       interface{}
 	}{
 		ActivePage: "dashboard",
+		HasCharts:  true,
 		Data: map[string]interface{}{
 			// Current readings
 			"SolarRadiation": getFloat32Value(current.SolarRadiation),
@@ -727,15 +739,15 @@ func (h *Handler) DetailSolar(w http.ResponseWriter, r *http.Request) {
 			"UpdateDate":     formatRussianDate(current.Time),
 
 			// Changes (for solar radiation)
-			"ChangeHour": calculateSolarChange(current.SolarRadiation, hourAgo),
-			"ChangeDay":  calculateSolarChange(current.SolarRadiation, dayAgo),
-			"ChangeWeek": calculateSolarChange(current.SolarRadiation, weekAgo),
+			"ChangeHour":  calculateSolarChange(current.SolarRadiation, hourAgo),
+			"ChangeDay":   calculateSolarChange(current.SolarRadiation, dayAgo),
+			"ChangeWeek":  calculateSolarChange(current.SolarRadiation, weekAgo),
 			"HasHourData": hourAgo != nil && hourAgo.SolarRadiation != nil,
 			"HasDayData":  dayAgo != nil && dayAgo.SolarRadiation != nil,
 			"HasWeekData": weekAgo != nil && weekAgo.SolarRadiation != nil,
 
 			// Today's stats - No daily max in DailyMinMax for solar
-			"HasDailyData":  dailyMinMax != nil,
+			"HasDailyData": dailyMinMax != nil,
 
 			// Records
 			"RecordSolar":     records.SolarRadiationMax.Value,

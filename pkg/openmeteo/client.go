@@ -27,11 +27,11 @@ type ForecastRequest struct {
 }
 
 type ForecastResponse struct {
-	Latitude  float64      `json:"latitude"`
-	Longitude float64      `json:"longitude"`
-	Timezone  string       `json:"timezone"`
-	Hourly    HourlyData   `json:"hourly"`
-	Daily     DailyData    `json:"daily"`
+	Latitude  float64    `json:"latitude"`
+	Longitude float64    `json:"longitude"`
+	Timezone  string     `json:"timezone"`
+	Hourly    HourlyData `json:"hourly"`
+	Daily     DailyData  `json:"daily"`
 }
 
 type HourlyData struct {
@@ -106,7 +106,7 @@ func (c *Client) GetForecast(ctx context.Context, req ForecastRequest) (*Forecas
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)

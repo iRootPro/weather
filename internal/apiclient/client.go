@@ -42,7 +42,7 @@ func (c *Client) GetCurrent(ctx context.Context) (*models.WeatherData, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch current weather: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
@@ -160,7 +160,7 @@ func (c *Client) GetHistory(ctx context.Context, from, to time.Time, interval st
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch history: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
@@ -193,7 +193,7 @@ func (c *Client) GetStats(ctx context.Context, period string) (*models.WeatherSt
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch stats: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
@@ -226,7 +226,7 @@ func (c *Client) GetRecentEvents(ctx context.Context, hours int) ([]models.Weath
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch events: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)

@@ -3,6 +3,111 @@ let charts = {};
 let currentInterval = '1h';
 let sharedTooltipIndex = null;
 
+function formatAccessibleNumber(value, fractionDigits = 1) {
+    return Number(value).toLocaleString('ru-RU', {
+        minimumFractionDigits: fractionDigits,
+        maximumFractionDigits: fractionDigits
+    });
+}
+
+function configureChartAccessibility(chart, name, formatValue) {
+    if (!chart?.canvas) return;
+
+    chart.accessibility = { name, formatValue };
+    const details = document.getElementById(`${chart.canvas.id}-details`);
+    if (details) {
+        details.addEventListener('toggle', () => {
+            if (details.open) renderChartDataTable(chart);
+        });
+    }
+    updateChartAccessibility(chart);
+}
+
+function updateChartAccessibility(chart) {
+    if (!chart?.accessibility) return;
+
+    const { name, formatValue } = chart.accessibility;
+    const summary = document.getElementById(`${chart.canvas.id}-summary`);
+    if (summary) {
+        const series = chart.data.datasets.map(dataset => {
+            const values = dataset.data.filter(value => Number.isFinite(value));
+            if (values.length === 0) return `${dataset.label}: нет данных.`;
+
+            const current = values.at(-1);
+            const min = Math.min(...values);
+            const max = Math.max(...values);
+            const previous = values.at(-2);
+            let trend = '';
+            if (previous !== undefined) {
+                const delta = current - previous;
+                if (delta > 0) trend = ` Рост на ${formatValue(delta, dataset)} от предыдущего значения.`;
+                if (delta < 0) trend = ` Снижение на ${formatValue(Math.abs(delta), dataset)} от предыдущего значения.`;
+                if (delta === 0) trend = ' Без изменения от предыдущего значения.';
+            }
+            return `${dataset.label}: последнее значение ${formatValue(current, dataset)}, минимум ${formatValue(min, dataset)}, максимум ${formatValue(max, dataset)}.${trend}`;
+        });
+        summary.textContent = `${name}. ${series.join(' ')}`;
+    }
+
+    const details = document.getElementById(`${chart.canvas.id}-details`);
+    if (details?.open) renderChartDataTable(chart);
+}
+
+function renderChartDataTable(chart) {
+    const container = document.getElementById(`${chart.canvas.id}-table`);
+    if (!container || !chart.accessibility) return;
+
+    const { name, formatValue } = chart.accessibility;
+    const table = document.createElement('table');
+    table.className = 'min-w-full whitespace-nowrap text-left text-xs tabular-nums';
+
+    const caption = document.createElement('caption');
+    caption.className = 'sr-only';
+    caption.textContent = `${name}: значения по времени`;
+    table.append(caption);
+
+    const thead = document.createElement('thead');
+    thead.className = 'bg-gray-50 text-gray-600 dark:bg-gray-900 dark:text-gray-300';
+    const headerRow = document.createElement('tr');
+    ['Время', ...chart.data.datasets.map(dataset => dataset.label)].forEach(label => {
+        const cell = document.createElement('th');
+        cell.className = 'px-3 py-2 font-semibold';
+        cell.scope = 'col';
+        cell.textContent = label;
+        headerRow.append(cell);
+    });
+    thead.append(headerRow);
+    table.append(thead);
+
+    const tbody = document.createElement('tbody');
+    chart.data.labels.forEach((label, index) => {
+        const row = document.createElement('tr');
+        row.className = 'border-t border-gray-100 dark:border-gray-700';
+
+        const time = document.createElement('th');
+        time.className = 'px-3 py-2 font-medium';
+        time.scope = 'row';
+        time.textContent = label;
+        row.append(time);
+
+        chart.data.datasets.forEach(dataset => {
+            const cell = document.createElement('td');
+            cell.className = 'px-3 py-2';
+            const value = dataset.data[index];
+            cell.textContent = Number.isFinite(value) ? formatValue(value, dataset) : '—';
+            row.append(cell);
+        });
+        tbody.append(row);
+    });
+    table.append(tbody);
+
+    container.replaceChildren(table);
+}
+
+function refreshChartAccessibility(chartCollection) {
+    Object.values(chartCollection).forEach(updateChartAccessibility);
+}
+
 // Get theme-specific colors
 function getThemeColors() {
     const isDark = document.documentElement.classList.contains('dark');
@@ -378,6 +483,16 @@ function initCharts() {
             plugins: [crosshairPlugin]
         });
     }
+
+    configureChartAccessibility(charts.temp, 'Температура', value => `${formatAccessibleNumber(value)} °C`);
+    configureChartAccessibility(charts.humidity, 'Влажность', value => `${formatAccessibleNumber(value, 0)} %`);
+    configureChartAccessibility(charts.pressure, 'Давление', value => `${formatAccessibleNumber(value)} мм рт. ст.`);
+    configureChartAccessibility(charts.wind, 'Ветер', value => `${formatAccessibleNumber(value)} м/с`);
+    configureChartAccessibility(charts.solar, 'Освещённость', value => `${formatAccessibleNumber(value * 120, 0)} лк`);
+    configureChartAccessibility(charts.rain, 'Осадки', (value, dataset) => {
+        const unit = dataset.label.includes('Интенсивность') ? 'мм/ч' : 'мм';
+        return `${formatAccessibleNumber(value)} ${unit}`;
+    });
 }
 
 async function loadChartData(interval) {
@@ -469,6 +584,8 @@ async function loadChartData(interval) {
             charts.rain.update();
         }
 
+        refreshChartAccessibility(charts);
+
     } catch (error) {
         console.error('Error loading chart data:', error);
     }
@@ -512,7 +629,13 @@ window.addEventListener('themeChanged', updateChartColors);
 
 // Auto-refresh charts every 5 minutes
 setInterval(() => {
-    if (typeof charts.temp !== 'undefined') {
+    if (!document.hidden && typeof charts.temp !== 'undefined') {
         loadChartData(currentInterval);
     }
 }, 5 * 60 * 1000);
+
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && typeof charts.temp !== 'undefined') {
+        loadChartData(currentInterval);
+    }
+});

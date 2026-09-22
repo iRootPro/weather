@@ -39,7 +39,7 @@ func (s *DailySummaryService) Start(ctx context.Context) {
 			s.logger.Info("max daily summary service stopped")
 			return
 		case now := <-ticker.C:
-			if now.Hour() == hour && now.Minute() == minute && !(lastSent.Year() == now.Year() && lastSent.YearDay() == now.YearDay()) {
+			if now.Hour() == hour && now.Minute() == minute && (lastSent.Year() != now.Year() || lastSent.YearDay() != now.YearDay()) {
 				s.sendDailySummary(ctx)
 				lastSent = now
 			}

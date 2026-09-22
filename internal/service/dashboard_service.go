@@ -260,72 +260,6 @@ func buildNearForecast(forecast []models.HourlyForecast, limit int) []models.Nea
 	return items
 }
 
-func buildCurrentWeatherCard(current *models.WeatherData, hourAgo *models.WeatherData) models.AttentionCard {
-	title := "Текущая погода"
-	subtitle := "Последние данные метеостанции"
-	value := "—"
-	severity := models.DashboardSeverityNormal
-	priority := 45
-	icon := "🌤️"
-
-	if current.TempOutdoor != nil {
-		value = fmt.Sprintf("%.1f", *current.TempOutdoor)
-		title = weatherComfortTitle(*current.TempOutdoor)
-		switch {
-		case *current.TempOutdoor >= 35:
-			severity = models.DashboardSeverityDanger
-			priority = 82
-			icon = "🔥"
-			subtitle = "Очень жарко"
-		case *current.TempOutdoor >= 30:
-			severity = models.DashboardSeverityWarning
-			priority = 68
-			icon = "🥵"
-			subtitle = "Жарко"
-		case *current.TempOutdoor <= -10:
-			severity = models.DashboardSeverityWarning
-			priority = 65
-			icon = "🥶"
-			subtitle = "Сильный мороз"
-		case *current.TempOutdoor <= 0:
-			severity = models.DashboardSeverityInfo
-			priority = 52
-			icon = "❄️"
-			subtitle = "Холодно"
-		}
-	}
-
-	if current.TempFeelsLike != nil && current.TempOutdoor != nil {
-		subtitle = fmt.Sprintf("Ощущается как %.1f°", *current.TempFeelsLike)
-	}
-	if hourAgo != nil && current.TempOutdoor != nil && hourAgo.TempOutdoor != nil {
-		change := *current.TempOutdoor - *hourAgo.TempOutdoor
-		if math.Abs(float64(change)) >= 3 {
-			priority = maxIntDashboard(priority, 72)
-			severity = models.DashboardSeverityWarning
-			if change > 0 {
-				subtitle = fmt.Sprintf("Быстро теплеет: +%.1f° за час", change)
-			} else {
-				subtitle = fmt.Sprintf("Быстро холодает: %.1f° за час", change)
-			}
-		}
-	}
-
-	return models.AttentionCard{
-		ID:        "weather-current",
-		Domain:    "weather",
-		Title:     title,
-		Subtitle:  subtitle,
-		Value:     value,
-		Unit:      "°C",
-		Severity:  string(severity),
-		Priority:  models.ClampPriority(priority),
-		Reason:    "базовое текущее состояние погоды",
-		Icon:      icon,
-		DetailURL: "/detail/temperature",
-	}
-}
-
 func buildWindCard(current *models.WeatherData) models.AttentionCard {
 	value := "—"
 	subtitle := "Ветер слабый"
@@ -538,8 +472,7 @@ func buildEventCards(events []models.WeatherEvent, now time.Time) []models.Atten
 		}
 		priority := 0
 		severity := models.DashboardSeverityInfo
-		domain := "weather"
-		detailURL := "/"
+		var domain, detailURL string
 		switch event.Type {
 		case "wind_gust":
 			priority = 70

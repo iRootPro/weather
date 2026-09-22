@@ -80,11 +80,21 @@ func (r *hydroRepository) SaveReadingsBatch(ctx context.Context, data []models.H
 			d.SourceHDIIHR, d.LeadText, d.StateCode, d.LevelCode, d.RawData, d.FetchedAt)
 	}
 	br := r.pool.SendBatch(ctx, batch)
-	defer br.Close()
+	closed := false
+	defer func() {
+		if !closed {
+			_ = br.Close()
+		}
+	}()
 	for i := range data {
 		if _, err := br.Exec(); err != nil {
 			return fmt.Errorf("failed to save hydro reading %d: %w", i, err)
 		}
+	}
+	closeErr := br.Close()
+	closed = true
+	if closeErr != nil {
+		return fmt.Errorf("failed to close hydro batch: %w", closeErr)
 	}
 	return nil
 }

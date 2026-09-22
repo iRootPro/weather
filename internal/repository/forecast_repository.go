@@ -125,13 +125,23 @@ func (r *forecastRepository) SaveBatch(ctx context.Context, data []models.Foreca
 	}
 
 	br := r.pool.SendBatch(ctx, batch)
-	defer br.Close()
+	closed := false
+	defer func() {
+		if !closed {
+			_ = br.Close()
+		}
+	}()
 
 	for i := 0; i < len(data); i++ {
 		_, err := br.Exec()
 		if err != nil {
 			return fmt.Errorf("failed to execute batch item %d: %w", i, err)
 		}
+	}
+	closeErr := br.Close()
+	closed = true
+	if closeErr != nil {
+		return fmt.Errorf("failed to close forecast batch: %w", closeErr)
 	}
 
 	return nil

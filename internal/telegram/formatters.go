@@ -136,7 +136,7 @@ func FormatStats(stats *models.WeatherStats) string {
 
 	// Температура
 	if stats.TempOutdoorMin != nil && stats.TempOutdoorMax != nil {
-		text += fmt.Sprintf("🌡️ *Температура:*\n")
+		text += "🌡️ *Температура:*\n"
 		text += fmt.Sprintf("   Мин: %.1f°C\n", *stats.TempOutdoorMin)
 		text += fmt.Sprintf("   Макс: %.1f°C\n", *stats.TempOutdoorMax)
 		if stats.TempOutdoorAvg != nil {
@@ -147,7 +147,7 @@ func FormatStats(stats *models.WeatherStats) string {
 
 	// Влажность
 	if stats.HumidityOutdoorMin != nil && stats.HumidityOutdoorMax != nil {
-		text += fmt.Sprintf("💧 *Влажность:*\n")
+		text += "💧 *Влажность:*\n"
 		text += fmt.Sprintf("   Мин: %d%%\n", *stats.HumidityOutdoorMin)
 		text += fmt.Sprintf("   Макс: %d%%\n", *stats.HumidityOutdoorMax)
 		if stats.HumidityOutdoorAvg != nil {
@@ -158,7 +158,7 @@ func FormatStats(stats *models.WeatherStats) string {
 
 	// Давление
 	if stats.PressureRelativeMin != nil && stats.PressureRelativeMax != nil {
-		text += fmt.Sprintf("🔽 *Давление:*\n")
+		text += "🔽 *Давление:*\n"
 		text += fmt.Sprintf("   Мин: %.0f мм рт.ст.\n", *stats.PressureRelativeMin)
 		text += fmt.Sprintf("   Макс: %.0f мм рт.ст.\n", *stats.PressureRelativeMax)
 		if stats.PressureRelativeAvg != nil {
@@ -312,7 +312,7 @@ func FormatMoonData(moonData *service.MoonData) string {
 		return "❌ Нет данных о луне"
 	}
 
-	text := fmt.Sprintf("🌙 *Луна*\n\n")
+	text := "🌙 *Луна*\n\n"
 
 	text += fmt.Sprintf("%s *%s*\n", moonData.PhaseIcon, moonData.PhaseName)
 	text += fmt.Sprintf("💡 *Освещённость:* %.0f%%\n", moonData.Illumination)
@@ -649,9 +649,10 @@ func FormatForecast(forecast []models.DailyForecast) string {
 
 		// Дата
 		dayName := daysOfWeek[day.Date.Weekday()]
-		if i == 0 {
+		switch i {
+		case 0:
 			dayName = "Сегодня"
-		} else if i == 1 {
+		case 1:
 			dayName = "Завтра"
 		}
 

@@ -98,7 +98,21 @@ func (h *BotHandler) HandleUpdate(ctx context.Context, update tgbotapi.Update) {
 func (h *BotHandler) sendMessage(chatID int64, text string) {
 	msg := tgbotapi.NewMessage(chatID, text)
 	msg.ParseMode = "Markdown"
-	h.bot.Send(msg)
+	if _, err := h.bot.Send(msg); err != nil {
+		h.logger.Error("failed to send Telegram message", "chat_id", chatID, "error", err)
+	}
+}
+
+func (h *BotHandler) sendAndLog(message tgbotapi.Chattable, operation string) {
+	if _, err := h.bot.Send(message); err != nil {
+		h.logger.Error("failed to send Telegram message", "operation", operation, "error", err)
+	}
+}
+
+func (h *BotHandler) requestAndLog(request tgbotapi.Chattable, operation string) {
+	if _, err := h.bot.Request(request); err != nil {
+		h.logger.Warn("failed to send Telegram request", "operation", operation, "error", err)
+	}
 }
 
 // isAdmin проверяет, является ли пользователь админом
@@ -117,13 +131,13 @@ func isImageMimeType(mimeType string) bool {
 		"image/jpeg",
 		"image/jpg",
 		"image/png",
-		"image/heic",  // iPhone (High Efficiency Image Container)
-		"image/heif",  // iPhone альтернативный формат
-		"image/webp",  // Android/Google формат
-		"image/avif",  // Новый формат (Android 12+)
-		"image/bmp",   // Windows Bitmap
-		"image/gif",   // GIF анимация
-		"image/tiff",  // TIFF формат
+		"image/heic",        // iPhone (High Efficiency Image Container)
+		"image/heif",        // iPhone альтернативный формат
+		"image/webp",        // Android/Google формат
+		"image/avif",        // Новый формат (Android 12+)
+		"image/bmp",         // Windows Bitmap
+		"image/gif",         // GIF анимация
+		"image/tiff",        // TIFF формат
 		"image/x-canon-cr2", // Canon RAW
 		"image/x-nikon-nef", // Nikon RAW
 		"image/x-sony-arw",  // Sony RAW

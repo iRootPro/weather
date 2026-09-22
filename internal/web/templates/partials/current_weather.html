@@ -1,7 +1,7 @@
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
     <div class="flex items-center justify-between mb-4">
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Текущая погода</h2>
-        <span class="text-sm text-gray-500 dark:text-gray-400">{{.Time}}</span>
+        <span class="text-sm text-gray-500 dark:text-gray-400">Измерено {{.ObservationTime}} · обновлено {{.UpdatedAt}}</span>
     </div>
 
     {{if or .IsRaining .IsFoggy .IsWindy}}

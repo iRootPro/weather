@@ -45,6 +45,15 @@ func TestInsightsTemplateRendersArchiveControls(t *testing.T) {
 	if !bytes.Contains(output.Bytes(), []byte(`name="search_field"`)) || !bytes.Contains(output.Bytes(), []byte("Найти дни по условию")) {
 		t.Fatal("archive day search controls are missing")
 	}
+	for _, expected := range []string{
+		`id="archive-table-scroll-hint"`,
+		`Листайте таблицу влево`,
+		`role="region"`,
+	} {
+		if !bytes.Contains(output.Bytes(), []byte(expected)) {
+			t.Errorf("rendered template is missing %s", expected)
+		}
+	}
 	if !bytes.Contains(output.Bytes(), []byte("События периода")) || !bytes.Contains(output.Bytes(), []byte("Самый жаркий день")) {
 		t.Fatal("archive period events are missing")
 	}

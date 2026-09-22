@@ -3,9 +3,9 @@
 {{define "title"}}Главная - Метеостанция{{end}}
 
 {{define "content"}}
-<div class="space-y-6">
+<div class="ui-page flex flex-col gap-6 sm:block sm:space-y-6">
     <!-- Current Weather -->
-    <div id="current-weather"
+    <div id="current-weather" class="order-1 sm:order-none"
          hx-get="/widgets/current"
          hx-trigger="load, every 60s"
          hx-swap="innerHTML">
@@ -16,7 +16,7 @@
     </div>
 
     <!-- Forecast -->
-    <div id="forecast"
+    <div id="forecast" class="order-2 sm:order-none"
          hx-get="/widgets/forecast"
          hx-trigger="load, every 3600s"
          hx-swap="innerHTML">
@@ -26,18 +26,22 @@
         </div>
     </div>
 
+    <a href="#charts-24h" class="order-3 flex items-center justify-center rounded-lg border border-blue-200 bg-white px-4 py-3 text-sm font-semibold text-blue-700 shadow-sm dark:border-blue-800 dark:bg-gray-800 dark:text-blue-300 sm:hidden">
+        Перейти к графикам за 24 часа
+    </a>
+
     <!-- Water Level -->
-    <div id="water-level"
+    <div id="water-level" class="order-5 sm:order-none"
          hx-get="/widgets/water-level"
          hx-trigger="load, every 600s"
          hx-swap="innerHTML">
     </div>
 
     <!-- Telegram Bot -->
-    <div id="telegram-bot-card" class="bg-gradient-to-br from-blue-50 to-sky-100 dark:from-blue-900/20 dark:to-sky-800/20 rounded-lg shadow p-6 transition-colors border-2 border-blue-200 dark:border-blue-800 relative">
+    <div id="telegram-bot-card" class="order-9 bg-gradient-to-br from-blue-50 to-sky-100 dark:from-blue-900/20 dark:to-sky-800/20 rounded-lg shadow p-6 transition-colors border-2 border-blue-200 dark:border-blue-800 relative sm:order-none">
         <!-- Close Button -->
-        <button onclick="closeTelegramCard()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button onclick="closeTelegramCard()" aria-label="Скрыть предложение Telegram-бота" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
             </svg>
         </button>
@@ -101,7 +105,7 @@
     </div>
 
     <!-- Sun Times -->
-    <div id="sun-times"
+    <div id="sun-times" class="order-6 sm:order-none"
          hx-get="/widgets/sun"
          hx-trigger="load"
          hx-swap="innerHTML">
@@ -112,7 +116,7 @@
     </div>
 
     <!-- Weather Events -->
-    <div id="weather-events"
+    <div id="weather-events" class="order-4 sm:order-none"
          hx-get="/widgets/events"
          hx-trigger="load, every 300s"
          hx-swap="innerHTML">
@@ -123,7 +127,7 @@
     </div>
 
     <!-- Stats Cards -->
-    <div id="daily-stats"
+    <div id="daily-stats" class="order-7 sm:order-none"
          hx-get="/widgets/stats"
          hx-trigger="load, every 300s"
          hx-swap="innerHTML">
@@ -144,7 +148,7 @@
     </div>
 
     <!-- Charts -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
+    <div id="charts-24h" class="order-8 bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors sm:order-none">
         <div class="flex items-center justify-between mb-4">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Графики за 24 часа</h2>
             <div class="flex space-x-2">
@@ -155,31 +159,73 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-8">
-            <div class="h-48 border-b border-gray-100 dark:border-gray-700 pb-4">
-                <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Температура</h3>
-                <canvas id="tempChart"></canvas>
-            </div>
-            <div class="h-48 border-b border-gray-100 dark:border-gray-700 pb-4">
-                <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Влажность</h3>
-                <canvas id="humidityChart"></canvas>
-            </div>
-            <div class="h-48 border-b border-gray-100 dark:border-gray-700 pb-4">
-                <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Давление</h3>
-                <canvas id="pressureChart"></canvas>
-            </div>
-            <div class="h-48 border-b border-gray-100 dark:border-gray-700 pb-4">
-                <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Ветер</h3>
-                <canvas id="windChart"></canvas>
-            </div>
-            <div class="h-48 pb-4">
-                <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Освещённость</h3>
-                <canvas id="solarChart"></canvas>
-            </div>
-            <div class="h-48 pb-4">
-                <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Осадки</h3>
-                <div class="relative h-36">
-                    <canvas id="rainChart"></canvas>
+            <div class="border-b border-gray-100 dark:border-gray-700 pb-4">
+                <div class="h-48">
+                    <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Температура</h3>
+                    <canvas id="tempChart" role="img" aria-label="График температуры" aria-describedby="tempChart-summary"></canvas>
                 </div>
+                <p id="tempChart-summary" class="sr-only"></p>
+                <details id="tempChart-details" class="mt-2 text-sm">
+                    <summary class="cursor-pointer font-medium text-blue-600 dark:text-blue-300">Табличные данные температуры</summary>
+                    <div id="tempChart-table" class="mt-2 max-h-64 overflow-auto rounded border border-gray-200 dark:border-gray-700"></div>
+                </details>
+            </div>
+            <div class="border-b border-gray-100 dark:border-gray-700 pb-4">
+                <div class="h-48">
+                    <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Влажность</h3>
+                    <canvas id="humidityChart" role="img" aria-label="График влажности" aria-describedby="humidityChart-summary"></canvas>
+                </div>
+                <p id="humidityChart-summary" class="sr-only"></p>
+                <details id="humidityChart-details" class="mt-2 text-sm">
+                    <summary class="cursor-pointer font-medium text-blue-600 dark:text-blue-300">Табличные данные влажности</summary>
+                    <div id="humidityChart-table" class="mt-2 max-h-64 overflow-auto rounded border border-gray-200 dark:border-gray-700"></div>
+                </details>
+            </div>
+            <div class="border-b border-gray-100 dark:border-gray-700 pb-4">
+                <div class="h-48">
+                    <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Давление</h3>
+                    <canvas id="pressureChart" role="img" aria-label="График давления" aria-describedby="pressureChart-summary"></canvas>
+                </div>
+                <p id="pressureChart-summary" class="sr-only"></p>
+                <details id="pressureChart-details" class="mt-2 text-sm">
+                    <summary class="cursor-pointer font-medium text-blue-600 dark:text-blue-300">Табличные данные давления</summary>
+                    <div id="pressureChart-table" class="mt-2 max-h-64 overflow-auto rounded border border-gray-200 dark:border-gray-700"></div>
+                </details>
+            </div>
+            <div class="border-b border-gray-100 dark:border-gray-700 pb-4">
+                <div class="h-48">
+                    <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Ветер</h3>
+                    <canvas id="windChart" role="img" aria-label="График ветра" aria-describedby="windChart-summary"></canvas>
+                </div>
+                <p id="windChart-summary" class="sr-only"></p>
+                <details id="windChart-details" class="mt-2 text-sm">
+                    <summary class="cursor-pointer font-medium text-blue-600 dark:text-blue-300">Табличные данные ветра</summary>
+                    <div id="windChart-table" class="mt-2 max-h-64 overflow-auto rounded border border-gray-200 dark:border-gray-700"></div>
+                </details>
+            </div>
+            <div class="pb-4">
+                <div class="h-48">
+                    <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Освещённость</h3>
+                    <canvas id="solarChart" role="img" aria-label="График освещённости" aria-describedby="solarChart-summary"></canvas>
+                </div>
+                <p id="solarChart-summary" class="sr-only"></p>
+                <details id="solarChart-details" class="mt-2 text-sm">
+                    <summary class="cursor-pointer font-medium text-blue-600 dark:text-blue-300">Табличные данные освещённости</summary>
+                    <div id="solarChart-table" class="mt-2 max-h-64 overflow-auto rounded border border-gray-200 dark:border-gray-700"></div>
+                </details>
+            </div>
+            <div class="pb-4">
+                <div class="h-48">
+                    <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Осадки</h3>
+                    <div class="relative h-36">
+                        <canvas id="rainChart" role="img" aria-label="График осадков" aria-describedby="rainChart-summary"></canvas>
+                    </div>
+                </div>
+                <p id="rainChart-summary" class="sr-only"></p>
+                <details id="rainChart-details" class="mt-2 text-sm">
+                    <summary class="cursor-pointer font-medium text-blue-600 dark:text-blue-300">Табличные данные осадков</summary>
+                    <div id="rainChart-table" class="mt-2 max-h-64 overflow-auto rounded border border-gray-200 dark:border-gray-700"></div>
+                </details>
             </div>
         </div>
     </div>

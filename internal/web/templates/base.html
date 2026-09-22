@@ -48,11 +48,49 @@
     <!-- HTMX -->
     <script src="/static/js/vendor/htmx.min.js"></script>
 
-    <!-- Chart.js -->
-    <script src="/static/js/vendor/chart.min.js"></script>
+    {{if .HasCharts}}<script src="/static/js/vendor/chart.min.js"></script>{{end}}
 
     <style>
+        :root {
+            --ui-radius: 0.75rem;
+            --ui-shadow: 0 1px 3px rgb(15 23 42 / 0.10), 0 1px 2px rgb(15 23 42 / 0.06);
+            --ui-border: rgb(226 232 240);
+        }
+
+        .ui-page > .bg-white,
+        .ui-page > [id] > .bg-white,
+        .ui-page > [id] > .grid > .bg-white {
+            border: 1px solid var(--ui-border);
+            border-radius: var(--ui-radius);
+            box-shadow: var(--ui-shadow);
+        }
+
+        .dark .ui-page > .bg-white,
+        .dark .ui-page > [id] > .bg-white,
+        .dark .ui-page > [id] > .grid > .bg-white {
+            border-color: rgb(55 65 81);
+        }
+
         [x-cloak] { display: none !important; }
+
+        html {
+            scroll-padding-top: 5rem;
+        }
+
+        a:focus-visible,
+        button:focus-visible,
+        input:focus-visible,
+        select:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 3px;
+        }
+
+        .dark a:focus-visible,
+        .dark button:focus-visible,
+        .dark input:focus-visible,
+        .dark select:focus-visible {
+            outline-color: #93c5fd;
+        }
 
         /* Mobile touch improvements */
         a, button {
@@ -152,64 +190,64 @@
                     <h1 class="text-lg font-bold text-gray-900 dark:text-white hidden sm:block">Армавир</h1>
                 </div>
                 <!-- Desktop nav -->
-                <nav class="hidden sm:flex space-x-2">
-                    <a href="/" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium {{if eq .ActivePage "dashboard"}}bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white{{end}}">
+                <nav class="hidden sm:flex space-x-2" aria-label="Основная навигация">
+                    <a href="/" {{if eq .ActivePage "dashboard"}}aria-current="page"{{end}} class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium {{if eq .ActivePage "dashboard"}}bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white{{end}}">
                         Главная
                     </a>
-                    <a href="/history" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium {{if eq .ActivePage "history"}}bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white{{end}}">
+                    <a href="/history" {{if eq .ActivePage "history"}}aria-current="page"{{end}} class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium {{if eq .ActivePage "history"}}bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white{{end}}">
                         История
                     </a>
-                    <a href="/records" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium {{if eq .ActivePage "records"}}bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white{{end}}">
+                    <a href="/records" {{if eq .ActivePage "records"}}aria-current="page"{{end}} class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium {{if eq .ActivePage "records"}}bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white{{end}}">
                         Рекорды
                     </a>
-                    <a href="/insights" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium {{if eq .ActivePage "insights"}}bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white{{end}}">
+                    <a href="/insights" {{if eq .ActivePage "insights"}}aria-current="page"{{end}} class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium {{if eq .ActivePage "insights"}}bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white{{end}}">
                         Архив
                     </a>
-                    <a href="/gallery" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium {{if eq .ActivePage "gallery"}}bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white{{end}}">
+                    <a href="/gallery" {{if eq .ActivePage "gallery"}}aria-current="page"{{end}} class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium {{if eq .ActivePage "gallery"}}bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white{{end}}">
                         Галерея
                     </a>
-                    <a href="/help" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium {{if eq .ActivePage "help"}}bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white{{end}}">
+                    <a href="/help" {{if eq .ActivePage "help"}}aria-current="page"{{end}} class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium {{if eq .ActivePage "help"}}bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white{{end}}">
                         Справка
                     </a>
                 </nav>
                 <!-- Mobile nav -->
-                <nav class="flex sm:hidden gap-1">
-                        <a href="/" class="p-3 rounded-md text-sm font-medium {{if eq .ActivePage "dashboard"}}bg-blue-500 text-white{{else}}text-gray-600 dark:text-gray-300{{end}}">
+                <nav class="flex sm:hidden gap-1" aria-label="Основная навигация">
+                        <a href="/" aria-label="Главная" {{if eq .ActivePage "dashboard"}}aria-current="page"{{end}} class="p-3 rounded-md text-sm font-medium {{if eq .ActivePage "dashboard"}}bg-blue-500 text-white{{else}}text-gray-600 dark:text-gray-300{{end}}">
                             <!-- Cloud with sun icon -->
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
                                 <circle cx="17" cy="7" r="2" stroke-width="1.5" opacity="0.6"/>
                                 <path d="M17 5v-.5M19 7h.5M17 9v.5M15 7h-.5" stroke-width="1.5" opacity="0.6"/>
                             </svg>
                         </a>
-                        <a href="/history" class="p-3 rounded-md text-sm font-medium {{if eq .ActivePage "history"}}bg-blue-500 text-white{{else}}text-gray-600 dark:text-gray-300{{end}}">
+                        <a href="/history" aria-label="История" {{if eq .ActivePage "history"}}aria-current="page"{{end}} class="p-3 rounded-md text-sm font-medium {{if eq .ActivePage "history"}}bg-blue-500 text-white{{else}}text-gray-600 dark:text-gray-300{{end}}">
                             <!-- Trending up / Line chart icon -->
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
                             </svg>
                         </a>
-                        <a href="/records" class="p-3 rounded-md text-sm font-medium {{if eq .ActivePage "records"}}bg-blue-500 text-white{{else}}text-gray-600 dark:text-gray-300{{end}}">
+                        <a href="/records" aria-label="Рекорды" {{if eq .ActivePage "records"}}aria-current="page"{{end}} class="p-3 rounded-md text-sm font-medium {{if eq .ActivePage "records"}}bg-blue-500 text-white{{else}}text-gray-600 dark:text-gray-300{{end}}">
                             <!-- Trophy icon -->
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
                             </svg>
                         </a>
-                        <a href="/insights" class="p-3 rounded-md text-sm font-medium {{if eq .ActivePage "insights"}}bg-blue-500 text-white{{else}}text-gray-600 dark:text-gray-300{{end}}">
+                        <a href="/insights" aria-label="Архив" {{if eq .ActivePage "insights"}}aria-current="page"{{end}} class="p-3 rounded-md text-sm font-medium {{if eq .ActivePage "insights"}}bg-blue-500 text-white{{else}}text-gray-600 dark:text-gray-300{{end}}">
                             <!-- Sparkles / analytics icon -->
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.16c.969 0 1.371 1.24.588 1.81l-3.366 2.445a1 1 0 00-.364 1.118l1.286 3.957c.3.921-.755 1.688-1.538 1.118l-3.366-2.445a1 1 0 00-1.176 0l-3.366 2.445c-.783.57-1.838-.197-1.538-1.118l1.286-3.957a1 1 0 00-.364-1.118L4.063 9.384c-.783-.57-.38-1.81.588-1.81h4.16a1 1 0 00.95-.69l1.286-3.957z"/>
                             </svg>
                         </a>
-                        <a href="/gallery" class="p-3 rounded-md text-sm font-medium {{if eq .ActivePage "gallery"}}bg-blue-500 text-white{{else}}text-gray-600 dark:text-gray-300{{end}}">
+                        <a href="/gallery" aria-label="Галерея" {{if eq .ActivePage "gallery"}}aria-current="page"{{end}} class="p-3 rounded-md text-sm font-medium {{if eq .ActivePage "gallery"}}bg-blue-500 text-white{{else}}text-gray-600 dark:text-gray-300{{end}}">
                             <!-- Camera icon -->
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
                             </svg>
                         </a>
-                        <a href="/help" class="p-3 rounded-md text-sm font-medium {{if eq .ActivePage "help"}}bg-blue-500 text-white{{else}}text-gray-600 dark:text-gray-300{{end}}">
+                        <a href="/help" aria-label="Справка" {{if eq .ActivePage "help"}}aria-current="page"{{end}} class="p-3 rounded-md text-sm font-medium {{if eq .ActivePage "help"}}bg-blue-500 text-white{{else}}text-gray-600 dark:text-gray-300{{end}}">
                             <!-- Info circle icon -->
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
                         </a>
@@ -229,7 +267,7 @@
         <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-center sm:justify-between gap-3">
                 <!-- Contact (Telegram only) -->
-                <a href="https://t.me/iRootPro" target="_blank" rel="noopener noreferrer"
+                <a href="https://t.me/iRootPro" target="_blank" rel="noopener noreferrer" aria-label="Написать в Telegram"
                    class="inline-flex items-center p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
                    title="Написать в Telegram">
                     <svg class="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
@@ -245,7 +283,7 @@
                 </div>
 
                 <!-- Theme Toggle -->
-                <button onclick="toggleTheme()"
+                <button onclick="toggleTheme()" aria-label="Переключить цветовую тему"
                         class="inline-flex items-center gap-2 p-2 sm:px-4 sm:py-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                         title="Переключить тему">
                     <!-- Sun icon (shown in dark mode) -->
@@ -294,6 +332,21 @@
                 }
                 window.dispatchEvent(new CustomEvent('themeChanged'));
             }
+        });
+
+        document.addEventListener('htmx:configRequest', (event) => {
+            if (document.hidden) event.preventDefault();
+        });
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) return;
+            document.querySelectorAll('[hx-get][hx-trigger*="every"]').forEach((element) => {
+                if (element.contains(document.activeElement)) return;
+                htmx.ajax('GET', element.getAttribute('hx-get'), {
+                    target: element,
+                    swap: element.getAttribute('hx-swap') || 'innerHTML'
+                });
+            });
         });
 
         // Pull to Refresh

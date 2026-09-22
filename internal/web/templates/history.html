@@ -3,7 +3,7 @@
 {{define "title"}}История - Метеостанция{{end}}
 
 {{define "content"}}
-<div class="space-y-6">
+<div class="ui-page space-y-6">
   <!-- Date Range Selector -->
   <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 transition-colors">
     <div class="flex flex-wrap items-center gap-4">
@@ -28,11 +28,22 @@
         </select>
       </div>
       <div class="flex items-end">
-        <button onclick="loadHistoryData()"
+        <button id="history-load" type="button" onclick="historyQuickRange = null; loadHistoryData()"
           class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
           Загрузить
         </button>
       </div>
+    </div>
+    <div class="mt-4 border-t border-gray-100 pt-4 dark:border-gray-700">
+      <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Быстрый период</p>
+      <div class="mt-2 flex flex-wrap gap-2" aria-label="Быстрый выбор периода">
+        <button type="button" data-history-period="24h" class="min-h-11 rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:border-blue-500 hover:text-blue-600 dark:border-gray-600 dark:text-gray-200 dark:hover:border-blue-400">24 часа</button>
+        <button type="button" data-history-period="7d" class="min-h-11 rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:border-blue-500 hover:text-blue-600 dark:border-gray-600 dark:text-gray-200 dark:hover:border-blue-400">7 дней</button>
+        <button type="button" data-history-period="30d" class="min-h-11 rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:border-blue-500 hover:text-blue-600 dark:border-gray-600 dark:text-gray-200 dark:hover:border-blue-400">30 дней</button>
+        <button type="button" data-history-period="month" class="min-h-11 rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:border-blue-500 hover:text-blue-600 dark:border-gray-600 dark:text-gray-200 dark:hover:border-blue-400">Этот месяц</button>
+      </div>
+      <div id="history-status" class="mt-3 hidden rounded-md px-3 py-2 text-sm" role="status" aria-live="polite"></div>
+      <button id="history-retry" type="button" onclick="loadHistoryData()" class="mt-2 hidden min-h-11 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">Повторить</button>
     </div>
   </div>
 
@@ -49,31 +60,55 @@
   <!-- Charts -->
   <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
     <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Графики</h2>
-    <div class="space-y-8">
-      <div class="h-48">
-        <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Температура</h3>
-        <canvas id="historyTempChart"></canvas>
-      </div>
-      <div class="h-48">
-        <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Влажность</h3>
-        <canvas id="historyHumidityChart"></canvas>
-      </div>
-      <div class="h-48">
-        <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Давление</h3>
-        <canvas id="historyPressureChart"></canvas>
-      </div>
-      <div class="h-48">
-        <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Ветер</h3>
-        <canvas id="historyWindChart"></canvas>
-      </div>
-      <div class="h-48">
-        <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Осадки</h3>
-        <canvas id="historyRainChart"></canvas>
-      </div>
-      <div class="h-48">
-        <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Освещённость</h3>
-        <canvas id="historySolarChart"></canvas>
-      </div>
+    <div class="space-y-3">
+      <details data-history-chart="temp" open class="rounded-lg border border-gray-200 dark:border-gray-700">
+        <summary class="cursor-pointer px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white">Температура</summary>
+        <div class="border-t border-gray-100 px-4 pb-4 pt-3 dark:border-gray-700">
+          <div class="h-48">
+          <canvas id="historyTempChart" role="img" aria-label="График температуры" aria-describedby="historyTempChart-summary"></canvas>
+          </div><p id="historyTempChart-summary" class="sr-only"></p><details id="historyTempChart-details" class="mt-2 text-sm"><summary class="cursor-pointer font-medium text-blue-600 dark:text-blue-300">Табличные данные температуры</summary><div id="historyTempChart-table" class="mt-2 max-h-64 overflow-auto rounded border border-gray-200 dark:border-gray-700"></div></details>
+        </div>
+      </details>
+      <details data-history-chart="humidity" class="rounded-lg border border-gray-200 dark:border-gray-700">
+        <summary class="cursor-pointer px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white">Влажность</summary>
+        <div class="border-t border-gray-100 px-4 pb-4 pt-3 dark:border-gray-700">
+          <div class="h-48">
+          <canvas id="historyHumidityChart" role="img" aria-label="График влажности" aria-describedby="historyHumidityChart-summary"></canvas>
+          </div><p id="historyHumidityChart-summary" class="sr-only"></p><details id="historyHumidityChart-details" class="mt-2 text-sm"><summary class="cursor-pointer font-medium text-blue-600 dark:text-blue-300">Табличные данные влажности</summary><div id="historyHumidityChart-table" class="mt-2 max-h-64 overflow-auto rounded border border-gray-200 dark:border-gray-700"></div></details>
+        </div>
+      </details>
+      <details data-history-chart="pressure" class="rounded-lg border border-gray-200 dark:border-gray-700">
+        <summary class="cursor-pointer px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white">Давление</summary>
+        <div class="border-t border-gray-100 px-4 pb-4 pt-3 dark:border-gray-700">
+          <div class="h-48">
+          <canvas id="historyPressureChart" role="img" aria-label="График давления" aria-describedby="historyPressureChart-summary"></canvas>
+          </div><p id="historyPressureChart-summary" class="sr-only"></p><details id="historyPressureChart-details" class="mt-2 text-sm"><summary class="cursor-pointer font-medium text-blue-600 dark:text-blue-300">Табличные данные давления</summary><div id="historyPressureChart-table" class="mt-2 max-h-64 overflow-auto rounded border border-gray-200 dark:border-gray-700"></div></details>
+        </div>
+      </details>
+      <details data-history-chart="wind" class="rounded-lg border border-gray-200 dark:border-gray-700">
+        <summary class="cursor-pointer px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white">Ветер</summary>
+        <div class="border-t border-gray-100 px-4 pb-4 pt-3 dark:border-gray-700">
+          <div class="h-48">
+          <canvas id="historyWindChart" role="img" aria-label="График ветра" aria-describedby="historyWindChart-summary"></canvas>
+          </div><p id="historyWindChart-summary" class="sr-only"></p><details id="historyWindChart-details" class="mt-2 text-sm"><summary class="cursor-pointer font-medium text-blue-600 dark:text-blue-300">Табличные данные ветра</summary><div id="historyWindChart-table" class="mt-2 max-h-64 overflow-auto rounded border border-gray-200 dark:border-gray-700"></div></details>
+        </div>
+      </details>
+      <details data-history-chart="rain" class="rounded-lg border border-gray-200 dark:border-gray-700">
+        <summary class="cursor-pointer px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white">Интенсивность осадков</summary>
+        <div class="border-t border-gray-100 px-4 pb-4 pt-3 dark:border-gray-700">
+          <div class="h-48">
+          <canvas id="historyRainChart" role="img" aria-label="График интенсивности осадков" aria-describedby="historyRainChart-summary"></canvas>
+          </div><p id="historyRainChart-summary" class="sr-only"></p><details id="historyRainChart-details" class="mt-2 text-sm"><summary class="cursor-pointer font-medium text-blue-600 dark:text-blue-300">Табличные данные интенсивности осадков</summary><div id="historyRainChart-table" class="mt-2 max-h-64 overflow-auto rounded border border-gray-200 dark:border-gray-700"></div></details>
+        </div>
+      </details>
+      <details data-history-chart="solar" class="rounded-lg border border-gray-200 dark:border-gray-700">
+        <summary class="cursor-pointer px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white">Освещённость</summary>
+        <div class="border-t border-gray-100 px-4 pb-4 pt-3 dark:border-gray-700">
+          <div class="h-48">
+          <canvas id="historySolarChart" role="img" aria-label="График освещённости" aria-describedby="historySolarChart-summary"></canvas>
+          </div><p id="historySolarChart-summary" class="sr-only"></p><details id="historySolarChart-details" class="mt-2 text-sm"><summary class="cursor-pointer font-medium text-blue-600 dark:text-blue-300">Табличные данные освещённости</summary><div id="historySolarChart-table" class="mt-2 max-h-64 overflow-auto rounded border border-gray-200 dark:border-gray-700"></div></details>
+        </div>
+      </details>
     </div>
   </div>
 </div>
@@ -83,6 +118,7 @@
 <script src="/static/js/charts.js?v=7"></script>
 <script>
   let historyCharts = {};
+  let historyQuickRange = null;
   // sharedTooltipIndex уже объявлен в charts.js
   // getThemeColors() уже объявлена в charts.js
   // crosshairPlugin уже объявлен в charts.js
@@ -111,17 +147,106 @@
   }
 
   document.addEventListener('DOMContentLoaded', function () {
-    // Set default dates
     const today = new Date();
     const weekAgo = new Date(today);
     weekAgo.setDate(weekAgo.getDate() - 7);
 
-    document.getElementById('dateTo').value = today.toISOString().split('T')[0];
-    document.getElementById('dateFrom').value = weekAgo.toISOString().split('T')[0];
+    document.getElementById('dateTo').value = formatDateForInput(today);
+    document.getElementById('dateFrom').value = formatDateForInput(weekAgo);
 
     initHistoryCharts();
+    initHistoryChartAccordions();
+    initHistoryPeriodControls();
     loadHistoryData();
   });
+
+  function formatDateForInput(date) {
+    const offset = date.getTimezoneOffset();
+    return new Date(date.getTime() - offset * 60_000).toISOString().slice(0, 10);
+  }
+
+  function initHistoryPeriodControls() {
+    document.querySelectorAll('#dateFrom, #dateTo, #interval').forEach(control => {
+      control.addEventListener('change', () => { historyQuickRange = null; });
+    });
+    document.querySelectorAll('[data-history-period]').forEach(button => {
+      button.addEventListener('click', () => {
+        const today = new Date();
+        const from = new Date(today);
+        let interval = '1h';
+
+        switch (button.dataset.historyPeriod) {
+          case '24h':
+            from.setDate(from.getDate() - 1);
+            interval = '5m';
+            break;
+          case '30d':
+            from.setDate(from.getDate() - 30);
+            break;
+          case 'month':
+            from.setDate(1);
+            from.setHours(0, 0, 0, 0);
+            interval = '1d';
+            break;
+          default:
+            from.setDate(from.getDate() - 7);
+        }
+
+        document.getElementById('dateFrom').value = formatDateForInput(from);
+        document.getElementById('dateTo').value = formatDateForInput(today);
+        document.getElementById('interval').value = interval;
+        historyQuickRange = {from: from.toISOString(), to: today.toISOString()};
+        loadHistoryData();
+      });
+    });
+  }
+
+  function initHistoryChartAccordions() {
+    const sections = document.querySelectorAll('[data-history-chart]');
+    const desktopQuery = window.matchMedia('(min-width: 640px)');
+    const openChartsOnDesktop = () => {
+      if (!desktopQuery.matches) return;
+      sections.forEach(section => { section.open = true; });
+    };
+    openChartsOnDesktop();
+    desktopQuery.addEventListener('change', openChartsOnDesktop);
+
+    sections.forEach(section => {
+      section.addEventListener('toggle', () => {
+        if (!section.open) return;
+        const chart = historyCharts[section.dataset.historyChart];
+        window.requestAnimationFrame(() => chart?.resize());
+      });
+    });
+  }
+
+  function setHistoryStatus(message, type) {
+    const status = document.getElementById('history-status');
+    const retry = document.getElementById('history-retry');
+    status.textContent = message;
+    status.className = 'mt-3 rounded-md px-3 py-2 text-sm';
+    retry.classList.add('hidden');
+
+    if (!message) {
+      status.classList.add('hidden');
+      return;
+    }
+    if (type === 'error') {
+      status.classList.add('bg-red-50', 'text-red-800', 'dark:bg-red-950/30', 'dark:text-red-200');
+      retry.classList.remove('hidden');
+      return;
+    }
+    status.classList.add('bg-blue-50', 'text-blue-800', 'dark:bg-blue-950/30', 'dark:text-blue-200');
+  }
+
+  function setHistoryLoading(isLoading) {
+    document.querySelectorAll('[data-history-period], #dateFrom, #dateTo, #interval').forEach(control => {
+      control.disabled = isLoading;
+    });
+    document.querySelectorAll('#history-load, #history-retry').forEach(button => {
+      button.disabled = isLoading;
+    });
+  }
 
   function initHistoryCharts() {
     const themeColors = getThemeColors();
@@ -215,11 +340,11 @@
 
     historyCharts.rain = new Chart(document.getElementById('historyRainChart'), {
       type: 'bar',
-      data: {labels: [], datasets: [{label: 'Осадки', data: [], backgroundColor: 'rgba(6, 182, 212, 0.7)', borderColor: '#06b6d4', borderWidth: 1}]},
+      data: {labels: [], datasets: [{label: 'Интенсивность', data: [], backgroundColor: 'rgba(6, 182, 212, 0.7)', borderColor: '#06b6d4', borderWidth: 1}]},
       options: {
         ...commonOptions,
-        plugins: {...commonOptions.plugins, tooltip: {callbacks: {label: (ctx) => ctx.raw.toFixed(1) + ' мм'}}},
-        scales: {...commonOptions.scales, y: {...commonOptions.scales.y, min: 0, ticks: {callback: (v) => v.toFixed(1) + ' мм', font: {size: 10}}}}
+        plugins: {...commonOptions.plugins, tooltip: {callbacks: {label: (ctx) => ctx.raw.toFixed(1) + ' мм/ч'}}},
+        scales: {...commonOptions.scales, y: {...commonOptions.scales.y, min: 0, ticks: {callback: (v) => v.toFixed(1) + ' мм/ч', font: {size: 10}}}}
       },
       plugins: [crosshairPlugin]
     });
@@ -234,40 +359,73 @@
       },
       plugins: [crosshairPlugin]
     });
+
+    configureChartAccessibility(historyCharts.temp, 'Температура', value => `${formatAccessibleNumber(value)} °C`);
+    configureChartAccessibility(historyCharts.humidity, 'Влажность', value => `${formatAccessibleNumber(value, 0)} %`);
+    configureChartAccessibility(historyCharts.pressure, 'Давление', value => `${formatAccessibleNumber(value)} мм рт. ст.`);
+    configureChartAccessibility(historyCharts.wind, 'Ветер', value => `${formatAccessibleNumber(value)} м/с`);
+    configureChartAccessibility(historyCharts.rain, 'Интенсивность осадков', value => `${formatAccessibleNumber(value)} мм/ч`);
+    configureChartAccessibility(historyCharts.solar, 'Освещённость', value => `${formatAccessibleNumber(value * 120, 0)} лк`);
   }
 
   async function loadHistoryData() {
-    const from = document.getElementById('dateFrom').value;
-    const to = document.getElementById('dateTo').value;
+    const selectedFrom = document.getElementById('dateFrom').value;
+    const selectedTo = document.getElementById('dateTo').value;
     const interval = document.getElementById('interval').value;
+    if (!selectedFrom || !selectedTo) {
+      setHistoryStatus('Выберите начальную и конечную даты.', 'error');
+      return;
+    }
+    const from = historyQuickRange?.from || selectedFrom;
+    const to = historyQuickRange?.to || selectedTo;
 
-    const response = await fetch(`/api/weather/chart?from=${from}&to=${to}&interval=${interval}&fields=temp_outdoor,humidity_outdoor,pressure_relative,wind_speed,wind_gust,rain_rate,solar_radiation`);
-    const data = await response.json();
+    setHistoryLoading(true);
+    setHistoryStatus('Загружаем данные истории…', 'loading');
+    try {
+      const params = new URLSearchParams({
+        from,
+        to,
+        interval,
+        fields: 'temp_outdoor,humidity_outdoor,pressure_relative,wind_speed,wind_gust,rain_rate,solar_radiation'
+      });
+      const response = await fetch(`/api/weather/chart?${params}`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      if (!Array.isArray(data.labels) || !data.datasets) throw new Error('invalid chart response');
 
-    historyCharts.temp.data.labels = data.labels;
-    historyCharts.temp.data.datasets[0].data = data.datasets.temp_outdoor;
-    historyCharts.temp.update();
+      historyCharts.temp.data.labels = data.labels;
+      historyCharts.temp.data.datasets[0].data = data.datasets.temp_outdoor || [];
+      historyCharts.temp.update();
 
-    historyCharts.humidity.data.labels = data.labels;
-    historyCharts.humidity.data.datasets[0].data = data.datasets.humidity_outdoor;
-    historyCharts.humidity.update();
+      historyCharts.humidity.data.labels = data.labels;
+      historyCharts.humidity.data.datasets[0].data = data.datasets.humidity_outdoor || [];
+      historyCharts.humidity.update();
 
-    historyCharts.pressure.data.labels = data.labels;
-    historyCharts.pressure.data.datasets[0].data = data.datasets.pressure_relative;
-    historyCharts.pressure.update();
+      historyCharts.pressure.data.labels = data.labels;
+      historyCharts.pressure.data.datasets[0].data = data.datasets.pressure_relative || [];
+      historyCharts.pressure.update();
 
-    historyCharts.wind.data.labels = data.labels;
-    historyCharts.wind.data.datasets[0].data = data.datasets.wind_speed;
-    historyCharts.wind.data.datasets[1].data = data.datasets.wind_gust;
-    historyCharts.wind.update();
+      historyCharts.wind.data.labels = data.labels;
+      historyCharts.wind.data.datasets[0].data = data.datasets.wind_speed || [];
+      historyCharts.wind.data.datasets[1].data = data.datasets.wind_gust || [];
+      historyCharts.wind.update();
 
-    historyCharts.rain.data.labels = data.labels;
-    historyCharts.rain.data.datasets[0].data = data.datasets.rain_rate;
-    historyCharts.rain.update();
+      historyCharts.rain.data.labels = data.labels;
+      historyCharts.rain.data.datasets[0].data = data.datasets.rain_rate || [];
+      historyCharts.rain.update();
 
-    historyCharts.solar.data.labels = data.labels;
-    historyCharts.solar.data.datasets[0].data = data.datasets.solar_radiation;
-    historyCharts.solar.update();
+      historyCharts.solar.data.labels = data.labels;
+      historyCharts.solar.data.datasets[0].data = data.datasets.solar_radiation || [];
+      historyCharts.solar.update();
+
+      refreshChartAccessibility(historyCharts);
+      setHistoryStatus(data.labels.length === 0 ? 'За выбранный период данных нет.' : '', 'success');
+    } catch (error) {
+      console.error('failed to load history data', error);
+      setHistoryStatus('Не удалось загрузить историю. Проверьте подключение и повторите запрос.', 'error');
+    } finally {
+      setHistoryLoading(false);
+    }
   }
 
   // Update chart colors when theme changes

@@ -2,7 +2,6 @@ package components
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/guptarohit/asciigraph"
@@ -286,16 +285,4 @@ func generateTimeLabels(data []models.WeatherData, count int) string {
 	// Pad labels to align with chart width
 	spacing := "          "
 	return secondaryTextStyle.Render(lipgloss.JoinHorizontal(lipgloss.Left, labels[0], spacing+labels[1], spacing+labels[2], spacing+labels[3], spacing+labels[4]))
-}
-
-// formatTime formats time based on the period
-func formatTime(t time.Time, period string) string {
-	switch period {
-	case "24h":
-		return t.Format("15:04")
-	case "7d", "30d":
-		return t.Format("02.01")
-	default:
-		return t.Format("15:04")
-	}
 }

@@ -7,108 +7,55 @@ import (
 // Color palette
 var (
 	// Temperature colors
-	coldColor   = lipgloss.Color("#3b82f6")  // Blue
-	coolColor   = lipgloss.Color("#10b981")  // Green
-	warmColor   = lipgloss.Color("#f59e0b")  // Yellow
-	hotColor    = lipgloss.Color("#ef4444")  // Red
+	coldColor = lipgloss.Color("#3b82f6") // Blue
+	coolColor = lipgloss.Color("#10b981") // Green
+	warmColor = lipgloss.Color("#f59e0b") // Yellow
+	hotColor  = lipgloss.Color("#ef4444") // Red
 
 	// General colors
-	primaryColor   = lipgloss.Color("#3b82f6")  // Blue
-	secondaryColor = lipgloss.Color("#6b7280")  // Gray
-	accentColor    = lipgloss.Color("#8b5cf6")  // Purple
-	successColor   = lipgloss.Color("#10b981")  // Green
-	warningColor   = lipgloss.Color("#f59e0b")  // Orange
-	errorColor     = lipgloss.Color("#ef4444")  // Red
+	primaryColor = lipgloss.Color("#3b82f6") // Blue
+	warningColor = lipgloss.Color("#f59e0b") // Orange
+	errorColor   = lipgloss.Color("#ef4444") // Red
 
 	// Text colors
-	textPrimary   = lipgloss.Color("#ffffff")  // White
-	textSecondary = lipgloss.Color("#9ca3af")  // Light gray
-	textMuted     = lipgloss.Color("#6b7280")  // Gray
+	textPrimary   = lipgloss.Color("#ffffff") // White
+	textSecondary = lipgloss.Color("#9ca3af") // Light gray
 
 	// Background colors
-	bgPrimary   = lipgloss.Color("#1f2937")  // Dark gray
-	bgSecondary = lipgloss.Color("#111827")  // Darker gray
-	bgAccent    = lipgloss.Color("#374151")  // Medium gray
+	bgSecondary = lipgloss.Color("#111827") // Darker gray
+	bgAccent    = lipgloss.Color("#374151") // Medium gray
 )
 
 // Component styles
 var (
-	// Header style
-	headerStyle = lipgloss.NewStyle().
-		Bold(true).
-		Foreground(textPrimary).
-		Background(primaryColor).
-		Padding(0, 2).
-		MarginBottom(1)
-
 	// Tab styles
 	activeTabStyle = lipgloss.NewStyle().
-		Bold(true).
-		Foreground(textPrimary).
-		Background(primaryColor).
-		Padding(0, 2)
+			Bold(true).
+			Foreground(textPrimary).
+			Background(primaryColor).
+			Padding(0, 2)
 
 	inactiveTabStyle = lipgloss.NewStyle().
-		Foreground(textSecondary).
-		Background(bgAccent).
-		Padding(0, 2)
+				Foreground(textSecondary).
+				Background(bgAccent).
+				Padding(0, 2)
 
 	tabGapStyle = lipgloss.NewStyle().
-		Background(bgSecondary)
-
-	// Box styles
-	boxStyle = lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(primaryColor).
-		Padding(1, 2).
-		MarginBottom(1)
-
-	titleStyle = lipgloss.NewStyle().
-		Bold(true).
-		Foreground(textPrimary).
-		MarginBottom(1)
-
-	subtitleStyle = lipgloss.NewStyle().
-		Foreground(textSecondary)
-
-	// Value styles
-	valueStyle = lipgloss.NewStyle().
-		Bold(true).
-		Foreground(textPrimary)
-
-	labelStyle = lipgloss.NewStyle().
-		Foreground(textSecondary)
-
-	// Status styles
-	goodStyle = lipgloss.NewStyle().
-		Foreground(successColor).
-		Bold(true)
-
-	neutralStyle = lipgloss.NewStyle().
-		Foreground(textSecondary)
-
-	badStyle = lipgloss.NewStyle().
-		Foreground(warningColor).
-		Bold(true)
-
-	// Footer style
-	footerStyle = lipgloss.NewStyle().
-		Foreground(textMuted).
-		MarginTop(1)
+			Background(bgSecondary)
 
 	// Help style
 	helpStyle = lipgloss.NewStyle().
-		Foreground(textSecondary).
-		MarginTop(1)
+			Foreground(textSecondary).
+			MarginTop(1)
 
 	// Error style
 	errorStyle = lipgloss.NewStyle().
-		Foreground(errorColor).
-		Bold(true)
+			Foreground(errorColor).
+			Bold(true)
 
 	// Spinner style
 	spinnerStyle = lipgloss.NewStyle().
-		Foreground(primaryColor)
+			Foreground(primaryColor)
 )
 
 // GetTempColor returns color based on temperature

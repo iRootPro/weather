@@ -141,6 +141,7 @@ func (h *Handler) parseStandaloneTemplate(name string) (*template.Template, erro
 
 type PageData struct {
 	ActivePage string
+	HasCharts  bool
 	Data       interface{}
 	Current    *models.WeatherData
 }
@@ -162,6 +163,7 @@ func (h *Handler) Dashboard(w http.ResponseWriter, r *http.Request) {
 
 	data := PageData{
 		ActivePage: "dashboard",
+		HasCharts:  true,
 	}
 
 	if err := tmpl.Execute(w, data); err != nil {
@@ -181,6 +183,7 @@ func (h *Handler) History(w http.ResponseWriter, r *http.Request) {
 
 	data := PageData{
 		ActivePage: "history",
+		HasCharts:  true,
 	}
 
 	if err := tmpl.Execute(w, data); err != nil {

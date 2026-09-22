@@ -42,12 +42,22 @@ func (r *geomagneticRepository) SaveKpBatch(ctx context.Context, data []models.G
 	}
 
 	br := r.pool.SendBatch(ctx, batch)
-	defer br.Close()
+	closed := false
+	defer func() {
+		if !closed {
+			_ = br.Close()
+		}
+	}()
 
 	for i := range data {
 		if _, err := br.Exec(); err != nil {
 			return fmt.Errorf("failed to execute kp batch item %d: %w", i, err)
 		}
+	}
+	closeErr := br.Close()
+	closed = true
+	if closeErr != nil {
+		return fmt.Errorf("failed to close kp batch: %w", closeErr)
 	}
 	return nil
 }
@@ -74,12 +84,22 @@ func (r *geomagneticRepository) SaveDailyBatch(ctx context.Context, data []model
 	}
 
 	br := r.pool.SendBatch(ctx, batch)
-	defer br.Close()
+	closed := false
+	defer func() {
+		if !closed {
+			_ = br.Close()
+		}
+	}()
 
 	for i := range data {
 		if _, err := br.Exec(); err != nil {
 			return fmt.Errorf("failed to execute daily batch item %d: %w", i, err)
 		}
+	}
+	closeErr := br.Close()
+	closed = true
+	if closeErr != nil {
+		return fmt.Errorf("failed to close daily batch: %w", closeErr)
 	}
 	return nil
 }

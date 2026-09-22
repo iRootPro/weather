@@ -222,6 +222,7 @@ func (h *Handler) DetailGeomagnetic(w http.ResponseWriter, r *http.Request) {
 
 	data := PageData{
 		ActivePage: "dashboard",
+		HasCharts:  true,
 		Data: map[string]any{
 			"Card":      card,
 			"Snapshot":  snap,

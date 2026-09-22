@@ -101,7 +101,7 @@ func (c *Client) do(ctx context.Context, method, path string, q url.Values, in i
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	data, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return fmt.Errorf("max api %s %s failed: status=%d body=%s", method, path, resp.StatusCode, string(data))
