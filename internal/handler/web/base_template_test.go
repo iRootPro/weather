@@ -85,6 +85,35 @@ func TestChartTemplatesRenderAccessibleDataControls(t *testing.T) {
 	}
 }
 
+func TestChartTemplatesUseCurrentChartsScriptVersion(t *testing.T) {
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("could not locate test file")
+	}
+
+	h := &Handler{templatesDir: filepath.Join(filepath.Dir(filename), "..", "..", "web", "templates")}
+	for _, page := range []string{"dashboard.html", "history.html"} {
+		t.Run(page, func(t *testing.T) {
+			tmpl, err := h.parseTemplate(page)
+			if err != nil {
+				t.Fatalf("parseTemplate() error = %v", err)
+			}
+
+			var output bytes.Buffer
+			if err := tmpl.Execute(&output, PageData{}); err != nil {
+				t.Fatalf("Execute() error = %v", err)
+			}
+			const currentChartsScript = `<script src="/static/js/charts.js?v=8"></script>`
+			if bytes.Count(output.Bytes(), []byte(currentChartsScript)) != 1 {
+				t.Fatalf("rendered template must contain exactly one current charts script reference: %s", currentChartsScript)
+			}
+			if bytes.Contains(output.Bytes(), []byte(`/static/js/charts.js?v=7`)) {
+				t.Fatal("rendered template still references the previous charts script version")
+			}
+		})
+	}
+}
+
 func TestDashboardTemplatePrioritizesWeatherBeforeTelegramPromotion(t *testing.T) {
 	_, filename, _, ok := runtime.Caller(0)
 	if !ok {
