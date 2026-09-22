@@ -110,7 +110,7 @@ deploy:
 
 # Проверенный backup БД перед production-деплоем
 deploy-backup:
-	@$(SSH_CMD) "set -eu; cd $(DEPLOY_PATH); mkdir -p backups; backup=backups/weather-predeploy-$$(date +%Y%m%d-%H%M%S).dump; docker exec weather-postgres pg_dump -U weather -d weather -Fc > $$backup; test -s $$backup; docker exec -i weather-postgres pg_restore -l < $$backup >/dev/null; echo backup-verified: $$backup"
+	@$(SSH_CMD) "set -eu; cd $(DEPLOY_PATH); mkdir -p backups; backup=backups/weather-predeploy-$$(date +%Y%m%d-%H%M%S).dump; docker exec weather-postgres pg_dump -U weather -d weather -Fc > \$$backup; test -s \$$backup; docker exec -i weather-postgres pg_restore -l < \$$backup >/dev/null; echo backup-verified: \$$backup"
 
 # Первоначальная настройка сервера
 deploy-init:
