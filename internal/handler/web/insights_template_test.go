@@ -45,7 +45,7 @@ func TestInsightsTemplateRendersArchiveControls(t *testing.T) {
 	for _, expected := range []string{
 		`<section class="ui-surface px-4 py-5 sm:px-6">`,
 		`class="ui-field mt-2 block w-full"`,
-		`class="ui-field-label min-w-48"`,
+		`class="ui-field-label ui-form-item min-w-0 w-full max-w-full md:w-auto md:min-w-48"`,
 		`class="ui-metric-card basis-full p-4"`,
 	} {
 		if !bytes.Contains(output.Bytes(), []byte(expected)) {
@@ -104,7 +104,7 @@ func TestInsightsTemplateRendersArchiveControls(t *testing.T) {
 				t.Fatalf("Execute() error = %v", err)
 			}
 
-			for _, expected := range []string{`id="insights-content"`, `hx-target="#insights-content"`, `hx-swap="outerHTML"`, test.controller, `name="search_field"`} {
+			for _, expected := range []string{`id="insights-content"`, `hx-target="#insights-content"`, `hx-swap="outerHTML"`, test.controller, `name="search_field"`, `ui-form-item min-w-0 w-full`} {
 				if !bytes.Contains(rendered.Bytes(), []byte(expected)) {
 					t.Errorf("rendered %s archive is missing %s", test.name, expected)
 				}

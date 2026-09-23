@@ -13,17 +13,17 @@
   <!-- Date Range Selector -->
   <div class="ui-surface p-4">
     <div class="flex flex-wrap items-end gap-5">
-      <div class="min-w-40 flex-1 sm:flex-none">
+      <div class="ui-form-item min-w-0 w-full sm:w-40 sm:flex-none">
         <label for="dateFrom" class="ui-field-label">От</label>
         <input type="date" id="dateFrom"
           class="ui-field mt-2 block w-full">
       </div>
-      <div class="min-w-40 flex-1 sm:flex-none">
+      <div class="ui-form-item min-w-0 w-full sm:w-40 sm:flex-none">
         <label for="dateTo" class="ui-field-label">До</label>
         <input type="date" id="dateTo"
           class="ui-field mt-2 block w-full">
       </div>
-      <div class="min-w-40 flex-1 sm:flex-none">
+      <div class="ui-form-item min-w-0 w-full sm:w-40 sm:flex-none">
         <label for="interval" class="ui-field-label">Интервал</label>
         <select id="interval"
           class="ui-field mt-2 block w-full">
@@ -33,7 +33,7 @@
           <option value="1d">1 день</option>
         </select>
       </div>
-      <div class="flex w-full items-end sm:w-auto">
+      <div class="ui-form-item flex min-w-0 w-full items-end sm:w-auto">
         <button id="history-load" type="button" onclick="historyQuickRange = null; loadHistoryData()"
           class="ui-button-primary w-full sm:w-auto">
           Загрузить

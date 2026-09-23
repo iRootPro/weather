@@ -25,10 +25,20 @@
          hx-get="/widgets/forecast"
          hx-trigger="load, every 3600s"
          hx-swap="innerHTML">
-        <div class="ui-surface animate-pulse p-6">
-            <div class="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4"></div>
-            <div class="h-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
-        </div>
+         <div class="ui-surface animate-pulse p-4 sm:p-5">
+             <div class="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4"></div>
+             <div class="grid grid-cols-3 gap-2 sm:grid-cols-5 sm:gap-3 lg:grid-cols-9">
+                 <div class="h-24 rounded bg-gray-200 dark:bg-gray-700 sm:h-28"></div>
+                 <div class="h-24 rounded bg-gray-200 dark:bg-gray-700 sm:h-28"></div>
+                 <div class="h-24 rounded bg-gray-200 dark:bg-gray-700 sm:h-28"></div>
+                 <div class="h-24 rounded bg-gray-200 dark:bg-gray-700 sm:h-28"></div>
+                 <div class="h-24 rounded bg-gray-200 dark:bg-gray-700 sm:h-28"></div>
+                 <div class="h-24 rounded bg-gray-200 dark:bg-gray-700 sm:h-28"></div>
+                 <div class="h-24 rounded bg-gray-200 dark:bg-gray-700 sm:h-28"></div>
+                 <div class="h-24 rounded bg-gray-200 dark:bg-gray-700 sm:h-28"></div>
+                 <div class="h-24 rounded bg-gray-200 dark:bg-gray-700 sm:h-28"></div>
+             </div>
+         </div>
     </div>
 
     <a href="#charts-24h" class="order-3 flex items-center justify-center rounded-lg border border-blue-200 bg-white px-4 py-3 text-sm font-semibold text-blue-700 shadow-sm dark:border-blue-800 dark:bg-gray-800 dark:text-blue-300 sm:hidden">

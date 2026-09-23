@@ -40,6 +40,11 @@ func TestBaseTemplateRendersAccessibleNavigation(t *testing.T) {
 		`.ui-button-secondary`,
 		`.ui-field`,
 		`.ui-field-label`,
+		`.ui-form-item`,
+		`box-sizing: border-box`,
+		`inline-size: 100%`,
+		`max-inline-size: 100%`,
+		`min-inline-size: 0`,
 		`padding: 0.5rem 0.75rem`,
 		`color: var(--ui-on-action)`,
 		`class="min-h-screen transition-colors duration-200"`,
@@ -427,7 +432,7 @@ func TestCurrentWeatherTemplateShowsMeasurementAndRefreshTimes(t *testing.T) {
 	}
 }
 
-func TestForecastTemplateUsesMobileScrollSnap(t *testing.T) {
+func TestForecastTemplateUsesCompactGridAndAccessibleLabels(t *testing.T) {
 	_, filename, _, ok := runtime.Caller(0)
 	if !ok {
 		t.Fatal("could not locate test file")
@@ -445,22 +450,31 @@ func TestForecastTemplateUsesMobileScrollSnap(t *testing.T) {
 		TempMain                 string
 		TempSecondary            string
 		WeatherDescription       string
+		AccessibleLabel          string
 		PrecipitationProbability int16
 		HasPrecipitation         bool
 	}
 	data := struct {
 		Cards      []forecastCard
 		NoForecast bool
-	}{Cards: []forecastCard{{Label: "12:00", Icon: "☀️", TempMain: "20°"}}}
+	}{Cards: []forecastCard{{
+		Label: "12:00", Icon: "☀️", TempMain: "20°", TempSecondary: "ощущ. 18°", WeatherDescription: "Ясно",
+		AccessibleLabel: "12:00, Ясно, 20°", PrecipitationProbability: 40, HasPrecipitation: true,
+	}}}
 
 	var output bytes.Buffer
 	if err := tmpl.Execute(&output, data); err != nil {
 		t.Fatalf("Execute() error = %v", err)
 	}
 
-	for _, expected := range []string{"snap-x snap-mandatory", `aria-label="Периоды прогноза"`, "w-40 shrink-0 snap-start", "Проведите влево"} {
+	for _, expected := range []string{"grid grid-cols-3", "lg:grid-cols-9", `aria-label="Периоды прогноза"`, `class="sr-only">12:00, Ясно, 20°`, `aria-hidden="true"`, "💧", "40%"} {
 		if !bytes.Contains(output.Bytes(), []byte(expected)) {
 			t.Errorf("rendered forecast is missing %s", expected)
+		}
+	}
+	for _, unexpected := range []string{"snap-x", "overflow-x-auto", "w-40", "Проведите влево", "ощущ. 18°", ">Ясно<"} {
+		if bytes.Contains(output.Bytes(), []byte(unexpected)) {
+			t.Errorf("rendered forecast must not contain %s", unexpected)
 		}
 	}
 }
@@ -508,7 +522,7 @@ func TestHistoryTemplateHasQuickPeriodsAndChartAccordions(t *testing.T) {
 
 	for _, expected := range []string{
 		`ui-status-surface`,
-		`ui-field`, `ui-field-label`, `ui-button-primary`, `ui-button-secondary`,
+		`ui-field`, `ui-field-label`, `ui-form-item`, `ui-button-primary`, `ui-button-secondary`,
 		`data-history-period="24h"`, `data-history-period="7d"`, `data-history-period="30d"`, `data-history-period="month"`,
 		`id="history-status"`, `id="history-retry"`,
 		`data-history-chart="temp"`, `data-history-chart="humidity"`, `data-history-chart="pressure"`,

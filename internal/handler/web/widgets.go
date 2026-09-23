@@ -7,6 +7,7 @@ import (
 	"math"
 	"net/http"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/iRootPro/weather/internal/models"
@@ -519,7 +520,76 @@ func (h *Handler) WeatherEventsWidget(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// ForecastWidget renders the weather forecast widget
+type forecastCard struct {
+	Label                    string
+	Icon                     string
+	TempMain                 string
+	AccessibleLabel          string
+	PrecipitationProbability int16
+	HasPrecipitation         bool
+}
+
+func buildForecastCards(now time.Time, hourlyForecast []models.HourlyForecast, dailyForecast []models.DailyForecast) []forecastCard {
+	cards := make([]forecastCard, 0, 9)
+
+	// Добавляем почасовые карточки (каждые 3 часа, максимум 3 карточки).
+	for i, hf := range hourlyForecast {
+		if len(cards) >= 3 {
+			break
+		}
+		if i != 0 && i%3 != 0 {
+			continue
+		}
+
+		temp := fmt.Sprintf("%.0f°", hf.Temperature)
+		cards = append(cards, forecastCard{
+			Label:                    hf.Time.Format("15:04"),
+			Icon:                     hf.Icon,
+			TempMain:                 temp,
+			AccessibleLabel:          formatForecastAccessibleLabel(hf.Time.Format("15:04"), hf.WeatherDescription, temp, hf.PrecipitationProbability),
+			PrecipitationProbability: hf.PrecipitationProbability,
+			HasPrecipitation:         hf.PrecipitationProbability > 0,
+		})
+	}
+
+	// Дневной прогноз начинается с завтрашнего дня и дополняет список до девяти карточек.
+	tomorrow := time.Date(now.Year(), now.Month(), now.Day()+1, 0, 0, 0, 0, now.Location())
+	daysOfWeekShort := []string{"Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"}
+	for _, df := range dailyForecast {
+		if len(cards) >= 9 || df.Date.Before(tomorrow) {
+			continue
+		}
+
+		label := daysOfWeekShort[df.Date.Weekday()]
+		temp := fmt.Sprintf("%.0f/%.0f°", df.TemperatureMin, df.TemperatureMax)
+		cards = append(cards, forecastCard{
+			Label:                    label,
+			Icon:                     df.Icon,
+			TempMain:                 temp,
+			AccessibleLabel:          formatForecastAccessibleLabel(label, df.WeatherDescription, temp, df.PrecipitationProbability),
+			PrecipitationProbability: df.PrecipitationProbability,
+			HasPrecipitation:         df.PrecipitationProbability > 0,
+		})
+	}
+
+	return cards
+}
+
+func formatForecastAccessibleLabel(label, description, temperature string, precipitationProbability int16) string {
+	parts := []string{label}
+	if description != "" {
+		parts = append(parts, description)
+	}
+	if temperature != "" {
+		parts = append(parts, temperature)
+	}
+	if precipitationProbability > 0 {
+		parts = append(parts, fmt.Sprintf("вероятность осадков %d%%", precipitationProbability))
+	}
+	return strings.Join(parts, ", ")
+}
+
+// ForecastWidget renders the weather forecast widget.
 func (h *Handler) ForecastWidget(w http.ResponseWriter, r *http.Request) {
 	if h.forecastService == nil {
 		slog.Error("forecast service is nil")
@@ -545,82 +615,10 @@ func (h *Handler) ForecastWidget(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Фильтруем дневной прогноз: исключаем сегодня
-	tomorrow := time.Date(now.Year(), now.Month(), now.Day()+1, 0, 0, 0, 0, now.Location())
-	filteredDaily := make([]models.DailyForecast, 0)
-	for _, df := range dailyForecast {
-		if df.Date.After(tomorrow) || df.Date.Equal(tomorrow) {
-			filteredDaily = append(filteredDaily, df)
-		}
-	}
-	// Не ограничиваем количество дней - нужно столько, сколько нужно для 9 карточек
-
-	// Единый тип карточки для всех прогнозов
-	type ForecastCard struct {
-		IsHourly                 bool   // true = почасовой, false = дневной
-		Label                    string // "15:00" или "Пн"
-		Icon                     string
-		TempMain                 string // "-3°" или "-8/-2°"
-		TempSecondary            string // "ощущ. -7°" для часов, пусто для дней
-		WeatherDescription       string // "Снег", "Дождь", "Облачно" и т.д.
-		PrecipitationProbability int16
-		HasPrecipitation         bool
-	}
-
-	cards := make([]ForecastCard, 0)
-
-	// Добавляем почасовые карточки (каждые 3 часа, максимум 3 карточки)
-	hourCount := 0
-	maxHours := 3
-	for i, hf := range hourlyForecast {
-		if hourCount >= maxHours {
-			break
-		}
-		// Берём первый час и далее каждые 3 часа
-		if i == 0 || i%3 == 0 {
-			tempSecondary := ""
-			if hf.FeelsLike != hf.Temperature {
-				tempSecondary = fmt.Sprintf("ощущ. %.0f°", hf.FeelsLike)
-			}
-			card := ForecastCard{
-				IsHourly:                 true,
-				Label:                    hf.Time.Format("15:04"),
-				Icon:                     hf.Icon,
-				TempMain:                 fmt.Sprintf("%.0f°", hf.Temperature),
-				TempSecondary:            tempSecondary,
-				WeatherDescription:       hf.WeatherDescription,
-				PrecipitationProbability: hf.PrecipitationProbability,
-				HasPrecipitation:         hf.PrecipitationProbability > 0,
-			}
-			cards = append(cards, card)
-			hourCount++
-		}
-	}
-
-	// Добавляем дневные карточки (дополняем до 9 карточек)
-	daysOfWeekShort := []string{"Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"}
-	totalCards := 9
-	daysNeeded := totalCards - len(cards)
-
-	for i, df := range filteredDaily {
-		if i >= daysNeeded {
-			break
-		}
-		card := ForecastCard{
-			IsHourly:                 false,
-			Label:                    daysOfWeekShort[df.Date.Weekday()],
-			Icon:                     df.Icon,
-			TempMain:                 fmt.Sprintf("%.0f/%.0f°", df.TemperatureMin, df.TemperatureMax),
-			TempSecondary:            "",
-			WeatherDescription:       df.WeatherDescription,
-			PrecipitationProbability: df.PrecipitationProbability,
-			HasPrecipitation:         df.PrecipitationProbability > 0,
-		}
-		cards = append(cards, card)
-	}
+	cards := buildForecastCards(now, hourlyForecast, dailyForecast)
 
 	templateData := struct {
-		Cards      []ForecastCard
+		Cards      []forecastCard
 		NoForecast bool
 	}{
 		Cards:      cards,
