@@ -12,44 +12,44 @@
 
   <!-- Date Range Selector -->
   <div class="ui-surface p-4">
-    <div class="flex flex-wrap items-center gap-4">
-      <div>
-        <label for="dateFrom" class="block text-sm font-medium text-gray-700 dark:text-gray-300">От</label>
+    <div class="flex flex-wrap items-end gap-5">
+      <div class="min-w-40 flex-1 sm:flex-none">
+        <label for="dateFrom" class="ui-field-label">От</label>
         <input type="date" id="dateFrom"
-          class="mt-1 block rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500">
+          class="ui-field mt-2 block w-full">
       </div>
-      <div>
-        <label for="dateTo" class="block text-sm font-medium text-gray-700 dark:text-gray-300">До</label>
+      <div class="min-w-40 flex-1 sm:flex-none">
+        <label for="dateTo" class="ui-field-label">До</label>
         <input type="date" id="dateTo"
-          class="mt-1 block rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500">
+          class="ui-field mt-2 block w-full">
       </div>
-      <div>
-        <label for="interval" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Интервал</label>
+      <div class="min-w-40 flex-1 sm:flex-none">
+        <label for="interval" class="ui-field-label">Интервал</label>
         <select id="interval"
-          class="mt-1 block rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500">
+          class="ui-field mt-2 block w-full">
           <option value="5m">5 минут</option>
           <option value="15m">15 минут</option>
           <option value="1h" selected>1 час</option>
           <option value="1d">1 день</option>
         </select>
       </div>
-      <div class="flex items-end">
+      <div class="flex w-full items-end sm:w-auto">
         <button id="history-load" type="button" onclick="historyQuickRange = null; loadHistoryData()"
-          class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
+          class="ui-button-primary w-full sm:w-auto">
           Загрузить
         </button>
       </div>
     </div>
     <div class="mt-4 border-t border-gray-100 pt-4 dark:border-gray-700">
       <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Быстрый период</p>
-      <div class="mt-2 flex flex-wrap gap-2" aria-label="Быстрый выбор периода">
-        <button type="button" data-history-period="24h" class="min-h-11 rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:border-blue-500 hover:text-blue-600 dark:border-gray-600 dark:text-gray-200 dark:hover:border-blue-400">24 часа</button>
-        <button type="button" data-history-period="7d" class="min-h-11 rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:border-blue-500 hover:text-blue-600 dark:border-gray-600 dark:text-gray-200 dark:hover:border-blue-400">7 дней</button>
-        <button type="button" data-history-period="30d" class="min-h-11 rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:border-blue-500 hover:text-blue-600 dark:border-gray-600 dark:text-gray-200 dark:hover:border-blue-400">30 дней</button>
-        <button type="button" data-history-period="month" class="min-h-11 rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:border-blue-500 hover:text-blue-600 dark:border-gray-600 dark:text-gray-200 dark:hover:border-blue-400">Этот месяц</button>
+      <div class="mt-3 flex flex-wrap gap-2" aria-label="Быстрый выбор периода">
+        <button type="button" data-history-period="24h" class="ui-button-secondary">24 часа</button>
+        <button type="button" data-history-period="7d" class="ui-button-secondary">7 дней</button>
+        <button type="button" data-history-period="30d" class="ui-button-secondary">30 дней</button>
+        <button type="button" data-history-period="month" class="ui-button-secondary">Этот месяц</button>
       </div>
       <div id="history-status" class="mt-3 hidden rounded-md px-3 py-2 text-sm" role="status" aria-live="polite"></div>
-      <button id="history-retry" type="button" onclick="loadHistoryData()" class="mt-2 hidden min-h-11 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">Повторить</button>
+      <button id="history-retry" type="button" onclick="loadHistoryData()" class="ui-button-primary mt-3 hidden">Повторить</button>
     </div>
   </div>
 

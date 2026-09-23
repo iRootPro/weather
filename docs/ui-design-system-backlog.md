@@ -182,6 +182,60 @@
 
 **Готово, когда:** TUI сохраняет читаемость в узком терминале и визуально следует тем же значениям статусов, что web.
 
+### P0 — корректность Archive после релиза
+
+#### DS-011. Исправить структуру form-panel Archive
+
+**Источник.** Проверка production-разметки после DS-007: в `internal/web/templates/insights.html` закрывающий `</div>` стоит после `</nav>`, хотя контейнер уже стал `<section>`. Browser может неявно исправлять DOM, но это делает отступы и HTMX-замену непредсказуемыми.
+
+**Задачи:**
+
+- Исправить парность `section`/`nav` и сохранить периодные controls, форму и loading-indicator в одном form-panel.
+- Добавить regression-тест на корректную структуру Archive и наличие controls после server render / HTMX swap.
+- Проверить month, season, year и range режимы.
+
+**Готово, когда:** периодный selector и форма образуют одну surface без неявно исправленного browser DOM; все режимы Archive работают как до исправления.
+
+### P1 — polish основных web-сценариев
+
+#### DS-012. Упростить верхний banner Archive
+
+**Источник.** Production-наблюдение пользователя: верхний banner выглядит слишком тяжёлым. В коде это единственный крупный градиентный hero Archive: `internal/web/templates/insights.html`.
+
+**Задачи:**
+
+- Заменить насыщенный тёмный gradient hero на компактный contextual header в общих surface/typography-ролях.
+- Оставить период, назначение страницы и coverage, но снизить высоту, контрастный шум и конкуренцию с table-first сценарием.
+- На mobile не допускать второго экрана до filters и таблицы; coverage не должен вытеснять основной контент.
+- Согласовать visual weight с dashboard/history, не меняя данные, URL и HTMX-контракт.
+
+**Готово, когда:** Archive начинается как рабочий инструмент исследования данных, а не как рекламный hero; период и покрытие считываются без крупного баннера.
+
+#### DS-013. Ввести полноценную плотность form controls
+
+**Источник.** `ui-field` задаёт border/radius/min-height, но не задаёт внутренние horizontal/vertical padding. History использует отдельные legacy input/select/button-классы без `ui-field`; в Archive utility-классы снова переопределяют часть control-стилей.
+
+**Задачи:**
+
+- Зафиксировать в `ui-field` padding, line-height, font-size, icon/caret clearance и одинаковую высоту input/select/button.
+- Убрать локальные form-control классы History и Archive в пользу общих ролей; не менять типы полей и query-параметры.
+- Ввести единые gap между label и control, между соседними controls и touch-targets — не меньше 8 px между соседними действиями и 44 px для интерактивных элементов.
+- Проверить date picker, select и number input в Safari/iOS и Chromium, включая dark theme и zoom 200%.
+
+**Готово, когда:** поля не выглядят «прижатыми» к границам, controls имеют одинаковую вертикальную плотность и остаются удобными для touch/keyboard.
+
+### P2 — визуальная приёмка следующей итерации
+
+#### DS-014. Зафиксировать screenshot QA для banner и form controls
+
+**Задачи:**
+
+- Снять reference screenshots Archive и History в light/dark на 375, 768, 1024 и 1440 px до и после DS-012/DS-013.
+- Проверить отсутствие горизонтального overflow, обрезанных label и закрытого focus ring.
+- Согласовать финальный вариант с пользователем до production deploy.
+
+**Готово, когда:** следующий visual polish имеет сравнимые артефакты до/после и не полагается только на субъективное воспоминание.
+
 ## Порядок выполнения
 
 1. DS-001 — фундамент токенов и компонентов.
@@ -190,6 +244,9 @@
 4. DS-004 и DS-005 — dashboard/history как эталонные сценарии.
 5. DS-006 и DS-007 — остальные data-heavy страницы и share-поверхности.
 6. DS-008, DS-009 и DS-010 — documentation, gallery и TUI.
+7. DS-011 — исправление Archive DOM до следующего visual-полиша.
+8. DS-012 и DS-013 — banner и form controls.
+9. DS-014 — визуальная приёмка перед deploy.
 
 ## Решения, требующие подтверждения до DS-001
 

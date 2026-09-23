@@ -42,6 +42,22 @@ func TestInsightsTemplateRendersArchiveControls(t *testing.T) {
 	if !bytes.Contains(output.Bytes(), []byte(`hx-get="/insights"`)) {
 		t.Fatal("archive period form is not HTMX-enabled")
 	}
+	for _, expected := range []string{
+		`<section class="ui-surface px-4 py-5 sm:px-6">`,
+		`class="ui-field mt-2 block w-full"`,
+		`class="ui-field-label min-w-48"`,
+		`class="ui-metric-card basis-full p-4"`,
+	} {
+		if !bytes.Contains(output.Bytes(), []byte(expected)) {
+			t.Errorf("rendered archive is missing %s", expected)
+		}
+	}
+	if bytes.Contains(output.Bytes(), []byte("bg-gradient-to-br from-slate-900 via-blue-950")) {
+		t.Fatal("archive must not use the legacy promotional gradient banner")
+	}
+	if bytes.Contains(output.Bytes(), []byte("</nav>\n        </div>\n\n        <form")) {
+		t.Fatal("archive period navigation must remain inside the form-panel surface")
+	}
 	if !bytes.Contains(output.Bytes(), []byte(`name="search_field"`)) || !bytes.Contains(output.Bytes(), []byte("Найти дни по условию")) {
 		t.Fatal("archive day search controls are missing")
 	}
@@ -59,5 +75,40 @@ func TestInsightsTemplateRendersArchiveControls(t *testing.T) {
 	}
 	if !bytes.Contains(output.Bytes(), []byte("12.3°")) || !bytes.Contains(output.Bytes(), []byte("3.7 мм")) {
 		t.Fatal("daily pointer values were not rendered as measurements")
+	}
+
+	for _, test := range []struct {
+		name       string
+		period     string
+		controller string
+	}{
+		{name: "month", period: "month", controller: `name="month"`},
+		{name: "season", period: "season", controller: `name="season"`},
+		{name: "year", period: "year", controller: `name="year"`},
+		{name: "range", period: "range", controller: `name="from"`},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			page := *data.Data.(*models.WeatherArchivePage)
+			page.Period = test.period
+			page.SeasonParam = "summer-2026"
+			page.SeasonOptions = []models.WeatherInsightsPeriodOption{{Value: "summer-2026", Label: "Лето 2026"}}
+			page.YearParam = 2026
+			page.YearOptions = []int{2026}
+			page.FromParam = "2026-08-01"
+			page.ToParam = "2026-08-31"
+			page.FirstDateParam = "2024-01-01"
+			page.LastDateParam = "2026-08-31"
+
+			var rendered bytes.Buffer
+			if err := tmpl.Execute(&rendered, PageData{ActivePage: "insights", Data: &page}); err != nil {
+				t.Fatalf("Execute() error = %v", err)
+			}
+
+			for _, expected := range []string{`id="insights-content"`, `hx-target="#insights-content"`, `hx-swap="outerHTML"`, test.controller, `name="search_field"`} {
+				if !bytes.Contains(rendered.Bytes(), []byte(expected)) {
+					t.Errorf("rendered %s archive is missing %s", test.name, expected)
+				}
+			}
+		})
 	}
 }
