@@ -484,7 +484,7 @@ func TestDashboardTemplatePrioritizesWeatherBeforeTelegramPromotion(t *testing.T
 		`id="sun-times"`,
 		`id="telegram-bot-promo"`,
 		`syncChartVisibility`,
-		`<h1 class="ui-page-header">Погода в Армавире</h1>`,
+		`<h1 class="sr-only">Погода в Армавире</h1>`,
 		`<h2 class="ui-section-heading sr-only sm:not-sr-only px-4 pt-4 sm:px-6 sm:pt-6">Графики за 24 часа</h2>`,
 	} {
 		if !bytes.Contains(output.Bytes(), []byte(expected)) {
@@ -506,6 +506,9 @@ func TestDashboardTemplatePrioritizesWeatherBeforeTelegramPromotion(t *testing.T
 	}
 	if bytes.Contains(output.Bytes(), []byte("Погода сейчас")) || bytes.Contains(output.Bytes(), []byte(`class="ui-kicker">Метеостанция Армавир`)) {
 		t.Fatal("dashboard must not repeat the application name or current-weather label in its page header")
+	}
+	if bytes.Contains(output.Bytes(), []byte(`<h1 class="ui-page-header">`)) {
+		t.Fatal("dashboard h1 must stay visually hidden because the application header already provides the location context")
 	}
 	chartHeadingIndex := bytes.Index(output.Bytes(), []byte(`<h2 class="ui-section-heading sr-only sm:not-sr-only px-4 pt-4 sm:px-6 sm:pt-6">Графики за 24 часа</h2>`))
 	chartDetailsIndex := bytes.Index(output.Bytes(), []byte(`<details id="charts-24h">`))
