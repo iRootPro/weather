@@ -229,8 +229,17 @@
         }
 
         .ui-form-item {
+            box-sizing: border-box;
             max-inline-size: 100%;
             min-inline-size: 0;
+        }
+
+        @media (max-width: 767px) {
+            .ui-form-item,
+            .ui-form-item > .ui-field {
+                inline-size: 100%;
+                max-inline-size: 100%;
+            }
         }
 
         .ui-field-label {

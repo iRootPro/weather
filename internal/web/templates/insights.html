@@ -24,7 +24,7 @@
             <a href="/insights?period=range&amp;from={{.Data.FromParam}}&amp;to={{.Data.ToParam}}&amp;metric={{.Data.Metric}}&amp;search_field={{.Data.Search.Field}}&amp;search_comparison={{.Data.Search.Comparison}}&amp;search_threshold={{.Data.Search.Threshold}}" hx-boost="true" hx-target="#insights-content" hx-select="#insights-content" hx-swap="outerHTML" hx-push-url="true" {{if eq .Data.Period "range"}}aria-current="page"{{end}} class="{{if eq .Data.Period "range"}}ui-button-primary{{else}}ui-button-secondary{{end}}">Диапазон</a>
         </nav>
 
-        <form method="get" action="/insights" class="mt-4 flex flex-col gap-5 md:flex-row md:flex-wrap md:items-end" hx-get="/insights" hx-target="#insights-content" hx-select="#insights-content" hx-swap="outerHTML" hx-push-url="true" hx-indicator="#archive-loading">
+        <form method="get" action="/insights" class="mt-4 grid grid-cols-1 gap-5 md:flex md:flex-row md:flex-wrap md:items-end" hx-get="/insights" hx-target="#insights-content" hx-select="#insights-content" hx-swap="outerHTML" hx-push-url="true" hx-indicator="#archive-loading">
             <input type="hidden" name="period" value="{{.Data.Period}}">
             {{if eq .Data.Period "month"}}
             <label class="ui-field-label ui-form-item min-w-0 w-full max-w-full md:w-auto md:min-w-48">Месяц
@@ -65,7 +65,7 @@
 
             <fieldset class="ui-metric-card basis-full p-4">
                 <legend class="px-1 text-sm font-bold text-slate-800 dark:text-white">Найти дни по условию</legend>
-                <div class="mt-3 flex flex-col gap-4 sm:flex-row sm:items-end">
+                <div class="mt-3 grid grid-cols-1 gap-4 sm:flex sm:flex-row sm:items-end">
                     <label class="ui-field-label ui-form-item min-w-0 w-full text-xs sm:flex-1">Показатель
                         <select name="search_field" class="ui-field mt-2 block w-full">
                             <option value="" {{if not .Data.Search.Active}}selected{{end}}>Без условия</option>

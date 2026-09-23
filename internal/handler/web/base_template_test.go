@@ -44,6 +44,7 @@ func TestBaseTemplateRendersAccessibleNavigation(t *testing.T) {
 		`box-sizing: border-box`,
 		`inline-size: 100%`,
 		`max-inline-size: 100%`,
+		`@media (max-width: 767px)`,
 		`min-inline-size: 0`,
 		`padding: 0.5rem 0.75rem`,
 		`color: var(--ui-on-action)`,
@@ -523,6 +524,7 @@ func TestHistoryTemplateHasQuickPeriodsAndChartAccordions(t *testing.T) {
 	for _, expected := range []string{
 		`ui-status-surface`,
 		`ui-field`, `ui-field-label`, `ui-form-item`, `ui-button-primary`, `ui-button-secondary`,
+		`grid grid-cols-1 gap-5 sm:flex sm:flex-wrap sm:items-end`,
 		`data-history-period="24h"`, `data-history-period="7d"`, `data-history-period="30d"`, `data-history-period="month"`,
 		`id="history-status"`, `id="history-retry"`,
 		`data-history-chart="temp"`, `data-history-chart="humidity"`, `data-history-chart="pressure"`,
