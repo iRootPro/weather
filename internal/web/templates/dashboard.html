@@ -161,8 +161,8 @@
     </div>
 
     <!-- Charts -->
-    <div id="charts-24h" class="ui-chart-panel order-8 p-6 sm:order-none">
-        <div class="flex items-center justify-between mb-4">
+    <div id="charts-24h" class="ui-chart-panel order-8 p-4 sm:order-none sm:p-6">
+        <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Графики за 24 часа</h2>
             <div class="flex space-x-2" role="group" aria-label="Интервал графиков">
                 <button onclick="updateCharts('5m')" class="chart-interval-btn ui-button-primary min-h-0 px-3 py-1" data-interval="5m" aria-pressed="true">5м</button>
@@ -174,71 +174,69 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-8">
             <div class="border-b border-gray-100 dark:border-gray-700 pb-4">
-                <div class="h-48">
-                    <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Температура</h3>
+                <h3 class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Температура</h3>
+                <div class="ui-chart-plot">
                     <canvas id="tempChart" role="img" aria-label="График температуры" aria-describedby="tempChart-summary"></canvas>
                 </div>
                 <p id="tempChart-summary" class="sr-only"></p>
-                <details id="tempChart-details" class="mt-2 text-sm">
+                <details id="tempChart-details" class="mt-4 text-sm">
                     <summary class="cursor-pointer font-medium text-blue-600 dark:text-blue-300">Табличные данные температуры</summary>
-                    <div id="tempChart-table" class="mt-2 max-h-64 overflow-auto rounded border border-gray-200 dark:border-gray-700"></div>
+                    <div id="tempChart-table" class="ui-chart-data mt-2 rounded border border-gray-200 dark:border-gray-700"></div>
                 </details>
             </div>
             <div class="border-b border-gray-100 dark:border-gray-700 pb-4">
-                <div class="h-48">
-                    <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Влажность</h3>
+                <h3 class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Влажность</h3>
+                <div class="ui-chart-plot">
                     <canvas id="humidityChart" role="img" aria-label="График влажности" aria-describedby="humidityChart-summary"></canvas>
                 </div>
                 <p id="humidityChart-summary" class="sr-only"></p>
-                <details id="humidityChart-details" class="mt-2 text-sm">
+                <details id="humidityChart-details" class="mt-4 text-sm">
                     <summary class="cursor-pointer font-medium text-blue-600 dark:text-blue-300">Табличные данные влажности</summary>
-                    <div id="humidityChart-table" class="mt-2 max-h-64 overflow-auto rounded border border-gray-200 dark:border-gray-700"></div>
+                    <div id="humidityChart-table" class="ui-chart-data mt-2 rounded border border-gray-200 dark:border-gray-700"></div>
                 </details>
             </div>
             <div class="border-b border-gray-100 dark:border-gray-700 pb-4">
-                <div class="h-48">
-                    <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Давление</h3>
+                <h3 class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Давление</h3>
+                <div class="ui-chart-plot">
                     <canvas id="pressureChart" role="img" aria-label="График давления" aria-describedby="pressureChart-summary"></canvas>
                 </div>
                 <p id="pressureChart-summary" class="sr-only"></p>
-                <details id="pressureChart-details" class="mt-2 text-sm">
+                <details id="pressureChart-details" class="mt-4 text-sm">
                     <summary class="cursor-pointer font-medium text-blue-600 dark:text-blue-300">Табличные данные давления</summary>
-                    <div id="pressureChart-table" class="mt-2 max-h-64 overflow-auto rounded border border-gray-200 dark:border-gray-700"></div>
+                    <div id="pressureChart-table" class="ui-chart-data mt-2 rounded border border-gray-200 dark:border-gray-700"></div>
                 </details>
             </div>
             <div class="border-b border-gray-100 dark:border-gray-700 pb-4">
-                <div class="h-48">
-                    <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Ветер</h3>
+                <h3 class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Ветер</h3>
+                <div class="ui-chart-plot ui-chart-plot-with-legend">
                     <canvas id="windChart" role="img" aria-label="График ветра" aria-describedby="windChart-summary"></canvas>
                 </div>
                 <p id="windChart-summary" class="sr-only"></p>
-                <details id="windChart-details" class="mt-2 text-sm">
+                <details id="windChart-details" class="mt-4 text-sm">
                     <summary class="cursor-pointer font-medium text-blue-600 dark:text-blue-300">Табличные данные ветра</summary>
-                    <div id="windChart-table" class="mt-2 max-h-64 overflow-auto rounded border border-gray-200 dark:border-gray-700"></div>
+                    <div id="windChart-table" class="ui-chart-data mt-2 rounded border border-gray-200 dark:border-gray-700"></div>
                 </details>
             </div>
             <div class="pb-4">
-                <div class="h-48">
-                    <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Освещённость</h3>
+                <h3 class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Освещённость</h3>
+                <div class="ui-chart-plot">
                     <canvas id="solarChart" role="img" aria-label="График освещённости" aria-describedby="solarChart-summary"></canvas>
                 </div>
                 <p id="solarChart-summary" class="sr-only"></p>
-                <details id="solarChart-details" class="mt-2 text-sm">
+                <details id="solarChart-details" class="mt-4 text-sm">
                     <summary class="cursor-pointer font-medium text-blue-600 dark:text-blue-300">Табличные данные освещённости</summary>
-                    <div id="solarChart-table" class="mt-2 max-h-64 overflow-auto rounded border border-gray-200 dark:border-gray-700"></div>
+                    <div id="solarChart-table" class="ui-chart-data mt-2 rounded border border-gray-200 dark:border-gray-700"></div>
                 </details>
             </div>
             <div class="pb-4">
-                <div class="h-48">
-                    <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Осадки</h3>
-                    <div class="relative h-36">
-                        <canvas id="rainChart" role="img" aria-label="График осадков" aria-describedby="rainChart-summary"></canvas>
-                    </div>
+                <h3 class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Осадки</h3>
+                <div class="ui-chart-plot">
+                    <canvas id="rainChart" role="img" aria-label="График осадков" aria-describedby="rainChart-summary"></canvas>
                 </div>
                 <p id="rainChart-summary" class="sr-only"></p>
-                <details id="rainChart-details" class="mt-2 text-sm">
+                <details id="rainChart-details" class="mt-4 text-sm">
                     <summary class="cursor-pointer font-medium text-blue-600 dark:text-blue-300">Табличные данные осадков</summary>
-                    <div id="rainChart-table" class="mt-2 max-h-64 overflow-auto rounded border border-gray-200 dark:border-gray-700"></div>
+                    <div id="rainChart-table" class="ui-chart-data mt-2 rounded border border-gray-200 dark:border-gray-700"></div>
                 </details>
             </div>
         </div>
@@ -247,7 +245,7 @@
 {{end}}
 
 {{define "scripts"}}
-<script src="/static/js/charts.js?v=8"></script>
+<script src="/static/js/charts.js?v=9"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         initCharts();

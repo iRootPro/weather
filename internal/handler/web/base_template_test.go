@@ -71,6 +71,9 @@ func TestBaseTemplateRendersAccessibleNavigation(t *testing.T) {
 		`summary:focus-visible`,
 		`prefers-reduced-motion: reduce`,
 		`.ui-chart-panel`,
+		`.ui-chart-plot`,
+		`.ui-chart-plot-with-legend`,
+		`.ui-chart-data`,
 		`aria-label="Главная"`,
 		`aria-label="История"`,
 		`aria-label="Рекорды"`,
@@ -349,14 +352,37 @@ func TestChartTemplatesUseCurrentChartsScriptVersion(t *testing.T) {
 			if err := tmpl.Execute(&output, PageData{}); err != nil {
 				t.Fatalf("Execute() error = %v", err)
 			}
-			const currentChartsScript = `<script src="/static/js/charts.js?v=8"></script>`
+			const currentChartsScript = `<script src="/static/js/charts.js?v=9"></script>`
 			if bytes.Count(output.Bytes(), []byte(currentChartsScript)) != 1 {
 				t.Fatalf("rendered template must contain exactly one current charts script reference: %s", currentChartsScript)
 			}
-			if bytes.Contains(output.Bytes(), []byte(`/static/js/charts.js?v=7`)) {
+			if bytes.Contains(output.Bytes(), []byte(`/static/js/charts.js?v=8`)) {
 				t.Fatal("rendered template still references the previous charts script version")
 			}
 		})
+	}
+}
+
+func TestChartsScriptRendersMobileDataCards(t *testing.T) {
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("could not locate test file")
+	}
+
+	script, err := os.ReadFile(filepath.Join(filepath.Dir(filename), "..", "..", "web", "static", "js", "charts.js"))
+	if err != nil {
+		t.Fatalf("ReadFile(charts.js) error = %v", err)
+	}
+
+	for _, expected := range []string{
+		"function renderChartDataCards",
+		"window.matchMedia('(max-width: 639px)')",
+		"grid-cols-[minmax(0,1fr)_auto]",
+		"details[id$=\"-details\"][open]",
+	} {
+		if !bytes.Contains(script, []byte(expected)) {
+			t.Errorf("charts.js is missing %s", expected)
+		}
 	}
 }
 
@@ -384,6 +410,7 @@ func TestDashboardTemplatePrioritizesWeatherBeforeTelegramPromotion(t *testing.T
 		`href="#charts-24h"`,
 		`id="weather-events"`,
 		`id="charts-24h"`,
+		`ui-chart-plot`, `ui-chart-plot-with-legend`, `ui-chart-data`,
 		`id="telegram-bot-card" class="ui-surface order-9`,
 	} {
 		if !bytes.Contains(output.Bytes(), []byte(expected)) {
@@ -532,6 +559,7 @@ func TestHistoryTemplateHasQuickPeriodsAndChartAccordions(t *testing.T) {
 		`id="history-status"`, `id="history-retry"`,
 		`data-history-chart="temp"`, `data-history-chart="humidity"`, `data-history-chart="pressure"`,
 		`data-history-chart="wind"`, `data-history-chart="rain"`, `data-history-chart="solar"`,
+		`ui-chart-data`,
 	} {
 		if !bytes.Contains(output.Bytes(), []byte(expected)) {
 			t.Errorf("rendered history is missing %s", expected)

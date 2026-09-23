@@ -60,6 +60,11 @@ function renderChartDataTable(chart) {
     if (!container || !chart.accessibility) return;
 
     const { name, formatValue } = chart.accessibility;
+    if (window.matchMedia('(max-width: 639px)').matches) {
+        renderChartDataCards(chart, container, name, formatValue);
+        return;
+    }
+
     const table = document.createElement('table');
     table.className = 'min-w-full whitespace-nowrap text-left text-xs tabular-nums';
 
@@ -106,9 +111,58 @@ function renderChartDataTable(chart) {
     container.replaceChildren(table);
 }
 
+function renderChartDataCards(chart, container, name, formatValue) {
+    const list = document.createElement('ol');
+    list.className = 'space-y-2 p-2';
+    list.setAttribute('aria-label', `${name}: значения по времени`);
+
+    chart.data.labels.forEach((label, index) => {
+        const item = document.createElement('li');
+        item.className = 'ui-metric-card p-3';
+
+        const time = document.createElement('time');
+        time.className = 'ui-tabular text-xs font-semibold text-gray-900 dark:text-white';
+        time.textContent = label;
+        item.append(time);
+
+        const values = document.createElement('dl');
+        values.className = 'mt-2 grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1';
+        chart.data.datasets.forEach(dataset => {
+            const label = document.createElement('dt');
+            label.className = 'min-w-0 text-xs text-gray-600 dark:text-gray-300';
+            label.textContent = dataset.label;
+            values.append(label);
+
+            const value = document.createElement('dd');
+            value.className = 'ui-tabular text-right text-xs font-semibold text-gray-900 dark:text-white';
+            const dataPoint = dataset.data[index];
+            value.textContent = Number.isFinite(dataPoint) ? formatValue(dataPoint, dataset) : '—';
+            values.append(value);
+        });
+        item.append(values);
+        list.append(item);
+    });
+
+    container.replaceChildren(list);
+}
+
 function refreshChartAccessibility(chartCollection) {
     Object.values(chartCollection).forEach(updateChartAccessibility);
 }
+
+let chartDataLayoutIsMobile = window.matchMedia('(max-width: 639px)').matches;
+
+window.addEventListener('resize', () => {
+    const isMobile = window.matchMedia('(max-width: 639px)').matches;
+    if (isMobile === chartDataLayoutIsMobile) return;
+
+    chartDataLayoutIsMobile = isMobile;
+    document.querySelectorAll('details[id$="-details"][open]').forEach(details => {
+        const canvasID = details.id.replace(/-details$/, '');
+        const chart = Chart.getChart(document.getElementById(canvasID));
+        if (chart) renderChartDataTable(chart);
+    });
+});
 
 // Get theme-specific colors
 function getThemeColors() {
