@@ -295,6 +295,73 @@ func TestConditionalDetailTemplatesKeepPageHeading(t *testing.T) {
 	}
 }
 
+func TestWaterLevelDetailDoesNotRenderMissingThresholdsAsZero(t *testing.T) {
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("could not locate test file")
+	}
+
+	h := &Handler{templatesDir: filepath.Join(filepath.Dir(filename), "..", "..", "web", "templates")}
+	tmpl, err := h.parseTemplate("detail/water_level.html")
+	if err != nil {
+		t.Fatalf("parseTemplate() error = %v", err)
+	}
+
+	var output bytes.Buffer
+	data := PageData{Data: map[string]any{
+		"Card":      WaterLevelCardData{HasData: true},
+		"Gauge":     &models.HydroGauge{},
+		"ChartJSON": "[]",
+	}}
+	if err := tmpl.Execute(&output, data); err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+
+	if bytes.Contains(output.Bytes(), []byte("0.000 м")) {
+		t.Fatal("missing water-level thresholds must not be rendered as 0.000 м")
+	}
+	if count := bytes.Count(output.Bytes(), []byte("Порог не указан источником")); count != 2 {
+		t.Fatalf("missing threshold message count = %d, want 2", count)
+	}
+}
+
+func TestWaterLevelDetailRendersProvidedThresholds(t *testing.T) {
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("could not locate test file")
+	}
+
+	prevention := float32(162.5)
+	danger := float32(163.75)
+	h := &Handler{templatesDir: filepath.Join(filepath.Dir(filename), "..", "..", "web", "templates")}
+	tmpl, err := h.parseTemplate("detail/water_level.html")
+	if err != nil {
+		t.Fatalf("parseTemplate() error = %v", err)
+	}
+
+	var output bytes.Buffer
+	data := PageData{Data: map[string]any{
+		"Card": WaterLevelCardData{HasData: true},
+		"Gauge": &models.HydroGauge{
+			FloodingPreventionBM: &prevention,
+			FloodingDangerBSM:    &danger,
+		},
+		"ChartJSON": "[]",
+	}}
+	if err := tmpl.Execute(&output, data); err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+
+	for _, expected := range []string{"162.500 м", "163.750 м"} {
+		if !bytes.Contains(output.Bytes(), []byte(expected)) {
+			t.Errorf("provided water-level threshold is missing %s", expected)
+		}
+	}
+	if bytes.Contains(output.Bytes(), []byte("Порог не указан источником")) {
+		t.Fatal("provided water-level thresholds must not render the missing-source message")
+	}
+}
+
 func TestChartTemplatesRenderAccessibleDataControls(t *testing.T) {
 	_, filename, _, ok := runtime.Caller(0)
 	if !ok {

@@ -43,13 +43,21 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div class="ui-metric-card p-5">
             <div class="text-sm text-gray-500 dark:text-gray-400">Неблагоприятный уровень</div>
+            {{if .Data.Gauge.FloodingPreventionBM}}
             <div class="text-2xl font-bold text-orange-600 dark:text-orange-300">{{printf "%.3f" (deref .Data.Gauge.FloodingPreventionBM)}} м</div>
             {{if .Data.Card.ToPrevention}}<div class="text-sm text-gray-500 dark:text-gray-400">{{.Data.Card.ToPrevention}}</div>{{end}}
+            {{else}}
+            <div class="mt-1 text-sm font-semibold text-gray-700 dark:text-gray-200">Порог не указан источником</div>
+            {{end}}
         </div>
         <div class="ui-metric-card p-5">
             <div class="text-sm text-gray-500 dark:text-gray-400">Опасный уровень</div>
+            {{if .Data.Gauge.FloodingDangerBSM}}
             <div class="text-2xl font-bold text-red-600 dark:text-red-300">{{printf "%.3f" (deref .Data.Gauge.FloodingDangerBSM)}} м</div>
             {{if .Data.Card.ToDanger}}<div class="text-sm text-gray-500 dark:text-gray-400">{{.Data.Card.ToDanger}}</div>{{end}}
+            {{else}}
+            <div class="mt-1 text-sm font-semibold text-gray-700 dark:text-gray-200">Порог не указан источником</div>
+            {{end}}
         </div>
         <div class="ui-metric-card p-5">
             <div class="text-sm text-gray-500 dark:text-gray-400">Гидропост</div>
