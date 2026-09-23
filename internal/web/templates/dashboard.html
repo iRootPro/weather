@@ -1,12 +1,11 @@
 {{template "base.html" .}}
 
-{{define "title"}}Главная - Метеостанция{{end}}
+{{define "title"}}Погода в Армавире — Метеостанция{{end}}
 
 {{define "content"}}
 <div class="ui-page flex flex-col gap-6 sm:block sm:space-y-6">
-    <header class="order-0 space-y-1 sm:order-none">
-        <p class="ui-kicker">Метеостанция Армавир</p>
-        <h1 class="ui-page-header">Погода сейчас</h1>
+    <header class="order-0 sm:order-none">
+        <h1 class="ui-page-header">Погода в Армавире</h1>
     </header>
 
     <!-- Current Weather -->
@@ -67,14 +66,15 @@
     </div>
 
     <!-- Charts -->
-    <details id="charts-24h" class="ui-chart-panel order-6 sm:order-none">
+    <section class="ui-chart-panel order-6 sm:order-none">
+        <h2 class="ui-section-heading sr-only sm:not-sr-only px-4 pt-4 sm:px-6 sm:pt-6">Графики за 24 часа</h2>
+    <details id="charts-24h">
         <summary class="flex min-h-11 cursor-pointer items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white sm:hidden">
             Графики за 24 часа
             <span class="text-blue-700 dark:text-blue-300">Открыть</span>
         </summary>
-        <div class="p-4 sm:p-6">
-        <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Графики за 24 часа</h2>
+        <div class="p-4 sm:px-6 sm:pb-6 sm:pt-3">
+        <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
             <div class="flex space-x-2" role="group" aria-label="Интервал графиков">
                 <button onclick="updateCharts('5m')" class="chart-interval-btn ui-button-primary min-h-0 px-3 py-1" data-interval="5m" aria-pressed="true">5м</button>
                 <button onclick="updateCharts('15m')" class="chart-interval-btn ui-button-secondary min-h-0 px-3 py-1" data-interval="15m" aria-pressed="false">15м</button>
@@ -153,6 +153,7 @@
         </div>
         </div>
     </details>
+    </section>
 
     <a id="telegram-bot-promo" href="https://t.me/ArmavirMeteoBot" target="_blank" rel="noopener noreferrer" class="ui-surface order-7 flex min-h-11 items-center justify-between gap-3 px-4 py-3 text-sm sm:order-none">
         <span class="text-gray-700 dark:text-gray-200"><strong>Telegram-бот</strong> · уведомления о погоде</span>

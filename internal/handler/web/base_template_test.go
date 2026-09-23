@@ -56,6 +56,7 @@ func TestBaseTemplateRendersAccessibleNavigation(t *testing.T) {
 		`class="min-h-screen transition-colors duration-200"`,
 		`.ui-page-header`,
 		`.ui-section-heading`,
+		`.ui-card-heading`,
 		`.ui-kicker`,
 		`.ui-tabular`,
 		`.ui-body`,
@@ -84,6 +85,7 @@ func TestBaseTemplateRendersAccessibleNavigation(t *testing.T) {
 		`aria-label="Справка"`,
 		`aria-label="Переключить цветовую тему"`,
 		`id="telegram-bot-promo"`,
+		`Метеостанция Армавир`,
 		`aria-current="page"`,
 		`a:focus-visible`,
 		`.dark a:focus-visible`,
@@ -482,6 +484,8 @@ func TestDashboardTemplatePrioritizesWeatherBeforeTelegramPromotion(t *testing.T
 		`id="sun-times"`,
 		`id="telegram-bot-promo"`,
 		`syncChartVisibility`,
+		`<h1 class="ui-page-header">Погода в Армавире</h1>`,
+		`<h2 class="ui-section-heading sr-only sm:not-sr-only px-4 pt-4 sm:px-6 sm:pt-6">Графики за 24 часа</h2>`,
 	} {
 		if !bytes.Contains(output.Bytes(), []byte(expected)) {
 			t.Errorf("rendered dashboard is missing %s", expected)
@@ -499,6 +503,40 @@ func TestDashboardTemplatePrioritizesWeatherBeforeTelegramPromotion(t *testing.T
 	}
 	if bytes.Contains(output.Bytes(), []byte(`id="daily-stats"`)) || bytes.Contains(output.Bytes(), []byte(`href="#charts-24h"`)) {
 		t.Fatal("dashboard must not contain duplicated stats or a chart jump link")
+	}
+	if bytes.Contains(output.Bytes(), []byte("Погода сейчас")) || bytes.Contains(output.Bytes(), []byte(`class="ui-kicker">Метеостанция Армавир`)) {
+		t.Fatal("dashboard must not repeat the application name or current-weather label in its page header")
+	}
+	chartHeadingIndex := bytes.Index(output.Bytes(), []byte(`<h2 class="ui-section-heading sr-only sm:not-sr-only px-4 pt-4 sm:px-6 sm:pt-6">Графики за 24 часа</h2>`))
+	chartDetailsIndex := bytes.Index(output.Bytes(), []byte(`<details id="charts-24h">`))
+	if chartHeadingIndex < 0 || chartHeadingIndex > chartDetailsIndex {
+		t.Fatal("chart heading must stay outside the collapsed mobile disclosure")
+	}
+}
+
+func TestDashboardWidgetTemplatesUseConsistentHeadingRoles(t *testing.T) {
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("could not locate test file")
+	}
+
+	partialsDir := filepath.Join(filepath.Dir(filename), "..", "..", "web", "templates", "partials")
+	for name, expected := range map[string]string{
+		"current_weather.html": `<h2 class="ui-section-heading">Сейчас</h2>`,
+		"forecast.html":        `<h2 class="ui-section-heading mb-4">Прогноз погоды</h2>`,
+		"sun_times.html":       `<h2 class="ui-section-heading">Солнце и Луна</h2>`,
+		"water_level.html":     `<h2 class="ui-section-heading">Уровень Кубани</h2>`,
+		"weather_events.html":  `<h2 class="ui-card-heading">Погодные события (24 часа)</h2>`,
+	} {
+		t.Run(name, func(t *testing.T) {
+			contents, err := os.ReadFile(filepath.Join(partialsDir, name))
+			if err != nil {
+				t.Fatalf("ReadFile(%s) error = %v", name, err)
+			}
+			if !bytes.Contains(contents, []byte(expected)) {
+				t.Errorf("widget heading must use its shared role: %s", expected)
+			}
+		})
 	}
 }
 
