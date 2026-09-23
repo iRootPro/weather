@@ -2,16 +2,39 @@ package web
 
 import (
 	"bytes"
+	"context"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"regexp"
 	"runtime"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/iRootPro/weather/internal/models"
 	"github.com/iRootPro/weather/internal/repository"
+	"github.com/iRootPro/weather/internal/service"
 )
+
+type widgetWeatherRepository struct {
+	repository.WeatherRepository
+	current *models.WeatherData
+	hourAgo *models.WeatherData
+	daily   *repository.DailyMinMax
+}
+
+func (r widgetWeatherRepository) GetLatest(context.Context) (*models.WeatherData, error) {
+	return r.current, nil
+}
+
+func (r widgetWeatherRepository) GetDataNearTime(context.Context, time.Time) (*models.WeatherData, error) {
+	return r.hourAgo, nil
+}
+
+func (r widgetWeatherRepository) GetDailyMinMax(context.Context) (*repository.DailyMinMax, error) {
+	return r.daily, nil
+}
 
 func TestBaseTemplateRendersAccessibleNavigation(t *testing.T) {
 	_, filename, _, ok := runtime.Caller(0)
@@ -558,13 +581,23 @@ func TestCurrentWeatherTemplateShowsMeasurementAndRefreshTimes(t *testing.T) {
 
 	var output bytes.Buffer
 	data := map[string]interface{}{
-		"ObservationTime": "12:00",
-		"UpdatedAt":       "12:01",
-		"HasHourlyData":   true,
-		"TempChange":      float32(0),
-		"HumidityChange":  int16(0),
-		"PressureChange":  float32(0),
-		"Geomagnetic":     map[string]bool{"HasData": false},
+		"ObservationTime":       "12:00",
+		"UpdatedAt":             "12:01",
+		"HasTempHourlyData":     true,
+		"HasHumidityHourlyData": true,
+		"HasPressureHourlyData": true,
+		"HasTempDailyData":      true,
+		"HasHumidityDailyData":  true,
+		"HasPressureDailyData":  true,
+		"HasWindMax":            true,
+		"HasWindGustMax":        true,
+		"HasDewPoint":           true,
+		"HasWindGust":           true,
+		"HasRainMonthly":        true,
+		"TempChange":            float32(0),
+		"HumidityChange":        int16(0),
+		"PressureChange":        float32(0),
+		"Geomagnetic":           map[string]bool{"HasData": false},
 	}
 	if err := tmpl.Execute(&output, data); err != nil {
 		t.Fatalf("Execute() error = %v", err)
@@ -582,74 +615,102 @@ func TestCurrentWeatherTemplateShowsMeasurementAndRefreshTimes(t *testing.T) {
 	if !bytes.Contains(output.Bytes(), []byte("ui-metric-card")) {
 		t.Fatal("current weather values must use the shared metric card role")
 	}
-	for _, expected := range []string{`p-3 text-center group sm:p-4`, `sm:text-3xl`, `sm:hidden">UV`, `hidden text-xs text-gray-400 dark:text-gray-500 sm:block`, `mt-1 hidden text-xs sm:block`} {
+	for _, expected := range []string{`p-3 text-center group sm:p-4`, `sm:text-3xl`, `sm:hidden">UV`, `mt-1 text-xs text-gray-400 dark:text-gray-500`} {
 		if !bytes.Contains(output.Bytes(), []byte(expected)) {
-			t.Errorf("current weather is missing compact mobile treatment %s", expected)
+			t.Errorf("current weather is missing detailed mobile treatment %s", expected)
+		}
+	}
+	if !bytes.Contains(output.Bytes(), []byte("0.0 мм рт. ст./ч")) {
+		t.Fatal("pressure change must include its unit")
+	}
+}
+
+func TestCurrentWeatherTemplateOmitsSecondaryMetricsWithoutSourceData(t *testing.T) {
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("could not determine test file path")
+	}
+
+	h := &Handler{templatesDir: filepath.Join(filepath.Dir(filename), "..", "..", "web", "templates")}
+	tmpl, err := h.parsePartial("current_weather.html")
+	if err != nil {
+		t.Fatalf("parsePartial() error = %v", err)
+	}
+
+	var output bytes.Buffer
+	if err := tmpl.Execute(&output, map[string]interface{}{
+		"ObservationTime": "12:00",
+		"UpdatedAt":       "12:01",
+		"Geomagnetic":     map[string]bool{"HasData": false},
+	}); err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+
+	for _, unexpected := range []string{"→\n                0.0°/ч", "0.0° / 0.0°", "→\n                0%/ч", "0% / 0%", "0 мм рт. ст./ч", "макс: 0.0 м/с", "макс порыв: 0.0 м/с"} {
+		if bytes.Contains(output.Bytes(), []byte(unexpected)) {
+			t.Errorf("secondary metric without source data must be omitted, got %q", unexpected)
 		}
 	}
 }
 
-func TestBuildCurrentWeatherTodayData(t *testing.T) {
-	tempMin, tempMax := float32(15.8), float32(33.5)
-	pressureMin, pressureMax := float32(738), float32(743)
-	gustMax, rainDaily := float32(7.4), float32(0)
+func TestCurrentWeatherWidgetOmitsPartialSecondaryMetrics(t *testing.T) {
+	temp, previousTemp := float32(20), float32(19)
+	humidity := int16(60)
+	pressure, windSpeed, rainDaily := float32(740), float32(3), float32(0)
+	tempMin, windMax := float32(12), float32(6)
 
-	today := buildCurrentWeatherTodayData(&repository.DailyMinMax{
-		TempMin:     &tempMin,
-		TempMax:     &tempMax,
-		PressureMin: &pressureMin,
-		PressureMax: &pressureMax,
-		GustMax:     &gustMax,
-	}, &rainDaily, WaterLevelCardData{
-		HasData:       true,
-		LevelM:        161.681,
-		DayChangeText: "+5 см",
-	})
-
-	if !today.HasData {
-		t.Fatal("today summary must render when daily weather or water-level data is available")
+	h := &Handler{
+		templatesDir: filepath.Join("..", "..", "web", "templates"),
+		weatherService: service.NewWeatherService(widgetWeatherRepository{
+			current: &models.WeatherData{
+				Time:             time.Now(),
+				TempOutdoor:      &temp,
+				HumidityOutdoor:  &humidity,
+				PressureRelative: &pressure,
+				WindSpeed:        &windSpeed,
+				RainDaily:        &rainDaily,
+			},
+			hourAgo: &models.WeatherData{TempOutdoor: &previousTemp},
+			daily:   &repository.DailyMinMax{TempMin: &tempMin, WindMax: &windMax},
+		}),
 	}
-	for _, test := range []struct {
-		field string
-		got   string
-		want  string
-	}{
-		{field: "temperature", got: today.TemperatureRange, want: "15.8…33.5°"},
-		{field: "pressure", got: today.PressureRange, want: "738…743 мм рт. ст."},
-		{field: "max gust", got: today.MaxGust, want: "до 7.4 м/с"},
-		{field: "rain", got: today.RainDaily, want: "0.0 мм"},
-		{field: "water level", got: today.WaterLevel, want: "161.681 м"},
-		{field: "water change", got: today.WaterChange, want: "+5 см"},
-	} {
-		if test.got != test.want {
-			t.Errorf("%s = %q, want %q", test.field, test.got, test.want)
+
+	recorder := httptest.NewRecorder()
+	h.CurrentWeatherWidget(recorder, httptest.NewRequest("GET", "/", nil))
+	if recorder.Code != 200 {
+		t.Fatalf("CurrentWeatherWidget() status = %d, want 200", recorder.Code)
+	}
+
+	body := recorder.Body.String()
+	for _, unexpected := range []string{"точка росы:", "порывы:", "месяц:", "0.0° / 0.0°", "0% / 0%", "0 / 0", "макс порыв: 0.0 м/с"} {
+		if strings.Contains(body, unexpected) {
+			t.Errorf("secondary metric with incomplete source data must be omitted, got %q", unexpected)
 		}
 	}
-	if today.WaterChangeLabel != "за 24 часа" {
-		t.Errorf("water change label = %q, want %q", today.WaterChangeLabel, "за 24 часа")
+	for _, expected := range []string{"1.0°/ч", "макс: 6.0 м/с"} {
+		if !strings.Contains(body, expected) {
+			t.Errorf("secondary metric with complete source data is missing %q", expected)
+		}
 	}
+}
 
-	hourlyWater := buildCurrentWeatherTodayData(nil, nil, WaterLevelCardData{
+func TestBuildCurrentWeatherWaterData(t *testing.T) {
+	water := buildCurrentWeatherWaterData(WaterLevelCardData{
 		HasData:         true,
-		LevelM:          161.681,
-		HasHourlyChange: true,
-		ChangeText:      "-1 см/ч",
+		RelativeLevelCm: "168 см над нулём поста",
+		DayChangeText:   "+5 см",
 	})
-	if hourlyWater.WaterChange != "-1 см/ч" || hourlyWater.WaterChangeLabel != "за час" {
-		t.Errorf("hourly water fallback = %q %q, want -1 см/ч за час", hourlyWater.WaterChange, hourlyWater.WaterChangeLabel)
+	if !water.HasData || water.RelativeLevel != "168 см над нулём поста" || water.DayChange != "+5 см" {
+		t.Fatalf("water summary = %+v, want relative level and daily change", water)
 	}
 
-	previousReading := buildCurrentWeatherTodayData(nil, nil, WaterLevelCardData{
-		HasData:    true,
-		LevelM:     161.681,
-		ChangeText: "-7 см",
-	})
-	if previousReading.WaterChange != "" || previousReading.WaterChangeLabel != "" {
-		t.Errorf("unbounded previous-reading change must be omitted, got %q %q", previousReading.WaterChange, previousReading.WaterChangeLabel)
+	withoutReference := buildCurrentWeatherWaterData(WaterLevelCardData{HasData: true, LevelM: 161.681})
+	if withoutReference.HasData {
+		t.Fatal("water summary must not fall back to the unexplained absolute water-level mark")
 	}
 }
 
-func TestCurrentWeatherTemplateRendersMobileTodaySummary(t *testing.T) {
+func TestCurrentWeatherTemplateRendersMobileWaterSummary(t *testing.T) {
 	_, filename, _, ok := runtime.Caller(0)
 	if !ok {
 		t.Fatal("could not locate test file")
@@ -664,25 +725,48 @@ func TestCurrentWeatherTemplateRendersMobileTodaySummary(t *testing.T) {
 	var output bytes.Buffer
 	data := map[string]any{
 		"Geomagnetic": map[string]bool{"HasData": false},
-		"Today": currentWeatherTodayData{
-			HasData:          true,
-			TemperatureRange: "15.8…33.5°",
-			PressureRange:    "738…743 мм рт. ст.",
-			MaxGust:          "до 7.4 м/с",
-			RainDaily:        "0.0 мм",
-			WaterLevel:       "161.681 м",
-			WaterChange:      "+5 см",
-			WaterChangeLabel: "за 24 часа",
+		"Water": currentWeatherWaterData{
+			HasData:       true,
+			RelativeLevel: "168 см над нулём поста",
+			DayChange:     "+5 см",
 		},
 	}
 	if err := tmpl.Execute(&output, data); err != nil {
 		t.Fatalf("Execute() error = %v", err)
 	}
 
-	for _, expected := range []string{`aria-labelledby="today-summary-heading"`, `sm:hidden`, "Сегодня", "15.8…33.5°", "161.681 м", "&#43;5 см", "за 24 часа"} {
+	for _, expected := range []string{`href="/detail/water-level"`, `sm:hidden`, "Кубань", "168 см над нулём поста", "&#43;5 см", "за 24 ч"} {
 		if !bytes.Contains(output.Bytes(), []byte(expected)) {
-			t.Errorf("mobile today summary is missing %s", expected)
+			t.Errorf("mobile water summary is missing %s", expected)
 		}
+	}
+}
+
+func TestCurrentWeatherTemplateOmitsWaterDailyChangeWhenUnavailable(t *testing.T) {
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("could not locate test file")
+	}
+
+	h := &Handler{templatesDir: filepath.Join(filepath.Dir(filename), "..", "..", "web", "templates")}
+	tmpl, err := h.parsePartial("current_weather.html")
+	if err != nil {
+		t.Fatalf("parsePartial() error = %v", err)
+	}
+
+	var output bytes.Buffer
+	if err := tmpl.Execute(&output, map[string]any{
+		"Geomagnetic": map[string]bool{"HasData": false},
+		"Water": currentWeatherWaterData{
+			HasData:       true,
+			RelativeLevel: "168 см над нулём поста",
+		},
+	}); err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+
+	if bytes.Contains(output.Bytes(), []byte("за 24 ч")) {
+		t.Fatal("mobile water summary must omit the daily-change label when no daily change is available")
 	}
 }
 

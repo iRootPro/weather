@@ -49,14 +49,14 @@
             <div class="text-xs text-gray-400 dark:text-gray-500">
                 ощущается: {{printf "%.1f" .TempFeelsLike}}°
             </div>
-            {{if .HasHourlyData}}
-            <div class="mt-1 hidden text-xs sm:block {{if gt .TempChange 0.0}}text-red-500{{else if lt .TempChange 0.0}}text-blue-500{{else}}text-gray-400 dark:text-gray-500{{end}}">
+            {{if .HasTempHourlyData}}
+            <div class="mt-1 text-xs {{if gt .TempChange 0.0}}text-red-500{{else if lt .TempChange 0.0}}text-blue-500{{else}}text-gray-400 dark:text-gray-500{{end}}">
                 {{if gt .TempChange 0.0}}↑{{else if lt .TempChange 0.0}}↓{{else}}→{{end}}
                 {{printf "%.1f" .TempChange}}°/ч
             </div>
             {{end}}
-            {{if .HasDailyData}}
-            <div class="mt-1 hidden text-xs text-gray-400 dark:text-gray-500 sm:block">
+            {{if .HasTempDailyData}}
+            <div class="mt-1 text-xs text-gray-400 dark:text-gray-500">
                 {{printf "%.1f" .TempMin}}° / {{printf "%.1f" .TempMax}}°
             </div>
             {{end}}
@@ -73,17 +73,19 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                 </svg>
             </div>
-            <div class="hidden text-xs text-gray-400 dark:text-gray-500 sm:block">
+            {{if .HasDewPoint}}
+            <div class="text-xs text-gray-400 dark:text-gray-500">
                 точка росы: {{printf "%.1f" .DewPoint}}°
             </div>
-            {{if .HasHourlyData}}
-            <div class="mt-1 hidden text-xs sm:block {{if gt .HumidityChange 0}}text-blue-500{{else if lt .HumidityChange 0}}text-orange-500{{else}}text-gray-400 dark:text-gray-500{{end}}">
+            {{end}}
+            {{if .HasHumidityHourlyData}}
+            <div class="mt-1 text-xs {{if gt .HumidityChange 0}}text-blue-500{{else if lt .HumidityChange 0}}text-orange-500{{else}}text-gray-400 dark:text-gray-500{{end}}">
                 {{if gt .HumidityChange 0}}↑{{else if lt .HumidityChange 0}}↓{{else}}→{{end}}
                 {{.HumidityChange}}%/ч
             </div>
             {{end}}
-            {{if .HasDailyData}}
-            <div class="mt-1 hidden text-xs text-gray-400 dark:text-gray-500 sm:block">
+            {{if .HasHumidityDailyData}}
+            <div class="mt-1 text-xs text-gray-400 dark:text-gray-500">
                 {{.HumidityMin}}% / {{.HumidityMax}}%
             </div>
             {{end}}
@@ -100,14 +102,14 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                 </svg>
             </div>
-            {{if .HasHourlyData}}
-            <div class="mt-1 hidden text-xs sm:block {{if gt .PressureChange 0.0}}text-green-500{{else if lt .PressureChange 0.0}}text-red-500{{else}}text-gray-400 dark:text-gray-500{{end}}">
+            {{if .HasPressureHourlyData}}
+            <div class="mt-1 text-xs {{if gt .PressureChange 0.0}}text-green-500{{else if lt .PressureChange 0.0}}text-red-500{{else}}text-gray-400 dark:text-gray-500{{end}}">
                 {{if gt .PressureChange 0.0}}↑{{else if lt .PressureChange 0.0}}↓{{else}}→{{end}}
-                {{printf "%.1f" .PressureChange}}/ч
+                {{printf "%.1f" .PressureChange}} мм рт. ст./ч
             </div>
             {{end}}
-            {{if .HasDailyData}}
-            <div class="mt-1 hidden text-xs text-gray-400 dark:text-gray-500 sm:block">
+            {{if .HasPressureDailyData}}
+            <div class="mt-1 text-xs text-gray-400 dark:text-gray-500">
                 {{printf "%.0f" .PressureMin}} / {{printf "%.0f" .PressureMax}}
             </div>
             {{end}}
@@ -133,14 +135,18 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                 </svg>
             </div>
+            {{if .HasWindGust}}
             <div class="text-xs text-gray-400 dark:text-gray-500">
                 порывы: {{printf "%.1f" .WindGust}} м/с
             </div>
-            {{if .HasDailyData}}
-            <div class="mt-1 hidden text-xs text-gray-400 dark:text-gray-500 sm:block">
+            {{end}}
+            {{if .HasWindMax}}
+            <div class="mt-1 text-xs text-gray-400 dark:text-gray-500">
                 макс: {{printf "%.1f" .WindMax}} м/с
             </div>
-            <div class="hidden text-xs text-gray-400 dark:text-gray-500 sm:block">
+            {{end}}
+            {{if .HasWindGustMax}}
+            <div class="text-xs text-gray-400 dark:text-gray-500">
                 макс порыв: {{printf "%.1f" .WindGustMax}} м/с
             </div>
             {{end}}
@@ -157,9 +163,11 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                 </svg>
             </div>
-            <div class="hidden text-xs text-gray-400 dark:text-gray-500 sm:block">
+            {{if .HasRainMonthly}}
+            <div class="text-xs text-gray-400 dark:text-gray-500">
                 месяц: {{printf "%.1f" .RainMonthly}} мм
             </div>
+            {{end}}
         </a>
 
         <!-- Solar/UV -->
@@ -179,42 +187,11 @@
         </a>
     </div>
 
-    {{if .Today.HasData}}
-    <section class="mt-4 border-t border-gray-200 pt-4 dark:border-gray-700 sm:hidden" aria-labelledby="today-summary-heading">
-        <h3 id="today-summary-heading" class="ui-card-heading">Сегодня</h3>
-        <dl class="mt-2 grid grid-cols-2 gap-2 text-sm">
-            {{if .Today.TemperatureRange}}
-            <div class="rounded-lg bg-gray-50 px-3 py-2 dark:bg-gray-800">
-                <dt class="text-xs text-gray-500 dark:text-gray-400">Температура</dt>
-                <dd class="ui-tabular mt-0.5 font-semibold text-gray-900 dark:text-white">{{.Today.TemperatureRange}}</dd>
-            </div>
-            {{end}}
-            {{if .Today.PressureRange}}
-            <div class="rounded-lg bg-gray-50 px-3 py-2 dark:bg-gray-800">
-                <dt class="text-xs text-gray-500 dark:text-gray-400">Давление</dt>
-                <dd class="ui-tabular mt-0.5 font-semibold text-gray-900 dark:text-white">{{.Today.PressureRange}}</dd>
-            </div>
-            {{end}}
-            {{if .Today.MaxGust}}
-            <div class="rounded-lg bg-gray-50 px-3 py-2 dark:bg-gray-800">
-                <dt class="text-xs text-gray-500 dark:text-gray-400">Макс. порыв</dt>
-                <dd class="ui-tabular mt-0.5 font-semibold text-gray-900 dark:text-white">{{.Today.MaxGust}}</dd>
-            </div>
-            {{end}}
-            {{if .Today.RainDaily}}
-            <div class="rounded-lg bg-gray-50 px-3 py-2 dark:bg-gray-800">
-                <dt class="text-xs text-gray-500 dark:text-gray-400">Осадки</dt>
-                <dd class="ui-tabular mt-0.5 font-semibold text-gray-900 dark:text-white">{{.Today.RainDaily}}</dd>
-            </div>
-            {{end}}
-            {{if .Today.WaterLevel}}
-            <div class="col-span-2 rounded-lg bg-blue-50 px-3 py-2 dark:bg-blue-900/20">
-                <dt class="text-xs text-blue-700 dark:text-blue-300">Кубань</dt>
-                <dd class="ui-tabular mt-0.5 font-semibold text-gray-900 dark:text-white">{{.Today.WaterLevel}}{{if .Today.WaterChange}} · {{.Today.WaterChange}} {{.Today.WaterChangeLabel}}{{end}}</dd>
-            </div>
-            {{end}}
-        </dl>
-    </section>
+    {{if .Water.HasData}}
+    <a href="/detail/water-level" class="mt-4 flex min-h-11 items-center justify-between gap-3 border-t border-gray-200 pt-4 text-sm dark:border-gray-700 sm:hidden">
+        <span class="font-semibold text-blue-700 dark:text-blue-300">Кубань</span>
+        <span class="ui-tabular text-right text-gray-700 dark:text-gray-200">{{.Water.RelativeLevel}}{{if .Water.DayChange}} · {{.Water.DayChange}} за 24 ч{{end}}</span>
+    </a>
     {{end}}
 
     {{if .Geomagnetic.HasData}}

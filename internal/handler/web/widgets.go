@@ -11,49 +11,24 @@ import (
 	"time"
 
 	"github.com/iRootPro/weather/internal/models"
-	"github.com/iRootPro/weather/internal/repository"
 	"github.com/iRootPro/weather/internal/service"
 )
 
-type currentWeatherTodayData struct {
-	HasData          bool
-	TemperatureRange string
-	PressureRange    string
-	MaxGust          string
-	RainDaily        string
-	WaterLevel       string
-	WaterChange      string
-	WaterChangeLabel string
+type currentWeatherWaterData struct {
+	HasData       bool
+	RelativeLevel string
+	DayChange     string
 }
 
-func buildCurrentWeatherTodayData(dailyMinMax *repository.DailyMinMax, rainDaily *float32, waterLevel WaterLevelCardData) currentWeatherTodayData {
-	today := currentWeatherTodayData{}
-	if dailyMinMax != nil {
-		if dailyMinMax.TempMin != nil && dailyMinMax.TempMax != nil {
-			today.TemperatureRange = fmt.Sprintf("%.1f…%.1f°", *dailyMinMax.TempMin, *dailyMinMax.TempMax)
-		}
-		if dailyMinMax.PressureMin != nil && dailyMinMax.PressureMax != nil {
-			today.PressureRange = fmt.Sprintf("%.0f…%.0f мм рт. ст.", *dailyMinMax.PressureMin, *dailyMinMax.PressureMax)
-		}
-		if dailyMinMax.GustMax != nil {
-			today.MaxGust = fmt.Sprintf("до %.1f м/с", *dailyMinMax.GustMax)
-		}
+func buildCurrentWeatherWaterData(waterLevel WaterLevelCardData) currentWeatherWaterData {
+	if !waterLevel.HasData || waterLevel.RelativeLevelCm == "" {
+		return currentWeatherWaterData{}
 	}
-	if rainDaily != nil {
-		today.RainDaily = fmt.Sprintf("%.1f мм", *rainDaily)
+	return currentWeatherWaterData{
+		HasData:       true,
+		RelativeLevel: waterLevel.RelativeLevelCm,
+		DayChange:     waterLevel.DayChangeText,
 	}
-	if waterLevel.HasData {
-		today.WaterLevel = fmt.Sprintf("%.3f м", waterLevel.LevelM)
-		if waterLevel.DayChangeText != "" {
-			today.WaterChange = waterLevel.DayChangeText
-			today.WaterChangeLabel = "за 24 часа"
-		} else if waterLevel.HasHourlyChange {
-			today.WaterChange = waterLevel.ChangeText
-			today.WaterChangeLabel = "за час"
-		}
-	}
-	today.HasData = today.TemperatureRange != "" || today.PressureRange != "" || today.MaxGust != "" || today.RainDaily != "" || today.WaterLevel != ""
-	return today
 }
 
 // degreesToDirection converts wind direction in degrees to compass direction
@@ -108,52 +83,59 @@ func (h *Handler) CurrentWeatherWidget(w http.ResponseWriter, r *http.Request) {
 		UVIndex          float32
 		SolarRadiation   float32
 		Illuminance      float32 // lux = solar radiation * 120
+		HasDewPoint      bool
+		HasWindGust      bool
+		HasRainMonthly   bool
 		// Hourly changes
-		TempChange     float32
-		HumidityChange int16
-		PressureChange float32
-		HasHourlyData  bool
+		TempChange            float32
+		HumidityChange        int16
+		PressureChange        float32
+		HasTempHourlyData     bool
+		HasHumidityHourlyData bool
+		HasPressureHourlyData bool
 		// Daily min/max
-		TempMin      float32
-		TempMax      float32
-		HumidityMin  int16
-		HumidityMax  int16
-		PressureMin  float32
-		PressureMax  float32
-		WindMax      float32
-		WindGustMax  float32
-		HasDailyData bool
+		TempMin              float32
+		TempMax              float32
+		HumidityMin          int16
+		HumidityMax          int16
+		PressureMin          float32
+		PressureMax          float32
+		WindMax              float32
+		WindGustMax          float32
+		HasTempDailyData     bool
+		HasHumidityDailyData bool
+		HasPressureDailyData bool
+		HasWindMax           bool
+		HasWindGustMax       bool
 		// Геомагнитная активность
 		Geomagnetic GeomagneticCardData
-		Today       currentWeatherTodayData
+		Water       currentWeatherWaterData
 	}{
 		ObservationTime: data.Time.Format("15:04"),
 		UpdatedAt:       time.Now().Format("15:04"),
 		Geomagnetic:     h.buildGeomagneticCard(r.Context()),
-		Today:           buildCurrentWeatherTodayData(dailyMinMax, data.RainDaily, h.buildCachedWaterLevelCard(r)),
+		Water:           buildCurrentWeatherWaterData(h.buildCachedWaterLevelCard(r)),
 	}
-
-	// Check if we have hourly comparison data
-	templateData.HasHourlyData = hourAgo != nil
-	// Check if we have daily min/max data
-	templateData.HasDailyData = dailyMinMax != nil
 
 	if data.TempOutdoor != nil {
 		templateData.TempOutdoor = *data.TempOutdoor
 		if hourAgo != nil && hourAgo.TempOutdoor != nil {
 			templateData.TempChange = *data.TempOutdoor - *hourAgo.TempOutdoor
+			templateData.HasTempHourlyData = true
 		}
 	}
 	if data.HumidityOutdoor != nil {
 		templateData.HumidityOutdoor = *data.HumidityOutdoor
 		if hourAgo != nil && hourAgo.HumidityOutdoor != nil {
 			templateData.HumidityChange = *data.HumidityOutdoor - *hourAgo.HumidityOutdoor
+			templateData.HasHumidityHourlyData = true
 		}
 	}
 	if data.PressureRelative != nil {
 		templateData.PressureRelative = *data.PressureRelative
 		if hourAgo != nil && hourAgo.PressureRelative != nil {
 			templateData.PressureChange = *data.PressureRelative - *hourAgo.PressureRelative
+			templateData.HasPressureHourlyData = true
 		}
 	}
 	if data.WindSpeed != nil {
@@ -173,6 +155,7 @@ func (h *Handler) CurrentWeatherWidget(w http.ResponseWriter, r *http.Request) {
 	}
 	if data.WindGust != nil {
 		templateData.WindGust = *data.WindGust
+		templateData.HasWindGust = true
 	}
 	if data.WindDirection != nil {
 		templateData.WindDirection = *data.WindDirection
@@ -198,6 +181,7 @@ func (h *Handler) CurrentWeatherWidget(w http.ResponseWriter, r *http.Request) {
 	}
 	if data.RainMonthly != nil {
 		templateData.RainMonthly = *data.RainMonthly
+		templateData.HasRainMonthly = true
 	}
 	if data.UVIndex != nil {
 		templateData.UVIndex = *data.UVIndex
@@ -208,6 +192,7 @@ func (h *Handler) CurrentWeatherWidget(w http.ResponseWriter, r *http.Request) {
 	}
 	if data.DewPoint != nil {
 		templateData.DewPoint = *data.DewPoint
+		templateData.HasDewPoint = true
 		// Определяем туман если разница между температурой и точкой росы < 2.5°C
 		if data.TempOutdoor != nil {
 			templateData.IsFoggy = models.IsFoggy(float64(*data.TempOutdoor), float64(*data.DewPoint))
@@ -222,29 +207,28 @@ func (h *Handler) CurrentWeatherWidget(w http.ResponseWriter, r *http.Request) {
 
 	// Daily min/max
 	if dailyMinMax != nil {
-		if dailyMinMax.TempMin != nil {
+		if dailyMinMax.TempMin != nil && dailyMinMax.TempMax != nil {
 			templateData.TempMin = *dailyMinMax.TempMin
-		}
-		if dailyMinMax.TempMax != nil {
 			templateData.TempMax = *dailyMinMax.TempMax
+			templateData.HasTempDailyData = true
 		}
-		if dailyMinMax.HumidityMin != nil {
+		if dailyMinMax.HumidityMin != nil && dailyMinMax.HumidityMax != nil {
 			templateData.HumidityMin = *dailyMinMax.HumidityMin
-		}
-		if dailyMinMax.HumidityMax != nil {
 			templateData.HumidityMax = *dailyMinMax.HumidityMax
+			templateData.HasHumidityDailyData = true
 		}
-		if dailyMinMax.PressureMin != nil {
+		if dailyMinMax.PressureMin != nil && dailyMinMax.PressureMax != nil {
 			templateData.PressureMin = *dailyMinMax.PressureMin
-		}
-		if dailyMinMax.PressureMax != nil {
 			templateData.PressureMax = *dailyMinMax.PressureMax
+			templateData.HasPressureDailyData = true
 		}
 		if dailyMinMax.WindMax != nil {
 			templateData.WindMax = *dailyMinMax.WindMax
+			templateData.HasWindMax = true
 		}
 		if dailyMinMax.GustMax != nil {
 			templateData.WindGustMax = *dailyMinMax.GustMax
+			templateData.HasWindGustMax = true
 		}
 	}
 
