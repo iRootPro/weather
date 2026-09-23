@@ -1,7 +1,7 @@
-<div class="ui-surface p-6">
-    <div class="flex items-center justify-between mb-4">
+<div class="ui-surface p-4 sm:p-6">
+    <div class="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Текущая погода</h2>
-        <span class="ui-tabular text-sm text-gray-500 dark:text-gray-400">Измерено {{.ObservationTime}} · обновлено {{.UpdatedAt}}</span>
+        <span class="ui-tabular text-xs text-gray-500 dark:text-gray-400 sm:text-sm">Измерено {{.ObservationTime}} · обновлено {{.UpdatedAt}}</span>
     </div>
 
     {{if or .IsRaining .IsFoggy .IsWindy}}
@@ -34,10 +34,10 @@
     </div>
     {{end}}
 
-    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+    <div class="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4 lg:grid-cols-6">
         <!-- Temperature -->
-        <a href="/detail/temperature" class="ui-metric-card block cursor-pointer p-4 text-center group">
-            <div class="ui-tabular text-3xl font-bold text-orange-600 dark:text-orange-400 group-hover:text-orange-700 dark:group-hover:text-orange-300">
+        <a href="/detail/temperature" class="ui-metric-card block cursor-pointer p-3 text-center group sm:p-4">
+            <div class="ui-tabular text-2xl font-bold text-orange-600 dark:text-orange-400 group-hover:text-orange-700 dark:group-hover:text-orange-300 sm:text-3xl">
                 {{printf "%.1f" .TempOutdoor}}°
             </div>
             <div class="text-sm text-gray-600 dark:text-gray-300 mt-1 group-hover:text-gray-900 dark:group-hover:text-white">
@@ -50,21 +50,21 @@
                 ощущается: {{printf "%.1f" .TempFeelsLike}}°
             </div>
             {{if .HasHourlyData}}
-            <div class="mt-1 text-xs {{if gt .TempChange 0.0}}text-red-500{{else if lt .TempChange 0.0}}text-blue-500{{else}}text-gray-400 dark:text-gray-500{{end}}">
+            <div class="mt-1 hidden text-xs sm:block {{if gt .TempChange 0.0}}text-red-500{{else if lt .TempChange 0.0}}text-blue-500{{else}}text-gray-400 dark:text-gray-500{{end}}">
                 {{if gt .TempChange 0.0}}↑{{else if lt .TempChange 0.0}}↓{{else}}→{{end}}
                 {{printf "%.1f" .TempChange}}°/ч
             </div>
             {{end}}
             {{if .HasDailyData}}
-            <div class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+            <div class="mt-1 hidden text-xs text-gray-400 dark:text-gray-500 sm:block">
                 {{printf "%.1f" .TempMin}}° / {{printf "%.1f" .TempMax}}°
             </div>
             {{end}}
         </a>
 
         <!-- Humidity -->
-        <a href="/detail/humidity" class="ui-metric-card block cursor-pointer p-4 text-center group">
-            <div class="ui-tabular text-3xl font-bold text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300">
+        <a href="/detail/humidity" class="ui-metric-card block cursor-pointer p-3 text-center group sm:p-4">
+            <div class="ui-tabular text-2xl font-bold text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300 sm:text-3xl">
                 {{.HumidityOutdoor}}%
             </div>
             <div class="text-sm text-gray-600 dark:text-gray-300 mt-1 group-hover:text-gray-900 dark:group-hover:text-white">
@@ -73,25 +73,25 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                 </svg>
             </div>
-            <div class="text-xs text-gray-400 dark:text-gray-500">
+            <div class="hidden text-xs text-gray-400 dark:text-gray-500 sm:block">
                 точка росы: {{printf "%.1f" .DewPoint}}°
             </div>
             {{if .HasHourlyData}}
-            <div class="mt-1 text-xs {{if gt .HumidityChange 0}}text-blue-500{{else if lt .HumidityChange 0}}text-orange-500{{else}}text-gray-400 dark:text-gray-500{{end}}">
+            <div class="mt-1 hidden text-xs sm:block {{if gt .HumidityChange 0}}text-blue-500{{else if lt .HumidityChange 0}}text-orange-500{{else}}text-gray-400 dark:text-gray-500{{end}}">
                 {{if gt .HumidityChange 0}}↑{{else if lt .HumidityChange 0}}↓{{else}}→{{end}}
                 {{.HumidityChange}}%/ч
             </div>
             {{end}}
             {{if .HasDailyData}}
-            <div class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+            <div class="mt-1 hidden text-xs text-gray-400 dark:text-gray-500 sm:block">
                 {{.HumidityMin}}% / {{.HumidityMax}}%
             </div>
             {{end}}
         </a>
 
         <!-- Pressure -->
-        <a href="/detail/pressure" class="ui-metric-card block cursor-pointer p-4 text-center group">
-            <div class="ui-tabular text-3xl font-bold text-purple-600 dark:text-purple-400 group-hover:text-purple-700 dark:group-hover:text-purple-300">
+        <a href="/detail/pressure" class="ui-metric-card block cursor-pointer p-3 text-center group sm:p-4">
+            <div class="ui-tabular text-2xl font-bold text-purple-600 dark:text-purple-400 group-hover:text-purple-700 dark:group-hover:text-purple-300 sm:text-3xl">
                 {{printf "%.0f" .PressureRelative}}
             </div>
             <div class="text-sm text-gray-600 dark:text-gray-300 mt-1 group-hover:text-gray-900 dark:group-hover:text-white">
@@ -101,22 +101,22 @@
                 </svg>
             </div>
             {{if .HasHourlyData}}
-            <div class="mt-1 text-xs {{if gt .PressureChange 0.0}}text-green-500{{else if lt .PressureChange 0.0}}text-red-500{{else}}text-gray-400 dark:text-gray-500{{end}}">
+            <div class="mt-1 hidden text-xs sm:block {{if gt .PressureChange 0.0}}text-green-500{{else if lt .PressureChange 0.0}}text-red-500{{else}}text-gray-400 dark:text-gray-500{{end}}">
                 {{if gt .PressureChange 0.0}}↑{{else if lt .PressureChange 0.0}}↓{{else}}→{{end}}
                 {{printf "%.1f" .PressureChange}}/ч
             </div>
             {{end}}
             {{if .HasDailyData}}
-            <div class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+            <div class="mt-1 hidden text-xs text-gray-400 dark:text-gray-500 sm:block">
                 {{printf "%.0f" .PressureMin}} / {{printf "%.0f" .PressureMax}}
             </div>
             {{end}}
         </a>
 
         <!-- Wind -->
-        <a href="/detail/wind" class="ui-metric-card block cursor-pointer p-4 text-center group">
+        <a href="/detail/wind" class="ui-metric-card block cursor-pointer p-3 text-center group sm:p-4">
             <div class="flex items-center justify-center space-x-2">
-                <div class="ui-tabular text-3xl font-bold text-teal-600 dark:text-teal-400 group-hover:text-teal-700 dark:group-hover:text-teal-300">
+                <div class="ui-tabular text-2xl font-bold text-teal-600 dark:text-teal-400 group-hover:text-teal-700 dark:group-hover:text-teal-300 sm:text-3xl">
                     {{printf "%.1f" .WindSpeed}}
                 </div>
                 {{if .WindDirectionStr}}
@@ -137,18 +137,18 @@
                 порывы: {{printf "%.1f" .WindGust}} м/с
             </div>
             {{if .HasDailyData}}
-            <div class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+            <div class="mt-1 hidden text-xs text-gray-400 dark:text-gray-500 sm:block">
                 макс: {{printf "%.1f" .WindMax}} м/с
             </div>
-            <div class="text-xs text-gray-400 dark:text-gray-500">
+            <div class="hidden text-xs text-gray-400 dark:text-gray-500 sm:block">
                 макс порыв: {{printf "%.1f" .WindGustMax}} м/с
             </div>
             {{end}}
         </a>
 
         <!-- Rain -->
-        <a href="/detail/rain" class="ui-metric-card block cursor-pointer p-4 text-center group">
-            <div class="ui-tabular text-3xl font-bold text-cyan-600 dark:text-cyan-400 group-hover:text-cyan-700 dark:group-hover:text-cyan-300">
+        <a href="/detail/rain" class="ui-metric-card block cursor-pointer p-3 text-center group sm:p-4">
+            <div class="ui-tabular text-2xl font-bold text-cyan-600 dark:text-cyan-400 group-hover:text-cyan-700 dark:group-hover:text-cyan-300 sm:text-3xl">
                 {{printf "%.1f" .RainDaily}}
             </div>
             <div class="text-sm text-gray-600 dark:text-gray-300 mt-1 group-hover:text-gray-900 dark:group-hover:text-white">
@@ -157,14 +157,14 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                 </svg>
             </div>
-            <div class="text-xs text-gray-400 dark:text-gray-500">
+            <div class="hidden text-xs text-gray-400 dark:text-gray-500 sm:block">
                 месяц: {{printf "%.1f" .RainMonthly}} мм
             </div>
         </a>
 
         <!-- Solar/UV -->
-        <a href="/detail/solar" class="ui-metric-card block cursor-pointer p-4 text-center group">
-            <div class="ui-tabular text-3xl font-bold text-yellow-600 dark:text-yellow-400 group-hover:text-yellow-700 dark:group-hover:text-yellow-300">
+        <a href="/detail/solar" class="ui-metric-card block cursor-pointer p-3 text-center group sm:p-4">
+            <div class="ui-tabular text-2xl font-bold text-yellow-600 dark:text-yellow-400 group-hover:text-yellow-700 dark:group-hover:text-yellow-300 sm:text-3xl">
                 {{printf "%.0f" .Illuminance}}
             </div>
             <div class="text-sm text-gray-600 dark:text-gray-300 mt-1 group-hover:text-gray-900 dark:group-hover:text-white">
@@ -174,13 +174,14 @@
                 </svg>
             </div>
             <div class="text-xs text-gray-400 dark:text-gray-500">
-                {{printf "%.0f" .SolarRadiation}} Вт/м² | UV {{printf "%.0f" .UVIndex}}
+                <span class="sm:hidden">UV {{printf "%.0f" .UVIndex}}</span><span class="hidden sm:inline">{{printf "%.0f" .SolarRadiation}} Вт/м² | UV {{printf "%.0f" .UVIndex}}</span>
             </div>
         </a>
     </div>
 
     {{if .Geomagnetic.HasData}}
-    <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+    <div class="mt-4 border-t border-gray-200 pt-4 dark:border-gray-700">
+        {{if .Geomagnetic.IsAttention}}
         <a href="/detail/geomagnetic"
            class="flex items-center gap-4 p-3 bg-gradient-to-r {{.Geomagnetic.StatusGradient}} rounded-lg hover:shadow transition-all duration-200">
             <span class="text-2xl shrink-0">🌞</span>
@@ -204,6 +205,12 @@
             </div>
             {{end}}
         </a>
+        {{else}}
+        <a href="/detail/geomagnetic" class="flex min-h-11 items-center justify-between gap-3 rounded-lg bg-green-50 px-3 py-2 text-sm dark:bg-green-900/20">
+            <span class="text-gray-700 dark:text-gray-200">Магнитное поле</span>
+            <span class="font-semibold {{.Geomagnetic.StatusText}}">{{.Geomagnetic.StatusHeading}} · Kp {{printf "%.1f" .Geomagnetic.Kp}}</span>
+        </a>
+        {{end}}
     </div>
     {{end}}
 </div>

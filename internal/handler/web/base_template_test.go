@@ -8,6 +8,8 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/iRootPro/weather/internal/models"
 )
 
 func TestBaseTemplateRendersAccessibleNavigation(t *testing.T) {
@@ -81,7 +83,7 @@ func TestBaseTemplateRendersAccessibleNavigation(t *testing.T) {
 		`aria-label="Галерея"`,
 		`aria-label="Справка"`,
 		`aria-label="Переключить цветовую тему"`,
-		`aria-label="Скрыть предложение Telegram-бота"`,
+		`id="telegram-bot-promo"`,
 		`aria-current="page"`,
 		`a:focus-visible`,
 		`.dark a:focus-visible`,
@@ -407,23 +409,29 @@ func TestDashboardTemplatePrioritizesWeatherBeforeTelegramPromotion(t *testing.T
 		`ui-chart-panel`,
 		`aria-pressed="true"`,
 		`aria-label="Интервал графиков"`,
-		`href="#charts-24h"`,
 		`id="weather-events"`,
 		`id="charts-24h"`,
 		`ui-chart-plot`, `ui-chart-plot-with-legend`, `ui-chart-data`,
-		`id="telegram-bot-card" class="ui-surface order-9`,
+		`id="sun-times"`,
+		`id="telegram-bot-promo"`,
+		`syncChartVisibility`,
 	} {
 		if !bytes.Contains(output.Bytes(), []byte(expected)) {
 			t.Errorf("rendered dashboard is missing %s", expected)
 		}
 	}
 
-	waterIndex := bytes.Index(output.Bytes(), []byte(`id="water-level"`))
-	telegramIndex := bytes.Index(output.Bytes(), []byte(`id="telegram-bot-card"`))
-	sunIndex := bytes.Index(output.Bytes(), []byte(`id="sun-times"`))
 	eventsIndex := bytes.Index(output.Bytes(), []byte(`id="weather-events"`))
-	if waterIndex >= telegramIndex || telegramIndex >= sunIndex || sunIndex >= eventsIndex {
-		t.Fatal("desktop dashboard order changed")
+	forecastIndex := bytes.Index(output.Bytes(), []byte(`id="forecast"`))
+	waterIndex := bytes.Index(output.Bytes(), []byte(`id="water-level"`))
+	sunIndex := bytes.Index(output.Bytes(), []byte(`id="sun-times"`))
+	chartsIndex := bytes.Index(output.Bytes(), []byte(`id="charts-24h"`))
+	telegramIndex := bytes.Index(output.Bytes(), []byte(`id="telegram-bot-promo"`))
+	if eventsIndex >= forecastIndex || forecastIndex >= waterIndex || waterIndex >= sunIndex || sunIndex >= chartsIndex || chartsIndex >= telegramIndex {
+		t.Fatal("dashboard content order changed")
+	}
+	if bytes.Contains(output.Bytes(), []byte(`id="daily-stats"`)) || bytes.Contains(output.Bytes(), []byte(`href="#charts-24h"`)) {
+		t.Fatal("dashboard must not contain duplicated stats or a chart jump link")
 	}
 }
 
@@ -443,6 +451,10 @@ func TestCurrentWeatherTemplateShowsMeasurementAndRefreshTimes(t *testing.T) {
 	data := map[string]interface{}{
 		"ObservationTime": "12:00",
 		"UpdatedAt":       "12:01",
+		"HasHourlyData":   true,
+		"TempChange":      float32(0),
+		"HumidityChange":  int16(0),
+		"PressureChange":  float32(0),
 		"Geomagnetic":     map[string]bool{"HasData": false},
 	}
 	if err := tmpl.Execute(&output, data); err != nil {
@@ -452,7 +464,7 @@ func TestCurrentWeatherTemplateShowsMeasurementAndRefreshTimes(t *testing.T) {
 	if !bytes.Contains(output.Bytes(), []byte("Измерено 12:00 · обновлено 12:01")) {
 		t.Fatal("current weather timestamp is missing or incomplete")
 	}
-	if !bytes.Contains(output.Bytes(), []byte(`class="ui-tabular text-sm`)) {
+	if !bytes.Contains(output.Bytes(), []byte(`class="ui-tabular text-xs`)) {
 		t.Fatal("current weather timestamp must use the tabular typography role")
 	}
 	if bytes.Contains(output.Bytes(), []byte("hover:scale-105")) {
@@ -460,6 +472,76 @@ func TestCurrentWeatherTemplateShowsMeasurementAndRefreshTimes(t *testing.T) {
 	}
 	if !bytes.Contains(output.Bytes(), []byte("ui-metric-card")) {
 		t.Fatal("current weather values must use the shared metric card role")
+	}
+	for _, expected := range []string{`p-3 text-center group sm:p-4`, `sm:text-3xl`, `sm:hidden">UV`, `hidden text-xs text-gray-400 dark:text-gray-500 sm:block`, `mt-1 hidden text-xs sm:block`} {
+		if !bytes.Contains(output.Bytes(), []byte(expected)) {
+			t.Errorf("current weather is missing compact mobile treatment %s", expected)
+		}
+	}
+}
+
+func TestWeatherEventsTemplateOmitsEmptyState(t *testing.T) {
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("could not locate test file")
+	}
+
+	h := &Handler{templatesDir: filepath.Join(filepath.Dir(filename), "..", "..", "web", "templates")}
+	tmpl, err := h.parsePartial("weather_events.html")
+	if err != nil {
+		t.Fatalf("parsePartial() error = %v", err)
+	}
+
+	var output bytes.Buffer
+	if err := tmpl.Execute(&output, map[string]any{"Events": []models.WeatherEvent(nil)}); err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+	if bytes.Contains(output.Bytes(), []byte("ui-surface")) {
+		t.Fatal("empty weather events must clear the HTMX target without rendering a card")
+	}
+}
+
+func TestSunTimesTemplateUsesCompactSummaryAndDisclosure(t *testing.T) {
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("could not locate test file")
+	}
+
+	h := &Handler{templatesDir: filepath.Join(filepath.Dir(filename), "..", "..", "web", "templates")}
+	tmpl, err := h.parsePartial("sun_times.html")
+	if err != nil {
+		t.Fatalf("parsePartial() error = %v", err)
+	}
+
+	var output bytes.Buffer
+	if err := tmpl.Execute(&output, map[string]any{"Sunrise": "06:00", "Sunset": "18:00", "DayLength": "12ч", "HasMoonData": false}); err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+
+	for _, expected := range []string{"Восход", "Закат", "День", "Солнце и Луна подробнее", "<details"} {
+		if !bytes.Contains(output.Bytes(), []byte(expected)) {
+			t.Errorf("compact sun summary is missing %s", expected)
+		}
+	}
+}
+
+func TestIsGeomagneticAttention(t *testing.T) {
+	for _, test := range []struct {
+		name     string
+		status   models.KpStatus
+		peakLine string
+		want     bool
+	}{
+		{name: "calm", status: models.KpCalm, want: false},
+		{name: "forecast storm", status: models.KpCalm, peakLine: "Прогноз: буря G1", want: true},
+		{name: "unsettled", status: models.KpUnsettled, want: true},
+		{name: "storm", status: models.KpStorm, want: true},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			if got := isGeomagneticAttention(test.status, test.peakLine); got != test.want {
+				t.Errorf("isGeomagneticAttention(%v, %q) = %t, want %t", test.status, test.peakLine, got, test.want)
+			}
+		})
 	}
 }
 

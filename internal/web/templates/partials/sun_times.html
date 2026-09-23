@@ -1,11 +1,18 @@
-<div class="ui-surface p-6">
-    <div class="flex items-center justify-between mb-4">
+<div class="ui-surface p-4 sm:p-5">
+    <div class="flex items-center justify-between gap-3">
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Солнце и Луна</h2>
         <span class="text-sm text-gray-500 dark:text-gray-400">{{.Date}}</span>
     </div>
 
-    <!-- Two column layout for Sun and Moon -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:items-stretch">
+    <div class="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm text-gray-700 dark:text-gray-200">
+        <span>Восход <strong class="ui-tabular">{{.Sunrise}}</strong></span>
+        <span>Закат <strong class="ui-tabular">{{.Sunset}}</strong></span>
+        <span>День <strong class="ui-tabular">{{.DayLength}}</strong></span>
+    </div>
+
+    <details class="mt-3 border-t border-gray-200 pt-3 dark:border-gray-700">
+        <summary class="cursor-pointer text-sm font-semibold text-blue-700 dark:text-blue-300">Солнце и Луна подробнее</summary>
+        <div class="mt-4 grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-stretch">
         <!-- Sun Column -->
         <div class="flex flex-col space-y-4">
             <h3 class="text-md font-semibold text-gray-800 dark:text-gray-200 flex items-center">
@@ -186,5 +193,6 @@
             </div>
         </div>
         {{end}}
-    </div>
+        </div>
+    </details>
 </div>

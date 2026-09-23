@@ -498,13 +498,10 @@ func (h *Handler) WeatherEventsWidget(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to load weather events", http.StatusInternalServerError)
 		return
 	}
-
 	templateData := struct {
-		Events   []models.WeatherEvent
-		NoEvents bool
+		Events []models.WeatherEvent
 	}{
-		Events:   events,
-		NoEvents: len(events) == 0,
+		Events: events,
 	}
 
 	tmpl, err := h.parsePartial("weather_events.html")

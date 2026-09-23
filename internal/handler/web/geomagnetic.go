@@ -31,6 +31,7 @@ type GeomagneticCardData struct {
 	StatusText     string
 	SubLine        string // поясняющая подпись под крупным статусом — объясняет, о чём блок
 	PeakLine       string // готовая строка «Прогноз: …» или «Макс сегодня: …», либо пустая
+	IsAttention    bool
 	Sparkline      []SparkBar
 }
 
@@ -48,6 +49,10 @@ func statusHeading(status models.KpStatus, kp float32) string {
 	default:
 		return "Спокойно"
 	}
+}
+
+func isGeomagneticAttention(status models.KpStatus, peakLine string) bool {
+	return status != models.KpCalm || peakLine != ""
 }
 
 // buildGeomagneticCard собирает данные карточки. Никогда не возвращает ошибку —
@@ -74,7 +79,6 @@ func (h *Handler) buildGeomagneticCard(ctx context.Context) GeomagneticCardData 
 		StatusGradient: snap.Status.TailwindGradient(),
 		StatusText:     snap.Status.TextColor(),
 		SubLine:        "Магнитное поле Земли",
-		Sparkline:      h.buildSparkline(ctx, now),
 	}
 
 	switch {
@@ -90,6 +94,10 @@ func (h *Handler) buildGeomagneticCard(ctx context.Context) GeomagneticCardData 
 		} else if models.ClassifyKp(snap.TodayMaxKp.Kp) == models.KpUnsettled {
 			card.PeakLine = fmt.Sprintf("Макс сегодня: возмущение в %s", when)
 		}
+	}
+	card.IsAttention = isGeomagneticAttention(snap.Status, card.PeakLine)
+	if card.IsAttention {
+		card.Sparkline = h.buildSparkline(ctx, now)
 	}
 
 	return card

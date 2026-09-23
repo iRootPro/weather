@@ -20,8 +20,15 @@
         </div>
     </div>
 
+    <!-- Weather Events -->
+    <div id="weather-events" class="order-2 sm:order-none"
+         hx-get="/widgets/events"
+         hx-trigger="load, every 300s"
+         hx-swap="innerHTML">
+    </div>
+
     <!-- Forecast -->
-    <div id="forecast" class="order-2 sm:order-none"
+    <div id="forecast" class="order-3 sm:order-none"
          hx-get="/widgets/forecast"
          hx-trigger="load, every 3600s"
          hx-swap="innerHTML">
@@ -41,84 +48,15 @@
          </div>
     </div>
 
-    <a href="#charts-24h" class="order-3 flex items-center justify-center rounded-lg border border-blue-200 bg-white px-4 py-3 text-sm font-semibold text-blue-700 shadow-sm dark:border-blue-800 dark:bg-gray-800 dark:text-blue-300 sm:hidden">
-        Перейти к графикам за 24 часа
-    </a>
-
     <!-- Water Level -->
-    <div id="water-level" class="order-5 sm:order-none"
+    <div id="water-level" class="order-4 sm:order-none"
          hx-get="/widgets/water-level"
          hx-trigger="load, every 600s"
          hx-swap="innerHTML">
     </div>
 
-    <!-- Telegram Bot -->
-    <div id="telegram-bot-card" class="ui-surface order-9 relative p-6 sm:order-none">
-        <!-- Close Button -->
-        <button onclick="closeTelegramCard()" aria-label="Скрыть предложение Telegram-бота" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
-        </button>
-
-        <div class="flex flex-col md:flex-row items-center gap-6">
-            <!-- Telegram Icon -->
-            <div class="flex-shrink-0">
-                <div class="w-24 h-24 bg-blue-500 rounded-full flex items-center justify-center shadow-lg">
-                    <svg class="w-14 h-14 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.658-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.941z"/>
-                    </svg>
-                </div>
-            </div>
-
-            <!-- Content -->
-            <div class="flex-1 text-center md:text-left">
-                <h2 class="ui-section-heading mb-2">Telegram бот</h2>
-                <p class="text-gray-700 dark:text-gray-300 mb-4">
-                    Получайте уведомления о погоде прямо в мессенджере!
-                </p>
-
-                <!-- Features -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4 text-sm">
-                    <div class="flex items-start">
-                        <span class="text-green-500 mr-2">✓</span>
-                        <span class="text-gray-600 dark:text-gray-300">Утренняя сводка погоды</span>
-                    </div>
-                    <div class="flex items-start">
-                        <span class="text-green-500 mr-2">✓</span>
-                        <span class="text-gray-600 dark:text-gray-300">Уведомления о событиях</span>
-                    </div>
-                    <div class="flex items-start">
-                        <span class="text-green-500 mr-2">✓</span>
-                        <span class="text-gray-600 dark:text-gray-300">Прогноз на 6 дней</span>
-                    </div>
-                    <div class="flex items-start">
-                        <span class="text-green-500 mr-2">✓</span>
-                        <span class="text-gray-600 dark:text-gray-300">Статистика и рекорды</span>
-                    </div>
-                </div>
-
-                <!-- Button -->
-                <div class="flex flex-col sm:flex-row gap-3 items-center justify-center md:justify-start">
-                    <a href="https://t.me/ArmavirMeteoBot"
-                       target="_blank"
-                       rel="noopener noreferrer"
-                        class="ui-button-primary px-6">
-                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.658-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.941z"/>
-                        </svg>
-                        Открыть бот
-                    </a>
-                    <span class="ui-tabular ui-text-muted text-sm">
-                        @ArmavirMeteoBot
-                    </span>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Sun Times -->
-    <div id="sun-times" class="order-6 sm:order-none"
+    <div id="sun-times" class="order-5 sm:order-none"
          hx-get="/widgets/sun"
          hx-trigger="load"
          hx-swap="innerHTML">
@@ -128,40 +66,13 @@
         </div>
     </div>
 
-    <!-- Weather Events -->
-    <div id="weather-events" class="order-4 sm:order-none"
-         hx-get="/widgets/events"
-         hx-trigger="load, every 300s"
-         hx-swap="innerHTML">
-        <div class="ui-surface animate-pulse p-4">
-            <div class="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-2"></div>
-            <div class="h-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
-        </div>
-    </div>
-
-    <!-- Stats Cards -->
-    <div id="daily-stats" class="order-7 sm:order-none"
-         hx-get="/widgets/stats"
-         hx-trigger="load, every 300s"
-         hx-swap="innerHTML">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="ui-surface animate-pulse p-4">
-                <div class="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-2"></div>
-                <div class="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
-            </div>
-            <div class="ui-surface animate-pulse p-4">
-                <div class="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-2"></div>
-                <div class="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
-            </div>
-            <div class="ui-surface animate-pulse p-4">
-                <div class="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-2"></div>
-                <div class="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
-            </div>
-        </div>
-    </div>
-
     <!-- Charts -->
-    <div id="charts-24h" class="ui-chart-panel order-8 p-4 sm:order-none sm:p-6">
+    <details id="charts-24h" class="ui-chart-panel order-6 sm:order-none">
+        <summary class="flex min-h-11 cursor-pointer items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white sm:hidden">
+            Графики за 24 часа
+            <span class="text-blue-700 dark:text-blue-300">Открыть</span>
+        </summary>
+        <div class="p-4 sm:p-6">
         <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Графики за 24 часа</h2>
             <div class="flex space-x-2" role="group" aria-label="Интервал графиков">
@@ -240,7 +151,13 @@
                 </details>
             </div>
         </div>
-    </div>
+        </div>
+    </details>
+
+    <a id="telegram-bot-promo" href="https://t.me/ArmavirMeteoBot" target="_blank" rel="noopener noreferrer" class="ui-surface order-7 flex min-h-11 items-center justify-between gap-3 px-4 py-3 text-sm sm:order-none">
+        <span class="text-gray-700 dark:text-gray-200"><strong>Telegram-бот</strong> · уведомления о погоде</span>
+        <span class="shrink-0 font-semibold text-blue-700 dark:text-blue-300">Открыть →</span>
+    </a>
 </div>
 {{end}}
 
@@ -248,30 +165,40 @@
 <script src="/static/js/charts.js?v=9"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        initCharts();
-        loadChartData('5m');
+        const chartDetails = document.getElementById('charts-24h');
+        const desktopCharts = window.matchMedia('(min-width: 640px)');
+        let chartsInitialized = false;
 
-        // Check if telegram card was closed
-        if (localStorage.getItem('telegramCardClosed') === 'true') {
-            const card = document.getElementById('telegram-bot-card');
-            if (card) {
-                card.style.display = 'none';
+        function initializeCharts() {
+            if (chartsInitialized) return;
+            initCharts();
+            loadChartData('5m');
+            chartsInitialized = true;
+        }
+
+        function resizeCharts() {
+            requestAnimationFrame(() => {
+                Object.values(charts).forEach(chart => chart.resize());
+            });
+        }
+
+        function syncChartVisibility() {
+            if (desktopCharts.matches) {
+                chartDetails.open = true;
+                initializeCharts();
+                resizeCharts();
+                return;
             }
+            chartDetails.open = false;
         }
+
+        chartDetails.addEventListener('toggle', function() {
+            if (!chartDetails.open) return;
+            initializeCharts();
+            resizeCharts();
+        });
+        desktopCharts.addEventListener('change', syncChartVisibility);
+        syncChartVisibility();
     });
-
-    function closeTelegramCard() {
-        const card = document.getElementById('telegram-bot-card');
-        if (card) {
-            card.style.transition = 'opacity 0.3s ease-out, transform 0.3s ease-out';
-            card.style.opacity = '0';
-            card.style.transform = 'scale(0.95)';
-
-            setTimeout(() => {
-                card.style.display = 'none';
-                localStorage.setItem('telegramCardClosed', 'true');
-            }, 300);
-        }
-    }
 </script>
 {{end}}
