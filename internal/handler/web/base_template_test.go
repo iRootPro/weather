@@ -510,7 +510,7 @@ func TestForecastTemplateUsesCompactGridAndAccessibleLabels(t *testing.T) {
 	}
 }
 
-func TestWaterLevelTemplateUsesMobileSummaryAndDetails(t *testing.T) {
+func TestWaterLevelTemplateUsesCompactDashboardSummary(t *testing.T) {
 	_, filename, _, ok := runtime.Caller(0)
 	if !ok {
 		t.Fatal("could not locate test file")
@@ -523,13 +523,49 @@ func TestWaterLevelTemplateUsesMobileSummaryAndDetails(t *testing.T) {
 	}
 
 	var output bytes.Buffer
-	if err := tmpl.Execute(&output, WaterLevelCardData{Upstream: []WaterLevelMiniData{{}}}); err != nil {
+	if err := tmpl.Execute(&output, WaterLevelCardData{LevelM: 220.28, StatusNote: "Уровень ниже порога, резких изменений нет."}); err != nil {
 		t.Fatalf("Execute() error = %v", err)
 	}
 
-	for _, expected := range []string{"class=\"sm:hidden\"", "Подробный график и пороги", "Сравнить посты выше Армавира", "hidden sm:block"} {
+	for _, expected := range []string{"отметка уровня", "220.280 м", "за 24 часа", "статус", "Уровень ниже порога, резких изменений нет.", "График и пороги →", `min-h-11`} {
 		if !bytes.Contains(output.Bytes(), []byte(expected)) {
 			t.Errorf("rendered water level widget is missing %s", expected)
+		}
+	}
+	for _, unexpected := range []string{"Сравнить посты выше Армавира", "hydroFill", "Шкала заполнена", "Балтийская система высот"} {
+		if bytes.Contains(output.Bytes(), []byte(unexpected)) {
+			t.Errorf("rendered water level widget must not contain %s", unexpected)
+		}
+	}
+}
+
+func TestWaterLevelTemplateShowsThresholdDetailsOnlyForWarnings(t *testing.T) {
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("could not locate test file")
+	}
+
+	h := &Handler{templatesDir: filepath.Join(filepath.Dir(filename), "..", "..", "web", "templates")}
+	tmpl, err := h.parsePartial("water_level.html")
+	if err != nil {
+		t.Fatalf("parsePartial() error = %v", err)
+	}
+
+	var output bytes.Buffer
+	data := WaterLevelCardData{
+		ShowThreshold: true,
+		RiskHeadline:  "12 см",
+		RiskCaption:   "до неблагоприятного уровня",
+		StatusNote:    "Порог почти рядом.",
+		ToDanger:      "48 см",
+	}
+	if err := tmpl.Execute(&output, data); err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+
+	for _, expected := range []string{"12 см до неблагоприятного уровня", "Порог почти рядом.", "До опасного: 48 см"} {
+		if !bytes.Contains(output.Bytes(), []byte(expected)) {
+			t.Errorf("rendered warning summary is missing %s", expected)
 		}
 	}
 }

@@ -59,6 +59,29 @@
     </div>
     {{end}}
 
+    {{if .Data.Card.Upstream}}
+    <section class="ui-surface p-6">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Посты выше Армавира</h2>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Дополнительные данные для оценки ситуации выше по течению.</p>
+        <div class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+            {{range .Data.Card.Upstream}}
+            <article class="ui-metric-card p-4">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                        <h3 class="font-bold text-gray-900 dark:text-white">{{.ObjectName}}</h3>
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{.StationName}}</p>
+                    </div>
+                    <p class="shrink-0 text-right text-sm font-bold {{.StatusText}}">{{.StatusLabel}}</p>
+                </div>
+                <p class="mt-3 text-sm text-gray-700 dark:text-gray-200">Уровень: <span class="font-semibold">{{.AbsoluteLevelText}}</span></p>
+                <p class="mt-1 text-sm font-semibold {{.TrendClass}}">{{.TrendText}} · за 24 часа {{if .DayChangeText}}{{.DayChangeText}}{{else}}нет данных{{end}}</p>
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Обновлено {{.ObservedAt}}</p>
+            </article>
+            {{end}}
+        </div>
+    </section>
+    {{end}}
+
     <div class="ui-surface p-6">
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Последние измерения</h2>
         {{if .Data.Rows}}

@@ -1,111 +1,45 @@
-<section class="ui-status-surface overflow-hidden bg-gradient-to-br {{.StatusGradient}}">
-    <div class="p-5 md:p-6">
-        <div class="flex items-start justify-between gap-4 mb-4">
+<section class="ui-status-surface bg-gradient-to-br {{.StatusGradient}}">
+    <div class="p-4 sm:p-5">
+        <div class="flex items-start justify-between gap-4">
             <div class="min-w-0">
-                <div class="flex items-center gap-2">
-                    <span class="text-2xl" aria-hidden="true">🌊</span>
-                    <h2 class="text-lg font-bold text-gray-900 dark:text-white">Уровень Кубани</h2>
-                </div>
-                <div class="truncate text-sm text-gray-600 dark:text-gray-300 mt-1">{{.ObjectName}} · {{.StationName}}</div>
+                <h2 class="text-lg font-bold text-gray-900 dark:text-white">Уровень Кубани</h2>
+                <p class="mt-1 truncate text-sm text-gray-600 dark:text-gray-300">{{.ObjectName}} · {{.StationName}}</p>
             </div>
             <div class="shrink-0 text-right">
-                <div class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">обновлено</div>
-                <div class="text-sm font-semibold text-gray-700 dark:text-gray-200">{{.ObservedAt}}</div>
+                <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">обновлено</p>
+                <p class="text-sm font-semibold text-gray-700 dark:text-gray-200">{{.ObservedAt}}</p>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 gap-5 lg:grid-cols-12 lg:items-center">
-            <div class="lg:col-span-3">
-                <div class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">главное сейчас</div>
-                <div class="text-5xl md:text-6xl font-black {{.StatusText}} leading-none tracking-tight">{{.RiskHeadline}}</div>
-                <div class="mt-2 text-lg font-bold {{.StatusText}} leading-tight">{{.RiskCaption}}</div>
-                <div class="mt-3 rounded-lg bg-white/55 dark:bg-black/20 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 leading-snug">
-                    Уровень: <span class="font-bold text-gray-800 dark:text-gray-100">{{.AbsoluteLevelText}}</span>
-                </div>
+        <div class="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(15rem,auto)] sm:items-end">
+            <div>
+                <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">отметка уровня</p>
+                <p class="mt-1 text-4xl font-black leading-none tracking-tight text-gray-900 dark:text-white">{{printf "%.3f" .LevelM}} м</p>
             </div>
-
-            <div class="sm:hidden">
-                <dl class="grid grid-cols-2 gap-3 rounded-lg border border-white/60 bg-white/55 p-3 dark:border-white/10 dark:bg-gray-950/25">
-                    <div>
-                        <dt class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">за 24 часа</dt>
-                        <dd class="mt-1 font-bold {{.TrendClass}}">{{if .DayChangeText}}{{.DayChangeText}}{{else}}нет данных{{end}}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">статус</dt>
-                        <dd class="mt-1 font-bold {{.StatusText}}">{{.StatusLabel}}</dd>
-                    </div>
-                </dl>
-                {{if .TrendText}}<p class="mt-3 text-sm font-semibold {{.TrendClass}}">{{.TrendText}}</p>{{end}}
-                <a href="/detail/water-level" class="mt-4 inline-flex min-h-11 items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
-                    Подробный график и пороги
-                </a>
-
-                {{if .Upstream}}
-                <details class="mt-4 rounded-lg border border-white/60 bg-white/55 p-3 text-sm dark:border-white/10 dark:bg-gray-950/25">
-                    <summary class="cursor-pointer font-semibold text-blue-700 dark:text-blue-300">Сравнить посты выше Армавира</summary>
-                    <div class="mt-3 space-y-3">
-                        {{range .Upstream}}
-                        <div class="border-t border-white/60 pt-3 first:border-0 first:pt-0 dark:border-white/10">
-                            <div class="flex items-center justify-between gap-3">
-                                <span class="font-bold text-gray-900 dark:text-white">{{.ObjectName}}</span>
-                                <span class="font-bold {{.StatusText}}">{{.RiskHeadline}}</span>
-                            </div>
-                            <p class="mt-1 text-xs text-gray-600 dark:text-gray-300">{{.StationName}} · {{.TrendText}} · {{.ObservedAt}}</p>
-                        </div>
-                        {{end}}
-                    </div>
-                </details>
-                {{end}}
-            </div>
-
-            <div class="hidden sm:block lg:col-span-5">
-                <div class="rounded-lg bg-white/55 dark:bg-gray-950/25 border border-white/60 dark:border-white/10 p-3">
-                    <div class="flex items-center justify-between mb-2">
-                        <div>
-                            <div class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">динамика за 24 часа</div>
-                            <div class="text-sm font-semibold text-gray-800 dark:text-gray-100">{{if .DayChangeText}}за сутки {{.DayChangeText}}{{else}}накопление истории{{end}}</div>
-                            {{if .TrendText}}<div class="mt-0.5 text-xs font-bold {{.TrendClass}}">{{.TrendText}}</div>{{end}}
-                        </div>
-                        {{if .ChangeText}}<div class="text-right"><div class="text-xs text-gray-500 dark:text-gray-400">сейчас</div><div class="text-lg font-black {{.ChangeClass}}">{{.ChangeText}}</div></div>{{end}}
-                    </div>
-                    {{if .Sparkline.HasData}}
-                    <svg viewBox="0 0 100 44" preserveAspectRatio="none" class="w-full h-24 overflow-visible" aria-hidden="true">
-                        <defs><linearGradient id="hydroFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0ea5e9" stop-opacity="0.32"/><stop offset="100%" stop-color="#0ea5e9" stop-opacity="0.02"/></linearGradient></defs>
-                        {{if .Sparkline.HasThresholdLine}}<line x1="0" y1="{{.Sparkline.ThresholdY}}" x2="100" y2="{{.Sparkline.ThresholdY}}" stroke="#f97316" stroke-opacity="0.75" stroke-width="1" stroke-dasharray="3 3"/>{{end}}
-                        <polygon points="{{.Sparkline.FillPoints}}" fill="url(#hydroFill)"/><polyline points="{{.Sparkline.Points}}" fill="none" stroke="#0ea5e9" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-                    </svg>
-                    <div class="flex justify-between text-[11px] text-gray-500 dark:text-gray-400 mt-1"><span>min {{.Sparkline.MinText}}</span><span>max {{.Sparkline.MaxText}}</span></div>
-                    {{else}}<div class="h-24 rounded bg-white/40 dark:bg-black/20 flex items-center justify-center text-sm text-gray-500 dark:text-gray-400">График появится после накопления данных</div>{{end}}
+            <dl class="grid grid-cols-2 gap-3">
+                <div class="rounded-lg border border-white/60 bg-white/55 px-3 py-2 dark:border-white/10 dark:bg-gray-950/25">
+                    <dt class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">за 24 часа</dt>
+                    <dd class="mt-1 text-sm font-bold {{.TrendClass}}">{{if .DayChangeText}}{{.DayChangeText}}{{else}}нет данных{{end}}</dd>
+                    {{if .TrendText}}<p class="mt-0.5 text-xs font-semibold {{.TrendClass}}">{{.TrendText}}</p>{{end}}
                 </div>
-            </div>
-
-            <div class="hidden sm:block lg:col-span-4 space-y-3">
-                <div class="rounded-lg bg-white/55 dark:bg-gray-950/25 border border-white/60 dark:border-white/10 px-4 py-3">
-                    <div class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">оценка ситуации</div>
-                    <div class="text-xl font-black {{.StatusText}}">{{.StatusLabel}}</div>
-                    {{if .StatusNote}}<div class="mt-2 text-sm font-semibold text-gray-700 dark:text-gray-200 leading-snug">{{.StatusNote}}</div>{{end}}
+                <div class="rounded-lg border border-white/60 bg-white/55 px-3 py-2 dark:border-white/10 dark:bg-gray-950/25">
+                    <dt class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">статус</dt>
+                    <dd class="mt-1 text-sm font-bold {{.StatusText}}">{{.StatusLabel}}</dd>
                 </div>
-                <div class="rounded-lg bg-white/55 dark:bg-gray-950/25 border border-white/60 dark:border-white/10 px-4 py-3">
-                    <div class="flex justify-between gap-3 text-sm mb-2"><span class="text-gray-600 dark:text-gray-300">{{.ThresholdTitle}}</span><span class="font-bold {{.StatusText}} text-right">{{.ThresholdValue}}</span></div>
-                    <div class="h-2.5 rounded-full bg-white/70 dark:bg-black/30 overflow-hidden"><div class="h-full rounded-full {{.RiskBarClass}}" style="width: {{.RiskPct}}%"></div></div>
-                    <div class="mt-2 text-sm text-gray-600 dark:text-gray-300">{{.ThresholdDetail}}{{if .ToDanger}} <span class="font-bold text-gray-900 dark:text-white">До опасного: {{.ToDanger}}</span>{{end}}</div>
-                </div>
-                <a href="/detail/water-level" class="inline-flex min-h-11 items-center text-blue-700 dark:text-blue-300 text-sm font-semibold hover:underline">Открыть подробный график →</a>
-            </div>
+            </dl>
         </div>
 
-        {{if .Upstream}}
-        <div class="hidden sm:block mt-5 pt-5 border-t border-white/60 dark:border-white/10">
-            <div class="flex items-end justify-between gap-3 mb-3"><div><div class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">посты выше Армавира</div><div class="text-base font-black text-gray-900 dark:text-white">что может повлиять на уровень Кубани</div></div></div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {{range .Upstream}}
-                <div class="rounded-xl bg-white/60 dark:bg-gray-950/25 border border-white/70 dark:border-white/10 p-4">
-                    <div class="flex items-start justify-between gap-3"><div><div class="font-black text-gray-900 dark:text-white">{{.ObjectName}}</div><div class="text-xs text-gray-500 dark:text-gray-400">{{.StationName}}</div></div><div class="text-right"><div class="text-2xl font-black {{.StatusText}}">{{.RiskHeadline}}</div><div class="text-xs font-semibold {{.TrendClass}}">{{.TrendText}}</div></div></div>
-                    <div class="mt-3 text-sm text-gray-600 dark:text-gray-300">Уровень: {{.AbsoluteLevelText}} · {{.ObservedAt}}</div>
-                </div>
-                {{end}}
-            </div>
+        {{if .ShowThreshold}}
+        <div class="mt-3 rounded-lg border border-white/60 bg-white/55 px-3 py-2 text-sm dark:border-white/10 dark:bg-gray-950/25">
+            <p class="font-semibold {{.StatusText}}">{{.RiskHeadline}} {{.RiskCaption}}</p>
+            {{if .ToDanger}}<p class="mt-1 font-semibold text-gray-900 dark:text-white">До опасного: {{.ToDanger}}</p>{{end}}
         </div>
         {{end}}
+
+        {{if .StatusNote}}<p class="mt-3 text-sm text-gray-700 dark:text-gray-200">{{.StatusNote}}</p>{{end}}
+
+        <a href="/detail/water-level" class="mt-4 inline-flex min-h-11 items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900">
+            График и пороги →
+        </a>
     </div>
 </section>

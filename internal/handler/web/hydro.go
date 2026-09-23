@@ -26,6 +26,7 @@ type WaterLevelCardData struct {
 	StatusLabel       string
 	StatusGradient    string
 	StatusText        string
+	ShowThreshold     bool
 	ToPrevention      string
 	ToDanger          string
 	RiskPct           int
@@ -40,7 +41,6 @@ type WaterLevelCardData struct {
 	StatusNote        string
 	TrendText         string
 	TrendClass        string
-	Sparkline         WaterSparklineData
 	Upstream          []WaterLevelMiniData
 }
 
@@ -64,22 +64,9 @@ type WaterLevelMiniData struct {
 	AbsoluteLevelText string
 	TrendText         string
 	TrendClass        string
-	Sparkline         WaterSparklineData
 }
 
-type WaterSparklineData struct {
-	HasData          bool
-	Points           string
-	FillPoints       string
-	LastX            int
-	LastY            int
-	MinText          string
-	MaxText          string
-	ThresholdY       int
-	HasThresholdLine bool
-}
-
-func (h *Handler) buildWaterLevelCard(r *http.Request) WaterLevelCardData {
+func (h *Handler) buildWaterLevelCard(r *http.Request, includeUpstream bool) WaterLevelCardData {
 	if h.hydroService == nil {
 		return WaterLevelCardData{}
 	}
@@ -99,6 +86,7 @@ func (h *Handler) buildWaterLevelCard(r *http.Request) WaterLevelCardData {
 		StatusLabel:       snap.Status.Label(),
 		StatusGradient:    snap.Status.TailwindGradient(),
 		StatusText:        snap.Status.TextColor(),
+		ShowThreshold:     snap.Status != models.HydroStatusNormal,
 	}
 	if snap.Gauge != nil {
 		card.StationName = snap.Gauge.HolderName
@@ -141,22 +129,16 @@ func (h *Handler) buildWaterLevelCard(r *http.Request) WaterLevelCardData {
 	}
 	card.TrendText, card.TrendClass = trendLabel(snap.ChangeCmPerHour, snap.Change24hM)
 	card.StatusNote = hydroStatusNote(snap.Status, snap.ChangeCmPerHour, snap.Change24hM)
+	if !includeUpstream {
+		return card
+	}
+
 	upstream, err := h.hydroService.GetUpstreamSnapshots(r.Context(), time.Now())
 	if err != nil {
 		slog.Warn("failed to get upstream hydro snapshots", "error", err)
 	} else {
-		to := time.Now()
-		from := to.Add(-24 * time.Hour)
 		for _, item := range upstream {
 			if mini := buildWaterLevelMini(item); mini != nil {
-				if item.Current != nil {
-					readings, err := h.hydroService.GetRangeForStation(r.Context(), item.Current.StationUUID, from, to)
-					if err != nil {
-						slog.Warn("failed to get upstream hydro sparkline", "station_uuid", item.Current.StationUUID, "error", err)
-					} else {
-						mini.Sparkline = buildWaterSparkline(readings, item.Gauge)
-					}
-				}
 				card.Upstream = append(card.Upstream, *mini)
 			}
 		}
@@ -314,21 +296,10 @@ func summaryTrendPhrase(changePerHour *float32, change24hM *float32) string {
 }
 
 func (h *Handler) WaterLevelWidget(w http.ResponseWriter, r *http.Request) {
-	card := h.buildWaterLevelCard(r)
+	card := h.buildWaterLevelCard(r, false)
 	if !card.HasData {
 		w.WriteHeader(http.StatusNoContent)
 		return
-	}
-	if h.hydroService != nil {
-		to := time.Now()
-		from := to.Add(-24 * time.Hour)
-		readings, err := h.hydroService.GetRange(r.Context(), from, to)
-		if err != nil {
-			slog.Warn("failed to get hydro sparkline", "error", err)
-		} else {
-			gauge, _ := h.hydroService.GetGauge(r.Context())
-			card.Sparkline = buildWaterSparkline(readings, gauge)
-		}
 	}
 	tmpl, err := h.parsePartial("water_level.html")
 	if err != nil {
@@ -373,7 +344,7 @@ func (h *Handler) DetailWaterLevel(w http.ResponseWriter, r *http.Request) {
 	}
 	chartJSON, _ := json.Marshal(points)
 
-	card := h.buildWaterLevelCard(r)
+	card := h.buildWaterLevelCard(r, true)
 	data := PageData{
 		ActivePage: "dashboard",
 		HasCharts:  true,
@@ -444,94 +415,6 @@ func filterHydroOutliers(readings []models.HydroLevelReading) []models.HydroLeve
 	}
 	if len(out) < 2 {
 		return readings
-	}
-	return out
-}
-
-func buildWaterSparkline(readings []models.HydroLevelReading, gauge *models.HydroGauge) WaterSparklineData {
-	readings = filterHydroOutliers(readings)
-	if len(readings) < 2 {
-		return WaterSparklineData{}
-	}
-
-	// Для компактного SVG оставляем не больше 72 точек: форма сохраняется, HTML не раздувается.
-	step := 1
-	if len(readings) > 72 {
-		step = (len(readings) + 71) / 72
-	}
-	sampled := make([]models.HydroLevelReading, 0, len(readings)/step+1)
-	for i := 0; i < len(readings); i += step {
-		sampled = append(sampled, readings[i])
-	}
-	if last := readings[len(readings)-1]; sampled[len(sampled)-1].ObservedAt != last.ObservedAt {
-		sampled = append(sampled, last)
-	}
-
-	minLevel, maxLevel := sampled[0].LevelBSM, sampled[0].LevelBSM
-	for _, r := range sampled {
-		if r.LevelBSM < minLevel {
-			minLevel = r.LevelBSM
-		}
-		if r.LevelBSM > maxLevel {
-			maxLevel = r.LevelBSM
-		}
-	}
-	var prevention *float32
-	if gauge != nil && gauge.FloodingPreventionBM != nil {
-		prevention = gauge.FloodingPreventionBM
-		if *prevention < minLevel {
-			minLevel = *prevention
-		}
-		if *prevention > maxLevel {
-			maxLevel = *prevention
-		}
-	}
-	if maxLevel-minLevel < 0.05 {
-		mid := (maxLevel + minLevel) / 2
-		minLevel = mid - 0.025
-		maxLevel = mid + 0.025
-	}
-	padding := (maxLevel - minLevel) * 0.12
-	minLevel -= padding
-	maxLevel += padding
-
-	toXY := func(i int, level float32) (int, int) {
-		x := 0
-		if len(sampled) > 1 {
-			x = int(float32(i) / float32(len(sampled)-1) * 100)
-		}
-		y := int((1 - (level-minLevel)/(maxLevel-minLevel)) * 44)
-		if y < 2 {
-			y = 2
-		}
-		if y > 42 {
-			y = 42
-		}
-		return x, y
-	}
-
-	points := ""
-	for i, r := range sampled {
-		x, y := toXY(i, r.LevelBSM)
-		if i > 0 {
-			points += " "
-		}
-		points += fmt.Sprintf("%d,%d", x, y)
-	}
-	lastX, lastY := toXY(len(sampled)-1, sampled[len(sampled)-1].LevelBSM)
-	out := WaterSparklineData{
-		HasData:    true,
-		Points:     points,
-		FillPoints: "0,44 " + points + " 100,44",
-		LastX:      lastX,
-		LastY:      lastY,
-		MinText:    fmt.Sprintf("%.3f", minLevel+padding),
-		MaxText:    fmt.Sprintf("%.3f", maxLevel-padding),
-	}
-	if prevention != nil {
-		_, y := toXY(0, *prevention)
-		out.ThresholdY = y
-		out.HasThresholdLine = true
 	}
 	return out
 }
