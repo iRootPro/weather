@@ -2,8 +2,11 @@ package web
 
 import (
 	"bytes"
+	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
+	"strings"
 	"testing"
 )
 
@@ -25,6 +28,37 @@ func TestBaseTemplateRendersAccessibleNavigation(t *testing.T) {
 	}
 
 	for _, expected := range []string{
+		`family=Golos+Text`,
+		`family=IBM+Plex+Mono`,
+		`display=swap`,
+		`--ui-font-sans`,
+		`--ui-font-mono`,
+		`--ui-surface`,
+		`--ui-text-muted`,
+		`--ui-on-action`,
+		`.ui-button-primary`,
+		`.ui-button-secondary`,
+		`color: var(--ui-on-action)`,
+		`class="min-h-screen transition-colors duration-200"`,
+		`.ui-page-header`,
+		`.ui-section-heading`,
+		`.ui-kicker`,
+		`.ui-tabular`,
+		`.ui-body`,
+		`.ui-text-muted`,
+		`.ui-caption`,
+		`main .text-gray-400`,
+		`.dark main .dark\:text-gray-500`,
+		`.ui-mobile-nav`,
+		`--ui-mobile-nav-height`,
+		`.ui-mobile-nav-clearance`,
+		`padding-bottom: env(safe-area-inset-bottom)`,
+		`grid-cols-5`,
+		`min-h-16`,
+		`aria-label="Ещё"`,
+		`summary:focus-visible`,
+		`prefers-reduced-motion: reduce`,
+		`.ui-chart-panel`,
 		`aria-label="Главная"`,
 		`aria-label="История"`,
 		`aria-label="Рекорды"`,
@@ -36,11 +70,211 @@ func TestBaseTemplateRendersAccessibleNavigation(t *testing.T) {
 		`aria-current="page"`,
 		`a:focus-visible`,
 		`.dark a:focus-visible`,
-		`outline-color: #93c5fd`,
+		`outline-color: var(--ui-focus)`,
 	} {
 		if !bytes.Contains(output.Bytes(), []byte(expected)) {
 			t.Errorf("rendered template is missing %s", expected)
 		}
+	}
+}
+
+func TestGalleryModalRendersAboveMobileNavigation(t *testing.T) {
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("could not locate test file")
+	}
+
+	contents, err := os.ReadFile(filepath.Join(filepath.Dir(filename), "..", "..", "web", "templates", "gallery.html"))
+	if err != nil {
+		t.Fatalf("ReadFile() error = %v", err)
+	}
+	for _, expected := range []string{
+		`id="photoModal" class="ui-overlay`,
+		`role="dialog"`,
+		`aria-modal="true"`,
+		`event.key === 'Escape'`,
+		`photoModalTrigger.focus()`,
+		`event.key !== 'Tab'`,
+		`focusable.at(-1)`,
+	} {
+		if !bytes.Contains(contents, []byte(expected)) {
+			t.Errorf("gallery modal is missing %s", expected)
+		}
+	}
+}
+
+func TestDataHeavyPagesUseSharedDesignSystemRoles(t *testing.T) {
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("could not locate test file")
+	}
+
+	templatesDir := filepath.Join(filepath.Dir(filename), "..", "..", "web", "templates")
+	for _, name := range []string{
+		"records.html",
+		"detail/temperature.html", "detail/humidity.html", "detail/pressure.html", "detail/wind.html",
+		"detail/rain.html", "detail/solar.html", "detail/geomagnetic.html", "detail/water_level.html",
+	} {
+		t.Run(name, func(t *testing.T) {
+			contents, err := os.ReadFile(filepath.Join(templatesDir, name))
+			if err != nil {
+				t.Fatalf("ReadFile() error = %v", err)
+			}
+			if !bytes.Contains(contents, []byte("ui-surface")) {
+				t.Error("page must use the shared surface role")
+			}
+			if !bytes.Contains(contents, []byte("ui-metric-card")) {
+				t.Error("page must use the shared metric card role")
+			}
+		})
+	}
+
+	for _, name := range []string{"detail/temperature.html", "detail/humidity.html", "detail/pressure.html", "detail/wind.html", "detail/rain.html", "detail/solar.html"} {
+		contents, err := os.ReadFile(filepath.Join(templatesDir, name))
+		if err != nil {
+			t.Fatalf("ReadFile(%s) error = %v", name, err)
+		}
+		for _, expected := range []string{"ui-button-primary", "ui-button-secondary", `aria-pressed="true"`, `aria-label="Период графика"`} {
+			if !bytes.Contains(contents, []byte(expected)) {
+				t.Errorf("%s is missing shared chart control %s", name, expected)
+			}
+		}
+	}
+
+	for _, name := range []string{"detail/geomagnetic.html", "detail/water_level.html"} {
+		contents, err := os.ReadFile(filepath.Join(templatesDir, name))
+		if err != nil {
+			t.Fatalf("ReadFile(%s) error = %v", name, err)
+		}
+		if !bytes.Contains(contents, []byte("ui-status-surface")) {
+			t.Errorf("%s must use the shared status surface role", name)
+		}
+	}
+}
+
+func TestArchiveReportAndHelpUseSharedRoles(t *testing.T) {
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("could not locate test file")
+	}
+
+	templatesDir := filepath.Join(filepath.Dir(filename), "..", "..", "web", "templates")
+	assertContains := func(name string, expected []string) {
+		t.Helper()
+		contents, err := os.ReadFile(filepath.Join(templatesDir, name))
+		if err != nil {
+			t.Fatalf("ReadFile(%s) error = %v", name, err)
+		}
+		for _, value := range expected {
+			if !bytes.Contains(contents, []byte(value)) {
+				t.Errorf("%s is missing %s", name, value)
+			}
+		}
+	}
+
+	assertContains("insights.html", []string{"ui-page", "ui-field", "ui-button-primary", "ui-button-secondary"})
+	assertContains("insights_report.html", []string{"ui-page", "ui-surface", "ui-button-primary", "ui-button-secondary"})
+	assertContains("help.html", []string{`aria-label="Оглавление справки"`, `href="#calculations"`, "<details", "Формулы и пороги расчётных показателей", `id="station"`})
+
+	report, err := os.ReadFile(filepath.Join(templatesDir, "insights_report.html"))
+	if err != nil {
+		t.Fatalf("ReadFile(insights_report.html) error = %v", err)
+	}
+	for _, emoji := range []string{"🌧️", "🌡️", "🚶", "🧬", ".MainInsight.Icon", ".DominantDayType.Icon"} {
+		if bytes.Contains(report, []byte(emoji)) {
+			t.Errorf("public report must not use decorative KPI icon %s", emoji)
+		}
+	}
+}
+
+func TestMainTemplatesHaveExactlyOnePageHeading(t *testing.T) {
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("could not locate test file")
+	}
+
+	templatesDir := filepath.Join(filepath.Dir(filename), "..", "..", "web", "templates")
+	templates := []string{
+		"dashboard.html",
+		"history.html",
+		"records.html",
+		"gallery.html",
+		"help.html",
+		"insights.html",
+		"insights_report.html",
+		"insights_story.html",
+		"detail/temperature.html",
+		"detail/humidity.html",
+		"detail/pressure.html",
+		"detail/wind.html",
+		"detail/rain.html",
+		"detail/solar.html",
+		"detail/geomagnetic.html",
+		"detail/water_level.html",
+	}
+
+	baseContents, err := os.ReadFile(filepath.Join(templatesDir, "base.html"))
+	if err != nil {
+		t.Fatalf("ReadFile(base.html) error = %v", err)
+	}
+	if bytes.Contains(baseContents, []byte("<h1")) {
+		t.Fatal("global header must not contain a page heading")
+	}
+
+	headingPattern := regexp.MustCompile(`<h([1-6])(?:\s|>)`)
+
+	for _, name := range templates {
+		t.Run(name, func(t *testing.T) {
+			contents, err := os.ReadFile(filepath.Join(templatesDir, name))
+			if err != nil {
+				t.Fatalf("ReadFile() error = %v", err)
+			}
+			if count := strings.Count(string(contents), "<h1"); count != 1 {
+				t.Errorf("page heading count = %d, want 1", count)
+			}
+
+			previousLevel := 0
+			for _, match := range headingPattern.FindAllSubmatch(contents, -1) {
+				level := int(match[1][0] - '0')
+				if previousLevel != 0 && level > previousLevel+1 {
+					t.Errorf("heading level jumps from h%d to h%d", previousLevel, level)
+				}
+				previousLevel = level
+			}
+		})
+	}
+}
+
+func TestConditionalDetailTemplatesKeepPageHeading(t *testing.T) {
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("could not locate test file")
+	}
+
+	h := &Handler{templatesDir: filepath.Join(filepath.Dir(filename), "..", "..", "web", "templates")}
+	for _, name := range []string{"detail/geomagnetic.html", "detail/water_level.html"} {
+		t.Run(name, func(t *testing.T) {
+			tmpl, err := h.parseTemplate(name)
+			if err != nil {
+				t.Fatalf("parseTemplate() error = %v", err)
+			}
+
+			for _, hasData := range []bool{false, true} {
+				t.Run(map[bool]string{false: "empty", true: "data"}[hasData], func(t *testing.T) {
+					var output bytes.Buffer
+					data := map[string]any{
+						"Card":      map[string]any{"HasData": hasData},
+						"ChartJSON": "[]",
+					}
+					if err := tmpl.Execute(&output, PageData{Data: data}); err != nil {
+						t.Fatalf("Execute() error = %v", err)
+					}
+					if count := bytes.Count(output.Bytes(), []byte("<h1")); count != 1 {
+						t.Errorf("rendered page heading count = %d, want 1", count)
+					}
+				})
+			}
+		})
 	}
 }
 
@@ -132,10 +366,13 @@ func TestDashboardTemplatePrioritizesWeatherBeforeTelegramPromotion(t *testing.T
 	}
 
 	for _, expected := range []string{
+		`ui-chart-panel`,
+		`aria-pressed="true"`,
+		`aria-label="Интервал графиков"`,
 		`href="#charts-24h"`,
 		`id="weather-events"`,
 		`id="charts-24h"`,
-		`id="telegram-bot-card" class="order-9`,
+		`id="telegram-bot-card" class="ui-surface order-9`,
 	} {
 		if !bytes.Contains(output.Bytes(), []byte(expected)) {
 			t.Errorf("rendered dashboard is missing %s", expected)
@@ -175,6 +412,15 @@ func TestCurrentWeatherTemplateShowsMeasurementAndRefreshTimes(t *testing.T) {
 
 	if !bytes.Contains(output.Bytes(), []byte("Измерено 12:00 · обновлено 12:01")) {
 		t.Fatal("current weather timestamp is missing or incomplete")
+	}
+	if !bytes.Contains(output.Bytes(), []byte(`class="ui-tabular text-sm`)) {
+		t.Fatal("current weather timestamp must use the tabular typography role")
+	}
+	if bytes.Contains(output.Bytes(), []byte("hover:scale-105")) {
+		t.Fatal("metric cards must not use scale as their primary hover feedback")
+	}
+	if !bytes.Contains(output.Bytes(), []byte("ui-metric-card")) {
+		t.Fatal("current weather values must use the shared metric card role")
 	}
 }
 
@@ -258,6 +504,7 @@ func TestHistoryTemplateHasQuickPeriodsAndChartAccordions(t *testing.T) {
 	}
 
 	for _, expected := range []string{
+		`ui-status-surface`,
 		`data-history-period="24h"`, `data-history-period="7d"`, `data-history-period="30d"`, `data-history-period="month"`,
 		`id="history-status"`, `id="history-retry"`,
 		`data-history-chart="temp"`, `data-history-chart="humidity"`, `data-history-chart="pressure"`,

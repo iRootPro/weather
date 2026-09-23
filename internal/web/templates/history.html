@@ -4,8 +4,14 @@
 
 {{define "content"}}
 <div class="ui-page space-y-6">
+  <header class="space-y-1">
+    <p class="ui-kicker">Наблюдения станции</p>
+    <h1 class="ui-page-header">История погоды</h1>
+    <p class="ui-body ui-text-muted">Выберите период, чтобы сравнить изменения показателей.</p>
+  </header>
+
   <!-- Date Range Selector -->
-  <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 transition-colors">
+  <div class="ui-surface p-4">
     <div class="flex flex-wrap items-center gap-4">
       <div>
         <label for="dateFrom" class="block text-sm font-medium text-gray-700 dark:text-gray-300">От</label>
@@ -50,7 +56,7 @@
   <!-- Period Stats -->
   <div id="period-stats" hx-get="/widgets/stats?period=week" hx-trigger="load" hx-swap="innerHTML">
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div class="animate-pulse bg-white dark:bg-gray-800 rounded-lg shadow p-4 transition-colors">
+      <div class="ui-surface animate-pulse p-4">
         <div class="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-2"></div>
         <div class="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
       </div>
@@ -58,7 +64,7 @@
   </div>
 
   <!-- Charts -->
-  <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
+  <div class="ui-chart-panel p-6">
     <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Графики</h2>
     <div class="space-y-3">
       <details data-history-chart="temp" open class="rounded-lg border border-gray-200 dark:border-gray-700">

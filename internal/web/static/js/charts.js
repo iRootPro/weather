@@ -1,7 +1,9 @@
 // Dashboard Charts
 let charts = {};
-let currentInterval = '1h';
+let currentInterval = '5m';
+let lastAppliedInterval = '5m';
 let sharedTooltipIndex = null;
+let chartRequestID = 0;
 
 function formatAccessibleNumber(value, fractionDigits = 1) {
     return Number(value).toLocaleString('ru-RU', {
@@ -496,19 +498,24 @@ function initCharts() {
 }
 
 async function loadChartData(interval) {
+    const requestID = ++chartRequestID;
+    const previousInterval = lastAppliedInterval;
     currentInterval = interval;
 
     // Update button states
-    const isDark = document.documentElement.classList.contains('dark');
     document.querySelectorAll('.chart-interval-btn').forEach(btn => {
         if (btn.dataset.interval === interval) {
-            btn.classList.remove('bg-gray-200', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
-            btn.classList.add('bg-blue-500', 'text-white');
+            btn.classList.remove('ui-button-secondary');
+            btn.classList.add('ui-button-primary');
+            btn.setAttribute('aria-pressed', 'true');
         } else {
-            btn.classList.remove('bg-blue-500', 'text-white');
-            btn.classList.add('bg-gray-200', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
+            btn.classList.remove('ui-button-primary');
+            btn.classList.add('ui-button-secondary');
+            btn.setAttribute('aria-pressed', 'false');
         }
     });
+    const status = document.getElementById('chart-status');
+    if (status) status.textContent = 'Загрузка графиков.';
 
     // Calculate date range (last 24 hours)
     const to = new Date();
@@ -522,7 +529,9 @@ async function loadChartData(interval) {
         const response = await fetch(
             `/api/weather/chart?from=${fromStr}&to=${toStr}&interval=${interval}&fields=temp_outdoor,humidity_outdoor,pressure_relative,wind_speed,wind_gust,solar_radiation,rain_rate,rain_daily`
         );
+        if (!response.ok) throw new Error(`chart request failed: ${response.status}`);
         const data = await response.json();
+        if (requestID !== chartRequestID) return;
 
         // Format labels for display
         const labels = data.labels.map(label => {
@@ -585,8 +594,18 @@ async function loadChartData(interval) {
         }
 
         refreshChartAccessibility(charts);
+        lastAppliedInterval = interval;
 
     } catch (error) {
+        if (requestID !== chartRequestID) return;
+        document.querySelectorAll('.chart-interval-btn').forEach(btn => {
+            const active = btn.dataset.interval === previousInterval;
+            btn.classList.toggle('ui-button-primary', active);
+            btn.classList.toggle('ui-button-secondary', !active);
+            btn.setAttribute('aria-pressed', String(active));
+        });
+        currentInterval = previousInterval;
+        if (status) status.textContent = 'Не удалось загрузить графики. Повторите попытку.';
         console.error('Error loading chart data:', error);
     }
 }

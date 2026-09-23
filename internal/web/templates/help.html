@@ -3,16 +3,30 @@
 {{define "title"}}Справка - Метеостанция{{end}}
 
 {{define "content"}}
-<div class="space-y-8">
+<div class="ui-page space-y-6">
     <!-- Header -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Справка</h1>
-        <p class="text-gray-600 dark:text-gray-300">Информация о показателях метеостанции, методах измерения и расчётов.</p>
+    <div class="ui-surface p-6">
+        <h1 class="ui-page-header mb-2">Справка</h1>
+        <p class="ui-body ui-text-muted">Информация о показателях метеостанции, методах измерения и расчётов.</p>
     </div>
 
+    <nav class="ui-surface p-4" aria-label="Оглавление справки">
+        <p class="ui-kicker mb-3">Быстрая навигация</p>
+        <div class="flex flex-wrap gap-x-4 gap-y-2 text-sm font-semibold">
+            <a href="#station" class="text-blue-700 underline-offset-4 hover:underline dark:text-blue-300">Станция и питание</a>
+            <a href="#measurements" class="text-blue-700 underline-offset-4 hover:underline dark:text-blue-300">Измерения</a>
+            <a href="#calculations" class="text-blue-700 underline-offset-4 hover:underline dark:text-blue-300">Расчёты и пороги</a>
+            <a href="#events" class="text-blue-700 underline-offset-4 hover:underline dark:text-blue-300">События</a>
+            <a href="#astronomy" class="text-blue-700 underline-offset-4 hover:underline dark:text-blue-300">Солнце и луна</a>
+            <a href="#geomagnetic" class="text-blue-700 underline-offset-4 hover:underline dark:text-blue-300">Магнитная обстановка</a>
+            <a href="#forecast" class="text-blue-700 underline-offset-4 hover:underline dark:text-blue-300">Прогноз</a>
+            <a href="#sources" class="text-blue-700 underline-offset-4 hover:underline dark:text-blue-300">Источники</a>
+        </div>
+    </nav>
+
     <!-- Station Info -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+    <div id="station" class="ui-surface p-6">
+        <h2 class="ui-section-heading mb-4 flex items-center">
             <svg class="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
             </svg>
@@ -56,7 +70,7 @@
             </h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- Solar Capacitor -->
-                <div class="bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 rounded-lg p-4 border border-amber-200 dark:border-amber-800">
+                <div class="ui-metric-card p-4">
                     <div class="flex items-center justify-between mb-2">
                         <span class="text-xs font-medium text-gray-600 dark:text-gray-400">☀️ Аккумулятор</span>
                         {{if .Current.WS90CapVolt}}
@@ -91,7 +105,7 @@
                 </div>
 
                 <!-- AA Batteries -->
-                <div class="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+                <div class="ui-metric-card p-4">
                     <div class="flex items-center justify-between mb-2">
                         <span class="text-xs font-medium text-gray-600 dark:text-gray-400">🔋 Батарейки 2×AA</span>
                         {{if .Current.WH65Batt}}
@@ -130,8 +144,8 @@
     </div>
 
     <!-- Direct Measurements -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+    <div id="measurements" class="ui-surface p-6">
+        <h2 class="ui-section-heading mb-4 flex items-center">
             <svg class="w-5 h-5 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
             </svg>
@@ -217,15 +231,17 @@
     </div>
 
     <!-- Calculated Values -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+    <div id="calculations" class="ui-surface p-6">
+        <h2 class="ui-section-heading mb-4 flex items-center">
             <svg class="w-5 h-5 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
             </svg>
             Расчётные показатели
         </h2>
 
-        <div class="space-y-6">
+        <details class="group">
+            <summary class="cursor-pointer font-semibold text-gray-900 dark:text-white">Формулы и пороги расчётных показателей</summary>
+            <div class="mt-5 space-y-6">
             <!-- Dew Point -->
             <div class="border-l-4 border-blue-300 pl-4">
                 <h3 class="font-medium text-gray-900 dark:text-white">Точка росы</h3>
@@ -309,12 +325,13 @@
                     </div>
                 </div>
             </div>
-        </div>
+            </div>
+        </details>
     </div>
 
     <!-- Weather Events -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+    <div id="events" class="ui-surface p-6">
+        <h2 class="ui-section-heading mb-4 flex items-center">
             <svg class="w-5 h-5 mr-2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
@@ -442,8 +459,8 @@
     </div>
 
     <!-- Sun Calculations -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+    <div id="astronomy" class="ui-surface p-6">
+        <h2 class="ui-section-heading mb-4 flex items-center">
             <svg class="w-5 h-5 mr-2 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 7a5 5 0 100 10 5 5 0 000-10zM2 13h2a1 1 0 100-2H2a1 1 0 100 2zm18 0h2a1 1 0 100-2h-2a1 1 0 100 2zM11 2v2a1 1 0 102 0V2a1 1 0 10-2 0zm0 18v2a1 1 0 102 0v-2a1 1 0 10-2 0zM5.99 4.58a1 1 0 00-1.41 1.41l1.06 1.06a1 1 0 001.41-1.41L5.99 4.58zm12.37 12.37a1 1 0 00-1.41 1.41l1.06 1.06a1 1 0 001.41-1.41l-1.06-1.06zm1.06-12.37a1 1 0 00-1.41 0l-1.06 1.06a1 1 0 001.41 1.41l1.06-1.06a1 1 0 000-1.41zM5.99 19.42a1 1 0 001.41 0l1.06-1.06a1 1 0 00-1.41-1.41l-1.06 1.06a1 1 0 000 1.41z"/>
             </svg>
@@ -491,8 +508,8 @@
     </div>
 
     <!-- Moon Calculations -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+    <div class="ui-surface p-6">
+        <h2 class="ui-section-heading mb-4 flex items-center">
             <svg class="w-5 h-5 mr-2 text-indigo-400" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
             </svg>
@@ -583,8 +600,8 @@
     </div>
 
     <!-- Geomagnetic Activity -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+    <div id="geomagnetic" class="ui-surface p-6">
+        <h2 class="ui-section-heading mb-4 flex items-center">
             <span class="text-2xl mr-2">🌞</span>
             Магнитная обстановка
         </h2>
@@ -672,8 +689,8 @@
     </div>
 
     <!-- Weather Forecast -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+    <div id="forecast" class="ui-surface p-6">
+        <h2 class="ui-section-heading mb-4 flex items-center">
             <svg class="w-5 h-5 mr-2 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
             </svg>
@@ -771,8 +788,8 @@
     </div>
 
     <!-- Narodmon Integration -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+    <div id="sources" class="ui-surface p-6">
+        <h2 class="ui-section-heading mb-4 flex items-center">
             <svg class="w-5 h-5 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
             </svg>
@@ -884,8 +901,8 @@
     </div>
 
     <!-- Data Collection -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+    <div class="ui-surface p-6">
+        <h2 class="ui-section-heading mb-4 flex items-center">
             <svg class="w-5 h-5 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/>
             </svg>
@@ -913,8 +930,8 @@
     </div>
 
     <!-- Battery Status -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+    <div class="ui-surface p-6">
+        <h2 class="ui-section-heading mb-4 flex items-center">
             <svg class="w-5 h-5 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
             </svg>

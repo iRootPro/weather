@@ -12,10 +12,12 @@
         <span class="text-gray-900 dark:text-white font-medium">Уровень Кубани</span>
     </nav>
 
+    <h1 class="ui-page-header">Уровень Кубани</h1>
+
     {{if .Data.Card.HasData}}
-    <div class="bg-gradient-to-br {{.Data.Card.StatusGradient}} rounded-lg shadow-lg p-8 transition-colors">
+    <div class="ui-status-surface p-8">
         <div class="text-center">
-            <h1 class="text-lg font-medium text-gray-700 dark:text-gray-200 mb-2">🌊 Уровень Кубани</h1>
+            <p class="text-lg font-medium text-gray-700 dark:text-gray-200 mb-2"><span aria-hidden="true">🌊</span> Текущий статус</p>
             <div class="text-6xl md:text-7xl font-bold {{.Data.Card.StatusText}} mb-2 leading-tight">
                 {{.Data.Card.RiskHeadline}}
             </div>
@@ -28,10 +30,10 @@
         </div>
     </div>
     {{else}}
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center text-gray-500 dark:text-gray-400">Нет актуальных данных об уровне воды.</div>
+    <div class="ui-surface p-8 text-center text-gray-500 dark:text-gray-400">Нет актуальных данных об уровне воды.</div>
     {{end}}
 
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
+    <div class="ui-surface p-6">
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">График уровня за 7 дней</h2>
         <div class="text-sm text-gray-500 dark:text-gray-400 mb-4">Служебная отметка уровня в Балтийской системе высот. Источник обновляется примерно раз в 10 минут.</div>
         <div class="relative h-96"><canvas id="waterLevelChart"></canvas></div>
@@ -39,17 +41,17 @@
 
     {{if .Data.Gauge}}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-5">
+        <div class="ui-metric-card p-5">
             <div class="text-sm text-gray-500 dark:text-gray-400">Неблагоприятный уровень</div>
             <div class="text-2xl font-bold text-orange-600 dark:text-orange-300">{{printf "%.3f" (deref .Data.Gauge.FloodingPreventionBM)}} м</div>
             {{if .Data.Card.ToPrevention}}<div class="text-sm text-gray-500 dark:text-gray-400">{{.Data.Card.ToPrevention}}</div>{{end}}
         </div>
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-5">
+        <div class="ui-metric-card p-5">
             <div class="text-sm text-gray-500 dark:text-gray-400">Опасный уровень</div>
             <div class="text-2xl font-bold text-red-600 dark:text-red-300">{{printf "%.3f" (deref .Data.Gauge.FloodingDangerBSM)}} м</div>
             {{if .Data.Card.ToDanger}}<div class="text-sm text-gray-500 dark:text-gray-400">{{.Data.Card.ToDanger}}</div>{{end}}
         </div>
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-5">
+        <div class="ui-metric-card p-5">
             <div class="text-sm text-gray-500 dark:text-gray-400">Гидропост</div>
             <div class="text-xl font-bold text-gray-900 dark:text-white">{{.Data.Gauge.Name}}</div>
             <div class="text-sm text-gray-500 dark:text-gray-400">{{.Data.Gauge.District}}</div>
@@ -57,7 +59,7 @@
     </div>
     {{end}}
 
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
+    <div class="ui-surface p-6">
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Последние измерения</h2>
         {{if .Data.Rows}}
         <div class="overflow-x-auto">

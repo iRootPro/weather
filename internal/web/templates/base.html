@@ -9,6 +9,11 @@
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/static/favicon.png">
 
+    <!-- Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+
     <!-- PWA / Add to Home Screen -->
     <link rel="manifest" href="/static/manifest.json?v=4">
     <link rel="apple-touch-icon" href="/static/icon-180.png?v=4">
@@ -52,9 +57,168 @@
 
     <style>
         :root {
-            --ui-radius: 0.75rem;
+            --ui-font-sans: "Golos Text", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            --ui-font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+            --ui-bg: #f8fafc;
+            --ui-surface: #ffffff;
+            --ui-surface-subtle: #f1f5f9;
+            --ui-text: #0f172a;
+            --ui-text-muted: #475569;
+            --ui-action: #2563eb;
+            --ui-action-hover: #1d4ed8;
+            --ui-on-action: #ffffff;
+            --ui-focus: #1d4ed8;
+            --ui-success: #047857;
+            --ui-warning: #b45309;
+            --ui-danger: #b91c1c;
+            --ui-radius-control: 0.5rem;
+            --ui-radius-card: 0.75rem;
+            --ui-radius-hero: 1rem;
+            --ui-radius: var(--ui-radius-card);
+            --ui-mobile-nav-height: calc(4rem + env(safe-area-inset-bottom));
             --ui-shadow: 0 1px 3px rgb(15 23 42 / 0.10), 0 1px 2px rgb(15 23 42 / 0.06);
-            --ui-border: rgb(226 232 240);
+            --ui-shadow-raised: 0 4px 12px rgb(15 23 42 / 0.10), 0 2px 4px rgb(15 23 42 / 0.06);
+            --ui-border: #dbe3ee;
+        }
+
+        .dark {
+            --ui-bg: #111827;
+            --ui-surface: #1f2937;
+            --ui-surface-subtle: #111827;
+            --ui-text: #f8fafc;
+            --ui-text-muted: #cbd5e1;
+            --ui-action: #60a5fa;
+            --ui-action-hover: #93c5fd;
+            --ui-on-action: #0f172a;
+            --ui-focus: #bfdbfe;
+            --ui-success: #6ee7b7;
+            --ui-warning: #fcd34d;
+            --ui-danger: #fca5a5;
+            --ui-border: #374151;
+        }
+
+        body {
+            background: var(--ui-bg);
+            color: var(--ui-text);
+            font-family: var(--ui-font-sans);
+        }
+
+        .ui-tabular {
+            font-family: var(--ui-font-mono);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .ui-body {
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        .ui-text-muted {
+            color: var(--ui-text-muted);
+        }
+
+        .ui-caption {
+            font-size: 0.8125rem;
+            line-height: 1.4;
+        }
+
+        .ui-surface {
+            background: var(--ui-surface);
+            border: 1px solid var(--ui-border);
+            border-radius: var(--ui-radius-card);
+            box-shadow: var(--ui-shadow);
+        }
+
+        .ui-surface-raised {
+            box-shadow: var(--ui-shadow-raised);
+        }
+
+        .ui-status-surface {
+            background: var(--ui-surface);
+            border: 1px solid var(--ui-border);
+            border-radius: var(--ui-radius-card);
+            box-shadow: var(--ui-shadow);
+        }
+
+        .ui-metric-card {
+            background: var(--ui-surface-subtle);
+            border: 1px solid transparent;
+            border-radius: var(--ui-radius-card);
+            transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+        }
+
+        .ui-metric-card:hover {
+            border-color: var(--ui-border);
+            box-shadow: var(--ui-shadow);
+        }
+
+        .ui-chart-panel {
+            background: var(--ui-surface);
+            border: 1px solid var(--ui-border);
+            border-radius: var(--ui-radius-card);
+            box-shadow: var(--ui-shadow);
+        }
+
+        .ui-page-header {
+            color: var(--ui-text);
+            font-size: 1.75rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .ui-section-heading {
+            color: var(--ui-text);
+            font-size: 1.25rem;
+            font-weight: 700;
+            line-height: 1.3;
+        }
+
+        .ui-kicker {
+            color: var(--ui-text-muted);
+            font-size: 0.8125rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .ui-button-primary,
+        .ui-button-secondary {
+            align-items: center;
+            border-radius: var(--ui-radius-control);
+            display: inline-flex;
+            font-size: 0.875rem;
+            font-weight: 600;
+            justify-content: center;
+            min-height: 2.75rem;
+            padding: 0.5rem 1rem;
+            transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+        }
+
+        .ui-button-primary {
+            background: var(--ui-action);
+            color: var(--ui-on-action);
+        }
+
+        .ui-button-primary:hover {
+            background: var(--ui-action-hover);
+        }
+
+        .ui-button-secondary {
+            background: var(--ui-surface);
+            border: 1px solid var(--ui-border);
+            color: var(--ui-text);
+        }
+
+        .ui-button-secondary:hover {
+            background: var(--ui-surface-subtle);
+        }
+
+        .ui-field {
+            background: var(--ui-surface);
+            border: 1px solid var(--ui-border);
+            border-radius: var(--ui-radius-control);
+            color: var(--ui-text);
+            min-height: 2.75rem;
         }
 
         .ui-page > .bg-white,
@@ -68,7 +232,37 @@
         .dark .ui-page > .bg-white,
         .dark .ui-page > [id] > .bg-white,
         .dark .ui-page > [id] > .grid > .bg-white {
-            border-color: rgb(55 65 81);
+            border-color: var(--ui-border);
+        }
+
+        main .text-gray-400 {
+            color: var(--ui-text-muted);
+        }
+
+        .dark main .dark\:text-gray-500 {
+            color: var(--ui-text-muted);
+        }
+
+        .ui-mobile-nav {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .ui-overlay {
+            z-index: 60;
+        }
+
+        .ui-mobile-nav summary {
+            list-style: none;
+        }
+
+        .ui-mobile-nav summary::-webkit-details-marker {
+            display: none;
+        }
+
+        @media (max-width: 640px) {
+            .ui-mobile-nav-clearance {
+                padding-bottom: calc(var(--ui-mobile-nav-height) + 1rem);
+            }
         }
 
         [x-cloak] { display: none !important; }
@@ -79,17 +273,19 @@
 
         a:focus-visible,
         button:focus-visible,
+        summary:focus-visible,
         input:focus-visible,
         select:focus-visible {
-            outline: 3px solid #2563eb;
+            outline: 3px solid var(--ui-focus);
             outline-offset: 3px;
         }
 
         .dark a:focus-visible,
         .dark button:focus-visible,
+        .dark summary:focus-visible,
         .dark input:focus-visible,
         .dark select:focus-visible {
-            outline-color: #93c5fd;
+            outline-color: var(--ui-focus);
         }
 
         /* Mobile touch improvements */
@@ -153,6 +349,15 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                scroll-behavior: auto !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
     </style>
 
     <script>
@@ -169,7 +374,7 @@
         }
     </script>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 min-h-screen transition-colors duration-200">
+<body class="min-h-screen transition-colors duration-200">
     <!-- Yandex.Metrika counter -->
     <noscript><div><img src="https://mc.yandex.ru/watch/106538623" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
     <!-- /Yandex.Metrika counter -->
@@ -187,7 +392,7 @@
                     <svg class="w-7 h-7 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
                     </svg>
-                    <h1 class="text-lg font-bold text-gray-900 dark:text-white hidden sm:block">Армавир</h1>
+                    <p class="text-lg font-bold text-gray-900 dark:text-white">Армавир</p>
                 </div>
                 <!-- Desktop nav -->
                 <nav class="hidden sm:flex space-x-2" aria-label="Основная навигация">
@@ -210,60 +415,18 @@
                         Справка
                     </a>
                 </nav>
-                <!-- Mobile nav -->
-                <nav class="flex sm:hidden gap-1" aria-label="Основная навигация">
-                        <a href="/" aria-label="Главная" {{if eq .ActivePage "dashboard"}}aria-current="page"{{end}} class="p-3 rounded-md text-sm font-medium {{if eq .ActivePage "dashboard"}}bg-blue-500 text-white{{else}}text-gray-600 dark:text-gray-300{{end}}">
-                            <!-- Cloud with sun icon -->
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
-                                <circle cx="17" cy="7" r="2" stroke-width="1.5" opacity="0.6"/>
-                                <path d="M17 5v-.5M19 7h.5M17 9v.5M15 7h-.5" stroke-width="1.5" opacity="0.6"/>
-                            </svg>
-                        </a>
-                        <a href="/history" aria-label="История" {{if eq .ActivePage "history"}}aria-current="page"{{end}} class="p-3 rounded-md text-sm font-medium {{if eq .ActivePage "history"}}bg-blue-500 text-white{{else}}text-gray-600 dark:text-gray-300{{end}}">
-                            <!-- Trending up / Line chart icon -->
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-                            </svg>
-                        </a>
-                        <a href="/records" aria-label="Рекорды" {{if eq .ActivePage "records"}}aria-current="page"{{end}} class="p-3 rounded-md text-sm font-medium {{if eq .ActivePage "records"}}bg-blue-500 text-white{{else}}text-gray-600 dark:text-gray-300{{end}}">
-                            <!-- Trophy icon -->
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
-                            </svg>
-                        </a>
-                        <a href="/insights" aria-label="Архив" {{if eq .ActivePage "insights"}}aria-current="page"{{end}} class="p-3 rounded-md text-sm font-medium {{if eq .ActivePage "insights"}}bg-blue-500 text-white{{else}}text-gray-600 dark:text-gray-300{{end}}">
-                            <!-- Sparkles / analytics icon -->
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.16c.969 0 1.371 1.24.588 1.81l-3.366 2.445a1 1 0 00-.364 1.118l1.286 3.957c.3.921-.755 1.688-1.538 1.118l-3.366-2.445a1 1 0 00-1.176 0l-3.366 2.445c-.783.57-1.838-.197-1.538-1.118l1.286-3.957a1 1 0 00-.364-1.118L4.063 9.384c-.783-.57-.38-1.81.588-1.81h4.16a1 1 0 00.95-.69l1.286-3.957z"/>
-                            </svg>
-                        </a>
-                        <a href="/gallery" aria-label="Галерея" {{if eq .ActivePage "gallery"}}aria-current="page"{{end}} class="p-3 rounded-md text-sm font-medium {{if eq .ActivePage "gallery"}}bg-blue-500 text-white{{else}}text-gray-600 dark:text-gray-300{{end}}">
-                            <!-- Camera icon -->
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
-                            </svg>
-                        </a>
-                        <a href="/help" aria-label="Справка" {{if eq .ActivePage "help"}}aria-current="page"{{end}} class="p-3 rounded-md text-sm font-medium {{if eq .ActivePage "help"}}bg-blue-500 text-white{{else}}text-gray-600 dark:text-gray-300{{end}}">
-                            <!-- Info circle icon -->
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                        </a>
-                    </nav>
                 </div>
             </div>
         </div>
     </header>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 mb-16">
+    <main class="ui-mobile-nav-clearance max-w-7xl mx-auto px-4 py-6 pb-24 sm:px-6 sm:pb-6 lg:px-8 mb-16">
         {{block "content" .}}{{end}}
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-auto transition-colors duration-200">
+    <footer class="ui-mobile-nav-clearance bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-auto pb-20 sm:pb-0 transition-colors duration-200">
         <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-center sm:justify-between gap-3">
                 <!-- Contact (Telegram only) -->
@@ -302,6 +465,37 @@
             </div>
         </div>
     </footer>
+
+    <nav class="ui-mobile-nav fixed inset-x-0 bottom-0 z-50 border-t border-gray-200 bg-white/95 shadow-lg backdrop-blur dark:border-gray-700 dark:bg-gray-800/95 sm:hidden" aria-label="Основная навигация">
+        <div class="mx-auto grid max-w-lg grid-cols-5 px-1">
+            <a href="/" aria-label="Главная" {{if eq .ActivePage "dashboard"}}aria-current="page"{{end}} class="flex min-h-16 flex-col items-center justify-center gap-1 rounded-md px-1 text-xs font-semibold {{if eq .ActivePage "dashboard"}}text-blue-700 dark:text-blue-300{{else}}text-gray-600 dark:text-gray-300{{end}}">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/></svg>
+                <span>Главная</span>
+            </a>
+            <a href="/history" aria-label="История" {{if eq .ActivePage "history"}}aria-current="page"{{end}} class="flex min-h-16 flex-col items-center justify-center gap-1 rounded-md px-1 text-xs font-semibold {{if eq .ActivePage "history"}}text-blue-700 dark:text-blue-300{{else}}text-gray-600 dark:text-gray-300{{end}}">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                <span>История</span>
+            </a>
+            <a href="/records" aria-label="Рекорды" {{if eq .ActivePage "records"}}aria-current="page"{{end}} class="flex min-h-16 flex-col items-center justify-center gap-1 rounded-md px-1 text-xs font-semibold {{if eq .ActivePage "records"}}text-blue-700 dark:text-blue-300{{else}}text-gray-600 dark:text-gray-300{{end}}">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+                <span>Рекорды</span>
+            </a>
+            <a href="/insights" aria-label="Архив" {{if eq .ActivePage "insights"}}aria-current="page"{{end}} class="flex min-h-16 flex-col items-center justify-center gap-1 rounded-md px-1 text-xs font-semibold {{if eq .ActivePage "insights"}}text-blue-700 dark:text-blue-300{{else}}text-gray-600 dark:text-gray-300{{end}}">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.16c.969 0 1.371 1.24.588 1.81l-3.366 2.445a1 1 0 00-.364 1.118l1.286 3.957c.3.921-.755 1.688-1.538 1.118l-3.366-2.445a1 1 0 00-1.176 0l-3.366 2.445c-.783.57-1.838-.197-1.538-1.118l1.286-3.957a1 1 0 00-.364-1.118L4.063 9.384c-.783-.57-.38-1.81.588-1.81h4.16a1 1 0 00.95-.69l1.286-3.957z"/></svg>
+                <span>Архив</span>
+            </a>
+            <details class="relative">
+                <summary aria-label="Ещё" class="flex min-h-16 cursor-pointer flex-col items-center justify-center gap-1 rounded-md px-1 text-xs font-semibold {{if or (eq .ActivePage "gallery") (eq .ActivePage "help")}}text-blue-700 dark:text-blue-300{{else}}text-gray-600 dark:text-gray-300{{end}}">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.5h.01M12 12h.01M12 17.5h.01"/></svg>
+                    <span>Ещё</span>
+                </summary>
+                <div class="ui-surface absolute bottom-full right-1 mb-2 w-48 overflow-hidden p-1">
+                    <a href="/gallery" aria-label="Галерея" {{if eq .ActivePage "gallery"}}aria-current="page"{{end}} class="flex min-h-11 items-center rounded-md px-3 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700">Галерея</a>
+                    <a href="/help" aria-label="Справка" {{if eq .ActivePage "help"}}aria-current="page"{{end}} class="flex min-h-11 items-center rounded-md px-3 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700">Справка</a>
+                </div>
+            </details>
+        </div>
+    </nav>
 
     <script>
         function toggleTheme() {

@@ -4,12 +4,17 @@
 
 {{define "content"}}
 <div class="ui-page flex flex-col gap-6 sm:block sm:space-y-6">
+    <header class="order-0 space-y-1 sm:order-none">
+        <p class="ui-kicker">Метеостанция Армавир</p>
+        <h1 class="ui-page-header">Погода сейчас</h1>
+    </header>
+
     <!-- Current Weather -->
     <div id="current-weather" class="order-1 sm:order-none"
          hx-get="/widgets/current"
          hx-trigger="load, every 60s"
          hx-swap="innerHTML">
-        <div class="animate-pulse bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
+        <div class="ui-surface animate-pulse p-6">
             <div class="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4"></div>
             <div class="h-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
         </div>
@@ -20,7 +25,7 @@
          hx-get="/widgets/forecast"
          hx-trigger="load, every 3600s"
          hx-swap="innerHTML">
-        <div class="animate-pulse bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
+        <div class="ui-surface animate-pulse p-6">
             <div class="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4"></div>
             <div class="h-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
         </div>
@@ -38,7 +43,7 @@
     </div>
 
     <!-- Telegram Bot -->
-    <div id="telegram-bot-card" class="order-9 bg-gradient-to-br from-blue-50 to-sky-100 dark:from-blue-900/20 dark:to-sky-800/20 rounded-lg shadow p-6 transition-colors border-2 border-blue-200 dark:border-blue-800 relative sm:order-none">
+    <div id="telegram-bot-card" class="ui-surface order-9 relative p-6 sm:order-none">
         <!-- Close Button -->
         <button onclick="closeTelegramCard()" aria-label="Скрыть предложение Telegram-бота" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -58,9 +63,7 @@
 
             <!-- Content -->
             <div class="flex-1 text-center md:text-left">
-                <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                    📱 Telegram бот
-                </h2>
+                <h2 class="ui-section-heading mb-2">Telegram бот</h2>
                 <p class="text-gray-700 dark:text-gray-300 mb-4">
                     Получайте уведомления о погоде прямо в мессенджере!
                 </p>
@@ -90,13 +93,13 @@
                     <a href="https://t.me/ArmavirMeteoBot"
                        target="_blank"
                        rel="noopener noreferrer"
-                       class="inline-flex items-center px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
+                        class="ui-button-primary px-6">
                         <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.658-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.941z"/>
                         </svg>
                         Открыть бот
                     </a>
-                    <span class="text-sm text-gray-500 dark:text-gray-400 font-mono">
+                    <span class="ui-tabular ui-text-muted text-sm">
                         @ArmavirMeteoBot
                     </span>
                 </div>
@@ -109,7 +112,7 @@
          hx-get="/widgets/sun"
          hx-trigger="load"
          hx-swap="innerHTML">
-        <div class="animate-pulse bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
+        <div class="ui-surface animate-pulse p-6">
             <div class="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4"></div>
             <div class="h-16 bg-gray-200 dark:bg-gray-700 rounded"></div>
         </div>
@@ -120,7 +123,7 @@
          hx-get="/widgets/events"
          hx-trigger="load, every 300s"
          hx-swap="innerHTML">
-        <div class="animate-pulse bg-white dark:bg-gray-800 rounded-lg shadow p-4 transition-colors">
+        <div class="ui-surface animate-pulse p-4">
             <div class="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-2"></div>
             <div class="h-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
         </div>
@@ -132,15 +135,15 @@
          hx-trigger="load, every 300s"
          hx-swap="innerHTML">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="animate-pulse bg-white dark:bg-gray-800 rounded-lg shadow p-4 transition-colors">
+            <div class="ui-surface animate-pulse p-4">
                 <div class="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-2"></div>
                 <div class="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
             </div>
-            <div class="animate-pulse bg-white dark:bg-gray-800 rounded-lg shadow p-4 transition-colors">
+            <div class="ui-surface animate-pulse p-4">
                 <div class="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-2"></div>
                 <div class="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
             </div>
-            <div class="animate-pulse bg-white dark:bg-gray-800 rounded-lg shadow p-4 transition-colors">
+            <div class="ui-surface animate-pulse p-4">
                 <div class="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-2"></div>
                 <div class="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
             </div>
@@ -148,15 +151,16 @@
     </div>
 
     <!-- Charts -->
-    <div id="charts-24h" class="order-8 bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors sm:order-none">
+    <div id="charts-24h" class="ui-chart-panel order-8 p-6 sm:order-none">
         <div class="flex items-center justify-between mb-4">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Графики за 24 часа</h2>
-            <div class="flex space-x-2">
-                <button onclick="updateCharts('5m')" class="chart-interval-btn px-3 py-1 text-sm rounded-md bg-blue-500 text-white hover:bg-blue-600 transition-colors" data-interval="5m">5м</button>
-                <button onclick="updateCharts('15m')" class="chart-interval-btn px-3 py-1 text-sm rounded-md bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors" data-interval="15m">15м</button>
-                <button onclick="updateCharts('1h')" class="chart-interval-btn px-3 py-1 text-sm rounded-md bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors" data-interval="1h">1ч</button>
+            <div class="flex space-x-2" role="group" aria-label="Интервал графиков">
+                <button onclick="updateCharts('5m')" class="chart-interval-btn ui-button-primary min-h-0 px-3 py-1" data-interval="5m" aria-pressed="true">5м</button>
+                <button onclick="updateCharts('15m')" class="chart-interval-btn ui-button-secondary min-h-0 px-3 py-1" data-interval="15m" aria-pressed="false">15м</button>
+                <button onclick="updateCharts('1h')" class="chart-interval-btn ui-button-secondary min-h-0 px-3 py-1" data-interval="1h" aria-pressed="false">1ч</button>
             </div>
         </div>
+        <p id="chart-status" class="sr-only" role="status" aria-live="polite"></p>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-8">
             <div class="border-b border-gray-100 dark:border-gray-700 pb-4">

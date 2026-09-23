@@ -5,7 +5,7 @@
 {{define "content"}}
 <div class="max-w-7xl mx-auto space-y-6">
     <!-- Hero section with current solar radiation -->
-    <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 rounded-lg shadow-lg p-8">
+    <div class="ui-surface p-8">
         <div class="flex flex-col md:flex-row items-center justify-between">
             <div>
                 <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Солнечная радиация</h1>
@@ -19,14 +19,14 @@
     </div>
 
     <!-- Current readings -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Текущие показатели</h2>
+    <div class="ui-surface p-6">
+        <h2 class="ui-section-heading mb-4">Текущие показатели</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+            <div class="ui-metric-card p-4">
                 <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Солнечная радиация</div>
                 <div class="text-3xl font-bold text-yellow-600 dark:text-yellow-400">{{printf "%.0f" .Data.SolarRadiation}} Вт/м²</div>
             </div>
-            <div class="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
+            <div class="ui-metric-card p-4">
                 <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">УФ-индекс</div>
                 <div class="text-3xl font-bold text-red-600 dark:text-red-400">{{printf "%.0f" .Data.UVIndex}}</div>
             </div>
@@ -34,11 +34,11 @@
     </div>
 
     <!-- Changes -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Изменения (солнечная радиация)</h2>
+    <div class="ui-surface p-6">
+        <h2 class="ui-section-heading mb-4">Изменения (солнечная радиация)</h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             {{if .Data.HasHourData}}
-            <div class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+            <div class="ui-metric-card p-4">
                 <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">За час</div>
                 <div class="text-2xl font-bold {{if gt .Data.ChangeHour 0.0}}text-yellow-500{{else if lt .Data.ChangeHour 0.0}}text-blue-500{{else}}text-gray-500{{end}}">
                     {{if gt .Data.ChangeHour 0.0}}↑{{else if lt .Data.ChangeHour 0.0}}↓{{else}}→{{end}}
@@ -47,7 +47,7 @@
             </div>
             {{end}}
             {{if .Data.HasDayData}}
-            <div class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+            <div class="ui-metric-card p-4">
                 <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">За сутки</div>
                 <div class="text-2xl font-bold {{if gt .Data.ChangeDay 0.0}}text-yellow-500{{else if lt .Data.ChangeDay 0.0}}text-blue-500{{else}}text-gray-500{{end}}">
                     {{if gt .Data.ChangeDay 0.0}}↑{{else if lt .Data.ChangeDay 0.0}}↓{{else}}→{{end}}
@@ -56,7 +56,7 @@
             </div>
             {{end}}
             {{if .Data.HasWeekData}}
-            <div class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+            <div class="ui-metric-card p-4">
                 <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">За неделю</div>
                 <div class="text-2xl font-bold {{if gt .Data.ChangeWeek 0.0}}text-yellow-500{{else if lt .Data.ChangeWeek 0.0}}text-blue-500{{else}}text-gray-500{{end}}">
                     {{if gt .Data.ChangeWeek 0.0}}↑{{else if lt .Data.ChangeWeek 0.0}}↓{{else}}→{{end}}
@@ -68,15 +68,15 @@
     </div>
 
     <!-- All-time records -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Рекорды за все время</h2>
+    <div class="ui-surface p-6">
+        <h2 class="ui-section-heading mb-4">Рекорды за все время</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+            <div class="ui-metric-card p-4">
                 <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Макс. солнечная радиация</div>
                 <div class="text-3xl font-bold text-yellow-600 dark:text-yellow-400 mb-2">{{printf "%.0f" .Data.RecordSolar}} Вт/м²</div>
                 <div class="text-xs text-gray-500 dark:text-gray-400">{{.Data.RecordSolarTime}}</div>
             </div>
-            <div class="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
+            <div class="ui-metric-card p-4">
                 <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Макс. УФ-индекс</div>
                 <div class="text-3xl font-bold text-red-600 dark:text-red-400 mb-2">{{printf "%.0f" .Data.RecordUV}}</div>
                 <div class="text-xs text-gray-500 dark:text-gray-400">{{.Data.RecordUVTime}}</div>
@@ -86,13 +86,13 @@
 
     <!-- Charts -->
     {{if .Data.HasCharts}}
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+    <div class="ui-surface p-6">
         <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">История</h2>
-            <div class="flex gap-2">
-                <button onclick="switchPeriod('24h')" id="btn-24h" class="px-4 py-2 text-sm font-medium text-white bg-yellow-600 rounded-lg hover:bg-yellow-700 transition-colors">24 часа</button>
-                <button onclick="switchPeriod('7d')" id="btn-7d" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">7 дней</button>
-                <button onclick="switchPeriod('30d')" id="btn-30d" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">30 дней</button>
+            <h2 class="ui-section-heading">История</h2>
+            <div class="flex gap-2" role="group" aria-label="Период графика">
+                <button onclick="switchPeriod('24h')" id="btn-24h" class="ui-button-primary" aria-pressed="true">24 часа</button>
+                <button onclick="switchPeriod('7d')" id="btn-7d" class="ui-button-secondary" aria-pressed="false">7 дней</button>
+                <button onclick="switchPeriod('30d')" id="btn-30d" class="ui-button-secondary" aria-pressed="false">30 дней</button>
             </div>
         </div>
         <div style="height: 400px;">
@@ -197,11 +197,13 @@
             ['24h', '7d', '30d'].forEach(p => {
                 const btn = document.getElementById(`btn-${p}`);
                 if (p === period) {
-                    btn.classList.remove('bg-gray-200', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
-                    btn.classList.add('bg-yellow-600', 'text-white');
+                    btn.classList.remove('ui-button-secondary');
+                    btn.classList.add('ui-button-primary');
+                    btn.setAttribute('aria-pressed', 'true');
                 } else {
-                    btn.classList.remove('bg-yellow-600', 'text-white');
-                    btn.classList.add('bg-gray-200', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
+                    btn.classList.remove('ui-button-primary');
+                    btn.classList.add('ui-button-secondary');
+                    btn.setAttribute('aria-pressed', 'false');
                 }
             });
 

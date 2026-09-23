@@ -13,14 +13,13 @@
         <span class="text-gray-900 dark:text-white font-medium">Геомагнитная активность</span>
     </nav>
 
+    <h1 class="ui-page-header">Геомагнитная активность</h1>
+
     <!-- Hero Section -->
     {{if .Data.Card.HasData}}
-    <div class="bg-gradient-to-br {{.Data.Card.StatusGradient}} rounded-lg shadow-lg p-8 transition-colors">
+    <div class="ui-status-surface p-8">
         <div class="text-center">
-            <h1 class="text-lg font-medium text-gray-700 dark:text-gray-200 mb-2">
-                <span class="text-2xl mr-1">🌞</span>
-                Магнитные бури
-            </h1>
+            <p class="text-lg font-medium text-gray-700 dark:text-gray-200 mb-2"><span class="text-2xl mr-1" aria-hidden="true">🌞</span>Магнитные бури</p>
             <div class="text-6xl md:text-7xl font-bold {{.Data.Card.StatusText}} mb-4 leading-tight">
                 {{.Data.Card.StatusHeading}}
             </div>
@@ -35,13 +34,13 @@
         </div>
     </div>
     {{else}}
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center text-gray-500 dark:text-gray-400">
+    <div class="ui-surface p-8 text-center text-gray-500 dark:text-gray-400">
         Нет актуальных данных о геомагнитной активности.
     </div>
     {{end}}
 
     <!-- График Kp -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
+    <div class="ui-surface p-6">
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">
             Магнитные бури · история за 3 дня
         </h2>
@@ -59,7 +58,7 @@
     </div>
 
     <!-- Таблица суточных показателей -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
+    <div class="ui-surface p-6">
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
             Суточные показатели солнечной активности
         </h2>
@@ -94,28 +93,28 @@
     </div>
 
     <!-- Шкала Kp -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
+    <div class="ui-surface p-6">
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
             Шкала бурь (NOAA G-scale)
         </h2>
         <div class="space-y-2 text-sm">
-            <div class="flex items-center justify-between p-3 bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded">
+            <div class="flex items-center justify-between p-3 ui-metric-card">
                 <span class="text-gray-700 dark:text-gray-200"><span class="font-bold mr-2">G1</span> Kp = 5 — слабая буря</span>
                 <span class="text-gray-500 dark:text-gray-400 hidden sm:inline">Северные сияния в высоких широтах</span>
             </div>
-            <div class="flex items-center justify-between p-3 bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded">
+            <div class="flex items-center justify-between p-3 ui-metric-card">
                 <span class="text-gray-700 dark:text-gray-200"><span class="font-bold mr-2">G2</span> Kp = 6 — средняя буря</span>
                 <span class="text-gray-500 dark:text-gray-400 hidden sm:inline">Перебои в радиосвязи на ВЧ</span>
             </div>
-            <div class="flex items-center justify-between p-3 bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded">
+            <div class="flex items-center justify-between p-3 ui-metric-card">
                 <span class="text-gray-700 dark:text-gray-200"><span class="font-bold mr-2">G3</span> Kp = 7 — сильная буря</span>
                 <span class="text-gray-500 dark:text-gray-400 hidden sm:inline">Сбои навигации, сияния в средних широтах</span>
             </div>
-            <div class="flex items-center justify-between p-3 bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded">
+            <div class="flex items-center justify-between p-3 ui-metric-card">
                 <span class="text-gray-700 dark:text-gray-200"><span class="font-bold mr-2">G4</span> Kp = 8 — очень сильная буря</span>
                 <span class="text-gray-500 dark:text-gray-400 hidden sm:inline">Влияние на электросети, сбои спутников</span>
             </div>
-            <div class="flex items-center justify-between p-3 bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded">
+            <div class="flex items-center justify-between p-3 ui-metric-card">
                 <span class="text-gray-700 dark:text-gray-200"><span class="font-bold mr-2">G5</span> Kp = 9 — экстремальная буря</span>
                 <span class="text-gray-500 dark:text-gray-400 hidden sm:inline">Аварии электросетей, отказы оборудования</span>
             </div>
