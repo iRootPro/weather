@@ -115,7 +115,7 @@ type HydroRepository interface {
 	GetGauge(ctx context.Context, stationUUID string) (*models.HydroGauge, error)
 	GetLatest(ctx context.Context, stationUUID string) (*models.HydroLevelReading, error)
 	GetPreviousBefore(ctx context.Context, stationUUID, waterLevelUUID string, before time.Time) (*models.HydroLevelReading, error)
-	GetNearBefore(ctx context.Context, stationUUID string, target time.Time, window time.Duration) (*models.HydroLevelReading, error)
+	GetNearBefore(ctx context.Context, stationUUID, waterLevelUUID string, target time.Time, window time.Duration) (*models.HydroLevelReading, error)
 	GetRange(ctx context.Context, stationUUID string, from, to time.Time) ([]models.HydroLevelReading, error)
 	DeleteOlderThan(ctx context.Context, threshold time.Time) error
 }

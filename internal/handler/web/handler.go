@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/iRootPro/weather/internal/models"
@@ -27,6 +28,9 @@ type Handler struct {
 	narodmonURL        string
 	geomagneticService *service.GeomagneticService
 	hydroService       *service.HydroService
+	hydroCardCacheMu   sync.Mutex
+	hydroCardCache     WaterLevelCardData
+	hydroCardCachedAt  time.Time
 }
 
 func NewHandler(templatesDir string, weatherService *service.WeatherService, sunService *service.SunService, moonService *service.MoonService, forecastService *service.ForecastService, photoRepo repository.PhotoRepository, narodmonService *service.NarodmonService, narodmonURL string, geomagneticService *service.GeomagneticService, hydroService *service.HydroService) (*Handler, error) {

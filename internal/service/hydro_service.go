@@ -16,6 +16,8 @@ type HydroService struct {
 	hasZeroPostBSM       bool
 }
 
+const hydroDayChangeTolerance = 30 * time.Minute
+
 func NewHydroService(repo repository.HydroRepository, stationUUID string, zeroPostBSM float32, upstreamStationUUIDs ...string) *HydroService {
 	return &HydroService{repo: repo, stationUUID: stationUUID, upstreamStationUUIDs: upstreamStationUUIDs, zeroPostBSM: zeroPostBSM, hasZeroPostBSM: zeroPostBSM != 0}
 }
@@ -75,7 +77,7 @@ func (s *HydroService) getSnapshotForStation(ctx context.Context, stationUUID st
 		}
 	}
 
-	dayAgo, err := s.repo.GetNearBefore(ctx, stationUUID, current.ObservedAt.Add(-24*time.Hour), 2*time.Hour)
+	dayAgo, err := s.repo.GetNearBefore(ctx, stationUUID, current.WaterLevelUUID, current.ObservedAt.Add(-24*time.Hour), hydroDayChangeTolerance)
 	if err != nil {
 		return nil, err
 	}

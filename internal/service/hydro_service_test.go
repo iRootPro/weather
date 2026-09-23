@@ -11,6 +11,9 @@ import (
 type hydroRepositoryStub struct {
 	latest   *models.HydroLevelReading
 	previous *models.HydroLevelReading
+	near     *models.HydroLevelReading
+	nearUUID string
+	nearWin  time.Duration
 }
 
 func (r *hydroRepositoryStub) SaveGauge(context.Context, *models.HydroGauge) error { return nil }
@@ -29,8 +32,13 @@ func (r *hydroRepositoryStub) GetPreviousBefore(_ context.Context, _, waterLevel
 	}
 	return r.previous, nil
 }
-func (r *hydroRepositoryStub) GetNearBefore(context.Context, string, time.Time, time.Duration) (*models.HydroLevelReading, error) {
-	return nil, nil
+func (r *hydroRepositoryStub) GetNearBefore(_ context.Context, _, waterLevelUUID string, _ time.Time, window time.Duration) (*models.HydroLevelReading, error) {
+	r.nearUUID = waterLevelUUID
+	r.nearWin = window
+	if r.near == nil || r.near.WaterLevelUUID != waterLevelUUID {
+		return nil, nil
+	}
+	return r.near, nil
 }
 func (r *hydroRepositoryStub) GetRange(context.Context, string, time.Time, time.Time) ([]models.HydroLevelReading, error) {
 	return nil, nil
@@ -112,5 +120,35 @@ func TestHydroSnapshotDoesNotCompareDifferentWaterLevelSeries(t *testing.T) {
 	}
 	if snapshot.ChangeCmPerHour != nil {
 		t.Fatalf("ChangeCmPerHour = %.3f, want nil across different water-level series", *snapshot.ChangeCmPerHour)
+	}
+}
+
+func TestHydroSnapshotUsesSameSeriesForDayChange(t *testing.T) {
+	observedAt := time.Date(2026, time.August, 31, 14, 40, 0, 0, time.UTC)
+	repo := &hydroRepositoryStub{
+		latest: &models.HydroLevelReading{
+			WaterLevelUUID: "new-sensor",
+			ObservedAt:     observedAt,
+			LevelBSM:       161.852,
+		},
+		near: &models.HydroLevelReading{
+			WaterLevelUUID: "new-sensor",
+			ObservedAt:     observedAt.Add(-24 * time.Hour),
+			LevelBSM:       161.802,
+		},
+	}
+
+	snapshot, err := NewHydroService(repo, "station", 0).GetSnapshot(context.Background(), observedAt)
+	if err != nil {
+		t.Fatalf("GetSnapshot: %v", err)
+	}
+	if repo.nearUUID != "new-sensor" {
+		t.Fatalf("day-change series = %q, want new-sensor", repo.nearUUID)
+	}
+	if repo.nearWin != hydroDayChangeTolerance {
+		t.Fatalf("day-change tolerance = %s, want %s", repo.nearWin, hydroDayChangeTolerance)
+	}
+	if snapshot.Change24hM == nil || *snapshot.Change24hM < 0.049 || *snapshot.Change24hM > 0.051 {
+		t.Fatalf("Change24hM = %v, want 0.050", snapshot.Change24hM)
 	}
 }

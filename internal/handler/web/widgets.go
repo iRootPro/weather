@@ -11,8 +11,50 @@ import (
 	"time"
 
 	"github.com/iRootPro/weather/internal/models"
+	"github.com/iRootPro/weather/internal/repository"
 	"github.com/iRootPro/weather/internal/service"
 )
+
+type currentWeatherTodayData struct {
+	HasData          bool
+	TemperatureRange string
+	PressureRange    string
+	MaxGust          string
+	RainDaily        string
+	WaterLevel       string
+	WaterChange      string
+	WaterChangeLabel string
+}
+
+func buildCurrentWeatherTodayData(dailyMinMax *repository.DailyMinMax, rainDaily *float32, waterLevel WaterLevelCardData) currentWeatherTodayData {
+	today := currentWeatherTodayData{}
+	if dailyMinMax != nil {
+		if dailyMinMax.TempMin != nil && dailyMinMax.TempMax != nil {
+			today.TemperatureRange = fmt.Sprintf("%.1f…%.1f°", *dailyMinMax.TempMin, *dailyMinMax.TempMax)
+		}
+		if dailyMinMax.PressureMin != nil && dailyMinMax.PressureMax != nil {
+			today.PressureRange = fmt.Sprintf("%.0f…%.0f мм рт. ст.", *dailyMinMax.PressureMin, *dailyMinMax.PressureMax)
+		}
+		if dailyMinMax.GustMax != nil {
+			today.MaxGust = fmt.Sprintf("до %.1f м/с", *dailyMinMax.GustMax)
+		}
+	}
+	if rainDaily != nil {
+		today.RainDaily = fmt.Sprintf("%.1f мм", *rainDaily)
+	}
+	if waterLevel.HasData {
+		today.WaterLevel = fmt.Sprintf("%.3f м", waterLevel.LevelM)
+		if waterLevel.DayChangeText != "" {
+			today.WaterChange = waterLevel.DayChangeText
+			today.WaterChangeLabel = "за 24 часа"
+		} else if waterLevel.HasHourlyChange {
+			today.WaterChange = waterLevel.ChangeText
+			today.WaterChangeLabel = "за час"
+		}
+	}
+	today.HasData = today.TemperatureRange != "" || today.PressureRange != "" || today.MaxGust != "" || today.RainDaily != "" || today.WaterLevel != ""
+	return today
+}
 
 // degreesToDirection converts wind direction in degrees to compass direction
 func degreesToDirection(degrees int16) string {
@@ -83,10 +125,12 @@ func (h *Handler) CurrentWeatherWidget(w http.ResponseWriter, r *http.Request) {
 		HasDailyData bool
 		// Геомагнитная активность
 		Geomagnetic GeomagneticCardData
+		Today       currentWeatherTodayData
 	}{
 		ObservationTime: data.Time.Format("15:04"),
 		UpdatedAt:       time.Now().Format("15:04"),
 		Geomagnetic:     h.buildGeomagneticCard(r.Context()),
+		Today:           buildCurrentWeatherTodayData(dailyMinMax, data.RainDaily, h.buildCachedWaterLevelCard(r)),
 	}
 
 	// Check if we have hourly comparison data

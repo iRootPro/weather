@@ -21,6 +21,7 @@ type WaterLevelCardData struct {
 	RelativeLevelCm   string
 	ChangeText        string
 	ChangeClass       string
+	HasHourlyChange   bool
 	DayChangeText     string
 	LeadText          string
 	StatusLabel       string
@@ -98,6 +99,7 @@ func (h *Handler) buildWaterLevelCard(r *http.Request, includeUpstream bool) Wat
 	if snap.ChangeCmPerHour != nil {
 		card.ChangeText = formatSignedFloat(*snap.ChangeCmPerHour, "%.0f см/ч")
 		card.ChangeClass = changeClass(*snap.ChangeCmPerHour)
+		card.HasHourlyChange = true
 	} else if snap.ChangeM != nil {
 		cm := *snap.ChangeM * 100
 		card.ChangeText = formatSignedFloat(cm, "%.0f см")
@@ -142,6 +144,28 @@ func (h *Handler) buildWaterLevelCard(r *http.Request, includeUpstream bool) Wat
 				card.Upstream = append(card.Upstream, *mini)
 			}
 		}
+	}
+	return card
+}
+
+const hydroCardCacheTTL = 10 * time.Minute
+
+// buildCachedWaterLevelCard reuses the dashboard snapshot for the period in
+// which the hydro source itself is expected to update. Detail pages continue
+// to load their own complete data, including upstream stations.
+func (h *Handler) buildCachedWaterLevelCard(r *http.Request) WaterLevelCardData {
+	now := time.Now()
+	h.hydroCardCacheMu.Lock()
+	defer h.hydroCardCacheMu.Unlock()
+
+	if h.hydroCardCache.HasData && now.Sub(h.hydroCardCachedAt) < hydroCardCacheTTL {
+		return h.hydroCardCache
+	}
+
+	card := h.buildWaterLevelCard(r, false)
+	if card.HasData {
+		h.hydroCardCache = card
+		h.hydroCardCachedAt = now
 	}
 	return card
 }
@@ -296,7 +320,7 @@ func summaryTrendPhrase(changePerHour *float32, change24hM *float32) string {
 }
 
 func (h *Handler) WaterLevelWidget(w http.ResponseWriter, r *http.Request) {
-	card := h.buildWaterLevelCard(r, false)
+	card := h.buildCachedWaterLevelCard(r)
 	if !card.HasData {
 		w.WriteHeader(http.StatusNoContent)
 		return

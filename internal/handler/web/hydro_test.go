@@ -1,10 +1,28 @@
 package web
 
 import (
+	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/iRootPro/weather/internal/models"
 )
+
+func TestBuildCachedWaterLevelCardReusesFreshSnapshot(t *testing.T) {
+	h := &Handler{
+		hydroCardCache: WaterLevelCardData{
+			HasData:       true,
+			LevelM:        161.681,
+			DayChangeText: "+5 см",
+		},
+		hydroCardCachedAt: time.Now(),
+	}
+
+	card := h.buildCachedWaterLevelCard(httptest.NewRequest("GET", "/widgets/current", nil))
+	if !card.HasData || card.LevelM != 161.681 || card.DayChangeText != "+5 см" {
+		t.Fatalf("fresh cached water card = %+v, want cached snapshot", card)
+	}
+}
 
 func TestBuildWaterLevelMiniUsesCalculatedSnapshotTrend(t *testing.T) {
 	sourceIndex := float32(1.407)

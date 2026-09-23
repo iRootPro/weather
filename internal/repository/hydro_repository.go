@@ -145,13 +145,13 @@ func (r *hydroRepository) GetPreviousBefore(ctx context.Context, stationUUID, wa
 	return &rows[0], nil
 }
 
-func (r *hydroRepository) GetNearBefore(ctx context.Context, stationUUID string, target time.Time, window time.Duration) (*models.HydroLevelReading, error) {
+func (r *hydroRepository) GetNearBefore(ctx context.Context, stationUUID, waterLevelUUID string, target time.Time, window time.Duration) (*models.HydroLevelReading, error) {
 	query := `SELECT observed_at, station_uuid, waterlevel_uuid, level_bs_m, level_zero_m,
 		source_hdi_ihr, lead_text, state_code, level_code, raw_data, fetched_at
 		FROM hydro_level_readings
-		WHERE station_uuid = $1 AND observed_at <= $2 AND observed_at >= $3
+		WHERE station_uuid = $1 AND waterlevel_uuid = $2 AND observed_at <= $3 AND observed_at >= $4
 		ORDER BY observed_at DESC LIMIT 1`
-	rows, err := r.queryReadings(ctx, query, stationUUID, target, target.Add(-window))
+	rows, err := r.queryReadings(ctx, query, stationUUID, waterLevelUUID, target, target.Add(-window))
 	if err != nil {
 		return nil, err
 	}

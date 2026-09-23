@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/iRootPro/weather/internal/models"
+	"github.com/iRootPro/weather/internal/repository"
 )
 
 func TestBaseTemplateRendersAccessibleNavigation(t *testing.T) {
@@ -584,6 +585,103 @@ func TestCurrentWeatherTemplateShowsMeasurementAndRefreshTimes(t *testing.T) {
 	for _, expected := range []string{`p-3 text-center group sm:p-4`, `sm:text-3xl`, `sm:hidden">UV`, `hidden text-xs text-gray-400 dark:text-gray-500 sm:block`, `mt-1 hidden text-xs sm:block`} {
 		if !bytes.Contains(output.Bytes(), []byte(expected)) {
 			t.Errorf("current weather is missing compact mobile treatment %s", expected)
+		}
+	}
+}
+
+func TestBuildCurrentWeatherTodayData(t *testing.T) {
+	tempMin, tempMax := float32(15.8), float32(33.5)
+	pressureMin, pressureMax := float32(738), float32(743)
+	gustMax, rainDaily := float32(7.4), float32(0)
+
+	today := buildCurrentWeatherTodayData(&repository.DailyMinMax{
+		TempMin:     &tempMin,
+		TempMax:     &tempMax,
+		PressureMin: &pressureMin,
+		PressureMax: &pressureMax,
+		GustMax:     &gustMax,
+	}, &rainDaily, WaterLevelCardData{
+		HasData:       true,
+		LevelM:        161.681,
+		DayChangeText: "+5 см",
+	})
+
+	if !today.HasData {
+		t.Fatal("today summary must render when daily weather or water-level data is available")
+	}
+	for _, test := range []struct {
+		field string
+		got   string
+		want  string
+	}{
+		{field: "temperature", got: today.TemperatureRange, want: "15.8…33.5°"},
+		{field: "pressure", got: today.PressureRange, want: "738…743 мм рт. ст."},
+		{field: "max gust", got: today.MaxGust, want: "до 7.4 м/с"},
+		{field: "rain", got: today.RainDaily, want: "0.0 мм"},
+		{field: "water level", got: today.WaterLevel, want: "161.681 м"},
+		{field: "water change", got: today.WaterChange, want: "+5 см"},
+	} {
+		if test.got != test.want {
+			t.Errorf("%s = %q, want %q", test.field, test.got, test.want)
+		}
+	}
+	if today.WaterChangeLabel != "за 24 часа" {
+		t.Errorf("water change label = %q, want %q", today.WaterChangeLabel, "за 24 часа")
+	}
+
+	hourlyWater := buildCurrentWeatherTodayData(nil, nil, WaterLevelCardData{
+		HasData:         true,
+		LevelM:          161.681,
+		HasHourlyChange: true,
+		ChangeText:      "-1 см/ч",
+	})
+	if hourlyWater.WaterChange != "-1 см/ч" || hourlyWater.WaterChangeLabel != "за час" {
+		t.Errorf("hourly water fallback = %q %q, want -1 см/ч за час", hourlyWater.WaterChange, hourlyWater.WaterChangeLabel)
+	}
+
+	previousReading := buildCurrentWeatherTodayData(nil, nil, WaterLevelCardData{
+		HasData:    true,
+		LevelM:     161.681,
+		ChangeText: "-7 см",
+	})
+	if previousReading.WaterChange != "" || previousReading.WaterChangeLabel != "" {
+		t.Errorf("unbounded previous-reading change must be omitted, got %q %q", previousReading.WaterChange, previousReading.WaterChangeLabel)
+	}
+}
+
+func TestCurrentWeatherTemplateRendersMobileTodaySummary(t *testing.T) {
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("could not locate test file")
+	}
+
+	h := &Handler{templatesDir: filepath.Join(filepath.Dir(filename), "..", "..", "web", "templates")}
+	tmpl, err := h.parsePartial("current_weather.html")
+	if err != nil {
+		t.Fatalf("parsePartial() error = %v", err)
+	}
+
+	var output bytes.Buffer
+	data := map[string]any{
+		"Geomagnetic": map[string]bool{"HasData": false},
+		"Today": currentWeatherTodayData{
+			HasData:          true,
+			TemperatureRange: "15.8…33.5°",
+			PressureRange:    "738…743 мм рт. ст.",
+			MaxGust:          "до 7.4 м/с",
+			RainDaily:        "0.0 мм",
+			WaterLevel:       "161.681 м",
+			WaterChange:      "+5 см",
+			WaterChangeLabel: "за 24 часа",
+		},
+	}
+	if err := tmpl.Execute(&output, data); err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+
+	for _, expected := range []string{`aria-labelledby="today-summary-heading"`, `sm:hidden`, "Сегодня", "15.8…33.5°", "161.681 м", "&#43;5 см", "за 24 часа"} {
+		if !bytes.Contains(output.Bytes(), []byte(expected)) {
+			t.Errorf("mobile today summary is missing %s", expected)
 		}
 	}
 }
