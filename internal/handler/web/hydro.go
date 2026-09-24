@@ -151,8 +151,8 @@ func (h *Handler) buildWaterLevelCard(r *http.Request, includeUpstream bool) Wat
 const hydroCardCacheTTL = 10 * time.Minute
 
 // buildCachedWaterLevelCard reuses the dashboard snapshot for the period in
-// which the hydro source itself is expected to update. Detail pages continue
-// to load their own complete data, including upstream stations.
+// which the hydro source itself is expected to update. It includes the
+// upstream snapshots used by the compact dashboard river summary.
 func (h *Handler) buildCachedWaterLevelCard(r *http.Request) WaterLevelCardData {
 	now := time.Now()
 	h.hydroCardCacheMu.Lock()
@@ -162,7 +162,7 @@ func (h *Handler) buildCachedWaterLevelCard(r *http.Request) WaterLevelCardData 
 		return h.hydroCardCache
 	}
 
-	card := h.buildWaterLevelCard(r, false)
+	card := h.buildWaterLevelCard(r, true)
 	if card.HasData {
 		h.hydroCardCache = card
 		h.hydroCardCachedAt = now

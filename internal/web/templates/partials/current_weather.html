@@ -188,10 +188,20 @@
     </div>
 
     {{if .Water.HasData}}
-    <a href="/detail/water-level" class="mt-4 flex min-h-11 items-center justify-between gap-3 border-t border-gray-200 pt-4 text-sm dark:border-gray-700 sm:hidden">
-        <span class="font-semibold text-blue-700 dark:text-blue-300">Кубань</span>
-        <span class="ui-tabular text-right text-gray-700 dark:text-gray-200">{{.Water.RelativeLevel}}{{if .Water.DayChange}} · {{.Water.DayChange}} за 24 ч{{end}}</span>
-    </a>
+    <section class="mt-4 border-t border-gray-200 pt-2 dark:border-gray-700 sm:hidden" aria-label="Изменение уровня рек за сутки">
+        {{if .Water.KubanChange}}
+        <a href="/detail/water-level" class="flex min-h-11 items-center justify-between gap-3 text-sm">
+            <span class="font-semibold text-blue-700 dark:text-blue-300">Кубань</span>
+            <span class="ui-tabular whitespace-nowrap text-right text-gray-700 dark:text-gray-200">{{.Water.KubanChange}} за сутки</span>
+        </a>
+        {{end}}
+        {{if .Water.UrupChange}}
+        <a href="/detail/water-level" class="flex min-h-11 items-center justify-between gap-3 border-t border-gray-100 text-sm dark:border-gray-800">
+            <span class="font-semibold text-blue-700 dark:text-blue-300">Уруп</span>
+            <span class="ui-tabular whitespace-nowrap text-right text-gray-700 dark:text-gray-200">{{.Water.UrupChange}} за сутки</span>
+        </a>
+        {{end}}
+    </section>
     {{end}}
 
     {{if .Geomagnetic.HasData}}

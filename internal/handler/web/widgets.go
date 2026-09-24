@@ -15,20 +15,26 @@ import (
 )
 
 type currentWeatherWaterData struct {
-	HasData       bool
-	RelativeLevel string
-	DayChange     string
+	HasData     bool
+	KubanChange string
+	UrupChange  string
 }
 
 func buildCurrentWeatherWaterData(waterLevel WaterLevelCardData) currentWeatherWaterData {
-	if !waterLevel.HasData || waterLevel.RelativeLevelCm == "" {
+	if !waterLevel.HasData {
 		return currentWeatherWaterData{}
 	}
-	return currentWeatherWaterData{
-		HasData:       true,
-		RelativeLevel: waterLevel.RelativeLevelCm,
-		DayChange:     waterLevel.DayChangeText,
+	water := currentWeatherWaterData{
+		KubanChange: waterLevel.DayChangeText,
 	}
+	for _, upstream := range waterLevel.Upstream {
+		if strings.Contains(strings.ToLower(upstream.ObjectName), "уруп") {
+			water.UrupChange = upstream.DayChangeText
+			break
+		}
+	}
+	water.HasData = water.KubanChange != "" || water.UrupChange != ""
+	return water
 }
 
 // degreesToDirection converts wind direction in degrees to compass direction

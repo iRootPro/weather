@@ -696,17 +696,19 @@ func TestCurrentWeatherWidgetOmitsPartialSecondaryMetrics(t *testing.T) {
 
 func TestBuildCurrentWeatherWaterData(t *testing.T) {
 	water := buildCurrentWeatherWaterData(WaterLevelCardData{
-		HasData:         true,
-		RelativeLevelCm: "168 см над нулём поста",
-		DayChangeText:   "+5 см",
+		HasData:       true,
+		DayChangeText: "-5 см",
+		Upstream: []WaterLevelMiniData{
+			{ObjectName: "Уруп р.", DayChangeText: "-2 см"},
+		},
 	})
-	if !water.HasData || water.RelativeLevel != "168 см над нулём поста" || water.DayChange != "+5 см" {
-		t.Fatalf("water summary = %+v, want relative level and daily change", water)
+	if !water.HasData || water.KubanChange != "-5 см" || water.UrupChange != "-2 см" {
+		t.Fatalf("water summary = %+v, want Kuban and Urup daily changes", water)
 	}
 
-	withoutReference := buildCurrentWeatherWaterData(WaterLevelCardData{HasData: true, LevelM: 161.681})
-	if withoutReference.HasData {
-		t.Fatal("water summary must not fall back to the unexplained absolute water-level mark")
+	withoutDailyChange := buildCurrentWeatherWaterData(WaterLevelCardData{HasData: true, LevelM: 161.681, RelativeLevelCm: "-732 см над нулём поста"})
+	if withoutDailyChange.HasData {
+		t.Fatal("water summary must not fall back to unexplained water-level marks without a daily change")
 	}
 }
 
@@ -726,23 +728,26 @@ func TestCurrentWeatherTemplateRendersMobileWaterSummary(t *testing.T) {
 	data := map[string]any{
 		"Geomagnetic": map[string]bool{"HasData": false},
 		"Water": currentWeatherWaterData{
-			HasData:       true,
-			RelativeLevel: "168 см над нулём поста",
-			DayChange:     "+5 см",
+			HasData:     true,
+			KubanChange: "-5 см",
+			UrupChange:  "-2 см",
 		},
 	}
 	if err := tmpl.Execute(&output, data); err != nil {
 		t.Fatalf("Execute() error = %v", err)
 	}
 
-	for _, expected := range []string{`href="/detail/water-level"`, `sm:hidden`, "Кубань", "168 см над нулём поста", "&#43;5 см", "за 24 ч"} {
+	for _, expected := range []string{`href="/detail/water-level"`, `sm:hidden`, `aria-label="Изменение уровня рек за сутки"`, "Кубань", "Уруп", "-5 см", "-2 см", "за сутки", "whitespace-nowrap"} {
 		if !bytes.Contains(output.Bytes(), []byte(expected)) {
 			t.Errorf("mobile water summary is missing %s", expected)
 		}
 	}
+	if bytes.Contains(output.Bytes(), []byte("над нулём поста")) {
+		t.Fatal("mobile water summary must not render an unexplained absolute level")
+	}
 }
 
-func TestCurrentWeatherTemplateOmitsWaterDailyChangeWhenUnavailable(t *testing.T) {
+func TestCurrentWeatherTemplateOmitsUrupWithoutDailyChange(t *testing.T) {
 	_, filename, _, ok := runtime.Caller(0)
 	if !ok {
 		t.Fatal("could not locate test file")
@@ -758,15 +763,15 @@ func TestCurrentWeatherTemplateOmitsWaterDailyChangeWhenUnavailable(t *testing.T
 	if err := tmpl.Execute(&output, map[string]any{
 		"Geomagnetic": map[string]bool{"HasData": false},
 		"Water": currentWeatherWaterData{
-			HasData:       true,
-			RelativeLevel: "168 см над нулём поста",
+			HasData:     true,
+			KubanChange: "-5 см",
 		},
 	}); err != nil {
 		t.Fatalf("Execute() error = %v", err)
 	}
 
-	if bytes.Contains(output.Bytes(), []byte("за 24 ч")) {
-		t.Fatal("mobile water summary must omit the daily-change label when no daily change is available")
+	if bytes.Contains(output.Bytes(), []byte("Уруп")) {
+		t.Fatal("mobile water summary must omit Urup when its daily change is unavailable")
 	}
 }
 
