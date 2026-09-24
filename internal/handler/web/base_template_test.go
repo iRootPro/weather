@@ -99,7 +99,7 @@ func TestBaseTemplateRendersAccessibleNavigation(t *testing.T) {
 		`prefers-reduced-motion: reduce`,
 		`.ui-chart-panel`,
 		`.ui-chart-plot`,
-		`.ui-chart-plot-with-legend`,
+		`.ui-chart-plot-compact`,
 		`.ui-chart-data`,
 		`aria-label="Главная"`,
 		`aria-label="История"`,
@@ -396,7 +396,7 @@ func TestChartTemplatesRenderAccessibleDataControls(t *testing.T) {
 
 	h := &Handler{templatesDir: filepath.Join(filepath.Dir(filename), "..", "..", "web", "templates")}
 	pages := map[string][]string{
-		"dashboard.html": {"tempChart", "humidityChart", "pressureChart", "windChart", "solarChart", "rainChart"},
+		"dashboard.html": {"tempChart", "humidityChart", "pressureChart", "windChart", "solarChart"},
 		"history.html":   {"historyTempChart", "historyHumidityChart", "historyPressureChart", "historyWindChart", "historyRainChart", "historySolarChart"},
 	}
 	for page, chartIDs := range pages {
@@ -425,6 +425,19 @@ func TestChartTemplatesRenderAccessibleDataControls(t *testing.T) {
 					t.Errorf("rendered template is missing an accessible name for %s", chartID)
 				}
 			}
+			if page == "dashboard.html" {
+				for _, expected := range []string{
+					`id="rainDailyChart" role="img" aria-label=`,
+					`id="rainRateChart" role="img" aria-label=`,
+					`id="rainChart-summary"`, `id="rainChart-details"`, `id="rainChart-table"`,
+					`aria-describedby="rainDailyChart-summary rainChart-summary"`,
+					`aria-describedby="rainRateChart-summary rainChart-summary"`,
+				} {
+					if !bytes.Contains(output.Bytes(), []byte(expected)) {
+						t.Errorf("rendered dashboard is missing combined rain accessibility control %s", expected)
+					}
+				}
+			}
 		})
 	}
 }
@@ -447,7 +460,7 @@ func TestChartTemplatesUseCurrentChartsScriptVersion(t *testing.T) {
 			if err := tmpl.Execute(&output, PageData{}); err != nil {
 				t.Fatalf("Execute() error = %v", err)
 			}
-			const currentChartsScript = `<script src="/static/js/charts.js?v=9"></script>`
+			const currentChartsScript = `<script src="/static/js/charts.js?v=10"></script>`
 			if bytes.Count(output.Bytes(), []byte(currentChartsScript)) != 1 {
 				t.Fatalf("rendered template must contain exactly one current charts script reference: %s", currentChartsScript)
 			}
@@ -471,6 +484,9 @@ func TestChartsScriptRendersMobileDataCards(t *testing.T) {
 
 	for _, expected := range []string{
 		"function renderChartDataCards",
+		"function renderCombinedRainTable",
+		"Осадки за день, мм",
+		"Интенсивность, мм/ч",
 		"window.matchMedia('(max-width: 639px)')",
 		"grid-cols-[minmax(0,1fr)_auto]",
 		"details[id$=\"-details\"][open]",
@@ -501,17 +517,17 @@ func TestDashboardTemplatePrioritizesWeatherBeforeTelegramPromotion(t *testing.T
 	for _, expected := range []string{
 		`ui-chart-panel`,
 		`aria-pressed="true"`,
-		`aria-label="Интервал графиков"`,
+		`aria-label="Шаг данных"`,
 		`id="weather-events"`,
 		`id="charts-24h"`,
-		`ui-chart-plot`, `ui-chart-plot-with-legend`, `ui-chart-data`,
+		`ui-chart-plot`, `ui-chart-plot-compact`, `ui-chart-data`,
 		`id="sun-times"`,
 		`id="telegram-bot-promo"`,
 		`syncChartVisibility`,
 		`desktopEventJournal`,
 		`eventJournalOpen`,
 		`<h1 class="sr-only">Погода в Армавире</h1>`,
-		`<h2 class="ui-section-heading sr-only sm:not-sr-only px-4 pt-4 sm:px-6 sm:pt-6">Графики за 24 часа</h2>`,
+		`<h2 class="ui-section-heading sr-only sm:not-sr-only px-4 pt-4 sm:px-6 sm:pt-6">Динамика погоды</h2>`,
 		`lg:grid-cols-12`,
 		`id="current-weather" class="order-1 lg:col-span-8"`,
 		`aria-label="Прогноз"`,
@@ -544,7 +560,7 @@ func TestDashboardTemplatePrioritizesWeatherBeforeTelegramPromotion(t *testing.T
 	if bytes.Contains(output.Bytes(), []byte(`<h1 class="ui-page-header">`)) {
 		t.Fatal("dashboard h1 must stay visually hidden because the application header already provides the location context")
 	}
-	chartHeadingIndex := bytes.Index(output.Bytes(), []byte(`<h2 class="ui-section-heading sr-only sm:not-sr-only px-4 pt-4 sm:px-6 sm:pt-6">Графики за 24 часа</h2>`))
+	chartHeadingIndex := bytes.Index(output.Bytes(), []byte(`<h2 class="ui-section-heading sr-only sm:not-sr-only px-4 pt-4 sm:px-6 sm:pt-6">Динамика погоды</h2>`))
 	chartDetailsIndex := bytes.Index(output.Bytes(), []byte(`<details id="charts-24h">`))
 	if chartHeadingIndex < 0 || chartHeadingIndex > chartDetailsIndex {
 		t.Fatal("chart heading must stay outside the collapsed mobile disclosure")
