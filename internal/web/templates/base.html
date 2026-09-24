@@ -152,6 +152,66 @@
             box-shadow: var(--ui-shadow);
         }
 
+        .ui-weather-icon {
+            display: block;
+            height: 1.75rem;
+            width: 1.75rem;
+            color: var(--ui-text-muted);
+        }
+
+        .ui-forecast-hourly .ui-weather-icon {
+            height: 1.25rem;
+            width: 1.25rem;
+        }
+
+        @media (min-width: 1024px) {
+            .ui-current-metric {
+                align-items: flex-start;
+                background: var(--ui-surface);
+                border: 0;
+                border-radius: 0;
+                box-shadow: none;
+                display: flex !important;
+                flex-direction: column;
+                min-height: 10.5rem;
+            }
+
+            .ui-current-metric:hover {
+                background: var(--ui-surface-subtle);
+                border-color: transparent;
+                box-shadow: none;
+            }
+
+            .ui-current-metric .ui-metric-label {
+                margin-top: 0;
+                order: 1;
+            }
+
+            .ui-current-metric .ui-current-value,
+            .ui-current-metric .ui-current-value * {
+                color: var(--ui-text) !important;
+            }
+
+            .ui-current-metric .ui-current-value {
+                font-size: 1.875rem !important;
+                line-height: 1.15;
+                margin-top: 0.5rem;
+                order: 2;
+            }
+
+            .ui-current-metric > :not(.ui-metric-label):not(.ui-current-value) {
+                order: 3;
+            }
+
+            .ui-current-metric .ui-metric-unit {
+                margin-top: 0.125rem;
+            }
+
+            .ui-water-level-value > p:last-child {
+                font-size: 1.25rem;
+            }
+        }
+
         .ui-chart-panel {
             background: var(--ui-surface);
             border: 1px solid var(--ui-border);

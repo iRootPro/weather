@@ -111,6 +111,37 @@ var templateFuncs = template.FuncMap{
 		}
 		return template.JS(data)
 	},
+	"weatherIcon": weatherIcon,
+}
+
+// weatherIcon renders a small, predictable SVG from the forecast's WMO code.
+// The markup is static for every branch, so it is safe to mark as template HTML.
+func weatherIcon(code int16) template.HTML {
+	const svgStart = `<svg class="ui-weather-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" aria-hidden="true" data-weather-icon="true">`
+	const svgEnd = `</svg>`
+
+	var path string
+	switch {
+	case code == 0:
+		path = `<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>`
+	case code == 1 || code == 2:
+		path = `<path d="M12 3v2m0 12v2m7-7h2M3 12h2m11.95-4.95l1.41-1.41M5.64 18.36l1.41-1.41"/><circle cx="12" cy="12" r="3.5"/><path d="M5 18h12a3 3 0 0 0 .3-5.98A5.5 5.5 0 0 0 7 10.5 3.75 3.75 0 0 0 5 18Z"/>`
+	case code == 3:
+		path = `<path d="M5 18h12a3 3 0 0 0 .3-5.98A5.5 5.5 0 0 0 7 10.5 3.75 3.75 0 0 0 5 18Z"/>`
+	case code == 45 || code == 48:
+		path = `<path d="M5 11h14M3 15h18M6 19h12"/>`
+	case code >= 51 && code <= 57:
+		path = `<path d="M5 14h12a3 3 0 0 0 .3-5.98A5.5 5.5 0 0 0 7 6.5 3.75 3.75 0 0 0 5 14Z"/><path d="M8 17l-1 2m5-2-1 2m5-2-1 2"/>`
+	case code >= 61 && code <= 67 || code >= 80 && code <= 82:
+		path = `<path d="M5 13h12a3 3 0 0 0 .3-5.98A5.5 5.5 0 0 0 7 5.5 3.75 3.75 0 0 0 5 13Z"/><path d="M8 16l-1 3m5-3-1 3m5-3-1 3"/>`
+	case code >= 71 && code <= 77 || code >= 85 && code <= 86:
+		path = `<path d="M5 13h12a3 3 0 0 0 .3-5.98A5.5 5.5 0 0 0 7 5.5 3.75 3.75 0 0 0 5 13Z"/><path d="M8 17h.01M12 17h.01M16 17h.01m-8 3h.01M12 20h.01M16 20h.01"/>`
+	case code == 95 || code == 96 || code == 99:
+		path = `<path d="M5 13h12a3 3 0 0 0 .3-5.98A5.5 5.5 0 0 0 7 5.5 3.75 3.75 0 0 0 5 13Z"/><path d="m12 15-2 4h3l-1 3 3-5h-3l1-2"/>`
+	default:
+		path = `<circle cx="12" cy="12" r="8"/><path d="M12 8v4m0 4h.01"/>`
+	}
+	return template.HTML(svgStart + path + svgEnd)
 }
 
 func (h *Handler) parseTemplate(name string) (*template.Template, error) {

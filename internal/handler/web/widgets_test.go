@@ -1,6 +1,7 @@
 package web
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -58,5 +59,38 @@ func TestBuildForecastCardsKeepsCompactForecastDataAndAccessibleNames(t *testing
 	}
 	if got, want := cards[8].AccessibleLabel, "Вт, Облачно, 16/26°"; got != want {
 		t.Errorf("cards[8].AccessibleLabel = %q, want %q", got, want)
+	}
+}
+
+func TestWeatherIconMapsKnownWMOCodesAndUsesUnknownFallback(t *testing.T) {
+	tests := []struct {
+		name     string
+		code     int16
+		contains string
+	}{
+		{name: "clear", code: 0, contains: `r="4"`},
+		{name: "partly cloudy", code: 1, contains: `r="3.5"`},
+		{name: "cloudy", code: 3, contains: `M5 18h12`},
+		{name: "fog", code: 45, contains: `M5 11h14`},
+		{name: "drizzle", code: 51, contains: `M8 17l-1 2`},
+		{name: "rain", code: 63, contains: `M8 16l-1 3`},
+		{name: "snow", code: 73, contains: `M8 17h.01`},
+		{name: "thunder", code: 95, contains: `m12 15-2 4`},
+		{name: "thunder with light hail", code: 96, contains: `m12 15-2 4`},
+		{name: "thunder with hail", code: 99, contains: `m12 15-2 4`},
+		{name: "unknown positive", code: 100, contains: `r="8"`},
+		{name: "unknown negative", code: -1, contains: `r="8"`},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			icon := string(weatherIcon(test.code))
+			if !strings.Contains(icon, `<svg`) || !strings.Contains(icon, `data-weather-icon="true"`) {
+				t.Fatalf("weatherIcon(%d) = %q, want static SVG", test.code, icon)
+			}
+			if !strings.Contains(icon, test.contains) {
+				t.Errorf("weatherIcon(%d) = %q, want %q", test.code, icon, test.contains)
+			}
+		})
 	}
 }

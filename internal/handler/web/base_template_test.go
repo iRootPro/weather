@@ -508,13 +508,15 @@ func TestDashboardTemplatePrioritizesWeatherBeforeTelegramPromotion(t *testing.T
 		`id="sun-times"`,
 		`id="telegram-bot-promo"`,
 		`syncChartVisibility`,
+		`desktopEventJournal`,
+		`eventJournalOpen`,
 		`<h1 class="sr-only">Погода в Армавире</h1>`,
 		`<h2 class="ui-section-heading sr-only sm:not-sr-only px-4 pt-4 sm:px-6 sm:pt-6">Графики за 24 часа</h2>`,
 		`lg:grid-cols-12`,
 		`id="current-weather" class="order-1 lg:col-span-8"`,
-		`aria-label="Прогноз и погодные события"`,
+		`aria-label="Прогноз"`,
 		`contents order-2 lg:col-span-4 lg:flex lg:flex-col lg:gap-6`,
-		`id="weather-events" class="order-2 empty:hidden lg:order-2"`,
+		`id="weather-events" class="order-2 empty:hidden lg:order-7 lg:col-span-full"`,
 		`id="forecast" class="order-3 lg:order-1"`,
 		`id="water-level" class="order-4 lg:col-span-6"`,
 		`id="sun-times" class="order-5 lg:col-span-6"`,
@@ -530,7 +532,7 @@ func TestDashboardTemplatePrioritizesWeatherBeforeTelegramPromotion(t *testing.T
 	sunIndex := bytes.Index(output.Bytes(), []byte(`id="sun-times"`))
 	chartsIndex := bytes.Index(output.Bytes(), []byte(`id="charts-24h"`))
 	telegramIndex := bytes.Index(output.Bytes(), []byte(`id="telegram-bot-promo"`))
-	if eventsIndex >= forecastIndex || forecastIndex >= waterIndex || waterIndex >= sunIndex || sunIndex >= chartsIndex || chartsIndex >= telegramIndex {
+	if forecastIndex >= waterIndex || waterIndex >= sunIndex || sunIndex >= chartsIndex || chartsIndex >= eventsIndex || eventsIndex >= telegramIndex {
 		t.Fatal("dashboard content order changed")
 	}
 	if bytes.Contains(output.Bytes(), []byte(`id="daily-stats"`)) || bytes.Contains(output.Bytes(), []byte(`href="#charts-24h"`)) {
@@ -882,7 +884,7 @@ func TestForecastTemplateUsesCompactGridAndAccessibleLabels(t *testing.T) {
 		t.Fatalf("Execute() error = %v", err)
 	}
 
-	for _, expected := range []string{"grid grid-cols-3", "lg:hidden", `aria-label="Периоды прогноза"`, `aria-label="Прогноз на ближайшие часы"`, `aria-label="Прогноз на ближайшие дни"`, "Ближайшие дни", `class="sr-only">12:00, Ясно, 20°`, `aria-hidden="true"`, "💧", "40%"} {
+	for _, expected := range []string{"grid grid-cols-3", "lg:hidden", `aria-label="Периоды прогноза"`, `aria-label="Прогноз на ближайшие часы"`, `aria-label="Прогноз на ближайшие дни"`, "Ближайшие дни", `class="sr-only">12:00, Ясно, 20°`, `aria-hidden="true"`, "💧", "40%", `data-weather-icon="true"`, "ui-forecast-hourly", "flex-col items-center", "px-2 py-2"} {
 		if !bytes.Contains(output.Bytes(), []byte(expected)) {
 			t.Errorf("rendered forecast is missing %s", expected)
 		}

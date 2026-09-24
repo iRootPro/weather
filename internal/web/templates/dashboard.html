@@ -17,14 +17,7 @@
         </div>
     </div>
 
-    <aside class="contents order-2 lg:col-span-4 lg:flex lg:flex-col lg:gap-6" aria-label="Прогноз и погодные события">
-        <!-- Weather Events -->
-        <div id="weather-events" class="order-2 empty:hidden lg:order-2"
-             hx-get="/widgets/events"
-             hx-trigger="load, every 300s"
-             hx-swap="innerHTML">
-        </div>
-
+    <aside class="contents order-2 lg:col-span-4 lg:flex lg:flex-col lg:gap-6" aria-label="Прогноз">
         <!-- Forecast -->
         <div id="forecast" class="order-3 lg:order-1"
              hx-get="/widgets/forecast"
@@ -152,7 +145,14 @@
     </details>
     </section>
 
-    <a id="telegram-bot-promo" href="https://t.me/ArmavirMeteoBot" target="_blank" rel="noopener noreferrer" class="ui-surface order-7 flex min-h-11 items-center justify-between gap-3 px-4 py-3 text-sm lg:col-span-full">
+    <!-- Weather Events: desktop journal follows the charts instead of occupying the forecast column. -->
+    <div id="weather-events" class="order-2 empty:hidden lg:order-7 lg:col-span-full"
+         hx-get="/widgets/events"
+         hx-trigger="load, every 300s"
+         hx-swap="innerHTML">
+    </div>
+
+    <a id="telegram-bot-promo" href="https://t.me/ArmavirMeteoBot" target="_blank" rel="noopener noreferrer" class="ui-surface order-7 flex min-h-11 items-center justify-between gap-3 px-4 py-3 text-sm text-gray-600 dark:text-gray-300 lg:order-8 lg:col-span-full">
         <span class="text-gray-700 dark:text-gray-200"><strong>Telegram-бот</strong> · уведомления о погоде</span>
         <span class="shrink-0 font-semibold text-blue-700 dark:text-blue-300">Открыть →</span>
     </a>
@@ -165,7 +165,9 @@
     document.addEventListener('DOMContentLoaded', function() {
         const chartDetails = document.getElementById('charts-24h');
         const desktopCharts = window.matchMedia('(min-width: 640px)');
+        const desktopEventJournal = window.matchMedia('(min-width: 1024px)');
         let chartsInitialized = false;
+        const eventJournalOpen = { desktop: false, mobile: true };
 
         function initializeCharts() {
             if (chartsInitialized) return;
@@ -190,13 +192,32 @@
             chartDetails.open = false;
         }
 
+        function syncEventJournal() {
+            const eventJournal = document.getElementById('weather-events').querySelector('details');
+            if (!eventJournal) return;
+            eventJournal.open = desktopEventJournal.matches ? eventJournalOpen.desktop : eventJournalOpen.mobile;
+        }
+
         chartDetails.addEventListener('toggle', function() {
             if (!chartDetails.open) return;
             initializeCharts();
             resizeCharts();
         });
         desktopCharts.addEventListener('change', syncChartVisibility);
+        desktopEventJournal.addEventListener('change', function() {
+            eventJournalOpen[desktopEventJournal.matches ? 'desktop' : 'mobile'] = !desktopEventJournal.matches;
+            syncEventJournal();
+        });
+        document.body.addEventListener('toggle', function(event) {
+            if (event.target.closest('#weather-events')) {
+                eventJournalOpen[desktopEventJournal.matches ? 'desktop' : 'mobile'] = event.target.open;
+            }
+        }, true);
+        document.body.addEventListener('htmx:afterSwap', function(event) {
+            if (event.target.id === 'weather-events') syncEventJournal();
+        });
         syncChartVisibility();
+        syncEventJournal();
     });
 </script>
 {{end}}

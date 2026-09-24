@@ -11,15 +11,15 @@
             </div>
         </div>
 
-        <div class="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(15rem,auto)] sm:items-end">
-            <div>
+        <div class="ui-water-summary mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(15rem,auto)] sm:items-end">
+            <div class="ui-water-level-value">
                 <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">отметка уровня</p>
                 <p class="mt-1 text-4xl font-black leading-none tracking-tight text-gray-900 dark:text-white">{{printf "%.3f" .LevelM}} м</p>
             </div>
             <dl class="grid grid-cols-2 gap-3">
                 <div class="rounded-lg border border-white/60 bg-white/55 px-3 py-2 dark:border-white/10 dark:bg-gray-950/25">
                     <dt class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">за 24 часа</dt>
-                    <dd class="mt-1 text-sm font-bold {{.TrendClass}}">{{if .DayChangeText}}{{.DayChangeText}}{{else}}нет данных{{end}}</dd>
+                    <dd class="mt-1 text-sm font-bold {{.TrendClass}} lg:text-2xl">{{if .DayChangeText}}{{.DayChangeText}}{{else}}нет данных{{end}}</dd>
                     {{if .TrendText}}<p class="mt-0.5 text-xs font-semibold {{.TrendClass}}">{{.TrendText}}</p>{{end}}
                 </div>
                 <div class="rounded-lg border border-white/60 bg-white/55 px-3 py-2 dark:border-white/10 dark:bg-gray-950/25">

@@ -554,6 +554,7 @@ func (h *Handler) WeatherEventsWidget(w http.ResponseWriter, r *http.Request) {
 type forecastCard struct {
 	Label                    string
 	Icon                     string
+	WeatherCode              int16
 	TempMain                 string
 	AccessibleLabel          string
 	PrecipitationProbability int16
@@ -577,6 +578,7 @@ func buildForecastCards(now time.Time, hourlyForecast []models.HourlyForecast, d
 		cards = append(cards, forecastCard{
 			Label:                    hf.Time.Format("15:04"),
 			Icon:                     hf.Icon,
+			WeatherCode:              hf.WeatherCode,
 			TempMain:                 temp,
 			AccessibleLabel:          formatForecastAccessibleLabel(hf.Time.Format("15:04"), hf.WeatherDescription, temp, hf.PrecipitationProbability),
 			PrecipitationProbability: hf.PrecipitationProbability,
@@ -598,6 +600,7 @@ func buildForecastCards(now time.Time, hourlyForecast []models.HourlyForecast, d
 		cards = append(cards, forecastCard{
 			Label:                    label,
 			Icon:                     df.Icon,
+			WeatherCode:              df.WeatherCode,
 			TempMain:                 temp,
 			AccessibleLabel:          formatForecastAccessibleLabel(label, df.WeatherDescription, temp, df.PrecipitationProbability),
 			PrecipitationProbability: df.PrecipitationProbability,
