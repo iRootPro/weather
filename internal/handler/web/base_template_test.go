@@ -510,6 +510,12 @@ func TestDashboardTemplatePrioritizesWeatherBeforeTelegramPromotion(t *testing.T
 		`syncChartVisibility`,
 		`<h1 class="sr-only">Погода в Армавире</h1>`,
 		`<h2 class="ui-section-heading sr-only sm:not-sr-only px-4 pt-4 sm:px-6 sm:pt-6">Графики за 24 часа</h2>`,
+		`lg:grid-cols-12`,
+		`id="current-weather" class="order-1 sm:order-none lg:col-span-8"`,
+		`id="weather-events" class="order-2 empty:hidden sm:order-none lg:col-span-4"`,
+		`id="forecast" class="order-3 sm:order-none lg:col-span-full"`,
+		`id="water-level" class="order-4 sm:order-none lg:col-span-6"`,
+		`id="sun-times" class="order-5 sm:order-none lg:col-span-6"`,
 	} {
 		if !bytes.Contains(output.Bytes(), []byte(expected)) {
 			t.Errorf("rendered dashboard is missing %s", expected)

@@ -3,11 +3,11 @@
 {{define "title"}}Погода в Армавире — Метеостанция{{end}}
 
 {{define "content"}}
-<div class="ui-page flex flex-col gap-6 sm:block sm:space-y-6">
+<div class="ui-page flex flex-col gap-6 sm:block sm:space-y-6 lg:grid lg:grid-cols-12 lg:items-start lg:gap-6 lg:space-y-0">
     <h1 class="sr-only">Погода в Армавире</h1>
 
     <!-- Current Weather -->
-    <div id="current-weather" class="order-1 sm:order-none"
+    <div id="current-weather" class="order-1 sm:order-none lg:col-span-8"
          hx-get="/widgets/current"
          hx-trigger="load, every 60s"
          hx-swap="innerHTML">
@@ -18,14 +18,14 @@
     </div>
 
     <!-- Weather Events -->
-    <div id="weather-events" class="order-2 sm:order-none"
+    <div id="weather-events" class="order-2 empty:hidden sm:order-none lg:col-span-4"
          hx-get="/widgets/events"
          hx-trigger="load, every 300s"
          hx-swap="innerHTML">
     </div>
 
     <!-- Forecast -->
-    <div id="forecast" class="order-3 sm:order-none"
+    <div id="forecast" class="order-3 sm:order-none lg:col-span-full"
          hx-get="/widgets/forecast"
          hx-trigger="load, every 3600s"
          hx-swap="innerHTML">
@@ -46,14 +46,14 @@
     </div>
 
     <!-- Water Level -->
-    <div id="water-level" class="order-4 sm:order-none"
+    <div id="water-level" class="order-4 sm:order-none lg:col-span-6"
          hx-get="/widgets/water-level"
          hx-trigger="load, every 600s"
          hx-swap="innerHTML">
     </div>
 
     <!-- Sun Times -->
-    <div id="sun-times" class="order-5 sm:order-none"
+    <div id="sun-times" class="order-5 sm:order-none lg:col-span-6"
          hx-get="/widgets/sun"
          hx-trigger="load"
          hx-swap="innerHTML">
@@ -64,7 +64,7 @@
     </div>
 
     <!-- Charts -->
-    <section class="ui-chart-panel order-6 sm:order-none">
+    <section class="ui-chart-panel order-6 sm:order-none lg:col-span-full">
         <h2 class="ui-section-heading sr-only sm:not-sr-only px-4 pt-4 sm:px-6 sm:pt-6">Графики за 24 часа</h2>
     <details id="charts-24h">
         <summary class="flex min-h-11 cursor-pointer items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white sm:hidden">
@@ -153,7 +153,7 @@
     </details>
     </section>
 
-    <a id="telegram-bot-promo" href="https://t.me/ArmavirMeteoBot" target="_blank" rel="noopener noreferrer" class="ui-surface order-7 flex min-h-11 items-center justify-between gap-3 px-4 py-3 text-sm sm:order-none">
+    <a id="telegram-bot-promo" href="https://t.me/ArmavirMeteoBot" target="_blank" rel="noopener noreferrer" class="ui-surface order-7 flex min-h-11 items-center justify-between gap-3 px-4 py-3 text-sm sm:order-none lg:col-span-full">
         <span class="text-gray-700 dark:text-gray-200"><strong>Telegram-бот</strong> · уведомления о погоде</span>
         <span class="shrink-0 font-semibold text-blue-700 dark:text-blue-300">Открыть →</span>
     </a>
