@@ -558,6 +558,7 @@ type forecastCard struct {
 	AccessibleLabel          string
 	PrecipitationProbability int16
 	HasPrecipitation         bool
+	IsHourly                 bool
 }
 
 func buildForecastCards(now time.Time, hourlyForecast []models.HourlyForecast, dailyForecast []models.DailyForecast) []forecastCard {
@@ -580,6 +581,7 @@ func buildForecastCards(now time.Time, hourlyForecast []models.HourlyForecast, d
 			AccessibleLabel:          formatForecastAccessibleLabel(hf.Time.Format("15:04"), hf.WeatherDescription, temp, hf.PrecipitationProbability),
 			PrecipitationProbability: hf.PrecipitationProbability,
 			HasPrecipitation:         hf.PrecipitationProbability > 0,
+			IsHourly:                 true,
 		})
 	}
 
@@ -648,12 +650,25 @@ func (h *Handler) ForecastWidget(w http.ResponseWriter, r *http.Request) {
 
 	cards := buildForecastCards(now, hourlyForecast, dailyForecast)
 
+	hourlyCards := make([]forecastCard, 0, 3)
+	dailyCards := make([]forecastCard, 0, len(cards))
+	for _, card := range cards {
+		if card.IsHourly {
+			hourlyCards = append(hourlyCards, card)
+		} else {
+			dailyCards = append(dailyCards, card)
+		}
+	}
 	templateData := struct {
-		Cards      []forecastCard
-		NoForecast bool
+		Cards       []forecastCard
+		HourlyCards []forecastCard
+		DailyCards  []forecastCard
+		NoForecast  bool
 	}{
-		Cards:      cards,
-		NoForecast: len(cards) == 0,
+		Cards:       cards,
+		HourlyCards: hourlyCards,
+		DailyCards:  dailyCards,
+		NoForecast:  len(cards) == 0,
 	}
 
 	tmpl, err := h.parsePartial("forecast.html")

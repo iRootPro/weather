@@ -47,6 +47,9 @@ func TestBuildForecastCardsKeepsCompactForecastDataAndAccessibleNames(t *testing
 	if cards[1].TempMain != "23°" || !cards[1].HasPrecipitation {
 		t.Errorf("hourly card = %#v, want compact temperature and precipitation", cards[1])
 	}
+	if !cards[0].IsHourly || !cards[2].IsHourly || cards[3].IsHourly {
+		t.Errorf("forecast card periods = %#v, want three hourly cards followed by daily cards", cards[:4])
+	}
 	if cards[3].TempMain != "11/21°" || !cards[3].HasPrecipitation {
 		t.Errorf("daily card = %#v, want tomorrow's compact range and precipitation", cards[3])
 	}

@@ -8,7 +8,7 @@
     </div>
     {{else}}
 
-    <ul id="forecast-cards" class="grid grid-cols-3 gap-2 sm:grid-cols-5 sm:gap-3 lg:grid-cols-9" aria-label="Периоды прогноза">
+    <ul id="forecast-cards" class="grid grid-cols-3 gap-2 sm:grid-cols-5 sm:gap-3 lg:hidden" aria-label="Периоды прогноза">
         {{range .Cards}}
         <li class="ui-metric-card min-w-0 p-2 text-center sm:p-3">
             <span class="sr-only">{{.AccessibleLabel}}</span>
@@ -32,6 +32,43 @@
         </li>
         {{end}}
     </ul>
+
+    <div class="hidden lg:block">
+        {{if .HourlyCards}}
+        <ul class="grid grid-cols-3 gap-2" aria-label="Прогноз на ближайшие часы">
+            {{range .HourlyCards}}
+            <li class="ui-metric-card min-w-0 p-2 text-center">
+                <span class="sr-only">{{.AccessibleLabel}}</span>
+                <div aria-hidden="true">
+                    <div class="text-xs font-semibold text-gray-700 dark:text-gray-300">{{.Label}}</div>
+                    <div class="my-1 text-xl">{{.Icon}}</div>
+                    <div class="ui-tabular whitespace-nowrap text-sm font-bold text-sky-700 dark:text-sky-300">{{.TempMain}}</div>
+                    {{if .HasPrecipitation}}<div class="mt-1 text-xs font-medium text-blue-700 dark:text-blue-300">💧 <span class="ui-tabular">{{.PrecipitationProbability}}%</span></div>{{end}}
+                </div>
+            </li>
+            {{end}}
+        </ul>
+        {{end}}
+
+        {{if .DailyCards}}
+        <div class="mt-4 border-t border-gray-200 pt-3 dark:border-gray-700">
+            <p class="ui-kicker mb-2">Ближайшие дни</p>
+            <ul class="grid grid-cols-3 gap-2" aria-label="Прогноз на ближайшие дни">
+                {{range .DailyCards}}
+                <li class="ui-metric-card min-w-0 p-2 text-center">
+                    <span class="sr-only">{{.AccessibleLabel}}</span>
+                    <div aria-hidden="true">
+                        <div class="text-xs font-semibold text-gray-700 dark:text-gray-300">{{.Label}}</div>
+                        <div class="my-1 text-xl">{{.Icon}}</div>
+                        <div class="ui-tabular whitespace-nowrap text-sm font-bold text-sky-700 dark:text-sky-300">{{.TempMain}}</div>
+                        {{if .HasPrecipitation}}<div class="mt-1 text-xs font-medium text-blue-700 dark:text-blue-300">💧 <span class="ui-tabular">{{.PrecipitationProbability}}%</span></div>{{end}}
+                    </div>
+                </li>
+                {{end}}
+            </ul>
+        </div>
+        {{end}}
+    </div>
 
     {{end}}
 

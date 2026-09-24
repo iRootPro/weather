@@ -511,11 +511,13 @@ func TestDashboardTemplatePrioritizesWeatherBeforeTelegramPromotion(t *testing.T
 		`<h1 class="sr-only">Погода в Армавире</h1>`,
 		`<h2 class="ui-section-heading sr-only sm:not-sr-only px-4 pt-4 sm:px-6 sm:pt-6">Графики за 24 часа</h2>`,
 		`lg:grid-cols-12`,
-		`id="current-weather" class="order-1 sm:order-none lg:col-span-8"`,
-		`id="weather-events" class="order-2 empty:hidden sm:order-none lg:col-span-4"`,
-		`id="forecast" class="order-3 sm:order-none lg:col-span-full"`,
-		`id="water-level" class="order-4 sm:order-none lg:col-span-6"`,
-		`id="sun-times" class="order-5 sm:order-none lg:col-span-6"`,
+		`id="current-weather" class="order-1 lg:col-span-8"`,
+		`aria-label="Прогноз и погодные события"`,
+		`contents order-2 lg:col-span-4 lg:flex lg:flex-col lg:gap-6`,
+		`id="weather-events" class="order-2 empty:hidden lg:order-2"`,
+		`id="forecast" class="order-3 lg:order-1"`,
+		`id="water-level" class="order-4 lg:col-span-6"`,
+		`id="sun-times" class="order-5 lg:col-span-6"`,
 	} {
 		if !bytes.Contains(output.Bytes(), []byte(expected)) {
 			t.Errorf("rendered dashboard is missing %s", expected)
@@ -797,8 +799,8 @@ func TestWeatherEventsTemplateOmitsEmptyState(t *testing.T) {
 	if err := tmpl.Execute(&output, map[string]any{"Events": []models.WeatherEvent(nil)}); err != nil {
 		t.Fatalf("Execute() error = %v", err)
 	}
-	if bytes.Contains(output.Bytes(), []byte("ui-surface")) {
-		t.Fatal("empty weather events must clear the HTMX target without rendering a card")
+	if output.Len() != 0 {
+		t.Fatalf("empty weather events must clear the HTMX target, got %q", output.String())
 	}
 }
 
@@ -858,30 +860,29 @@ func TestForecastTemplateUsesCompactGridAndAccessibleLabels(t *testing.T) {
 		t.Fatalf("parsePartial() error = %v", err)
 	}
 
-	type forecastCard struct {
-		Label                    string
-		Icon                     string
-		TempMain                 string
-		TempSecondary            string
-		WeatherDescription       string
-		AccessibleLabel          string
-		PrecipitationProbability int16
-		HasPrecipitation         bool
-	}
 	data := struct {
-		Cards      []forecastCard
-		NoForecast bool
-	}{Cards: []forecastCard{{
-		Label: "12:00", Icon: "☀️", TempMain: "20°", TempSecondary: "ощущ. 18°", WeatherDescription: "Ясно",
-		AccessibleLabel: "12:00, Ясно, 20°", PrecipitationProbability: 40, HasPrecipitation: true,
-	}}}
+		Cards       []forecastCard
+		HourlyCards []forecastCard
+		DailyCards  []forecastCard
+		NoForecast  bool
+	}{
+		Cards: []forecastCard{{
+			Label: "12:00", Icon: "☀️", TempMain: "20°", AccessibleLabel: "12:00, Ясно, 20°", PrecipitationProbability: 40, HasPrecipitation: true, IsHourly: true,
+		}},
+		HourlyCards: []forecastCard{{
+			Label: "12:00", Icon: "☀️", TempMain: "20°", AccessibleLabel: "12:00, Ясно, 20°", PrecipitationProbability: 40, HasPrecipitation: true, IsHourly: true,
+		}},
+		DailyCards: []forecastCard{{
+			Label: "Пт", Icon: "☀️", TempMain: "12/20°", AccessibleLabel: "Пт, Ясно, 12/20°",
+		}},
+	}
 
 	var output bytes.Buffer
 	if err := tmpl.Execute(&output, data); err != nil {
 		t.Fatalf("Execute() error = %v", err)
 	}
 
-	for _, expected := range []string{"grid grid-cols-3", "lg:grid-cols-9", `aria-label="Периоды прогноза"`, `class="sr-only">12:00, Ясно, 20°`, `aria-hidden="true"`, "💧", "40%"} {
+	for _, expected := range []string{"grid grid-cols-3", "lg:hidden", `aria-label="Периоды прогноза"`, `aria-label="Прогноз на ближайшие часы"`, `aria-label="Прогноз на ближайшие дни"`, "Ближайшие дни", `class="sr-only">12:00, Ясно, 20°`, `aria-hidden="true"`, "💧", "40%"} {
 		if !bytes.Contains(output.Bytes(), []byte(expected)) {
 			t.Errorf("rendered forecast is missing %s", expected)
 		}
