@@ -96,9 +96,9 @@ func (h *Handler) buildGeomagneticCard(ctx context.Context) GeomagneticCardData 
 		}
 	}
 	card.IsAttention = isGeomagneticAttention(snap.Status, card.PeakLine)
-	if card.IsAttention {
-		card.Sparkline = h.buildSparkline(ctx, now)
-	}
+	// The history gives useful context for both calm and attention states. It is
+	// intentionally compact and uses the same 0–9 Kp scale in every state.
+	card.Sparkline = h.buildSparkline(ctx, now)
 
 	return card
 }

@@ -518,8 +518,8 @@ func TestDashboardTemplatePrioritizesWeatherBeforeTelegramPromotion(t *testing.T
 		`contents order-2 lg:col-span-4 lg:flex lg:flex-col lg:gap-6`,
 		`id="weather-events" class="order-2 empty:hidden lg:order-7 lg:col-span-full"`,
 		`id="forecast" class="order-3 lg:order-1"`,
-		`id="water-level" class="order-4 lg:col-span-6"`,
-		`id="sun-times" class="order-5 lg:col-span-6"`,
+		`id="water-level" class="order-4 lg:hidden"`,
+		`id="sun-times" class="order-5 lg:hidden"`,
 	} {
 		if !bytes.Contains(output.Bytes(), []byte(expected)) {
 			t.Errorf("rendered dashboard is missing %s", expected)
@@ -757,7 +757,7 @@ func TestCurrentWeatherTemplateRendersMobileWaterSummary(t *testing.T) {
 	}
 }
 
-func TestCurrentWeatherTemplateOmitsUrupWithoutDailyChange(t *testing.T) {
+func TestCurrentWeatherTemplateMarksUnavailableDesktopUrupDailyChange(t *testing.T) {
 	_, filename, _, ok := runtime.Caller(0)
 	if !ok {
 		t.Fatal("could not locate test file")
@@ -780,8 +780,38 @@ func TestCurrentWeatherTemplateOmitsUrupWithoutDailyChange(t *testing.T) {
 		t.Fatalf("Execute() error = %v", err)
 	}
 
-	if bytes.Contains(output.Bytes(), []byte("Уруп")) {
-		t.Fatal("mobile water summary must omit Urup when its daily change is unavailable")
+	body := output.String()
+	if !strings.Contains(body, "Уруп") || !strings.Contains(body, "нет данных") {
+		t.Fatal("desktop river column must mark an unavailable daily change explicitly")
+	}
+}
+
+func TestCurrentWeatherTemplateRendersDesktopNaturalConditionsColumns(t *testing.T) {
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("could not locate test file")
+	}
+
+	h := &Handler{templatesDir: filepath.Join(filepath.Dir(filename), "..", "..", "web", "templates")}
+	tmpl, err := h.parsePartial("current_weather.html")
+	if err != nil {
+		t.Fatalf("parsePartial() error = %v", err)
+	}
+
+	var output bytes.Buffer
+	data := map[string]any{
+		"Water":       currentWeatherWaterData{HasData: true, KubanChange: "+3 см", UrupChange: "-1 см"},
+		"Geomagnetic": GeomagneticCardData{HasData: true, Kp: 2.3, StatusHeading: "Спокойно", StatusText: "text-green-700", Sparkline: []SparkBar{{HeightPct: 28, Color: "#22c55e", Title: "Kp 2.3"}}},
+		"Sun":         SunTimesData{HasData: true, Date: "24 сентября", Sunrise: "06:12", Sunset: "18:24", DayLength: "12ч 12мин", Dawn: "05:40", Dusk: "18:56", LightLength: "13ч 16мин", DayChangeDay: "+3мин", DayChangeWeek: "+21мин", DayChangeMonth: "+1ч 12мин", LightChangeDay: "+4мин", LightChangeWeek: "+28мин", LightChangeMonth: "+1ч 24мин", HasMoonData: true, MoonPhase: "Растущая луна", MoonIllumination: 35, Moonrise: "09:00", Moonset: "21:00", MoonAge: 5.2, NextPhaseName: "До полнолуния", DaysToNextPhase: 9},
+	}
+	if err := tmpl.Execute(&output, data); err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+
+	for _, expected := range []string{"lg:grid-cols-3", "Реки", "Геомагнитная обстановка", "Солнце и луна", "3 см", "1 см", "Kp 2.3", "Все астроданные", `id="current-astronomy-details"`, "за сутки", "24 сентября", "День за неделю", "День за месяц", "Светлое время вчера", "Светлое время за неделю", "Светлое время за месяц", "21мин", "1ч 12мин", "4мин", "28мин", "1ч 24мин"} {
+		if !strings.Contains(output.String(), expected) {
+			t.Errorf("desktop natural conditions is missing %q", expected)
+		}
 	}
 }
 

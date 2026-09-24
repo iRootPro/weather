@@ -38,14 +38,14 @@
     </aside>
 
     <!-- Water Level -->
-    <div id="water-level" class="order-4 lg:col-span-6"
+    <div id="water-level" class="order-4 lg:hidden"
          hx-get="/widgets/water-level"
          hx-trigger="load, every 600s"
          hx-swap="innerHTML">
     </div>
 
     <!-- Sun Times -->
-    <div id="sun-times" class="order-5 lg:col-span-6"
+    <div id="sun-times" class="order-5 lg:hidden"
          hx-get="/widgets/sun"
          hx-trigger="load"
          hx-swap="innerHTML">
@@ -168,6 +168,7 @@
         const desktopEventJournal = window.matchMedia('(min-width: 1024px)');
         let chartsInitialized = false;
         const eventJournalOpen = { desktop: false, mobile: true };
+        let astronomyDetailsOpen = false;
 
         function initializeCharts() {
             if (chartsInitialized) return;
@@ -215,7 +216,14 @@
         }, true);
         document.body.addEventListener('htmx:afterSwap', function(event) {
             if (event.target.id === 'weather-events') syncEventJournal();
+            if (event.target.id === 'current-weather') {
+                const astronomyDetails = event.target.querySelector('#current-astronomy-details');
+                if (astronomyDetails) astronomyDetails.open = astronomyDetailsOpen;
+            }
         });
+        document.body.addEventListener('toggle', function(event) {
+            if (event.target.id === 'current-astronomy-details') astronomyDetailsOpen = event.target.open;
+        }, true);
         syncChartVisibility();
         syncEventJournal();
     });

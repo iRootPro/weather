@@ -116,11 +116,13 @@ func (h *Handler) CurrentWeatherWidget(w http.ResponseWriter, r *http.Request) {
 		// Геомагнитная активность
 		Geomagnetic GeomagneticCardData
 		Water       currentWeatherWaterData
+		Sun         SunTimesData
 	}{
 		ObservationTime: data.Time.Format("15:04"),
 		UpdatedAt:       time.Now().Format("15:04"),
 		Geomagnetic:     h.buildGeomagneticCard(r.Context()),
 		Water:           buildCurrentWeatherWaterData(h.buildCachedWaterLevelCard(r)),
+		Sun:             h.buildSunTimesData(time.Now()),
 	}
 
 	if data.TempOutdoor != nil {
@@ -346,14 +348,39 @@ func formatDurationChange(d time.Duration) string {
 	return fmt.Sprintf("%s%dмин %dсек", sign, int(d.Minutes()), seconds)
 }
 
-// SunTimesWidget renders the sun and moon times widget
-func (h *Handler) SunTimesWidget(w http.ResponseWriter, r *http.Request) {
-	slog.Info("SunTimesWidget called")
+// SunTimesData is the shared presentation model for the dashboard astronomy
+// summary and its expanded details.
+type SunTimesData struct {
+	HasData             bool
+	Date                string
+	Dawn                string
+	Sunrise             string
+	Sunset              string
+	Dusk                string
+	DayLength           string
+	LightLength         string
+	DayChangeDay        string
+	DayChangeWeek       string
+	DayChangeMonth      string
+	LightChangeDay      string
+	LightChangeWeek     string
+	LightChangeMonth    string
+	DayChangePositive   bool
+	LightChangePositive bool
+	HasMoonData         bool
+	MoonPhase           string
+	MoonPhaseIcon       string
+	MoonIllumination    float64
+	MoonAge             float64
+	Moonrise            string
+	Moonset             string
+	DaysToNextPhase     float64
+	NextPhaseName       string
+}
 
+func (h *Handler) buildSunTimesData(now time.Time) SunTimesData {
 	if h.sunService == nil {
-		slog.Error("sun service is nil")
-		http.Error(w, "Sun service not configured", http.StatusInternalServerError)
-		return
+		return SunTimesData{}
 	}
 
 	sunTimes := h.sunService.GetTodaySunTimesWithComparison()
@@ -362,45 +389,11 @@ func (h *Handler) SunTimesWidget(w http.ResponseWriter, r *http.Request) {
 	var moonData *service.MoonData
 	if h.moonService != nil {
 		moonData = h.moonService.GetTodayMoonData()
-		if moonData != nil {
-			slog.Info("Moon data calculated",
-				"age", moonData.Age,
-				"phase", moonData.PhaseName,
-				"illumination", moonData.Illumination,
-				"moonrise", moonData.Moonrise.Format("15:04"),
-				"moonset", moonData.Moonset.Format("15:04"))
-		}
 	}
 
-	templateData := struct {
-		Date             string
-		Dawn             string
-		Sunrise          string
-		Sunset           string
-		Dusk             string
-		DayLength        string
-		LightLength      string
-		DayChangeDay     string
-		DayChangeWeek    string
-		DayChangeMonth   string
-		LightChangeDay   string
-		LightChangeWeek  string
-		LightChangeMonth string
-		// For CSS classes (positive = growing day)
-		DayChangePositive   bool
-		LightChangePositive bool
-		// Moon data
-		HasMoonData      bool
-		MoonPhase        string
-		MoonPhaseIcon    string
-		MoonIllumination float64
-		MoonAge          float64
-		Moonrise         string
-		Moonset          string
-		DaysToNextPhase  float64
-		NextPhaseName    string
-	}{
-		Date:                formatRussianDateShort(time.Now()),
+	templateData := SunTimesData{
+		HasData:             true,
+		Date:                formatRussianDateShort(now),
 		Dawn:                sunTimes.Dawn.Format("15:04"),
 		Sunrise:             sunTimes.Sunrise.Format("15:04"),
 		Sunset:              sunTimes.Sunset.Format("15:04"),
@@ -418,7 +411,7 @@ func (h *Handler) SunTimesWidget(w http.ResponseWriter, r *http.Request) {
 		HasMoonData:         moonData != nil,
 	}
 
-	// Add moon data if available
+	// Add moon data if available.
 	if moonData != nil {
 		templateData.MoonPhase = moonData.PhaseName
 		templateData.MoonPhaseIcon = moonData.PhaseIcon
@@ -510,6 +503,19 @@ func (h *Handler) SunTimesWidget(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	return templateData
+}
+
+// SunTimesWidget renders the sun and moon times widget.
+func (h *Handler) SunTimesWidget(w http.ResponseWriter, r *http.Request) {
+	slog.Info("SunTimesWidget called")
+	if h.sunService == nil {
+		slog.Error("sun service is nil")
+		http.Error(w, "Sun service not configured", http.StatusInternalServerError)
+		return
+	}
+
+	templateData := h.buildSunTimesData(time.Now())
 	tmpl, err := h.parsePartial("sun_times.html")
 	if err != nil {
 		slog.Error("failed to parse sun times template", "error", err)

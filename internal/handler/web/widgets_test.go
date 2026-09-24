@@ -94,3 +94,10 @@ func TestWeatherIconMapsKnownWMOCodesAndUsesUnknownFallback(t *testing.T) {
 		})
 	}
 }
+
+func TestBuildSunTimesDataWithoutServiceIsUnavailable(t *testing.T) {
+	h := &Handler{}
+	if data := h.buildSunTimesData(time.Now()); data.HasData {
+		t.Fatal("sun data must be unavailable when the sun service is not configured")
+	}
+}
