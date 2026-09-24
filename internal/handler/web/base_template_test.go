@@ -930,7 +930,7 @@ func TestForecastTemplateUsesCompactGridAndAccessibleLabels(t *testing.T) {
 		t.Fatalf("Execute() error = %v", err)
 	}
 
-	for _, expected := range []string{"grid grid-cols-3", "lg:hidden", `aria-label="Периоды прогноза"`, `aria-label="Прогноз на ближайшие часы"`, `aria-label="Прогноз на ближайшие дни"`, "Ближайшие дни", `class="sr-only">12:00, Ясно, 20°`, `aria-hidden="true"`, "💧", "40%", `data-weather-icon="true"`, "ui-forecast-hourly", "flex-col items-center", "px-2 py-2"} {
+	for _, expected := range []string{"grid grid-cols-3", "lg:hidden", `aria-label="Периоды прогноза"`, `aria-label="Прогноз на ближайшие часы"`, `aria-label="Прогноз на ближайшие дни"`, "Ближайшие дни", `class="sr-only">12:00, Ясно, 20°`, `aria-hidden="true"`, "40%", `data-icon="droplet"`, `data-icon="sun"`, "ui-forecast-hourly", "flex-col items-center", "px-2 py-2"} {
 		if !bytes.Contains(output.Bytes(), []byte(expected)) {
 			t.Errorf("rendered forecast is missing %s", expected)
 		}

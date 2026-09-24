@@ -152,17 +152,23 @@
             box-shadow: var(--ui-shadow);
         }
 
-        .ui-weather-icon {
+        .ui-icon {
             display: block;
-            height: 1.75rem;
-            width: 1.75rem;
+            height: 100%;
+            width: 100%;
+        }
+
+        .ui-weather-icon {
+            height: 1.5rem;
+            width: 1.5rem;
             color: var(--ui-text-muted);
         }
 
-        .ui-forecast-hourly .ui-weather-icon {
-            height: 1.25rem;
-            width: 1.25rem;
+        @media (min-width: 640px) {
+            .ui-weather-icon { height: 1.75rem; width: 1.75rem; }
         }
+
+        .ui-forecast-hourly .ui-weather-icon { height: 1.5rem; width: 1.5rem; }
 
         @media (min-width: 1024px) {
             .ui-current-metric {

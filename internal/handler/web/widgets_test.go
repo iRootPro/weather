@@ -66,32 +66,84 @@ func TestWeatherIconMapsKnownWMOCodesAndUsesUnknownFallback(t *testing.T) {
 	tests := []struct {
 		name     string
 		code     int16
-		contains string
+		iconName string
 	}{
-		{name: "clear", code: 0, contains: `r="4"`},
-		{name: "partly cloudy", code: 1, contains: `r="3.5"`},
-		{name: "cloudy", code: 3, contains: `M5 18h12`},
-		{name: "fog", code: 45, contains: `M5 11h14`},
-		{name: "drizzle", code: 51, contains: `M8 17l-1 2`},
-		{name: "rain", code: 63, contains: `M8 16l-1 3`},
-		{name: "snow", code: 73, contains: `M8 17h.01`},
-		{name: "thunder", code: 95, contains: `m12 15-2 4`},
-		{name: "thunder with light hail", code: 96, contains: `m12 15-2 4`},
-		{name: "thunder with hail", code: 99, contains: `m12 15-2 4`},
-		{name: "unknown positive", code: 100, contains: `r="8"`},
-		{name: "unknown negative", code: -1, contains: `r="8"`},
+		{name: "clear", code: 0, iconName: "sun"},
+		{name: "partly cloudy", code: 1, iconName: "cloud-sun"},
+		{name: "cloudy", code: 3, iconName: "cloud"},
+		{name: "fog", code: 45, iconName: "cloud-fog"},
+		{name: "drizzle", code: 51, iconName: "cloud-drizzle"},
+		{name: "rain", code: 63, iconName: "cloud-rain"},
+		{name: "snow", code: 73, iconName: "cloud-snow"},
+		{name: "thunder", code: 95, iconName: "cloud-lightning"},
+		{name: "thunder with light hail", code: 96, iconName: "cloud-lightning"},
+		{name: "thunder with hail", code: 99, iconName: "cloud-lightning"},
+		{name: "unknown positive", code: 100, iconName: "circle-alert"},
+		{name: "unknown negative", code: -1, iconName: "circle-alert"},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			icon := string(weatherIcon(test.code))
-			if !strings.Contains(icon, `<svg`) || !strings.Contains(icon, `data-weather-icon="true"`) {
+			if !strings.Contains(icon, `<svg`) || !strings.Contains(icon, `ui-weather-icon`) {
 				t.Fatalf("weatherIcon(%d) = %q, want static SVG", test.code, icon)
 			}
-			if !strings.Contains(icon, test.contains) {
-				t.Errorf("weatherIcon(%d) = %q, want %q", test.code, icon, test.contains)
+			if !strings.Contains(icon, `data-icon="`+test.iconName+`"`) {
+				t.Errorf("weatherIcon(%d) = %q, want Lucide %q", test.code, icon, test.iconName)
 			}
 		})
+	}
+}
+
+func TestMoonPhaseIconMapsKnownPhasesAndUsesSafeFallback(t *testing.T) {
+	seen := make(map[string]string)
+	for _, phase := range []string{"Новолуние", "Растущая луна", "Первая четверть", "Прибывающая луна", "Полнолуние", "Убывающая луна", "Последняя четверть", "Стареющая луна"} {
+		got := string(moonPhaseIcon(phase))
+		if !strings.Contains(got, `data-moon-phase="true"`) {
+			t.Errorf("moonPhaseIcon(%q) = %q, want distinct static phase SVG", phase, got)
+		}
+		if previous, duplicate := seen[got]; duplicate {
+			t.Errorf("moonPhaseIcon(%q) duplicates phase geometry for %q", phase, previous)
+		}
+		seen[got] = phase
+	}
+	for phase, arc := range map[string]string{
+		"Растущая луна":    `A4 9 0 0 0 12 3`,
+		"Прибывающая луна": `A4 9 0 0 1 12 3`,
+		"Убывающая луна":   `A4 9 0 0 0 12 3`,
+		"Стареющая луна":   `A4 9 0 0 1 12 3`,
+	} {
+		if got := string(moonPhaseIcon(phase)); !strings.Contains(got, arc) {
+			t.Errorf("moonPhaseIcon(%q) = %q, want non-normalized inner arc %q", phase, got, arc)
+		}
+	}
+	if got := string(moonPhaseIcon("неизвестная фаза")); !strings.Contains(got, `data-icon="circle-alert"`) {
+		t.Errorf("moonPhaseIcon unknown = %q, want neutral safe fallback", got)
+	}
+}
+
+func TestEventIconUsesEventTypeRatherThanBackendEmoji(t *testing.T) {
+	for eventType, want := range map[string]string{
+		"rain_start":    "cloud-rain",
+		"rain_end":      "cloud-rain",
+		"temp_drop":     "thermometer",
+		"temp_rise":     "thermometer",
+		"wind_gust":     "wind",
+		"pressure_drop": "gauge",
+		"pressure_rise": "gauge",
+	} {
+		if got := string(eventIcon(eventType)); !strings.Contains(got, `data-icon="`+want+`"`) {
+			t.Errorf("eventIcon(%q) = %q, want %q", eventType, got, want)
+		}
+	}
+	if got := string(eventIcon("unknown")); !strings.Contains(got, `data-icon="circle-alert"`) {
+		t.Errorf("eventIcon unknown = %q, want safe fallback", got)
+	}
+}
+
+func TestIconRejectsUnknownName(t *testing.T) {
+	if got := string(icon(`<path d="untrusted"/>`)); !strings.Contains(got, `data-icon="circle-alert"`) || strings.Contains(got, "untrusted") {
+		t.Errorf("icon() must not render untrusted SVG, got %q", got)
 	}
 }
 
