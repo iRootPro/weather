@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"math"
 	"net/http"
 	"time"
 
@@ -23,6 +24,7 @@ type SparkBar struct {
 // GeomagneticCardData — данные для карточки на дашборде, готовые к рендеру
 // (без условий внутри шаблона).
 type GeomagneticCardData struct {
+	Attention      metricAttention
 	HasData        bool
 	Kp             float32
 	StatusLabel    string
@@ -33,6 +35,28 @@ type GeomagneticCardData struct {
 	PeakLine       string // готовая строка «Прогноз: …» или «Макс сегодня: …», либо пустая
 	IsAttention    bool
 	Sparkline      []SparkBar
+}
+
+// Match the repository's six-hour observation window, excluding forecasts and
+// invalid readings. Peaks and upcoming storms are deliberately not inputs.
+func buildGeomagneticSignal(current *models.GeomagneticKp, now time.Time) metricAttention {
+	if current == nil || current.IsForecast || current.SlotTime.IsZero() || current.SlotTime.After(now) || now.Sub(current.SlotTime) >= 6*time.Hour {
+		return metricAttention{}
+	}
+	kp := current.Kp
+	if math.IsNaN(float64(kp)) || math.IsInf(float64(kp), 0) || kp < 4 || kp > 9 {
+		return metricAttention{}
+	}
+	signal := metricAttention{
+		Tone: "geomagnetic", Title: "Геомагнитное возмущение", Severity: "warning", Important: true,
+		Detail: fmt.Sprintf("Kp %.1f · наблюдение %s", kp, current.SlotTime.In(time.Local).Format("02.01 15:04")),
+	}
+	if level, description, ok := models.StormLevel(kp); ok {
+		signal.Title = "Магнитная буря " + level
+		signal.Severity = "danger"
+		signal.Detail += " · " + description + " буря"
+	}
+	return signal
 }
 
 // statusHeading возвращает крупную подпись для пользователя:
@@ -72,6 +96,7 @@ func (h *Handler) buildGeomagneticCard(ctx context.Context) GeomagneticCardData 
 	}
 
 	card := GeomagneticCardData{
+		Attention:      buildGeomagneticSignal(snap.Current, now),
 		HasData:        true,
 		Kp:             snap.Current.Kp,
 		StatusLabel:    snap.Status.Label(),

@@ -26,6 +26,8 @@ func (a metricAttention) Icon() string {
 		return "cloud-rain"
 	case "solar":
 		return "sun"
+	case "geomagnetic":
+		return "magnet"
 	default:
 		return "gauge"
 	}
@@ -39,18 +41,20 @@ func (a metricAttention) LevelLabel() string {
 }
 
 type currentAttention struct {
-	Temperature metricAttention
-	Wind        metricAttention
-	Rain        metricAttention
-	Solar       metricAttention
-	Pressure    metricAttention
-	Notice      string
+	Temperature        metricAttention
+	Wind               metricAttention
+	Rain               metricAttention
+	Solar              metricAttention
+	Pressure           metricAttention
+	Geomagnetic        metricAttention
+	Notice             string
+	stationUnavailable bool
 }
 
 // Signals keeps header icons in the same stable order as the weather domains.
 func (a currentAttention) Signals() []metricAttention {
 	var signals []metricAttention
-	for _, signal := range []metricAttention{a.Temperature, a.Wind, a.Rain, a.Solar, a.Pressure} {
+	for _, signal := range []metricAttention{a.Temperature, a.Wind, a.Rain, a.Solar, a.Pressure, a.Geomagnetic} {
 		if signal.Title != "" {
 			signals = append(signals, signal)
 		}
@@ -58,16 +62,41 @@ func (a currentAttention) Signals() []metricAttention {
 	return signals
 }
 
+// Geomagnetic observations come from an independent source; station freshness
+// must not suppress them. Preserve a station freshness notice over the count.
+func (a currentAttention) withGeomagnetic(signal metricAttention) currentAttention {
+	a.Geomagnetic = signal
+	if !a.stationUnavailable {
+		a.updateCountNotice()
+	}
+	return a
+}
+
+func (a *currentAttention) updateCountNotice() {
+	count := 0
+	for _, signal := range a.Signals() {
+		if signal.Important {
+			count++
+		}
+	}
+	a.Notice = ""
+	if count > 1 {
+		a.Notice = fmt.Sprintf("Важных сигналов: %d — пояснения в блоках показателей.", count)
+	}
+}
+
 // Attention describes observations only; missing or stale measurements never
 // become current weather signals. Thresholds apply to unrounded values.
 func buildCurrentAttention(current, previous *models.WeatherData, now time.Time) currentAttention {
 	var result currentAttention
 	if current == nil || current.Time.IsZero() || current.Time.After(now) {
+		result.stationUnavailable = true
 		result.Notice = "Нет актуальных измерений станции"
 		return result
 	}
 	age := now.Sub(current.Time)
 	if age >= 10*time.Minute {
+		result.stationUnavailable = true
 		result.Notice = fmt.Sprintf("Последние измерения %d мин назад. Текущие условия могут отличаться.", int(age.Minutes()))
 		return result
 	}
@@ -138,14 +167,6 @@ func buildCurrentAttention(current, previous *models.WeatherData, now time.Time)
 			}
 		}
 	}
-	count := 0
-	for _, signal := range []metricAttention{result.Temperature, result.Wind, result.Rain, result.Solar, result.Pressure} {
-		if signal.Important {
-			count++
-		}
-	}
-	if count > 1 {
-		result.Notice = fmt.Sprintf("Важных сигналов: %d — пояснения в блоках показателей.", count)
-	}
+	result.updateCountNotice()
 	return result
 }

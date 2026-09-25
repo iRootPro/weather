@@ -52,6 +52,10 @@ func NewAttentionDemo(templatesDir string) (http.Handler, error) {
 		{"moderate", "Жёлтые сигналы", 31, 6, 11, 0, 6},
 		{"all", "Все пять сигналов", 36, 11, 18, 9, 9},
 		{"stale", "Данные устарели", 36, 11, 18, 0, 9},
+		{"geomagnetic", "Геомагнитное возмущение", 22, 2, 3, 0, 2},
+		{"storm", "Магнитная буря G3", 22, 2, 3, 0, 2},
+		{"stale-geomagnetic", "Станция устарела, Kp свежий", 36, 2, 3, 0, 2},
+		{"six", "Все шесть сигналов", 36, 11, 18, 9, 9},
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		selected := scenarios[0]
@@ -62,19 +66,36 @@ func NewAttentionDemo(templatesDir string) (http.Handler, error) {
 		}
 		now := time.Now()
 		observed := now
-		if selected.ID == "stale" {
+		if selected.ID == "stale" || selected.ID == "stale-geomagnetic" {
 			observed = now.Add(-45 * time.Minute)
 		}
 		current := &models.WeatherData{Time: observed, TempOutdoor: &selected.Temp, WindSpeed: &selected.Wind, WindGust: &selected.Gust, RainRate: &selected.Rain, UVIndex: &selected.UV}
 		pressure, previousPressure := float32(755), float32(755)
-		if selected.ID == "all" {
+		if selected.ID == "all" || selected.ID == "six" {
 			pressure = 751
 		}
 		current.PressureRelative = &pressure
 		previous := &models.WeatherData{Time: observed.Add(-time.Hour), PressureRelative: &previousPressure}
+		var geomagnetic GeomagneticCardData
+		kp := float32(0)
+		switch selected.ID {
+		case "geomagnetic", "stale-geomagnetic":
+			kp = 4.3
+		case "storm", "six":
+			kp = 7
+		}
+		if kp > 0 {
+			status := models.ClassifyKp(kp)
+			geomagnetic = GeomagneticCardData{
+				HasData: true, Kp: kp, StatusHeading: statusHeading(status, kp),
+				StatusText: status.TextColor(), StatusGradient: status.TailwindGradient(), IsAttention: true,
+				Attention: buildGeomagneticSignal(&models.GeomagneticKp{SlotTime: now.Add(-time.Hour), Kp: kp}, now),
+			}
+		}
 		var widget bytes.Buffer
 		err := partial.Execute(&widget, map[string]any{
-			"Attention":       buildCurrentAttention(current, previous, now),
+			"Attention":       buildCurrentAttention(current, previous, now).withGeomagnetic(geomagnetic.Attention),
+			"Geomagnetic":     geomagnetic,
 			"ObservationTime": observed.Format("15:04"), "UpdatedAt": now.Format("15:04"),
 			"TempOutdoor": selected.Temp, "TempFeelsLike": selected.Temp, "HumidityOutdoor": 55,
 			"PressureRelative": pressure, "WindSpeed": selected.Wind, "WindGust": selected.Gust,
