@@ -21,9 +21,14 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	dashboardDemo, err := web.NewDashboardDemo("internal/web/templates")
+	if err != nil {
+		log.Fatal(err)
+	}
 	mux := http.NewServeMux()
 	mux.Handle("GET /", demo)
 	mux.Handle("GET /forecast", forecastDemo)
+	mux.Handle("GET /dashboard", dashboardDemo)
 	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.Dir("internal/web/static"))))
 	server := &http.Server{Addr: *addr, Handler: mux, ReadHeaderTimeout: 5 * time.Second}
 	log.Printf("Weather UI demo: http://%s", *addr)

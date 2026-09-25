@@ -1,5 +1,5 @@
-<div class="ui-surface p-4 sm:p-5">
-    <div class="mb-4 flex min-h-6 items-center">
+<div class="ui-surface p-4 sm:p-5 lg:flex lg:h-full lg:flex-col">
+    <div class="mb-4 flex min-h-6 items-center lg:min-h-11">
         <h2 class="ui-section-heading">Прогноз</h2>
     </div>
 
@@ -80,20 +80,21 @@
         {{if .DailyCards}}
         <div class="mt-4 border-t border-gray-200 pt-3 dark:border-gray-700">
             <p class="ui-kicker mb-2">Ближайшие дни</p>
+            <div class="ui-forecast-daily-columns text-xs text-gray-500 dark:text-gray-400" aria-hidden="true">
+                <span>День</span><span></span><span>Темп.</span><span>Осадки</span><span>Ветер · порывы</span><span>UV</span>
+            </div>
             <ul class="ui-forecast-daily divide-y divide-gray-200 dark:divide-gray-700" aria-label="Прогноз на ближайшие дни">
                 {{range .DailyCards}}
                 <li class="ui-forecast-daily-row py-2.5">
                     <span class="sr-only">{{.AccessibleLabel}}</span>
-                    <div class="ui-forecast-daily-top" aria-hidden="true">
+                    <div class="ui-forecast-daily-compact" aria-hidden="true">
                         <div class="text-sm font-semibold text-gray-700 dark:text-gray-300">{{.Label}}</div>
                         <div>{{weatherIcon .WeatherCode}}</div>
                         <div class="ui-tabular whitespace-nowrap text-sm font-bold text-gray-900 dark:text-white">{{.TempMain}}</div>
+                        <div class="ui-tabular whitespace-nowrap text-xs font-medium text-blue-700 dark:text-blue-300">{{.DailyPrecipitation}}</div>
+                        <div class="ui-tabular whitespace-nowrap text-xs text-gray-700 dark:text-gray-300">{{.DailyWind}} <span class="text-gray-500 dark:text-gray-400">· {{.DailyGusts}}</span></div>
+                        <div class="ui-tabular whitespace-nowrap text-xs font-medium text-gray-700 dark:text-gray-300">{{.DailyUV}}</div>
                     </div>
-                    <dl class="ui-forecast-daily-metrics ui-forecast-daily-details mt-2 gap-3 border-t border-gray-200 pt-2 text-xs text-gray-600 dark:border-gray-700 dark:text-gray-300" aria-hidden="true">
-                        <div><dt class="text-gray-500 dark:text-gray-400">Осадки</dt><dd class="ui-tabular mt-0.5 font-medium text-blue-700 dark:text-blue-300">{{.DailyPrecipitation}}</dd></div>
-                        <div><dt class="text-gray-500 dark:text-gray-400">Ветер</dt><dd class="ui-tabular mt-0.5 font-medium">{{.DailyWind}}</dd><dd class="ui-tabular text-gray-500 dark:text-gray-400">порывы {{.DailyGusts}}</dd></div>
-                        <div><dt class="text-gray-500 dark:text-gray-400">UV</dt><dd class="ui-tabular mt-0.5 font-medium">{{.DailyUV}}</dd></div>
-                    </dl>
                 </li>
                 {{end}}
             </ul>

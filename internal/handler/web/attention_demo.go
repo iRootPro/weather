@@ -13,6 +13,28 @@ import (
 	"github.com/iRootPro/weather/internal/models"
 )
 
+type demoWeatherScenario struct {
+	ID, Name                   string
+	Temp, Wind, Gust, Rain, UV float32
+}
+
+var attentionDemoScenarios = []demoWeatherScenario{
+	{"normal", "Обычная погода", 22, 2, 3, 0, 2},
+	{"heat", "Жара", 36, 2, 3, 0, 2},
+	{"cold", "Мороз", -14, 2, 3, 0, 0},
+	{"wind", "Сильный ветер", 22, 8, 18, 0, 2},
+	{"rain", "Ливень", 18, 2, 3, 9, 0},
+	{"uv", "Высокий UV", 26, 2, 3, 0, 9},
+	{"combined", "Жара + ветер + UV", 36, 11, 18, 0, 9},
+	{"moderate", "Жёлтые сигналы", 31, 6, 11, 0, 6},
+	{"all", "Все пять сигналов", 36, 11, 18, 9, 9},
+	{"stale", "Данные устарели", 36, 11, 18, 0, 9},
+	{"geomagnetic", "Геомагнитное возмущение", 22, 2, 3, 0, 2},
+	{"storm", "Магнитная буря G3", 22, 2, 3, 0, 2},
+	{"stale-geomagnetic", "Станция устарела, Kp свежий", 36, 2, 3, 0, 2},
+	{"six", "Все шесть сигналов", 36, 11, 18, 9, 9},
+}
+
 // NewAttentionDemo serves synthetic observations using the production partial and
 // attention rules. It is only registered by cmd/weather-demo, never by the API.
 func NewAttentionDemo(templatesDir string) (http.Handler, error) {
@@ -38,70 +60,16 @@ func NewAttentionDemo(templatesDir string) (http.Handler, error) {
 	if err != nil {
 		return nil, err
 	}
-	scenarios := []struct {
-		ID, Name                   string
-		Temp, Wind, Gust, Rain, UV float32
-	}{
-		{"normal", "Обычная погода", 22, 2, 3, 0, 2},
-		{"heat", "Жара", 36, 2, 3, 0, 2},
-		{"cold", "Мороз", -14, 2, 3, 0, 0},
-		{"wind", "Сильный ветер", 22, 8, 18, 0, 2},
-		{"rain", "Ливень", 18, 2, 3, 9, 0},
-		{"uv", "Высокий UV", 26, 2, 3, 0, 9},
-		{"combined", "Жара + ветер + UV", 36, 11, 18, 0, 9},
-		{"moderate", "Жёлтые сигналы", 31, 6, 11, 0, 6},
-		{"all", "Все пять сигналов", 36, 11, 18, 9, 9},
-		{"stale", "Данные устарели", 36, 11, 18, 0, 9},
-		{"geomagnetic", "Геомагнитное возмущение", 22, 2, 3, 0, 2},
-		{"storm", "Магнитная буря G3", 22, 2, 3, 0, 2},
-		{"stale-geomagnetic", "Станция устарела, Kp свежий", 36, 2, 3, 0, 2},
-		{"six", "Все шесть сигналов", 36, 11, 18, 9, 9},
-	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		selected := scenarios[0]
-		for _, s := range scenarios {
+		selected := attentionDemoScenarios[0]
+		for _, s := range attentionDemoScenarios {
 			if s.ID == r.URL.Query().Get("scenario") {
 				selected = s
 			}
 		}
 		now := time.Now()
-		observed := now
-		if selected.ID == "stale" || selected.ID == "stale-geomagnetic" {
-			observed = now.Add(-45 * time.Minute)
-		}
-		current := &models.WeatherData{Time: observed, TempOutdoor: &selected.Temp, WindSpeed: &selected.Wind, WindGust: &selected.Gust, RainRate: &selected.Rain, UVIndex: &selected.UV}
-		pressure, previousPressure := float32(755), float32(755)
-		if selected.ID == "all" || selected.ID == "six" {
-			pressure = 751
-		}
-		current.PressureRelative = &pressure
-		previous := &models.WeatherData{Time: observed.Add(-time.Hour), PressureRelative: &previousPressure}
-		var geomagnetic GeomagneticCardData
-		kp := float32(0)
-		switch selected.ID {
-		case "geomagnetic", "stale-geomagnetic":
-			kp = 4.3
-		case "storm", "six":
-			kp = 7
-		}
-		if kp > 0 {
-			status := models.ClassifyKp(kp)
-			geomagnetic = GeomagneticCardData{
-				HasData: true, Kp: kp, StatusHeading: statusHeading(status, kp),
-				StatusText: status.TextColor(), StatusGradient: status.TailwindGradient(), IsAttention: true,
-				Attention: buildGeomagneticSignal(&models.GeomagneticKp{SlotTime: now.Add(-time.Hour), Kp: kp}, now),
-			}
-		}
 		var widget bytes.Buffer
-		err := partial.Execute(&widget, map[string]any{
-			"Attention":       buildCurrentAttention(current, previous, now).withGeomagnetic(geomagnetic.Attention),
-			"Geomagnetic":     geomagnetic,
-			"ObservationTime": observed.Format("15:04"), "UpdatedAt": now.Format("15:04"),
-			"TempOutdoor": selected.Temp, "TempFeelsLike": selected.Temp, "HumidityOutdoor": 55,
-			"PressureRelative": pressure, "WindSpeed": selected.Wind, "WindGust": selected.Gust,
-			"HasWindGust": true, "WindDirectionStr": "СЗ", "WindDirection": 315,
-			"RainDaily": selected.Rain, "UVIndex": selected.UV, "SolarRadiation": 420.0, "Illuminance": 50400.0,
-		})
+		err := partial.Execute(&widget, demoCurrentWeatherData(now, selected))
 		if err != nil {
 			http.Error(w, "Demo render failed", http.StatusInternalServerError)
 			return
@@ -110,7 +78,7 @@ func NewAttentionDemo(templatesDir string) (http.Handler, error) {
 		err = page.Execute(&output, map[string]any{
 			"CSS":       template.CSS(css),              // trusted repository stylesheet
 			"Widget":    template.HTML(widget.String()), // escaped by the production template
-			"Scenarios": scenarios, "Selected": selected.ID,
+			"Scenarios": attentionDemoScenarios, "Selected": selected.ID,
 		})
 		if err != nil {
 			http.Error(w, "Demo render failed", http.StatusInternalServerError)
@@ -119,6 +87,45 @@ func NewAttentionDemo(templatesDir string) (http.Handler, error) {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		_, _ = w.Write(output.Bytes())
 	}), nil
+}
+
+func demoCurrentWeatherData(now time.Time, selected demoWeatherScenario) map[string]any {
+	observed := now
+	if selected.ID == "stale" || selected.ID == "stale-geomagnetic" {
+		observed = now.Add(-45 * time.Minute)
+	}
+	current := &models.WeatherData{Time: observed, TempOutdoor: &selected.Temp, WindSpeed: &selected.Wind, WindGust: &selected.Gust, RainRate: &selected.Rain, UVIndex: &selected.UV}
+	pressure, previousPressure := float32(755), float32(755)
+	if selected.ID == "all" || selected.ID == "six" {
+		pressure = 751
+	}
+	current.PressureRelative = &pressure
+	previous := &models.WeatherData{Time: observed.Add(-time.Hour), PressureRelative: &previousPressure}
+	var geomagnetic GeomagneticCardData
+	kp := float32(0)
+	switch selected.ID {
+	case "geomagnetic", "stale-geomagnetic":
+		kp = 4.3
+	case "storm", "six":
+		kp = 7
+	}
+	if kp > 0 {
+		status := models.ClassifyKp(kp)
+		geomagnetic = GeomagneticCardData{
+			HasData: true, Kp: kp, StatusHeading: statusHeading(status, kp),
+			StatusText: status.TextColor(), StatusGradient: status.TailwindGradient(), IsAttention: true,
+			Attention: buildGeomagneticSignal(&models.GeomagneticKp{SlotTime: now.Add(-time.Hour), Kp: kp}, now),
+		}
+	}
+	return map[string]any{
+		"Attention":       buildCurrentAttention(current, previous, now).withGeomagnetic(geomagnetic.Attention),
+		"Geomagnetic":     geomagnetic,
+		"ObservationTime": observed.Format("15:04"), "UpdatedAt": now.Format("15:04"),
+		"TempOutdoor": selected.Temp, "TempFeelsLike": selected.Temp, "HumidityOutdoor": 55,
+		"PressureRelative": pressure, "WindSpeed": selected.Wind, "WindGust": selected.Gust,
+		"HasWindGust": true, "WindDirectionStr": "СЗ", "WindDirection": 315,
+		"RainDaily": selected.Rain, "UVIndex": selected.UV, "SolarRadiation": 420.0, "Illuminance": 50400.0,
+	}
 }
 
 const attentionDemoHTML = `<!doctype html>

@@ -67,8 +67,20 @@ func demoForecastData(now time.Time, scenario string) forecastWidgetData {
 	}
 	hourly := []models.HourlyForecast{
 		{Time: now.Add(time.Hour), Temperature: 20, FeelsLike: 16, Precipitation: 0.4, PrecipitationProbability: 60, HasTemperature: true, HasFeelsLike: true, HasPrecipitation: true, HasPrecipitationProbability: true, FetchedAt: fetchedAt},
+		{Time: now.Add(2 * time.Hour), Temperature: 20, HasTemperature: true, FetchedAt: fetchedAt},
+		{Time: now.Add(3 * time.Hour), Temperature: 19, HasTemperature: true, FetchedAt: fetchedAt},
 		{Time: now.Add(4 * time.Hour), Temperature: 18, WindSpeed: 11, WindGusts: 16, HasTemperature: true, HasWindSpeed: true, HasWindGusts: true, FetchedAt: fetchedAt},
+		{Time: now.Add(5 * time.Hour), Temperature: 17, HasTemperature: true, FetchedAt: fetchedAt},
+		{Time: now.Add(6 * time.Hour), Temperature: 16, HasTemperature: true, FetchedAt: fetchedAt},
+		{Time: now.Add(7 * time.Hour), Temperature: 15, PrecipitationProbability: 40, HasTemperature: true, HasPrecipitationProbability: true, FetchedAt: fetchedAt},
 	}
-	daily := []models.DailyForecast{{Date: now.AddDate(0, 0, 1), TemperatureMin: 11, TemperatureMax: 19, PrecipitationSum: 1.2, PrecipitationProbability: 70, WindSpeedMax: 9, WindGustsMax: 14, UVIndexMax: 6, HasPrecipitationSum: true, HasPrecipitationProbability: true, HasWindSpeedMax: true, HasWindGustsMax: true, HasUVIndexMax: true, FetchedAt: fetchedAt}}
+	daily := []models.DailyForecast{
+		{Date: now.AddDate(0, 0, 1), TemperatureMin: 11, TemperatureMax: 19, PrecipitationSum: 1.2, PrecipitationProbability: 70, WindSpeedMax: 9, WindGustsMax: 14, UVIndexMax: 6, HasPrecipitationSum: true, HasPrecipitationProbability: true, HasWindSpeedMax: true, HasWindGustsMax: true, HasUVIndexMax: true, FetchedAt: fetchedAt},
+		{Date: now.AddDate(0, 0, 2), TemperatureMin: 10, TemperatureMax: 17, PrecipitationSum: 0, PrecipitationProbability: 20, WindSpeedMax: 6, WindGustsMax: 10, UVIndexMax: 4, HasPrecipitationSum: true, HasPrecipitationProbability: true, HasWindSpeedMax: true, HasWindGustsMax: true, HasUVIndexMax: true, FetchedAt: fetchedAt},
+		{Date: now.AddDate(0, 0, 3), TemperatureMin: 9, TemperatureMax: 15, PrecipitationSum: 3.6, PrecipitationProbability: 90, WindSpeedMax: 12, WindGustsMax: 18, UVIndexMax: 3, HasPrecipitationSum: true, HasPrecipitationProbability: true, HasWindSpeedMax: true, HasWindGustsMax: true, HasUVIndexMax: true, FetchedAt: fetchedAt},
+		{Date: now.AddDate(0, 0, 4), TemperatureMin: 8, TemperatureMax: 16, PrecipitationSum: 0.2, PrecipitationProbability: 40, WindSpeedMax: 7, WindGustsMax: 11, UVIndexMax: 5, HasPrecipitationSum: true, HasPrecipitationProbability: true, HasWindSpeedMax: true, HasWindGustsMax: true, HasUVIndexMax: true, FetchedAt: fetchedAt},
+		{Date: now.AddDate(0, 0, 5), TemperatureMin: 12, TemperatureMax: 21, PrecipitationSum: 0, PrecipitationProbability: 10, WindSpeedMax: 5, WindGustsMax: 8, UVIndexMax: 7, HasPrecipitationSum: true, HasPrecipitationProbability: true, HasWindSpeedMax: true, HasWindGustsMax: true, HasUVIndexMax: true, FetchedAt: fetchedAt},
+		{Date: now.AddDate(0, 0, 6), TemperatureMin: 13, TemperatureMax: 23, PrecipitationSum: 1.8, PrecipitationProbability: 55, WindSpeedMax: 8, WindGustsMax: 13, UVIndexMax: 7, HasPrecipitationSum: true, HasPrecipitationProbability: true, HasWindSpeedMax: true, HasWindGustsMax: true, HasUVIndexMax: true, FetchedAt: fetchedAt},
+	}
 	return buildForecastWidgetData(now, hourly, daily)
 }

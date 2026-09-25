@@ -536,11 +536,12 @@ func TestDashboardTemplatePrioritizesWeatherBeforeTelegramPromotion(t *testing.T
 		`<h1 class="sr-only">Погода в Армавире</h1>`,
 		`<h2 class="ui-section-heading sr-only sm:not-sr-only px-4 pt-4 sm:px-6 sm:pt-6">Динамика погоды</h2>`,
 		`lg:grid-cols-12`,
-		`id="current-weather" class="order-1 lg:col-span-8"`,
+		`lg:items-stretch`,
+		`id="current-weather" class="order-1 lg:col-span-8 lg:flex"`,
 		`aria-label="Прогноз"`,
-		`contents order-2 lg:col-span-4 lg:flex lg:flex-col lg:gap-6`,
+		`contents order-2 lg:col-span-4 lg:flex lg:h-full lg:flex-col lg:gap-6`,
 		`id="weather-events" class="order-2 empty:hidden lg:order-7 lg:col-span-8"`,
-		`id="forecast" class="order-3 lg:order-1"`,
+		`id="forecast" class="order-3 lg:order-1 lg:flex lg:h-full"`,
 		`id="water-level" class="order-4 lg:hidden"`,
 		`id="sun-times" class="order-5 lg:hidden"`,
 	} {
@@ -975,7 +976,7 @@ func TestForecastTemplateUsesCompactGridAndAccessibleLabels(t *testing.T) {
 			t.Errorf("rendered forecast must not contain %s", unexpected)
 		}
 	}
-	for _, expected := range []string{"ui-forecast-daily", "ui-forecast-daily-row", "ui-forecast-daily-top", "-12/-3°", "Осадки", "порывы 12", "3,2 мм · 100%", ">—<", "Open-Meteo"} {
+	for _, expected := range []string{"ui-forecast-daily", "ui-forecast-daily-row", "ui-forecast-daily-compact", "ui-forecast-daily-columns", "-12/-3°", "Осадки", "Ветер · порывы", "3,2 мм · 100%", ">—<", "Open-Meteo"} {
 		if !bytes.Contains(output.Bytes(), []byte(expected)) {
 			t.Errorf("rendered daily forecast is missing %s", expected)
 		}
