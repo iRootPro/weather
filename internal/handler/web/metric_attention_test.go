@@ -32,6 +32,11 @@ func TestMetricAttentionTemplateShowsContextAndMissingValues(t *testing.T) {
 			t.Errorf("missing %q", text)
 		}
 	}
+	for _, text := range []string{`aria-label="Очень жарко — Высокий уровень"`, `aria-describedby="attention-hint-heat"`, `role="tooltip" hidden`, `ui-attention-trigger-danger`, `data-icon="thermometer"`} {
+		if !strings.Contains(output.String(), text) {
+			t.Errorf("missing accessible header hint %q", text)
+		}
+	}
 	// The shared annotation renders nothing for normal conditions.
 	annotation, err := template.New("annotation").Parse(`{{define "annotation"}}{{template "metric-attention" .}}{{end}}`)
 	if err != nil {
@@ -47,6 +52,62 @@ func TestMetricAttentionTemplateShowsContextAndMissingValues(t *testing.T) {
 	}
 	if output.Len() != 0 {
 		t.Fatal("normal conditions should have no annotation")
+	}
+}
+
+func TestHeaderSignalsSeverityBoundariesAndFreshness(t *testing.T) {
+	now := time.Now()
+	for _, tc := range []struct {
+		name     string
+		field    string
+		value    float32
+		severity string
+	}{
+		{"temperature below", "temp", 29.9, ""}, {"warm", "temp", 30, "warning"}, {"hot", "temp", 35, "danger"},
+		{"cold", "temp", 0, "warning"}, {"frost", "temp", -10, "danger"},
+		{"wind below", "gust", 4.9, ""}, {"windy", "gust", 5, "warning"}, {"strong wind", "gust", 10, "warning"}, {"extreme wind", "gust", 17, "danger"},
+		{"rain below", "rain", 0.09, ""}, {"rain", "rain", 0.1, "warning"}, {"heavy rain", "rain", 2.5, "warning"}, {"downpour", "rain", 7.5, "danger"},
+		{"UV below", "uv", 5.9, ""}, {"UV high", "uv", 6, "warning"}, {"UV very high", "uv", 8, "danger"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			current := &models.WeatherData{Time: now}
+			switch tc.field {
+			case "temp":
+				current.TempOutdoor = &tc.value
+			case "gust":
+				current.WindGust = &tc.value
+			case "rain":
+				current.RainRate = &tc.value
+			case "uv":
+				current.UVIndex = &tc.value
+			}
+			signals := buildCurrentAttention(current, nil, now).Signals()
+			if tc.severity == "" {
+				if len(signals) != 0 {
+					t.Fatal("unexpected header icon", signals)
+				}
+			} else if len(signals) != 1 || signals[0].Severity != tc.severity {
+				t.Fatalf("got %+v, want %s", signals, tc.severity)
+			}
+			current.Time = now.Add(-10 * time.Minute)
+			if len(buildCurrentAttention(current, nil, now).Signals()) != 0 {
+				t.Fatal("stale header icons")
+			}
+		})
+	}
+	for _, delta := range []float32{1.5, 3, -1.5, -3} {
+		p := float32(750)
+		old := p - delta
+		current := &models.WeatherData{Time: now, PressureRelative: &p}
+		previous := &models.WeatherData{Time: now.Add(-time.Hour), PressureRelative: &old}
+		signal := buildCurrentAttention(current, previous, now).Signals()[0]
+		want := "warning"
+		if delta == 3 || delta == -3 {
+			want = "danger"
+		}
+		if signal.Severity != want || signal.Icon() != "gauge" {
+			t.Fatalf("pressure %v: %+v", delta, signal)
+		}
 	}
 }
 

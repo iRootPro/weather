@@ -1,6 +1,26 @@
 <div class="ui-surface p-4 sm:p-6 lg:p-5">
     <div class="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-        <h2 class="ui-section-heading">Сейчас</h2>
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 min-w-0">
+            <h2 class="ui-section-heading">Сейчас</h2>
+            {{with .Attention.Signals}}
+            <div class="ui-attention-signals" role="group" aria-label="На что обратить внимание">
+                {{range .}}
+                <div class="ui-attention-signal">
+                    <button type="button" class="ui-attention-trigger ui-attention-trigger-{{.Severity}}"
+                            data-attention-trigger aria-label="{{.Title}} — {{.LevelLabel}}"
+                            aria-describedby="attention-hint-{{.Tone}}" aria-controls="attention-hint-{{.Tone}}" aria-expanded="false">
+                        <span class="ui-attention-symbol" aria-hidden="true">{{icon .Icon}}</span>
+                    </button>
+                    <div id="attention-hint-{{.Tone}}" class="ui-attention-hint" role="tooltip" hidden>
+                        <p class="ui-attention-hint-level">{{.LevelLabel}}</p>
+                        <p class="font-semibold">{{.Title}}</p>
+                        {{with .Detail}}<p class="mt-1">{{.}}</p>{{end}}
+                    </div>
+                </div>
+                {{end}}
+            </div>
+            {{end}}
+        </div>
         <span class="ui-tabular text-xs text-gray-500 dark:text-gray-400 sm:text-sm">Измерено {{.ObservationTime}} · обновлено {{.UpdatedAt}}</span>
     </div>
 

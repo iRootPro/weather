@@ -176,6 +176,40 @@
             line-height: 1.45;
             color: var(--ui-text);
         }
+        .ui-attention-signals { display: flex; flex-wrap: wrap; gap: 8px; }
+        .ui-attention-trigger {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border-radius: var(--ui-radius-control);
+            cursor: pointer;
+            background: transparent;
+        }
+        .ui-attention-trigger-warning { color: var(--ui-warning); }
+        .ui-attention-trigger-danger { color: var(--ui-danger); }
+        .ui-attention-trigger:hover, .ui-attention-trigger[aria-expanded="true"] { background: var(--ui-surface-subtle); }
+        .ui-attention-trigger:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; }
+        .ui-attention-symbol { width: 20px; height: 20px; }
+        .ui-attention-hint {
+            position: fixed;
+            z-index: 60;
+            width: min(18rem, calc(100vw - 32px));
+            padding: 12px;
+            background: var(--ui-surface);
+            color: var(--ui-text);
+            border: 1px solid var(--ui-border);
+            border-radius: var(--ui-radius-control);
+            font-size: 0.875rem;
+            line-height: 1.45;
+            overflow-wrap: anywhere;
+            box-sizing: border-box;
+            overflow-y: auto;
+            max-height: calc(100vh - 16px);
+        }
+        .ui-attention-hint[hidden] { display: none; }
+        .ui-attention-hint-level { font-size: 0.75rem; color: var(--ui-text-muted); margin-bottom: 4px; }
         .ui-attention-notice {
             padding: 0.75rem;
             border-left: 3px solid var(--ui-warning);

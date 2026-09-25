@@ -49,6 +49,8 @@ func NewAttentionDemo(templatesDir string) (http.Handler, error) {
 		{"rain", "Ливень", 18, 2, 3, 9, 0},
 		{"uv", "Высокий UV", 26, 2, 3, 0, 9},
 		{"combined", "Жара + ветер + UV", 36, 11, 18, 0, 9},
+		{"moderate", "Жёлтые сигналы", 31, 6, 11, 0, 6},
+		{"all", "Все пять сигналов", 36, 11, 18, 9, 9},
 		{"stale", "Данные устарели", 36, 11, 18, 0, 9},
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -64,12 +66,18 @@ func NewAttentionDemo(templatesDir string) (http.Handler, error) {
 			observed = now.Add(-45 * time.Minute)
 		}
 		current := &models.WeatherData{Time: observed, TempOutdoor: &selected.Temp, WindSpeed: &selected.Wind, WindGust: &selected.Gust, RainRate: &selected.Rain, UVIndex: &selected.UV}
+		pressure, previousPressure := float32(755), float32(755)
+		if selected.ID == "all" {
+			pressure = 751
+		}
+		current.PressureRelative = &pressure
+		previous := &models.WeatherData{Time: observed.Add(-time.Hour), PressureRelative: &previousPressure}
 		var widget bytes.Buffer
 		err := partial.Execute(&widget, map[string]any{
-			"Attention":       buildCurrentAttention(current, nil, now),
+			"Attention":       buildCurrentAttention(current, previous, now),
 			"ObservationTime": observed.Format("15:04"), "UpdatedAt": now.Format("15:04"),
 			"TempOutdoor": selected.Temp, "TempFeelsLike": selected.Temp, "HumidityOutdoor": 55,
-			"PressureRelative": 755.0, "WindSpeed": selected.Wind, "WindGust": selected.Gust,
+			"PressureRelative": pressure, "WindSpeed": selected.Wind, "WindGust": selected.Gust,
 			"HasWindGust": true, "WindDirectionStr": "СЗ", "WindDirection": 315,
 			"RainDaily": selected.Rain, "UVIndex": selected.UV, "SolarRadiation": 420.0, "Illuminance": 50400.0,
 		})
@@ -95,7 +103,7 @@ func NewAttentionDemo(templatesDir string) (http.Handler, error) {
 const attentionDemoHTML = `<!doctype html>
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Демо подсветки погоды</title>
 <script>if(localStorage.getItem('weather-demo-dark')==='true')document.documentElement.classList.add('dark');</script>
-<script src="/static/js/vendor/tailwind.min.js"></script><style>{{.CSS}}</style></head>
+<script src="/static/js/vendor/tailwind.min.js"></script><script>tailwind.config={darkMode:'class'};</script><style>{{.CSS}}</style></head>
 <body><main class="max-w-5xl mx-auto p-4 sm:p-8">
 <h1 class="text-2xl font-bold">Подсветка погодных показателей</h1>
 <p class="mt-2 mb-5 ui-text-muted">Локальное демо · все значения вымышленные</p>
@@ -119,4 +127,4 @@ const url=new URL(location.href);url.searchParams.delete('phone');url.searchPara
 }
 if(new URLSearchParams(location.search).has('frame')){document.querySelector('form').remove();document.querySelector('h1').remove();document.querySelector('main > p').remove();}
 window.addEventListener('storage',e=>{if(e.key==='weather-demo-dark'){document.documentElement.classList.toggle('dark',e.newValue==='true');syncTheme();}});
-</script></body></html>`
+</script><script src="/static/js/attention.js?v=1"></script></body></html>`
