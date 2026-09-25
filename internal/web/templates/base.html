@@ -236,24 +236,24 @@
 
         .ui-forecast-hourly .ui-weather-icon { height: 1.5rem; width: 1.5rem; }
 
+        .ui-forecast-daily-metrics {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .ui-forecast-daily-metrics > div { min-width: 0; }
+
         @media (min-width: 1024px) {
-            .ui-forecast-daily {
-                column-gap: 0.75rem;
-                display: grid;
-                grid-template-columns: minmax(0, 1fr) 2rem max-content minmax(0, 1.4fr);
-                width: 100%;
-            }
-
             .ui-forecast-daily-row {
-                align-items: center;
-                display: grid;
-                grid-column: 1 / -1;
-                grid-template-columns: subgrid;
+                padding-bottom: 0.75rem;
+                padding-top: 0.75rem;
             }
 
-            .ui-forecast-daily-details {
-                min-width: 0;
-                text-align: right;
+            .ui-forecast-daily-top {
+                align-items: center;
+                column-gap: 0.5rem;
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) 2rem max-content;
             }
 
             .ui-current-metric {

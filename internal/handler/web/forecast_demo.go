@@ -33,7 +33,7 @@ func NewForecastDemo(templatesDir string) (http.Handler, error) {
 	if !ok {
 		return nil, fmt.Errorf("base template has unterminated styles")
 	}
-	page, err := template.New("forecast-demo").Parse(`<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Демо прогноза</title><script src="/static/js/vendor/tailwind.min.js"></script><script>tailwind.config={darkMode:'class'}</script><style>{{.CSS}}</style></head><body class="bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-white"><main class="mx-auto max-w-5xl p-4 sm:p-8"><div class="mb-5 flex flex-wrap items-center gap-3"><h1 class="text-xl font-bold">Демо прогноза</h1><a class="underline" href="?scenario=fresh">Свежий</a><a class="underline" href="?scenario=stale">Устаревший</a><a class="underline" href="?scenario=unavailable">Недоступен</a><button class="underline" onclick="document.documentElement.classList.toggle('dark')">Тёмная тема</button></div>{{.Widget}}</main></body></html>`)
+	page, err := template.New("forecast-demo").Parse(`<!doctype html><html lang="ru" {{if eq .Theme "dark"}}class="dark"{{end}}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Демо прогноза</title><script src="/static/js/vendor/tailwind.min.js"></script><script>tailwind.config={darkMode:'class'}</script><style>{{.CSS}}</style></head><body class="bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-white"><main class="mx-auto max-w-5xl p-4 sm:p-8 {{if eq .Layout "narrow"}}lg:ml-0 lg:max-w-[350px]{{end}}"><div class="mb-5 flex flex-wrap items-center gap-3"><h1 class="text-xl font-bold">Демо прогноза</h1><a class="underline" href="?scenario=fresh">Свежий</a><a class="underline" href="?scenario=stale">Устаревший</a><a class="underline" href="?scenario=unavailable">Недоступен</a><button class="underline" onclick="document.documentElement.classList.toggle('dark')">Тёмная тема</button></div>{{.Widget}}</main></body></html>`)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,12 @@ func NewForecastDemo(templatesDir string) (http.Handler, error) {
 			return
 		}
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		if err := page.Execute(w, map[string]any{"CSS": template.CSS(css), "Widget": template.HTML(widget.String())}); err != nil {
+		if err := page.Execute(w, map[string]any{
+			"CSS":    template.CSS(css),
+			"Widget": template.HTML(widget.String()),
+			"Theme":  r.URL.Query().Get("theme"),
+			"Layout": r.URL.Query().Get("layout"),
+		}); err != nil {
 			http.Error(w, "Demo render failed", http.StatusInternalServerError)
 		}
 	}), nil

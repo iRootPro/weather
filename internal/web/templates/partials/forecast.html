@@ -1,5 +1,7 @@
 <div class="ui-surface p-4 sm:p-5">
-    <h2 class="ui-section-heading mb-4">Прогноз погоды</h2>
+    <div class="mb-4 flex min-h-6 items-center">
+        <h2 class="ui-section-heading">Прогноз</h2>
+    </div>
 
     {{if .Stale}}
     <div class="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200" role="status">
@@ -27,25 +29,30 @@
 
     <ul id="forecast-cards" class="grid grid-cols-3 gap-2 sm:grid-cols-5 sm:gap-3 lg:hidden" aria-label="Периоды прогноза">
         {{range .Cards}}
-        <li class="ui-metric-card min-w-0 p-2 text-center sm:p-3">
+        <li class="ui-metric-card min-w-0 p-2 text-center sm:p-3 {{if not .IsHourly}}col-span-3 sm:col-span-5{{end}}">
             <span class="sr-only">{{.AccessibleLabel}}</span>
             <div aria-hidden="true">
-            <div class="mb-1 text-xs font-semibold text-gray-700 dark:text-gray-300 sm:mb-2">
-                {{.Label}}
-            </div>
-
-            <div class="mx-auto mb-1 h-6 w-6 text-gray-600 dark:text-gray-300 sm:mb-2 sm:h-7 sm:w-7">{{weatherIcon .WeatherCode}}</div>
-
-            <div class="ui-tabular whitespace-nowrap text-sm font-bold text-sky-700 dark:text-sky-300 sm:text-base">
-                {{.TempMain}}
-            </div>
-
-            <div class="mt-1 min-h-5 text-xs font-medium text-blue-700 dark:text-blue-300">
-            {{if .Precipitation}}<span class="inline-flex h-3.5 w-3.5 align-text-bottom" aria-hidden="true">{{icon "droplet"}}</span> <span class="ui-tabular">{{.Precipitation}}</span>{{else if .HasPrecipitation}}<span class="inline-flex h-3.5 w-3.5 align-text-bottom" aria-hidden="true">{{icon "droplet"}}</span> <span class="ui-tabular">{{.PrecipitationProbability}}%</span>{{end}}
-            </div>
-            {{if .Wind}}<div class="mt-1 text-xs text-gray-600 dark:text-gray-300">{{.Wind}}</div>{{end}}
-            {{if .FeelsLike}}<div class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{.FeelsLike}}</div>{{end}}
-            {{if .Details}}<div class="mt-1 text-xs text-gray-600 dark:text-gray-300">{{.Details}}</div>{{end}}
+            {{if .IsHourly}}
+                <div class="mb-1 text-xs font-semibold text-gray-700 dark:text-gray-300 sm:mb-2">{{.Label}}</div>
+                <div class="mx-auto mb-1 h-6 w-6 text-gray-600 dark:text-gray-300 sm:mb-2 sm:h-7 sm:w-7">{{weatherIcon .WeatherCode}}</div>
+                <div class="ui-tabular whitespace-nowrap text-sm font-bold text-sky-700 dark:text-sky-300 sm:text-base">{{.TempMain}}</div>
+                <div class="mt-1 min-h-5 text-xs font-medium text-blue-700 dark:text-blue-300">
+                    {{if .Precipitation}}<span class="inline-flex h-3.5 w-3.5 align-text-bottom" aria-hidden="true">{{icon "droplet"}}</span> <span class="ui-tabular">{{.Precipitation}}</span>{{else if .HasPrecipitation}}<span class="inline-flex h-3.5 w-3.5 align-text-bottom" aria-hidden="true">{{icon "droplet"}}</span> <span class="ui-tabular">{{.PrecipitationProbability}}%</span>{{end}}
+                </div>
+                {{if .Wind}}<div class="mt-1 text-xs text-gray-600 dark:text-gray-300">{{.Wind}}</div>{{end}}
+                {{if .FeelsLike}}<div class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{.FeelsLike}}</div>{{end}}
+            {{else}}
+                <div class="grid grid-cols-[1fr_2rem_max-content] items-center gap-2 text-left">
+                    <div class="text-xs font-semibold text-gray-700 dark:text-gray-300">{{.Label}}</div>
+                    <div class="h-6 w-6 text-gray-600 dark:text-gray-300">{{weatherIcon .WeatherCode}}</div>
+                    <div class="ui-tabular whitespace-nowrap text-sm font-bold text-sky-700 dark:text-sky-300">{{.TempMain}}</div>
+                </div>
+                <dl class="ui-forecast-daily-metrics mt-2 gap-2 border-t border-gray-200 pt-2 text-left text-xs dark:border-gray-700">
+                    <div class="min-w-0"><dt class="text-gray-500 dark:text-gray-400">Осадки</dt><dd class="ui-tabular mt-0.5 font-medium text-blue-700 dark:text-blue-300">{{.DailyPrecipitation}}</dd></div>
+                    <div class="min-w-0"><dt class="text-gray-500 dark:text-gray-400">Ветер</dt><dd class="ui-tabular mt-0.5 font-medium text-gray-700 dark:text-gray-300">{{.DailyWind}}</dd><dd class="ui-tabular text-gray-500 dark:text-gray-400">порывы {{.DailyGusts}}</dd></div>
+                    <div class="min-w-0"><dt class="text-gray-500 dark:text-gray-400">UV</dt><dd class="ui-tabular mt-0.5 font-medium text-gray-700 dark:text-gray-300">{{.DailyUV}}</dd></div>
+                </dl>
+            {{end}}
             </div>
         </li>
         {{end}}
@@ -77,10 +84,16 @@
                 {{range .DailyCards}}
                 <li class="ui-forecast-daily-row py-2.5">
                     <span class="sr-only">{{.AccessibleLabel}}</span>
-                    <div class="text-sm font-semibold text-gray-700 dark:text-gray-300" aria-hidden="true">{{.Label}}</div>
-                    <div aria-hidden="true">{{weatherIcon .WeatherCode}}</div>
-                    <div class="ui-tabular whitespace-nowrap text-sm font-bold text-gray-900 dark:text-white" aria-hidden="true">{{.TempMain}}</div>
-                    <div class="ui-forecast-daily-details text-xs text-gray-600 dark:text-gray-300" aria-hidden="true">{{if .Details}}{{.Details}}{{else if .HasPrecipitation}}Осадки <span class="ui-tabular">{{.PrecipitationProbability}}%</span>{{else}}—{{end}}</div>
+                    <div class="ui-forecast-daily-top" aria-hidden="true">
+                        <div class="text-sm font-semibold text-gray-700 dark:text-gray-300">{{.Label}}</div>
+                        <div>{{weatherIcon .WeatherCode}}</div>
+                        <div class="ui-tabular whitespace-nowrap text-sm font-bold text-gray-900 dark:text-white">{{.TempMain}}</div>
+                    </div>
+                    <dl class="ui-forecast-daily-metrics ui-forecast-daily-details mt-2 gap-3 border-t border-gray-200 pt-2 text-xs text-gray-600 dark:border-gray-700 dark:text-gray-300" aria-hidden="true">
+                        <div><dt class="text-gray-500 dark:text-gray-400">Осадки</dt><dd class="ui-tabular mt-0.5 font-medium text-blue-700 dark:text-blue-300">{{.DailyPrecipitation}}</dd></div>
+                        <div><dt class="text-gray-500 dark:text-gray-400">Ветер</dt><dd class="ui-tabular mt-0.5 font-medium">{{.DailyWind}}</dd><dd class="ui-tabular text-gray-500 dark:text-gray-400">порывы {{.DailyGusts}}</dd></div>
+                        <div><dt class="text-gray-500 dark:text-gray-400">UV</dt><dd class="ui-tabular mt-0.5 font-medium">{{.DailyUV}}</dd></div>
+                    </dl>
                 </li>
                 {{end}}
             </ul>
@@ -91,6 +104,6 @@
     {{end}}
 
     <div class="mt-4 text-center">
-        <p class="text-xs text-gray-500 dark:text-gray-400">Данные от Open-Meteo{{if .FetchedAtKnown}} · самое раннее обновление {{russianDate .FetchedAt "datetime"}}{{end}}</p>
+        <p class="text-xs text-gray-500 dark:text-gray-400">Open-Meteo{{if .FetchedAtKnown}} · <time datetime="{{.FetchedAt.Format "2006-01-02T15:04:05Z07:00"}}" title="Самое раннее обновление показанных данных {{russianDate .FetchedAt "datetime"}}" aria-label="самое раннее обновление показанных данных {{russianDate .FetchedAt "datetime"}}">обновлено в {{.FetchedAt.Format "15:04"}}</time>{{end}}</p>
     </div>
 </div>

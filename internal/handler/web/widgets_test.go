@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -60,8 +61,20 @@ func TestBuildForecastCardsKeepsCompactForecastDataAndAccessibleNames(t *testing
 	if got, want := cards[1].AccessibleLabel, "13:00, Переменная облачность, 23°, вероятность осадков 60%"; got != want {
 		t.Errorf("cards[1].AccessibleLabel = %q, want %q", got, want)
 	}
-	if got, want := cards[8].AccessibleLabel, "Вт, Облачно, 16/26°"; got != want {
+	if got, want := cards[8].AccessibleLabel, "Вт, Облачно, 16/26°, осадки —, ветер —, порывы —, UV —"; got != want {
 		t.Errorf("cards[8].AccessibleLabel = %q, want %q", got, want)
+	}
+}
+
+func TestFormatDailyDetailsUsesReadableLocalizedNumbers(t *testing.T) {
+	details := formatDailyDetails(models.DailyForecast{
+		PrecipitationSum:            0,
+		HasPrecipitationSum:         true,
+		PrecipitationProbability:    40,
+		HasPrecipitationProbability: true,
+	})
+	if got, want := details.Precipitation, "0 мм · 40%"; got != want {
+		t.Errorf("daily precipitation = %q, want %q", got, want)
 	}
 }
 
@@ -85,7 +98,7 @@ func TestForecastWidgetDataAndTemplateExposeFreshnessAndPartialStates(t *testing
 		{
 			name:       "fresh complete forecast",
 			data:       buildForecastWidgetData(now, fresh, daily),
-			contains:   []string{"самое раннее обновление 25 сентября 2026, 11:00"},
+			contains:   []string{"самое раннее обновление показанных данных 25 сентября 2026, 11:00", "обновлено в 11:00"},
 			notContain: []string{"устарели", "Время обновления части прогноза неизвестно.", "Почасовой прогноз пока недоступен", "Прогноз на ближайшие дни пока недоступен"},
 		},
 		{
@@ -106,7 +119,7 @@ func TestForecastWidgetDataAndTemplateExposeFreshnessAndPartialStates(t *testing
 		{
 			name:     "unknown hourly timestamp with fresh daily forecast",
 			data:     buildForecastWidgetData(now, []models.HourlyForecast{{Time: now.Add(time.Hour)}}, daily),
-			contains: []string{"Время обновления части прогноза неизвестно.", "самое раннее обновление 25 сентября 2026, 11:00"},
+			contains: []string{"Время обновления части прогноза неизвестно.", "самое раннее обновление показанных данных 25 сентября 2026, 11:00"},
 		},
 		{
 			name: "filtered daily timestamp does not make visible forecast stale",
@@ -172,7 +185,7 @@ func TestForecastCardsExposeOnlyAvailableDetailsAndFreshSummary(t *testing.T) {
 	if cards[0].Wind != "" || cards[1].Wind != "порывы 16" {
 		t.Errorf("notable wind = %q, %q", cards[0].Wind, cards[1].Wind)
 	}
-	if got, want := cards[2].Details, "осадки 1.2 мм · ветер 9 м/с, порывы 14 · UV 6"; got != want {
+	if got, want := []string{cards[2].DailyPrecipitation, cards[2].DailyWind, cards[2].DailyGusts, cards[2].DailyUV}, []string{"1,2 мм", "9 м/с", "14", "6"}; !slices.Equal(got, want) {
 		t.Errorf("daily details = %q, want %q", got, want)
 	}
 

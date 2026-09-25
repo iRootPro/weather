@@ -7,6 +7,7 @@ import (
 	"math"
 	"net/http"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -582,7 +583,10 @@ type forecastCard struct {
 	Precipitation            string
 	Wind                     string
 	FeelsLike                string
-	Details                  string
+	DailyPrecipitation       string
+	DailyWind                string
+	DailyGusts               string
+	DailyUV                  string
 	IsHourly                 bool
 	Time                     time.Time
 	FetchedAt                time.Time
@@ -659,16 +663,19 @@ func buildForecastCards(now time.Time, hourlyForecast []models.HourlyForecast, d
 
 		label := daysOfWeekShort[df.Date.Weekday()]
 		temp := formatDailyTemperature(df)
-		details := formatDailyDetails(df)
+		dailyDetails := formatDailyDetails(df)
 		cards = append(cards, forecastCard{
 			Label:                    label,
 			Icon:                     df.Icon,
 			WeatherCode:              df.WeatherCode,
 			TempMain:                 temp,
-			AccessibleLabel:          formatForecastAccessibleLabel(label, df.WeatherDescription, temp, df.PrecipitationProbability),
+			AccessibleLabel:          formatDailyForecastAccessibleLabel(label, df.WeatherDescription, temp, dailyDetails),
 			PrecipitationProbability: df.PrecipitationProbability,
 			HasPrecipitation:         df.HasPrecipitationSum || df.HasPrecipitationProbability || df.PrecipitationSum > 0 || df.PrecipitationProbability > 0,
-			Details:                  details,
+			DailyPrecipitation:       dailyDetails.Precipitation,
+			DailyWind:                dailyDetails.Wind,
+			DailyGusts:               dailyDetails.Gusts,
+			DailyUV:                  dailyDetails.UV,
 			FetchedAt:                df.FetchedAt,
 		})
 	}
@@ -713,26 +720,43 @@ func formatHourlyWind(f models.HourlyForecast) string {
 	return strings.Join(parts, ", ")
 }
 
-func formatDailyDetails(f models.DailyForecast) string {
-	precipitation := "осадки —"
+type dailyForecastDetails struct {
+	Precipitation string
+	Wind          string
+	Gusts         string
+	UV            string
+}
+
+func formatDailyDetails(f models.DailyForecast) dailyForecastDetails {
+	precipitation := "—"
 	if f.HasPrecipitationSum {
-		precipitation = fmt.Sprintf("осадки %.1f мм", f.PrecipitationSum)
+		precipitation = formatWeatherDecimal(f.PrecipitationSum) + " мм"
 	}
 	if f.HasPrecipitationProbability {
 		precipitation += fmt.Sprintf(" · %d%%", f.PrecipitationProbability)
 	}
-	wind := "ветер —"
+	wind := "—"
 	if f.HasWindSpeedMax {
-		wind = fmt.Sprintf("ветер %.0f м/с", f.WindSpeedMax)
+		wind = fmt.Sprintf("%.0f м/с", f.WindSpeedMax)
 	}
+	gusts := "—"
 	if f.HasWindGustsMax {
-		wind += fmt.Sprintf(", порывы %.0f", f.WindGustsMax)
+		gusts = fmt.Sprintf("%.0f", f.WindGustsMax)
 	}
-	uv := "UV —"
+	uv := "—"
 	if f.HasUVIndexMax {
-		uv = fmt.Sprintf("UV %.0f", f.UVIndexMax)
+		uv = fmt.Sprintf("%.0f", f.UVIndexMax)
 	}
-	return strings.Join([]string{precipitation, wind, uv}, " · ")
+	return dailyForecastDetails{
+		Precipitation: precipitation,
+		Wind:          wind,
+		Gusts:         gusts,
+		UV:            uv,
+	}
+}
+
+func formatWeatherDecimal(value float32) string {
+	return strings.ReplaceAll(strconv.FormatFloat(float64(value), 'f', -1, 32), ".", ",")
 }
 
 func formatForecastAccessibleLabel(label, description, temperature string, precipitationProbability int16) string {
@@ -746,6 +770,23 @@ func formatForecastAccessibleLabel(label, description, temperature string, preci
 	if precipitationProbability > 0 {
 		parts = append(parts, fmt.Sprintf("вероятность осадков %d%%", precipitationProbability))
 	}
+	return strings.Join(parts, ", ")
+}
+
+func formatDailyForecastAccessibleLabel(label, description, temperature string, details dailyForecastDetails) string {
+	parts := []string{label}
+	if description != "" {
+		parts = append(parts, description)
+	}
+	if temperature != "" {
+		parts = append(parts, temperature)
+	}
+	parts = append(parts,
+		"осадки "+details.Precipitation,
+		"ветер "+details.Wind,
+		"порывы "+details.Gusts,
+		"UV "+details.UV,
+	)
 	return strings.Join(parts, ", ")
 }
 

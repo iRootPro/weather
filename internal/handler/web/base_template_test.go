@@ -586,7 +586,7 @@ func TestDashboardWidgetTemplatesUseConsistentHeadingRoles(t *testing.T) {
 	partialsDir := filepath.Join(filepath.Dir(filename), "..", "..", "web", "templates", "partials")
 	for name, expected := range map[string]string{
 		"current_weather.html": `<h2 class="ui-section-heading">Сейчас</h2>`,
-		"forecast.html":        `<h2 class="ui-section-heading mb-4">Прогноз погоды</h2>`,
+		"forecast.html":        `<h2 class="ui-section-heading">Прогноз</h2>`,
 		"sun_times.html":       `<h2 class="ui-section-heading">Солнце и Луна</h2>`,
 		"water_level.html":     `<h2 class="ui-section-heading">Уровень Кубани</h2>`,
 		"weather_events.html":  `<h2 class="ui-card-heading min-w-0 flex-1 text-gray-900 dark:text-white">`,
@@ -954,8 +954,8 @@ func TestForecastTemplateUsesCompactGridAndAccessibleLabels(t *testing.T) {
 			Label: "12:00", Icon: "☀️", TempMain: "20°", AccessibleLabel: "12:00, Ясно, 20°", PrecipitationProbability: 40, HasPrecipitation: true, IsHourly: true,
 		}},
 		DailyCards: []forecastCard{
-			{Label: "Пт", Icon: "☀️", TempMain: "-12/-3°", AccessibleLabel: "Пт, Ясно, -12/-3°"},
-			{Label: "Сб", Icon: "🌧️", TempMain: "-10/2°", AccessibleLabel: "Сб, Дождь, -10/2°, вероятность осадков 100%", PrecipitationProbability: 100, HasPrecipitation: true},
+			{Label: "Пт", Icon: "☀️", TempMain: "-12/-3°", AccessibleLabel: "Пт, Ясно, -12/-3°", DailyPrecipitation: "—", DailyWind: "—", DailyGusts: "—", DailyUV: "—"},
+			{Label: "Сб", Icon: "🌧️", TempMain: "-10/2°", AccessibleLabel: "Сб, Дождь, -10/2°, вероятность осадков 100%", PrecipitationProbability: 100, HasPrecipitation: true, DailyPrecipitation: "3,2 мм · 100%", DailyWind: "8 м/с", DailyGusts: "12", DailyUV: "5"},
 		},
 		FetchedAtKnown: true,
 	}
@@ -975,7 +975,7 @@ func TestForecastTemplateUsesCompactGridAndAccessibleLabels(t *testing.T) {
 			t.Errorf("rendered forecast must not contain %s", unexpected)
 		}
 	}
-	for _, expected := range []string{"ui-forecast-daily", "ui-forecast-daily-row", "-12/-3°", "Осадки <span class=\"ui-tabular\">100%</span>", ">—<"} {
+	for _, expected := range []string{"ui-forecast-daily", "ui-forecast-daily-row", "ui-forecast-daily-top", "-12/-3°", "Осадки", "порывы 12", "3,2 мм · 100%", ">—<", "Open-Meteo"} {
 		if !bytes.Contains(output.Bytes(), []byte(expected)) {
 			t.Errorf("rendered daily forecast is missing %s", expected)
 		}
