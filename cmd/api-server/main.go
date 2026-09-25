@@ -65,6 +65,7 @@ func main() {
 	weatherService.SetTimezone(cfg.Location.Timezone)
 	sensorService := service.NewSensorService(sensorRepo)
 	forecastService := service.NewForecastService(forecastRepo)
+	forecastService.SetTimezone(cfg.Location.Timezone)
 	geomagneticService := service.NewGeomagneticService(geomagneticRepo, cfg.Geomagnetic.AlertThreshold)
 	var hydroService *service.HydroService
 	if cfg.Hydro.Enabled {

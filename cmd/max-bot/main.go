@@ -58,6 +58,7 @@ func main() {
 
 	weatherService := service.NewWeatherService(weatherRepo)
 	forecastService := service.NewForecastService(forecastRepo)
+	forecastService.SetTimezone(cfg.Location.Timezone)
 	sunService, err := service.NewSunService(cfg.Location.Latitude, cfg.Location.Longitude, cfg.Location.Timezone)
 	if err != nil {
 		log.Fatalf("failed to create sun service: %v", err)

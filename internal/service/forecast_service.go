@@ -9,16 +9,29 @@ import (
 )
 
 type ForecastService struct {
-	repo repository.ForecastRepository
+	repo     repository.ForecastRepository
+	location *time.Location
 }
 
 func NewForecastService(repo repository.ForecastRepository) *ForecastService {
-	return &ForecastService{repo: repo}
+	return &ForecastService{repo: repo, location: time.Local}
+}
+
+// SetTimezone aligns forecast query bounds with Open-Meteo's requested local time.
+func (s *ForecastService) SetTimezone(timezone string) {
+	if location, err := time.LoadLocation(timezone); err == nil {
+		s.location = location
+	}
+}
+
+// Now returns the current instant in the location used for forecast presentation.
+func (s *ForecastService) Now() time.Time {
+	return time.Now().In(s.location)
 }
 
 // GetTodayForecast возвращает почасовой прогноз на сегодня
 func (s *ForecastService) GetTodayForecast(ctx context.Context) ([]models.HourlyForecast, error) {
-	now := time.Now()
+	now := time.Now().In(s.location)
 	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 	endOfDay := startOfDay.Add(24 * time.Hour)
 
@@ -27,12 +40,12 @@ func (s *ForecastService) GetTodayForecast(ctx context.Context) ([]models.Hourly
 		return nil, err
 	}
 
-	return convertToHourlyForecast(data), nil
+	return convertToHourlyForecast(data, s.location), nil
 }
 
 // GetHourlyForecast возвращает почасовой прогноз на N часов вперед
 func (s *ForecastService) GetHourlyForecast(ctx context.Context, hours int) ([]models.HourlyForecast, error) {
-	now := time.Now()
+	now := time.Now().In(s.location)
 	to := now.Add(time.Duration(hours) * time.Hour)
 
 	data, err := s.repo.GetHourlyForecast(ctx, now, to)
@@ -40,22 +53,25 @@ func (s *ForecastService) GetHourlyForecast(ctx context.Context, hours int) ([]m
 		return nil, err
 	}
 
-	return convertToHourlyForecast(data), nil
+	return convertToHourlyForecast(data, s.location), nil
 }
 
 // GetDailyForecast возвращает дневной прогноз на N дней вперед
 func (s *ForecastService) GetDailyForecast(ctx context.Context, days int) ([]models.DailyForecast, error) {
-	data, err := s.repo.GetLatestDaily(ctx, days)
+	now := time.Now().In(s.location)
+	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, s.location)
+	data, err := s.repo.GetDailyForecast(ctx, startOfDay, startOfDay.AddDate(0, 0, days))
 	if err != nil {
 		return nil, err
 	}
 
-	return convertToDailyForecast(data), nil
+	return convertToDailyForecast(data, s.location), nil
 }
 
 // GetCurrentConditions возвращает текущие условия из прогноза (первый час)
 func (s *ForecastService) GetCurrentConditions(ctx context.Context) (*models.HourlyForecast, error) {
-	data, err := s.repo.GetLatestHourly(ctx, 1)
+	now := s.Now()
+	data, err := s.repo.GetHourlyForecast(ctx, now, now.Add(time.Hour))
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +80,7 @@ func (s *ForecastService) GetCurrentConditions(ctx context.Context) (*models.Hou
 		return nil, nil
 	}
 
-	forecasts := convertToHourlyForecast(data)
+	forecasts := convertToHourlyForecast(data, s.location)
 	return &forecasts[0], nil
 }
 
@@ -73,28 +89,37 @@ func (s *ForecastService) GetShortForecast(ctx context.Context) ([]models.Hourly
 	return s.GetHourlyForecast(ctx, 12) // следующие 12 часов
 }
 
-func convertToHourlyForecast(data []models.ForecastData) []models.HourlyForecast {
+func convertToHourlyForecast(data []models.ForecastData, location *time.Location) []models.HourlyForecast {
 	result := make([]models.HourlyForecast, 0, len(data))
 	for _, d := range data {
 		forecast := models.HourlyForecast{
-			Time:      d.ForecastTime,
-			FetchedAt: d.FetchedAt,
+			Time:      d.ForecastTime.In(location),
+			FetchedAt: d.FetchedAt.In(location),
 		}
 
 		if d.Temperature != nil {
 			forecast.Temperature = *d.Temperature
+			forecast.HasTemperature = true
 		}
 		if d.FeelsLike != nil {
 			forecast.FeelsLike = *d.FeelsLike
+			forecast.HasFeelsLike = true
 		}
 		if d.PrecipitationProbability != nil {
 			forecast.PrecipitationProbability = *d.PrecipitationProbability
+			forecast.HasPrecipitationProbability = true
 		}
 		if d.Precipitation != nil {
 			forecast.Precipitation = *d.Precipitation
+			forecast.HasPrecipitation = true
 		}
 		if d.WindSpeed != nil {
-			forecast.WindSpeed = *d.WindSpeed
+			forecast.WindSpeed = kilometersPerHourToMetersPerSecond(*d.WindSpeed)
+			forecast.HasWindSpeed = true
+		}
+		if d.WindGusts != nil {
+			forecast.WindGusts = kilometersPerHourToMetersPerSecond(*d.WindGusts)
+			forecast.HasWindGusts = true
 		}
 		if d.WindDirection != nil {
 			forecast.WindDirection = *d.WindDirection
@@ -113,28 +138,41 @@ func convertToHourlyForecast(data []models.ForecastData) []models.HourlyForecast
 	return result
 }
 
-func convertToDailyForecast(data []models.ForecastData) []models.DailyForecast {
+func convertToDailyForecast(data []models.ForecastData, location *time.Location) []models.DailyForecast {
 	result := make([]models.DailyForecast, 0, len(data))
 	for _, d := range data {
 		forecast := models.DailyForecast{
-			Date:      d.ForecastTime,
-			FetchedAt: d.FetchedAt,
+			Date:      d.ForecastTime.In(location),
+			FetchedAt: d.FetchedAt.In(location),
 		}
 
 		if d.TemperatureMin != nil {
 			forecast.TemperatureMin = *d.TemperatureMin
+			forecast.HasTemperatureMin = true
 		}
 		if d.TemperatureMax != nil {
 			forecast.TemperatureMax = *d.TemperatureMax
+			forecast.HasTemperatureMax = true
 		}
 		if d.PrecipitationProbability != nil {
 			forecast.PrecipitationProbability = *d.PrecipitationProbability
+			forecast.HasPrecipitationProbability = true
 		}
 		if d.Precipitation != nil {
 			forecast.PrecipitationSum = *d.Precipitation
+			forecast.HasPrecipitationSum = true
 		}
 		if d.WindSpeed != nil {
-			forecast.WindSpeedMax = *d.WindSpeed
+			forecast.WindSpeedMax = kilometersPerHourToMetersPerSecond(*d.WindSpeed)
+			forecast.HasWindSpeedMax = true
+		}
+		if d.WindGusts != nil {
+			forecast.WindGustsMax = kilometersPerHourToMetersPerSecond(*d.WindGusts)
+			forecast.HasWindGustsMax = true
+		}
+		if d.UVIndex != nil {
+			forecast.UVIndexMax = *d.UVIndex
+			forecast.HasUVIndexMax = true
 		}
 		if d.WindDirection != nil {
 			forecast.WindDirection = *d.WindDirection
@@ -151,4 +189,8 @@ func convertToDailyForecast(data []models.ForecastData) []models.DailyForecast {
 		result = append(result, forecast)
 	}
 	return result
+}
+
+func kilometersPerHourToMetersPerSecond(value float32) float32 {
+	return value / 3.6
 }

@@ -15,6 +15,11 @@ type forecastRepository struct {
 	pool *pgxpool.Pool
 }
 
+const (
+	latestHourlyGenerationFilter = "AND fetched_at = (SELECT MAX(fetched_at) FROM forecast_data WHERE forecast_type = 'hourly')"
+	latestDailyGenerationFilter  = "AND fetched_at = (SELECT MAX(fetched_at) FROM forecast_data WHERE forecast_type = 'daily')"
+)
+
 func NewForecastRepository(pool *pgxpool.Pool) ForecastRepository {
 	return &forecastRepository{pool: pool}
 }
@@ -124,7 +129,18 @@ func (r *forecastRepository) SaveBatch(ctx context.Context, data []models.Foreca
 		)
 	}
 
-	br := r.pool.SendBatch(ctx, batch)
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to start forecast batch transaction: %w", err)
+	}
+	committed := false
+	defer func() {
+		if !committed {
+			_ = tx.Rollback(ctx)
+		}
+	}()
+
+	br := tx.SendBatch(ctx, batch)
 	closed := false
 	defer func() {
 		if !closed {
@@ -143,6 +159,10 @@ func (r *forecastRepository) SaveBatch(ctx context.Context, data []models.Foreca
 	if closeErr != nil {
 		return fmt.Errorf("failed to close forecast batch: %w", closeErr)
 	}
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("failed to commit forecast batch: %w", err)
+	}
+	committed = true
 
 	return nil
 }
@@ -157,6 +177,7 @@ func (r *forecastRepository) GetHourlyForecast(ctx context.Context, from, to tim
 			forecast_type, fetched_at
 		FROM forecast_data
 		WHERE forecast_type = 'hourly'
+			` + latestHourlyGenerationFilter + `
 			AND forecast_time >= $1
 			AND forecast_time <= $2
 		ORDER BY forecast_time ASC`
@@ -174,6 +195,7 @@ func (r *forecastRepository) GetDailyForecast(ctx context.Context, from, to time
 			forecast_type, fetched_at
 		FROM forecast_data
 		WHERE forecast_type = 'daily'
+			` + latestDailyGenerationFilter + `
 			AND forecast_time >= $1
 			AND forecast_time <= $2
 		ORDER BY forecast_time ASC`
@@ -188,9 +210,9 @@ func (r *forecastRepository) GetLatestHourly(ctx context.Context, hours int) ([]
 }
 
 func (r *forecastRepository) GetLatestDaily(ctx context.Context, days int) ([]models.ForecastData, error) {
-	now := time.Now().Truncate(24 * time.Hour) // начало дня
-	to := now.Add(time.Duration(days) * 24 * time.Hour)
-	return r.GetDailyForecast(ctx, now, to)
+	now := time.Now()
+	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	return r.GetDailyForecast(ctx, startOfDay, startOfDay.AddDate(0, 0, days))
 }
 
 func (r *forecastRepository) DeleteOldForecasts(ctx context.Context, olderThan time.Time) error {

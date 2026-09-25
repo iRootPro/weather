@@ -579,7 +579,12 @@ type forecastCard struct {
 	AccessibleLabel          string
 	PrecipitationProbability int16
 	HasPrecipitation         bool
+	Precipitation            string
+	Wind                     string
+	FeelsLike                string
+	Details                  string
 	IsHourly                 bool
+	Time                     time.Time
 	FetchedAt                time.Time
 }
 
@@ -597,7 +602,13 @@ type forecastWidgetData struct {
 	HasUnknownFetchedAt bool
 	HasStaleFetchedAt   bool
 	Stale               bool
+	Summary             string
 }
+
+const (
+	notableWindSpeed = 10
+	notableWindGust  = 15
+)
 
 func buildForecastCards(now time.Time, hourlyForecast []models.HourlyForecast, dailyForecast []models.DailyForecast) []forecastCard {
 	cards := make([]forecastCard, 0, 9)
@@ -611,7 +622,16 @@ func buildForecastCards(now time.Time, hourlyForecast []models.HourlyForecast, d
 			continue
 		}
 
-		temp := fmt.Sprintf("%.0f°", hf.Temperature)
+		temp := "—"
+		if hf.HasTemperature || hf.Temperature != 0 {
+			temp = fmt.Sprintf("%.0f°", hf.Temperature)
+		}
+		precipitation := formatHourlyPrecipitation(hf)
+		wind := formatHourlyWind(hf)
+		feelsLike := ""
+		if (hf.HasTemperature || hf.Temperature != 0) && hf.HasFeelsLike && absFloat32(hf.Temperature-hf.FeelsLike) >= 3 {
+			feelsLike = fmt.Sprintf("ощущается %.0f°", hf.FeelsLike)
+		}
 		cards = append(cards, forecastCard{
 			Label:                    hf.Time.Format("15:04"),
 			Icon:                     hf.Icon,
@@ -619,8 +639,12 @@ func buildForecastCards(now time.Time, hourlyForecast []models.HourlyForecast, d
 			TempMain:                 temp,
 			AccessibleLabel:          formatForecastAccessibleLabel(hf.Time.Format("15:04"), hf.WeatherDescription, temp, hf.PrecipitationProbability),
 			PrecipitationProbability: hf.PrecipitationProbability,
-			HasPrecipitation:         hf.PrecipitationProbability > 0,
+			HasPrecipitation:         hf.HasPrecipitation || hf.HasPrecipitationProbability || hf.Precipitation > 0 || hf.PrecipitationProbability > 0,
+			Precipitation:            precipitation,
+			Wind:                     wind,
+			FeelsLike:                feelsLike,
 			IsHourly:                 true,
+			Time:                     hf.Time,
 			FetchedAt:                hf.FetchedAt,
 		})
 	}
@@ -634,7 +658,8 @@ func buildForecastCards(now time.Time, hourlyForecast []models.HourlyForecast, d
 		}
 
 		label := daysOfWeekShort[df.Date.Weekday()]
-		temp := fmt.Sprintf("%.0f/%.0f°", df.TemperatureMin, df.TemperatureMax)
+		temp := formatDailyTemperature(df)
+		details := formatDailyDetails(df)
 		cards = append(cards, forecastCard{
 			Label:                    label,
 			Icon:                     df.Icon,
@@ -642,12 +667,72 @@ func buildForecastCards(now time.Time, hourlyForecast []models.HourlyForecast, d
 			TempMain:                 temp,
 			AccessibleLabel:          formatForecastAccessibleLabel(label, df.WeatherDescription, temp, df.PrecipitationProbability),
 			PrecipitationProbability: df.PrecipitationProbability,
-			HasPrecipitation:         df.PrecipitationProbability > 0,
+			HasPrecipitation:         df.HasPrecipitationSum || df.HasPrecipitationProbability || df.PrecipitationSum > 0 || df.PrecipitationProbability > 0,
+			Details:                  details,
 			FetchedAt:                df.FetchedAt,
 		})
 	}
 
 	return cards
+}
+
+func formatDailyTemperature(f models.DailyForecast) string {
+	min := "—"
+	if f.HasTemperatureMin || f.TemperatureMin != 0 {
+		min = fmt.Sprintf("%.0f", f.TemperatureMin)
+	}
+	max := "—"
+	if f.HasTemperatureMax || f.TemperatureMax != 0 {
+		max = fmt.Sprintf("%.0f", f.TemperatureMax)
+	}
+	return min + "/" + max + "°"
+}
+
+func formatHourlyPrecipitation(f models.HourlyForecast) string {
+	parts := make([]string, 0, 2)
+	if f.HasPrecipitation {
+		parts = append(parts, fmt.Sprintf("%.1f мм", f.Precipitation))
+	}
+	if f.HasPrecipitationProbability {
+		parts = append(parts, fmt.Sprintf("%d%%", f.PrecipitationProbability))
+	}
+	return strings.Join(parts, " · ")
+}
+
+func formatHourlyWind(f models.HourlyForecast) string {
+	if (!f.HasWindSpeed || f.WindSpeed < notableWindSpeed) && (!f.HasWindGusts || f.WindGusts < notableWindGust) {
+		return ""
+	}
+	parts := make([]string, 0, 2)
+	if f.HasWindSpeed {
+		parts = append(parts, fmt.Sprintf("ветер %.0f м/с", f.WindSpeed))
+	}
+	if f.HasWindGusts {
+		parts = append(parts, fmt.Sprintf("порывы %.0f", f.WindGusts))
+	}
+	return strings.Join(parts, ", ")
+}
+
+func formatDailyDetails(f models.DailyForecast) string {
+	precipitation := "осадки —"
+	if f.HasPrecipitationSum {
+		precipitation = fmt.Sprintf("осадки %.1f мм", f.PrecipitationSum)
+	}
+	if f.HasPrecipitationProbability {
+		precipitation += fmt.Sprintf(" · %d%%", f.PrecipitationProbability)
+	}
+	wind := "ветер —"
+	if f.HasWindSpeedMax {
+		wind = fmt.Sprintf("ветер %.0f м/с", f.WindSpeedMax)
+	}
+	if f.HasWindGustsMax {
+		wind += fmt.Sprintf(", порывы %.0f", f.WindGustsMax)
+	}
+	uv := "UV —"
+	if f.HasUVIndexMax {
+		uv = fmt.Sprintf("UV %.0f", f.UVIndexMax)
+	}
+	return strings.Join([]string{precipitation, wind, uv}, " · ")
 }
 
 func formatForecastAccessibleLabel(label, description, temperature string, precipitationProbability int16) string {
@@ -699,7 +784,54 @@ func buildForecastWidgetData(now time.Time, hourlyForecast []models.HourlyForeca
 		data.HasUnknownFetchedAt = true
 	}
 	data.Stale = data.HasStaleFetchedAt || data.HasUnknownFetchedAt
+	if !data.Stale {
+		data.Summary = buildForecastSummary(now, hourlyForecast, data.HourlyCards)
+	}
 	return data
+}
+
+func buildForecastSummary(now time.Time, forecast []models.HourlyForecast, cards []forecastCard) string {
+	visibleTimes := make(map[time.Time]struct{}, len(cards))
+	for _, card := range cards {
+		visibleTimes[card.Time] = struct{}{}
+	}
+	eligible := make([]models.HourlyForecast, 0, len(forecast))
+	for _, item := range forecast {
+		if _, ok := visibleTimes[item.Time]; ok && isFreshForecast(now, item.FetchedAt) {
+			eligible = append(eligible, item)
+		}
+	}
+	for _, item := range eligible {
+		if item.HasPrecipitation && item.Precipitation >= 0.2 && (!item.HasPrecipitationProbability || item.PrecipitationProbability >= 40) {
+			return fmt.Sprintf("Осадки вероятны с %s", item.Time.Format("15:04"))
+		}
+	}
+	var strongestWind float32
+	for _, item := range eligible {
+		if item.HasWindGusts && item.WindGusts > strongestWind {
+			strongestWind = item.WindGusts
+		}
+		if item.HasWindSpeed && item.WindSpeed > strongestWind {
+			strongestWind = item.WindSpeed
+		}
+	}
+	if strongestWind >= notableWindGust {
+		return fmt.Sprintf("Порывы ветра до %.0f м/с", strongestWind)
+	}
+	if len(eligible) > 1 && eligible[0].HasTemperature && eligible[len(eligible)-1].HasTemperature {
+		delta := eligible[len(eligible)-1].Temperature - eligible[0].Temperature
+		if delta >= 5 {
+			return fmt.Sprintf("Потеплеет на %.0f°", delta)
+		}
+		if delta <= -5 {
+			return fmt.Sprintf("Похолодает на %.0f°", -delta)
+		}
+	}
+	return ""
+}
+
+func isFreshForecast(now, fetchedAt time.Time) bool {
+	return !fetchedAt.IsZero() && !fetchedAt.After(now) && now.Sub(fetchedAt) <= forecastStaleAfter
 }
 
 // ForecastWidget renders the weather forecast widget.
@@ -710,7 +842,7 @@ func (h *Handler) ForecastWidget(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	now := time.Now()
+	now := h.forecastService.Now()
 
 	// Получаем почасовой прогноз на следующие 12 часов (чтобы гарантированно было 3-4 карточки).
 	hourlyForecast, err := h.forecastService.GetHourlyForecast(r.Context(), 12)

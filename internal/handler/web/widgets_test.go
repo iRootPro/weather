@@ -153,6 +153,69 @@ func TestForecastWidgetDataAndTemplateExposeFreshnessAndPartialStates(t *testing
 	}
 }
 
+func TestForecastCardsExposeOnlyAvailableDetailsAndFreshSummary(t *testing.T) {
+	now := time.Date(2026, time.September, 25, 10, 0, 0, 0, time.UTC)
+	hourly := []models.HourlyForecast{
+		{Time: now.Add(time.Hour), Temperature: 20, FeelsLike: 16, HasTemperature: true, HasFeelsLike: true, Precipitation: 0.4, PrecipitationProbability: 60, HasPrecipitation: true, HasPrecipitationProbability: true},
+		{Time: now.Add(2 * time.Hour), Temperature: 19, HasTemperature: true},
+		{Time: now.Add(3 * time.Hour), Temperature: 19, HasTemperature: true},
+		{Time: now.Add(4 * time.Hour), Temperature: 19, WindGusts: 16, HasTemperature: true, HasWindGusts: true},
+	}
+	daily := []models.DailyForecast{{Date: now.AddDate(0, 0, 1), PrecipitationSum: 1.2, WindSpeedMax: 9, WindGustsMax: 14, UVIndexMax: 6, HasPrecipitationSum: true, HasWindSpeedMax: true, HasWindGustsMax: true, HasUVIndexMax: true}}
+	cards := buildForecastCards(now, hourly, daily)
+	if got, want := cards[0].Precipitation, "0.4 мм · 60%"; got != want {
+		t.Errorf("hourly precipitation = %q, want %q", got, want)
+	}
+	if got, want := cards[0].FeelsLike, "ощущается 16°"; got != want {
+		t.Errorf("feels like = %q, want %q", got, want)
+	}
+	if cards[0].Wind != "" || cards[1].Wind != "порывы 16" {
+		t.Errorf("notable wind = %q, %q", cards[0].Wind, cards[1].Wind)
+	}
+	if got, want := cards[2].Details, "осадки 1.2 мм · ветер 9 м/с, порывы 14 · UV 6"; got != want {
+		t.Errorf("daily details = %q, want %q", got, want)
+	}
+
+	hourly[0].FetchedAt = now.Add(-time.Hour)
+	hourly[1].FetchedAt = now.Add(-time.Hour)
+	hourly[2].FetchedAt = now.Add(-time.Hour)
+	hourly[3].FetchedAt = now.Add(-time.Hour)
+	daily[0].FetchedAt = now.Add(-time.Hour)
+	fresh := buildForecastWidgetData(now, hourly, daily)
+	if got, want := fresh.Summary, "Осадки вероятны с 11:00"; got != want {
+		t.Errorf("fresh summary = %q, want %q", got, want)
+	}
+	staleHourly := append([]models.HourlyForecast(nil), hourly...)
+	staleHourly[0].FetchedAt = now.Add(-3 * time.Hour)
+	if got := buildForecastWidgetData(now, staleHourly, daily).Summary; got != "" {
+		t.Errorf("stale summary = %q, want empty", got)
+	}
+}
+
+func TestForecastCardsDoNotRenderMissingDailyTemperaturesAsZero(t *testing.T) {
+	now := time.Date(2026, time.September, 25, 10, 0, 0, 0, time.UTC)
+	cards := buildForecastCards(now, nil, []models.DailyForecast{{Date: now.AddDate(0, 0, 1)}})
+	if len(cards) != 1 || cards[0].TempMain != "—/—°" {
+		t.Errorf("daily temperature = %#v, want —/—°", cards)
+	}
+}
+
+func TestForecastSummaryUsesOnlyVisibleFreshHourlyRows(t *testing.T) {
+	now := time.Date(2026, time.September, 25, 10, 0, 0, 0, time.UTC)
+	fresh := now.Add(-time.Hour)
+	stale := now.Add(-3 * time.Hour)
+	forecast := []models.HourlyForecast{
+		{Time: now.Add(time.Hour), FetchedAt: fresh, Temperature: 20, HasTemperature: true},
+		{Time: now.Add(2 * time.Hour), FetchedAt: fresh, Temperature: 20, HasTemperature: true},
+		{Time: now.Add(3 * time.Hour), FetchedAt: fresh, Temperature: 20, HasTemperature: true},
+		{Time: now.Add(4 * time.Hour), FetchedAt: fresh, Temperature: 20, HasTemperature: true},
+		{Time: now.Add(5 * time.Hour), FetchedAt: stale, Precipitation: 1, PrecipitationProbability: 80, HasPrecipitation: true, HasPrecipitationProbability: true},
+	}
+	if got := buildForecastWidgetData(now, forecast, nil).Summary; got != "" {
+		t.Errorf("summary = %q, want empty because notable row is not displayed", got)
+	}
+}
+
 func TestWeatherIconMapsKnownWMOCodesAndUsesUnknownFallback(t *testing.T) {
 	tests := []struct {
 		name     string

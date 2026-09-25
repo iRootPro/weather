@@ -18,9 +18,9 @@ type ForecastData struct {
 	Precipitation            *float32 `json:"precipitation,omitempty" db:"precipitation"`                         // мм
 
 	// Ветер
-	WindSpeed     *float32 `json:"wind_speed,omitempty" db:"wind_speed"`         // м/с
+	WindSpeed     *float32 `json:"wind_speed,omitempty" db:"wind_speed"`         // км/ч (Open-Meteo, преобразуется сервисом)
 	WindDirection *int16   `json:"wind_direction,omitempty" db:"wind_direction"` // градусы 0-360
-	WindGusts     *float32 `json:"wind_gusts,omitempty" db:"wind_gusts"`         // м/с
+	WindGusts     *float32 `json:"wind_gusts,omitempty" db:"wind_gusts"`         // км/ч (Open-Meteo, преобразуется сервисом)
 
 	// Облачность и другое
 	CloudCover *int16   `json:"cloud_cover,omitempty" db:"cloud_cover"` // %
@@ -41,32 +41,48 @@ type ForecastData struct {
 
 // HourlyForecast представляет почасовой прогноз (упрощенная структура для API)
 type HourlyForecast struct {
-	Time                     time.Time `json:"time"`
-	Temperature              float32   `json:"temperature"`
-	FeelsLike                float32   `json:"feels_like"`
-	PrecipitationProbability int16     `json:"precipitation_probability"`
-	Precipitation            float32   `json:"precipitation"`
-	WindSpeed                float32   `json:"wind_speed"`
-	WindDirection            int16     `json:"wind_direction"`
-	WeatherCode              int16     `json:"weather_code"`
-	WeatherDescription       string    `json:"weather_description"`
-	Icon                     string    `json:"icon"`
-	FetchedAt                time.Time `json:"-"`
+	Time                        time.Time `json:"time"`
+	Temperature                 float32   `json:"temperature"`
+	FeelsLike                   float32   `json:"feels_like"`
+	PrecipitationProbability    int16     `json:"precipitation_probability"`
+	Precipitation               float32   `json:"precipitation"`
+	WindSpeed                   float32   `json:"wind_speed"`
+	WindGusts                   float32   `json:"wind_gusts"`
+	WindDirection               int16     `json:"wind_direction"`
+	WeatherCode                 int16     `json:"weather_code"`
+	WeatherDescription          string    `json:"weather_description"`
+	Icon                        string    `json:"icon"`
+	FetchedAt                   time.Time `json:"-"`
+	HasTemperature              bool      `json:"-"`
+	HasFeelsLike                bool      `json:"-"`
+	HasPrecipitationProbability bool      `json:"-"`
+	HasPrecipitation            bool      `json:"-"`
+	HasWindSpeed                bool      `json:"-"`
+	HasWindGusts                bool      `json:"-"`
 }
 
 // DailyForecast представляет дневной прогноз (упрощенная структура для API)
 type DailyForecast struct {
-	Date                     time.Time `json:"date"`
-	TemperatureMin           float32   `json:"temperature_min"`
-	TemperatureMax           float32   `json:"temperature_max"`
-	PrecipitationProbability int16     `json:"precipitation_probability"`
-	PrecipitationSum         float32   `json:"precipitation_sum"`
-	WindSpeedMax             float32   `json:"wind_speed_max"`
-	WindDirection            int16     `json:"wind_direction"`
-	WeatherCode              int16     `json:"weather_code"`
-	WeatherDescription       string    `json:"weather_description"`
-	Icon                     string    `json:"icon"`
-	FetchedAt                time.Time `json:"-"`
+	Date                        time.Time `json:"date"`
+	TemperatureMin              float32   `json:"temperature_min"`
+	TemperatureMax              float32   `json:"temperature_max"`
+	PrecipitationProbability    int16     `json:"precipitation_probability"`
+	PrecipitationSum            float32   `json:"precipitation_sum"`
+	WindSpeedMax                float32   `json:"wind_speed_max"`
+	WindGustsMax                float32   `json:"wind_gusts_max"`
+	UVIndexMax                  float32   `json:"uv_index_max"`
+	WindDirection               int16     `json:"wind_direction"`
+	WeatherCode                 int16     `json:"weather_code"`
+	WeatherDescription          string    `json:"weather_description"`
+	Icon                        string    `json:"icon"`
+	FetchedAt                   time.Time `json:"-"`
+	HasTemperatureMin           bool      `json:"-"`
+	HasTemperatureMax           bool      `json:"-"`
+	HasPrecipitationProbability bool      `json:"-"`
+	HasPrecipitationSum         bool      `json:"-"`
+	HasWindSpeedMax             bool      `json:"-"`
+	HasWindGustsMax             bool      `json:"-"`
+	HasUVIndexMax               bool      `json:"-"`
 }
 
 // GetWeatherDescription возвращает текстовое описание по WMO коду погоды

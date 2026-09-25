@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -133,11 +134,17 @@ func (f *Fetcher) FetchAndSave(ctx context.Context) error {
 
 	fetchedAt := time.Now()
 
-	// Конвертируем почасовой прогноз
+	location, err := time.LoadLocation(f.location.Timezone)
+	if err != nil {
+		return fmt.Errorf("load forecast timezone %q: %w", f.location.Timezone, err)
+	}
+
+	// Конвертируем почасовой прогноз. Open-Meteo returns local, offset-free
+	// timestamps for the requested timezone, so retain that timezone here.
 	hourlyData := make([]models.ForecastData, 0)
 	for i := 0; i < len(resp.Hourly.Time) && i < f.config.HourlyHours; i++ {
 		// Open-Meteo возвращает время в формате "2025-12-29T00:00"
-		forecastTime, err := time.Parse("2006-01-02T15:04", resp.Hourly.Time[i])
+		forecastTime, err := parseForecastTime(resp.Hourly.Time[i], "2006-01-02T15:04", location)
 		if err != nil {
 			f.logger.Warn("failed to parse hourly time", "time", resp.Hourly.Time[i], "error", err)
 			continue
@@ -183,7 +190,7 @@ func (f *Fetcher) FetchAndSave(ctx context.Context) error {
 	// Конвертируем дневной прогноз
 	dailyData := make([]models.ForecastData, 0)
 	for i := 0; i < len(resp.Daily.Time) && i < f.config.DailyDays; i++ {
-		forecastTime, err := time.Parse("2006-01-02", resp.Daily.Time[i])
+		forecastTime, err := parseForecastTime(resp.Daily.Time[i], "2006-01-02", location)
 		if err != nil {
 			f.logger.Warn("failed to parse daily time", "time", resp.Daily.Time[i], "error", err)
 			continue
@@ -240,4 +247,8 @@ func (f *Fetcher) FetchAndSave(ctx context.Context) error {
 	)
 
 	return nil
+}
+
+func parseForecastTime(value, layout string, location *time.Location) (time.Time, error) {
+	return time.ParseInLocation(layout, value, location)
 }

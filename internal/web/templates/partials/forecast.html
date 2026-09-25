@@ -21,6 +21,9 @@
     {{if .DailyUnavailable}}
     <p class="mb-3 text-sm text-gray-500 dark:text-gray-400">Прогноз на ближайшие дни пока недоступен.</p>
     {{end}}
+    {{if .Summary}}
+    <p class="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">{{.Summary}}</p>
+    {{end}}
 
     <ul id="forecast-cards" class="grid grid-cols-3 gap-2 sm:grid-cols-5 sm:gap-3 lg:hidden" aria-label="Периоды прогноза">
         {{range .Cards}}
@@ -38,10 +41,11 @@
             </div>
 
             <div class="mt-1 min-h-5 text-xs font-medium text-blue-700 dark:text-blue-300">
-            {{if .HasPrecipitation}}
-                <span class="inline-flex h-3.5 w-3.5 align-text-bottom" aria-hidden="true">{{icon "droplet"}}</span> <span class="ui-tabular">{{.PrecipitationProbability}}%</span>
-            {{end}}
+            {{if .Precipitation}}<span class="inline-flex h-3.5 w-3.5 align-text-bottom" aria-hidden="true">{{icon "droplet"}}</span> <span class="ui-tabular">{{.Precipitation}}</span>{{else if .HasPrecipitation}}<span class="inline-flex h-3.5 w-3.5 align-text-bottom" aria-hidden="true">{{icon "droplet"}}</span> <span class="ui-tabular">{{.PrecipitationProbability}}%</span>{{end}}
             </div>
+            {{if .Wind}}<div class="mt-1 text-xs text-gray-600 dark:text-gray-300">{{.Wind}}</div>{{end}}
+            {{if .FeelsLike}}<div class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{.FeelsLike}}</div>{{end}}
+            {{if .Details}}<div class="mt-1 text-xs text-gray-600 dark:text-gray-300">{{.Details}}</div>{{end}}
             </div>
         </li>
         {{end}}
@@ -57,7 +61,9 @@
                     <div class="text-xs font-semibold text-gray-700 dark:text-gray-300">{{.Label}}</div>
                     {{weatherIcon .WeatherCode}}
                     <div class="ui-tabular whitespace-nowrap text-sm font-bold text-gray-900 dark:text-white">{{.TempMain}}</div>
-                    {{if .HasPrecipitation}}<div class="text-xs font-medium text-blue-700 dark:text-blue-300"><span aria-hidden="true">↓</span> <span class="ui-tabular">{{.PrecipitationProbability}}%</span></div>{{end}}
+                    {{if .Precipitation}}<div class="text-xs font-medium text-blue-700 dark:text-blue-300"><span aria-hidden="true">↓</span> <span class="ui-tabular">{{.Precipitation}}</span></div>{{else if .HasPrecipitation}}<div class="text-xs font-medium text-blue-700 dark:text-blue-300"><span aria-hidden="true">↓</span> <span class="ui-tabular">{{.PrecipitationProbability}}%</span></div>{{end}}
+                    {{if .Wind}}<div class="text-xs text-gray-600 dark:text-gray-300">{{.Wind}}</div>{{end}}
+                    {{if .FeelsLike}}<div class="text-xs text-gray-500 dark:text-gray-400">{{.FeelsLike}}</div>{{end}}
                 </div>
             </li>
             {{end}}
@@ -74,7 +80,7 @@
                     <div class="text-sm font-semibold text-gray-700 dark:text-gray-300" aria-hidden="true">{{.Label}}</div>
                     <div aria-hidden="true">{{weatherIcon .WeatherCode}}</div>
                     <div class="ui-tabular whitespace-nowrap text-sm font-bold text-gray-900 dark:text-white" aria-hidden="true">{{.TempMain}}</div>
-                    <div class="min-w-14 text-right text-xs font-medium text-blue-700 dark:text-blue-300" aria-hidden="true">{{if .HasPrecipitation}}Осадки <span class="ui-tabular">{{.PrecipitationProbability}}%</span>{{else}}—{{end}}</div>
+                    <div class="ui-forecast-daily-details text-xs text-gray-600 dark:text-gray-300" aria-hidden="true">{{if .Details}}{{.Details}}{{else if .HasPrecipitation}}Осадки <span class="ui-tabular">{{.PrecipitationProbability}}%</span>{{else}}—{{end}}</div>
                 </li>
                 {{end}}
             </ul>

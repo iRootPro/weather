@@ -82,6 +82,9 @@ func (c *Client) GetForecast(ctx context.Context, req ForecastRequest) (*Forecas
 	q.Set("latitude", fmt.Sprintf("%.6f", req.Latitude))
 	q.Set("longitude", fmt.Sprintf("%.6f", req.Longitude))
 	q.Set("timezone", req.Timezone)
+	// Keep stored values compatible with existing Open-Meteo rows. The service
+	// converts this canonical storage unit to m/s for its consumers.
+	q.Set("wind_speed_unit", "kmh")
 
 	if len(req.Hourly) > 0 {
 		for _, param := range req.Hourly {
