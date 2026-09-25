@@ -915,9 +915,10 @@ func TestForecastTemplateUsesCompactGridAndAccessibleLabels(t *testing.T) {
 		HourlyCards: []forecastCard{{
 			Label: "12:00", Icon: "☀️", TempMain: "20°", AccessibleLabel: "12:00, Ясно, 20°", PrecipitationProbability: 40, HasPrecipitation: true, IsHourly: true,
 		}},
-		DailyCards: []forecastCard{{
-			Label: "Пт", Icon: "☀️", TempMain: "12/20°", AccessibleLabel: "Пт, Ясно, 12/20°",
-		}},
+		DailyCards: []forecastCard{
+			{Label: "Пт", Icon: "☀️", TempMain: "-12/-3°", AccessibleLabel: "Пт, Ясно, -12/-3°"},
+			{Label: "Сб", Icon: "🌧️", TempMain: "-10/2°", AccessibleLabel: "Сб, Дождь, -10/2°, вероятность осадков 100%", PrecipitationProbability: 100, HasPrecipitation: true},
+		},
 		FetchedAtKnown: true,
 	}
 
@@ -935,6 +936,14 @@ func TestForecastTemplateUsesCompactGridAndAccessibleLabels(t *testing.T) {
 		if bytes.Contains(output.Bytes(), []byte(unexpected)) {
 			t.Errorf("rendered forecast must not contain %s", unexpected)
 		}
+	}
+	for _, expected := range []string{"ui-forecast-daily", "ui-forecast-daily-row", "-12/-3°", "Осадки <span class=\"ui-tabular\">100%</span>", ">—<"} {
+		if !bytes.Contains(output.Bytes(), []byte(expected)) {
+			t.Errorf("rendered daily forecast is missing %s", expected)
+		}
+	}
+	if got := bytes.Count(output.Bytes(), []byte("ui-forecast-daily-row")); got != 2 {
+		t.Errorf("rendered daily forecast has %d shared-grid rows, want 2", got)
 	}
 }
 
