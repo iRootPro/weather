@@ -51,6 +51,7 @@ type HourlyForecast struct {
 	WeatherCode              int16     `json:"weather_code"`
 	WeatherDescription       string    `json:"weather_description"`
 	Icon                     string    `json:"icon"`
+	FetchedAt                time.Time `json:"-"`
 }
 
 // DailyForecast представляет дневной прогноз (упрощенная структура для API)
@@ -65,6 +66,7 @@ type DailyForecast struct {
 	WeatherCode              int16     `json:"weather_code"`
 	WeatherDescription       string    `json:"weather_description"`
 	Icon                     string    `json:"icon"`
+	FetchedAt                time.Time `json:"-"`
 }
 
 // GetWeatherDescription возвращает текстовое описание по WMO коду погоды

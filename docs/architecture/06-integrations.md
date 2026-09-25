@@ -26,6 +26,8 @@ Client включает `AutoReconnect` и `ConnectRetry`: начальный re
 
 Client формирует один forecast request для координат и timezone станции, запрашивает hourly и daily наборы. HTTP timeout задаётся `FORECAST_API_TIMEOUT`; встроенного retry в client нет. Worker повторяет полный fetch на следующем interval. Сохранённые ранее forecast rows остаются доступны, а записи старше 7 дней очищаются после успешной batch save.
 
+В production Compose `forecast-fetcher` использует тот же публичный параметр proxy `GEOMAGNETIC_HTTPS_PROXY`, что и `geomagnetic-fetcher`: он передаётся в `HTTPS_PROXY` и `HTTP_PROXY`; локальные PostgreSQL-адреса исключены через `NO_PROXY`. Виджет показывает время получения из `fetched_at`; данные старше 2 часов (при штатном hourly refresh) или с неизвестным временем считаются устаревшими.
+
 ## XRAS
 
 Client читает JSON Kp/solar activity с конфигурируемого URL. Данные источника нормализуются из строк, timezone источника разбирается отдельно. Поддерживается optional HTTPS proxy. HTTP timeout задаётся конфигурацией; request-level retry нет. Worker повторит запрос на следующем tick, а предыдущие строки продолжат обслуживать dashboard и alerts. Retention — 90 дней.

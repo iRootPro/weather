@@ -77,7 +77,8 @@ func convertToHourlyForecast(data []models.ForecastData) []models.HourlyForecast
 	result := make([]models.HourlyForecast, 0, len(data))
 	for _, d := range data {
 		forecast := models.HourlyForecast{
-			Time: d.ForecastTime,
+			Time:      d.ForecastTime,
+			FetchedAt: d.FetchedAt,
 		}
 
 		if d.Temperature != nil {
@@ -116,7 +117,8 @@ func convertToDailyForecast(data []models.ForecastData) []models.DailyForecast {
 	result := make([]models.DailyForecast, 0, len(data))
 	for _, d := range data {
 		forecast := models.DailyForecast{
-			Date: d.ForecastTime,
+			Date:      d.ForecastTime,
+			FetchedAt: d.FetchedAt,
 		}
 
 		if d.TemperatureMin != nil {

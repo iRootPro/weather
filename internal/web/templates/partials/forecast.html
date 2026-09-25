@@ -1,12 +1,26 @@
 <div class="ui-surface p-4 sm:p-5">
     <h2 class="ui-section-heading mb-4">Прогноз погоды</h2>
 
+    {{if .Stale}}
+    <div class="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200" role="status">
+        {{if .HasStaleFetchedAt}}Данные прогноза устарели: самое раннее обновление показанных данных {{russianDate .FetchedAt "datetime"}}.{{end}}
+        {{if .HasUnknownFetchedAt}}{{if .HasStaleFetchedAt}} {{end}}Время обновления части прогноза неизвестно.{{end}}
+    </div>
+    {{end}}
+
     {{if .NoForecast}}
     <div class="text-center py-6 text-gray-500 dark:text-gray-400">
         <p class="text-sm">Прогноз пока недоступен</p>
         <p class="text-xs mt-1">Данные обновляются каждый час</p>
     </div>
     {{else}}
+
+    {{if .HourlyUnavailable}}
+    <p class="mb-3 text-sm text-gray-500 dark:text-gray-400">Почасовой прогноз пока недоступен.</p>
+    {{end}}
+    {{if .DailyUnavailable}}
+    <p class="mb-3 text-sm text-gray-500 dark:text-gray-400">Прогноз на ближайшие дни пока недоступен.</p>
+    {{end}}
 
     <ul id="forecast-cards" class="grid grid-cols-3 gap-2 sm:grid-cols-5 sm:gap-3 lg:hidden" aria-label="Периоды прогноза">
         {{range .Cards}}
@@ -71,6 +85,6 @@
     {{end}}
 
     <div class="mt-4 text-center">
-        <p class="text-xs text-gray-500 dark:text-gray-400">Данные от Open-Meteo</p>
+        <p class="text-xs text-gray-500 dark:text-gray-400">Данные от Open-Meteo{{if .FetchedAtKnown}} · самое раннее обновление {{russianDate .FetchedAt "datetime"}}{{end}}</p>
     </div>
 </div>

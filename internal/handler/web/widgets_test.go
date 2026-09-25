@@ -1,6 +1,9 @@
 package web
 
 import (
+	"bytes"
+	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -59,6 +62,94 @@ func TestBuildForecastCardsKeepsCompactForecastDataAndAccessibleNames(t *testing
 	}
 	if got, want := cards[8].AccessibleLabel, "Вт, Облачно, 16/26°"; got != want {
 		t.Errorf("cards[8].AccessibleLabel = %q, want %q", got, want)
+	}
+}
+
+func TestForecastWidgetDataAndTemplateExposeFreshnessAndPartialStates(t *testing.T) {
+	now := time.Date(2026, time.September, 25, 12, 0, 0, 0, time.UTC)
+	fresh := []models.HourlyForecast{{
+		Time:      now.Add(time.Hour),
+		FetchedAt: now.Add(-time.Hour),
+	}}
+	daily := []models.DailyForecast{{
+		Date:      now.AddDate(0, 0, 1),
+		FetchedAt: now.Add(-time.Hour),
+	}}
+
+	tests := []struct {
+		name       string
+		data       forecastWidgetData
+		contains   []string
+		notContain []string
+	}{
+		{
+			name:       "fresh complete forecast",
+			data:       buildForecastWidgetData(now, fresh, daily),
+			contains:   []string{"самое раннее обновление 25 сентября 2026, 11:00"},
+			notContain: []string{"устарели", "Время обновления части прогноза неизвестно.", "Почасовой прогноз пока недоступен", "Прогноз на ближайшие дни пока недоступен"},
+		},
+		{
+			name:     "stale forecast",
+			data:     buildForecastWidgetData(now, []models.HourlyForecast{{Time: now.Add(time.Hour), FetchedAt: now.Add(-3 * time.Hour)}}, nil),
+			contains: []string{"Данные прогноза устарели: самое раннее обновление показанных данных 25 сентября 2026, 09:00.", "Прогноз на ближайшие дни пока недоступен"},
+		},
+		{
+			name:     "stale hourly with fresh daily forecast",
+			data:     buildForecastWidgetData(now, []models.HourlyForecast{{Time: now.Add(time.Hour), FetchedAt: now.Add(-3 * time.Hour)}}, daily),
+			contains: []string{"Данные прогноза устарели: самое раннее обновление показанных данных 25 сентября 2026, 09:00."},
+		},
+		{
+			name:     "daily only with unknown timestamp",
+			data:     buildForecastWidgetData(now, nil, []models.DailyForecast{{Date: now.AddDate(0, 0, 1)}}),
+			contains: []string{"Время обновления части прогноза неизвестно.", "Почасовой прогноз пока недоступен"},
+		},
+		{
+			name:     "unknown hourly timestamp with fresh daily forecast",
+			data:     buildForecastWidgetData(now, []models.HourlyForecast{{Time: now.Add(time.Hour)}}, daily),
+			contains: []string{"Время обновления части прогноза неизвестно.", "самое раннее обновление 25 сентября 2026, 11:00"},
+		},
+		{
+			name: "filtered daily timestamp does not make visible forecast stale",
+			data: buildForecastWidgetData(now, fresh, []models.DailyForecast{{
+				Date:      now,
+				FetchedAt: now.Add(-3 * time.Hour),
+			}}),
+			notContain: []string{"устарели", "Время обновления части прогноза неизвестно."},
+		},
+		{
+			name:     "empty forecast",
+			data:     buildForecastWidgetData(now, nil, nil),
+			contains: []string{"Прогноз пока недоступен", "Время обновления части прогноза неизвестно."},
+		},
+	}
+
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("could not locate test file")
+	}
+	h := &Handler{templatesDir: filepath.Join(filepath.Dir(filename), "..", "..", "web", "templates")}
+	tmpl, err := h.parsePartial("forecast.html")
+	if err != nil {
+		t.Fatalf("parsePartial() error = %v", err)
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var output bytes.Buffer
+			if err := tmpl.Execute(&output, test.data); err != nil {
+				t.Fatalf("Execute() error = %v", err)
+			}
+			for _, want := range test.contains {
+				if !strings.Contains(output.String(), want) {
+					t.Errorf("rendered forecast missing %q", want)
+				}
+			}
+			for _, unwanted := range test.notContain {
+				if strings.Contains(output.String(), unwanted) {
+					t.Errorf("rendered forecast unexpectedly contains %q", unwanted)
+				}
+			}
+		})
 	}
 }
 

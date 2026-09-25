@@ -908,12 +908,7 @@ func TestForecastTemplateUsesCompactGridAndAccessibleLabels(t *testing.T) {
 		t.Fatalf("parsePartial() error = %v", err)
 	}
 
-	data := struct {
-		Cards       []forecastCard
-		HourlyCards []forecastCard
-		DailyCards  []forecastCard
-		NoForecast  bool
-	}{
+	data := forecastWidgetData{
 		Cards: []forecastCard{{
 			Label: "12:00", Icon: "☀️", TempMain: "20°", AccessibleLabel: "12:00, Ясно, 20°", PrecipitationProbability: 40, HasPrecipitation: true, IsHourly: true,
 		}},
@@ -923,6 +918,7 @@ func TestForecastTemplateUsesCompactGridAndAccessibleLabels(t *testing.T) {
 		DailyCards: []forecastCard{{
 			Label: "Пт", Icon: "☀️", TempMain: "12/20°", AccessibleLabel: "Пт, Ясно, 12/20°",
 		}},
+		FetchedAtKnown: true,
 	}
 
 	var output bytes.Buffer

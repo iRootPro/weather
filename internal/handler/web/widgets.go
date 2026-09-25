@@ -566,6 +566,23 @@ type forecastCard struct {
 	PrecipitationProbability int16
 	HasPrecipitation         bool
 	IsHourly                 bool
+	FetchedAt                time.Time
+}
+
+const forecastStaleAfter = 2 * time.Hour
+
+type forecastWidgetData struct {
+	Cards               []forecastCard
+	HourlyCards         []forecastCard
+	DailyCards          []forecastCard
+	NoForecast          bool
+	HourlyUnavailable   bool
+	DailyUnavailable    bool
+	FetchedAt           time.Time
+	FetchedAtKnown      bool
+	HasUnknownFetchedAt bool
+	HasStaleFetchedAt   bool
+	Stale               bool
 }
 
 func buildForecastCards(now time.Time, hourlyForecast []models.HourlyForecast, dailyForecast []models.DailyForecast) []forecastCard {
@@ -590,6 +607,7 @@ func buildForecastCards(now time.Time, hourlyForecast []models.HourlyForecast, d
 			PrecipitationProbability: hf.PrecipitationProbability,
 			HasPrecipitation:         hf.PrecipitationProbability > 0,
 			IsHourly:                 true,
+			FetchedAt:                hf.FetchedAt,
 		})
 	}
 
@@ -611,6 +629,7 @@ func buildForecastCards(now time.Time, hourlyForecast []models.HourlyForecast, d
 			AccessibleLabel:          formatForecastAccessibleLabel(label, df.WeatherDescription, temp, df.PrecipitationProbability),
 			PrecipitationProbability: df.PrecipitationProbability,
 			HasPrecipitation:         df.PrecipitationProbability > 0,
+			FetchedAt:                df.FetchedAt,
 		})
 	}
 
@@ -631,6 +650,44 @@ func formatForecastAccessibleLabel(label, description, temperature string, preci
 	return strings.Join(parts, ", ")
 }
 
+func buildForecastWidgetData(now time.Time, hourlyForecast []models.HourlyForecast, dailyForecast []models.DailyForecast) forecastWidgetData {
+	cards := buildForecastCards(now, hourlyForecast, dailyForecast)
+	data := forecastWidgetData{
+		Cards: cards,
+	}
+
+	for _, card := range cards {
+		if card.IsHourly {
+			data.HourlyCards = append(data.HourlyCards, card)
+		} else {
+			data.DailyCards = append(data.DailyCards, card)
+		}
+	}
+	data.HourlyUnavailable = len(data.HourlyCards) == 0
+	data.DailyUnavailable = len(data.DailyCards) == 0
+
+	data.NoForecast = len(cards) == 0
+	for _, card := range cards {
+		fetchedAt := card.FetchedAt
+		if fetchedAt.IsZero() || fetchedAt.After(now) {
+			data.HasUnknownFetchedAt = true
+			continue
+		}
+		if !data.FetchedAtKnown || fetchedAt.Before(data.FetchedAt) {
+			data.FetchedAt = fetchedAt
+			data.FetchedAtKnown = true
+		}
+		if now.Sub(fetchedAt) > forecastStaleAfter {
+			data.HasStaleFetchedAt = true
+		}
+	}
+	if len(cards) == 0 {
+		data.HasUnknownFetchedAt = true
+	}
+	data.Stale = data.HasStaleFetchedAt || data.HasUnknownFetchedAt
+	return data
+}
+
 // ForecastWidget renders the weather forecast widget.
 func (h *Handler) ForecastWidget(w http.ResponseWriter, r *http.Request) {
 	if h.forecastService == nil {
@@ -641,44 +698,21 @@ func (h *Handler) ForecastWidget(w http.ResponseWriter, r *http.Request) {
 
 	now := time.Now()
 
-	// Получаем почасовой прогноз на следующие 12 часов (чтобы гарантированно было 3-4 карточки)
+	// Получаем почасовой прогноз на следующие 12 часов (чтобы гарантированно было 3-4 карточки).
 	hourlyForecast, err := h.forecastService.GetHourlyForecast(r.Context(), 12)
 	if err != nil {
 		slog.Error("failed to get hourly forecast", "error", err)
-		http.Error(w, "Failed to load forecast", http.StatusInternalServerError)
-		return
+		hourlyForecast = nil
 	}
 
 	// Получаем дневной прогноз начиная с завтра
 	dailyForecast, err := h.forecastService.GetDailyForecast(r.Context(), 6)
 	if err != nil {
 		slog.Error("failed to get daily forecast", "error", err)
-		http.Error(w, "Failed to load forecast", http.StatusInternalServerError)
-		return
+		dailyForecast = nil
 	}
 
-	cards := buildForecastCards(now, hourlyForecast, dailyForecast)
-
-	hourlyCards := make([]forecastCard, 0, 3)
-	dailyCards := make([]forecastCard, 0, len(cards))
-	for _, card := range cards {
-		if card.IsHourly {
-			hourlyCards = append(hourlyCards, card)
-		} else {
-			dailyCards = append(dailyCards, card)
-		}
-	}
-	templateData := struct {
-		Cards       []forecastCard
-		HourlyCards []forecastCard
-		DailyCards  []forecastCard
-		NoForecast  bool
-	}{
-		Cards:       cards,
-		HourlyCards: hourlyCards,
-		DailyCards:  dailyCards,
-		NoForecast:  len(cards) == 0,
-	}
+	templateData := buildForecastWidgetData(now, hourlyForecast, dailyForecast)
 
 	tmpl, err := h.parsePartial("forecast.html")
 	if err != nil {

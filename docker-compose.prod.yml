@@ -114,6 +114,9 @@ services:
     container_name: weather-forecast-fetcher
     environment:
       TZ: Europe/Moscow
+      HTTPS_PROXY: ${GEOMAGNETIC_HTTPS_PROXY:-}
+      HTTP_PROXY: ${GEOMAGNETIC_HTTPS_PROXY:-}
+      NO_PROXY: localhost,127.0.0.1,postgres,weather-postgres
     depends_on:
       postgres:
         condition: service_healthy
