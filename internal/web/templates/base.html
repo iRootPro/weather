@@ -244,10 +244,6 @@
             position: relative;
         }
 
-        .ui-chart-plot-compact {
-            height: 8rem;
-        }
-
         .ui-chart-data {
             max-height: 16rem;
             overflow-y: auto;
@@ -286,6 +282,8 @@
 
         .ui-chart-card {
             border-bottom: 1px solid var(--ui-border);
+            display: flex;
+            flex-direction: column;
             padding-bottom: 1rem;
         }
 
@@ -301,12 +299,27 @@
         }
 
         .ui-chart-card-heading span { color: var(--ui-text-muted); font-size: 0.75rem; font-weight: 500; }
-        .ui-chart-legend { color: var(--ui-text-muted); display: flex; gap: 0.375rem; align-items: center; font-size: 0.75rem; margin: -0.25rem 0 0.5rem; }
+        .ui-chart-legend-slot { align-items: center; display: flex; height: 1.25rem; margin: -0.25rem 0 0.5rem; }
+        .ui-chart-legend { color: var(--ui-text-muted); display: flex; gap: 0.375rem; align-items: center; font-size: 0.75rem; }
         .ui-chart-legend-line { background: #2563eb; display: inline-block; height: 2px; width: 1.25rem; }
         .ui-chart-legend-dashed { background: repeating-linear-gradient(to right, #64748b 0 5px, transparent 5px 8px); }
-        .ui-chart-rain-plots { display: grid; gap: 0.75rem; }
-        .ui-chart-data-summary { color: var(--ui-action); cursor: pointer; font-size: 0.8125rem; font-weight: 600; }
+        .ui-chart-visual { height: 13rem; }
+        .ui-chart-visual > .ui-chart-plot { height: 100%; }
+        .ui-chart-rain-plots { display: grid; gap: 0.5rem; grid-template-rows: repeat(2, minmax(0, 1fr)); height: 100%; }
+        .ui-chart-rain-plots > div { display: flex; flex-direction: column; min-height: 0; }
+        .ui-chart-rain-plots .ui-chart-plot { flex: 1; height: auto; min-height: 0; }
+        .ui-chart-card details { margin-top: auto; padding-top: 1rem; }
+        .ui-chart-data-summary { align-items: center; color: var(--ui-text-muted); cursor: pointer; display: inline-flex; font-size: 0.8125rem; font-weight: 600; gap: 0.375rem; }
+        .ui-chart-data-summary::after { border-bottom: 1.5px solid currentColor; border-right: 1.5px solid currentColor; content: ""; height: 0.4rem; transform: rotate(45deg) translateY(-0.125rem); transition: transform 150ms ease; width: 0.4rem; }
+        details[open] > .ui-chart-data-summary::after { transform: rotate(225deg) translate(-0.125rem, -0.125rem); }
         .ui-chart-data-summary:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; }
+
+        .ui-event-summary { list-style: none; }
+        .ui-event-summary::-webkit-details-marker { display: none; }
+        .ui-disclosure-chevron { transition: transform 150ms ease; }
+        details[open] .ui-disclosure-chevron { transform: rotate(180deg); }
+        .ui-event-timeline { display: grid; grid-template-columns: max-content 1.25rem minmax(0, 1fr); }
+        .ui-event-time { font-family: var(--ui-font-mono); font-variant-numeric: tabular-nums; }
 
         @media (min-width: 640px) {
             .ui-chart-toolbar { align-items: center; flex-direction: row; justify-content: space-between; }

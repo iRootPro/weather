@@ -99,7 +99,8 @@ func TestBaseTemplateRendersAccessibleNavigation(t *testing.T) {
 		`prefers-reduced-motion: reduce`,
 		`.ui-chart-panel`,
 		`.ui-chart-plot`,
-		`.ui-chart-plot-compact`,
+		`.ui-chart-visual`,
+		`.ui-chart-legend-slot`,
 		`.ui-chart-data`,
 		`aria-label="Главная"`,
 		`aria-label="История"`,
@@ -520,7 +521,13 @@ func TestDashboardTemplatePrioritizesWeatherBeforeTelegramPromotion(t *testing.T
 		`aria-label="Шаг данных"`,
 		`id="weather-events"`,
 		`id="charts-24h"`,
-		`ui-chart-plot`, `ui-chart-plot-compact`, `ui-chart-data`,
+		`ui-chart-plot`, `ui-chart-visual`, `ui-chart-legend-slot`, `ui-chart-data`,
+		`aria-label="Таблица данных: ветер"`,
+		`aria-label="Таблица данных: осадки за день и интенсивность"`,
+		`aria-label="Таблица данных: освещённость"`,
+		`Погода в Telegram`, `Уведомления от метеостанции`, `Перейти в бот`,
+		`rel="noopener noreferrer"`, `message-circle`, `external-link`,
+		`syncDashboardLowerGrid`,
 		`id="sun-times"`,
 		`id="telegram-bot-promo"`,
 		`syncChartVisibility`,
@@ -532,7 +539,7 @@ func TestDashboardTemplatePrioritizesWeatherBeforeTelegramPromotion(t *testing.T
 		`id="current-weather" class="order-1 lg:col-span-8"`,
 		`aria-label="Прогноз"`,
 		`contents order-2 lg:col-span-4 lg:flex lg:flex-col lg:gap-6`,
-		`id="weather-events" class="order-2 empty:hidden lg:order-7 lg:col-span-full"`,
+		`id="weather-events" class="order-2 empty:hidden lg:order-7 lg:col-span-8"`,
 		`id="forecast" class="order-3 lg:order-1"`,
 		`id="water-level" class="order-4 lg:hidden"`,
 		`id="sun-times" class="order-5 lg:hidden"`,
@@ -565,6 +572,9 @@ func TestDashboardTemplatePrioritizesWeatherBeforeTelegramPromotion(t *testing.T
 	if chartHeadingIndex < 0 || chartHeadingIndex > chartDetailsIndex {
 		t.Fatal("chart heading must stay outside the collapsed mobile disclosure")
 	}
+	if !bytes.Contains(output.Bytes(), []byte(`hx-swap="innerHTML"></div>`)) {
+		t.Fatal("weather-events HTMX target must be truly empty before its first response")
+	}
 }
 
 func TestDashboardWidgetTemplatesUseConsistentHeadingRoles(t *testing.T) {
@@ -579,7 +589,7 @@ func TestDashboardWidgetTemplatesUseConsistentHeadingRoles(t *testing.T) {
 		"forecast.html":        `<h2 class="ui-section-heading mb-4">Прогноз погоды</h2>`,
 		"sun_times.html":       `<h2 class="ui-section-heading">Солнце и Луна</h2>`,
 		"water_level.html":     `<h2 class="ui-section-heading">Уровень Кубани</h2>`,
-		"weather_events.html":  `<h2 class="ui-card-heading">Погодные события (24 часа)</h2>`,
+		"weather_events.html":  `<h2 class="ui-card-heading min-w-0 flex-1 text-gray-900 dark:text-white">`,
 	} {
 		t.Run(name, func(t *testing.T) {
 			contents, err := os.ReadFile(filepath.Join(partialsDir, name))
@@ -849,6 +859,34 @@ func TestWeatherEventsTemplateOmitsEmptyState(t *testing.T) {
 	}
 	if output.Len() != 0 {
 		t.Fatalf("empty weather events must clear the HTMX target, got %q", output.String())
+	}
+}
+
+func TestWeatherEventsTemplateRendersAccessibleJournalSummary(t *testing.T) {
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("could not locate test file")
+	}
+
+	h := &Handler{templatesDir: filepath.Join(filepath.Dir(filename), "..", "..", "web", "templates")}
+	tmpl, err := h.parsePartial("weather_events.html")
+	if err != nil {
+		t.Fatalf("parsePartial() error = %v", err)
+	}
+
+	var output bytes.Buffer
+	events := []models.WeatherEvent{{Type: "wind_gust", Description: "Порыв ветра", Time: time.Date(2026, time.September, 25, 12, 30, 0, 0, time.Local)}}
+	if err := tmpl.Execute(&output, map[string]any{"Events": events}); err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+
+	for _, expected := range []string{"book-open-text", "Погодные события", "За последние 24 часа", "Всего: 1", "chevron-down", "ui-event-timeline", "12:30", "Порыв ветра"} {
+		if !bytes.Contains(output.Bytes(), []byte(expected)) {
+			t.Errorf("event journal is missing %q", expected)
+		}
+	}
+	if bytes.Contains(output.Bytes(), []byte(`data-icon="circle-alert"`)) {
+		t.Fatal("event journal summary must not use a warning icon")
 	}
 }
 

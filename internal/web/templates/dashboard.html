@@ -84,8 +84,8 @@
                     <canvas id="tempChart" role="img" aria-label="График температуры" aria-describedby="tempChart-summary"></canvas>
                 </div>
                 <p id="tempChart-summary" class="sr-only"></p>
-                <details id="tempChart-details" class="mt-4 text-sm">
-                    <summary class="ui-chart-data-summary">Данные: температура</summary>
+                <details id="tempChart-details" class="text-sm">
+                    <summary class="ui-chart-data-summary" aria-label="Таблица данных: температура">Таблица данных</summary>
                     <div id="tempChart-table" class="ui-chart-data mt-2 rounded border border-gray-200 dark:border-gray-700"></div>
                 </details>
             </section>
@@ -95,8 +95,8 @@
                     <canvas id="humidityChart" role="img" aria-label="График влажности" aria-describedby="humidityChart-summary"></canvas>
                 </div>
                 <p id="humidityChart-summary" class="sr-only"></p>
-                <details id="humidityChart-details" class="mt-4 text-sm">
-                    <summary class="ui-chart-data-summary">Данные: влажность</summary>
+                <details id="humidityChart-details" class="text-sm">
+                    <summary class="ui-chart-data-summary" aria-label="Таблица данных: влажность">Таблица данных</summary>
                     <div id="humidityChart-table" class="ui-chart-data mt-2 rounded border border-gray-200 dark:border-gray-700"></div>
                 </details>
             </section>
@@ -106,45 +106,49 @@
                     <canvas id="pressureChart" role="img" aria-label="График давления" aria-describedby="pressureChart-summary"></canvas>
                 </div>
                 <p id="pressureChart-summary" class="sr-only"></p>
-                <details id="pressureChart-details" class="mt-4 text-sm">
-                    <summary class="ui-chart-data-summary">Данные: давление</summary>
+                <details id="pressureChart-details" class="text-sm">
+                    <summary class="ui-chart-data-summary" aria-label="Таблица данных: давление">Таблица данных</summary>
                     <div id="pressureChart-table" class="ui-chart-data mt-2 rounded border border-gray-200 dark:border-gray-700"></div>
                 </details>
             </section>
             <section class="ui-chart-card">
                 <div class="ui-chart-card-heading"><h3>Ветер</h3><span>м/с</span></div>
-                <p class="ui-chart-legend"><span class="ui-chart-legend-line"></span>Скорость <span class="ui-chart-legend-line ui-chart-legend-dashed"></span>Порывы</p>
-                <div class="ui-chart-plot">
-                    <canvas id="windChart" role="img" aria-label="График ветра" aria-describedby="windChart-summary"></canvas>
+                <div class="ui-chart-legend-slot"><p class="ui-chart-legend"><span class="ui-chart-legend-line"></span>Скорость <span class="ui-chart-legend-line ui-chart-legend-dashed"></span>Порывы</p></div>
+                <div class="ui-chart-visual">
+                    <div class="ui-chart-plot"><canvas id="windChart" role="img" aria-label="График ветра" aria-describedby="windChart-summary"></canvas></div>
                 </div>
                 <p id="windChart-summary" class="sr-only"></p>
-                <details id="windChart-details" class="mt-4 text-sm">
-                    <summary class="ui-chart-data-summary">Данные: ветер</summary>
+                <details id="windChart-details" class="text-sm">
+                    <summary class="ui-chart-data-summary" aria-label="Таблица данных: ветер">Таблица данных</summary>
                     <div id="windChart-table" class="ui-chart-data mt-2 rounded border border-gray-200 dark:border-gray-700"></div>
                 </details>
             </section>
             <section class="ui-chart-card">
                 <div class="ui-chart-card-heading"><h3>Осадки</h3><span>мм</span></div>
-                <div class="ui-chart-rain-plots">
-                    <div><p class="ui-chart-subtitle">Накоплено за день, мм</p><div class="ui-chart-plot ui-chart-plot-compact"><canvas id="rainDailyChart" role="img" aria-label="График накопленных за день осадков" aria-describedby="rainDailyChart-summary rainChart-summary"></canvas></div></div>
-                    <div><p class="ui-chart-subtitle">Интенсивность, мм/ч</p><div class="ui-chart-plot ui-chart-plot-compact"><canvas id="rainRateChart" role="img" aria-label="График интенсивности осадков" aria-describedby="rainRateChart-summary rainChart-summary"></canvas></div></div>
+                <div class="ui-chart-legend-slot" aria-hidden="true"></div>
+                <div class="ui-chart-visual">
+                    <div class="ui-chart-rain-plots">
+                        <div><p class="ui-chart-subtitle">Накоплено за день, мм</p><div class="ui-chart-plot"><canvas id="rainDailyChart" role="img" aria-label="График накопленных за день осадков" aria-describedby="rainDailyChart-summary rainChart-summary"></canvas></div></div>
+                        <div><p class="ui-chart-subtitle">Интенсивность, мм/ч</p><div class="ui-chart-plot"><canvas id="rainRateChart" role="img" aria-label="График интенсивности осадков" aria-describedby="rainRateChart-summary rainChart-summary"></canvas></div></div>
+                    </div>
                 </div>
                 <p id="rainDailyChart-summary" class="sr-only"></p>
                 <p id="rainRateChart-summary" class="sr-only"></p>
                 <p id="rainChart-summary" class="sr-only">Таблица содержит накопленные за день осадки в миллиметрах и их интенсивность в миллиметрах в час.</p>
-                <details id="rainChart-details" class="mt-4 text-sm">
-                    <summary class="ui-chart-data-summary">Данные: осадки</summary>
+                <details id="rainChart-details" class="text-sm">
+                    <summary class="ui-chart-data-summary" aria-label="Таблица данных: осадки за день и интенсивность">Таблица данных</summary>
                     <div id="rainChart-table" class="ui-chart-data mt-2"></div>
                 </details>
             </section>
             <section class="ui-chart-card">
                 <div class="ui-chart-card-heading"><h3>Освещённость</h3><span>лк</span></div>
-                <div class="ui-chart-plot">
-                    <canvas id="solarChart" role="img" aria-label="График освещённости" aria-describedby="solarChart-summary"></canvas>
+                <div class="ui-chart-legend-slot" aria-hidden="true"></div>
+                <div class="ui-chart-visual">
+                    <div class="ui-chart-plot"><canvas id="solarChart" role="img" aria-label="График освещённости" aria-describedby="solarChart-summary"></canvas></div>
                 </div>
                 <p id="solarChart-summary" class="sr-only"></p>
-                <details id="solarChart-details" class="mt-4 text-sm">
-                    <summary class="ui-chart-data-summary">Данные: освещённость</summary>
+                <details id="solarChart-details" class="text-sm">
+                    <summary class="ui-chart-data-summary" aria-label="Таблица данных: освещённость">Таблица данных</summary>
                     <div id="solarChart-table" class="ui-chart-data mt-2 rounded border border-gray-200 dark:border-gray-700"></div>
                 </details>
             </section>
@@ -154,15 +158,15 @@
     </section>
 
     <!-- Weather Events: desktop journal follows the charts instead of occupying the forecast column. -->
-    <div id="weather-events" class="order-2 empty:hidden lg:order-7 lg:col-span-full"
+    <div id="weather-events" class="order-2 empty:hidden lg:order-7 lg:col-span-8"
          hx-get="/widgets/events"
          hx-trigger="load, every 300s"
-         hx-swap="innerHTML">
-    </div>
+         hx-swap="innerHTML"></div>
 
-    <a id="telegram-bot-promo" href="https://t.me/ArmavirMeteoBot" target="_blank" rel="noopener noreferrer" class="ui-surface order-7 flex min-h-11 items-center justify-between gap-3 px-4 py-3 text-sm text-gray-600 dark:text-gray-300 lg:order-8 lg:col-span-full">
-        <span class="text-gray-700 dark:text-gray-200"><strong>Telegram-бот</strong> · уведомления о погоде</span>
-        <span class="shrink-0 font-semibold text-blue-700 dark:text-blue-300">Открыть →</span>
+    <a id="telegram-bot-promo" href="https://t.me/ArmavirMeteoBot" target="_blank" rel="noopener noreferrer" class="ui-surface order-7 flex min-h-11 items-center justify-between gap-3 px-4 py-3 text-sm lg:order-8 lg:col-span-full">
+        <span class="inline-flex h-5 w-5 shrink-0 text-blue-700 dark:text-blue-300" aria-hidden="true">{{icon "message-circle"}}</span>
+        <span class="min-w-0 flex-1"><strong class="block text-gray-900 dark:text-white">Погода в Telegram</strong><span class="block text-xs text-gray-600 dark:text-gray-300">Уведомления от метеостанции</span></span>
+        <span class="inline-flex shrink-0 items-center gap-1 font-semibold text-blue-700 dark:text-blue-300">Перейти в бот <span class="h-4 w-4" aria-hidden="true">{{icon "external-link"}}</span></span>
     </a>
 </div>
 {{end}}
@@ -207,6 +211,12 @@
             eventJournal.open = desktopEventJournal.matches ? eventJournalOpen.desktop : eventJournalOpen.mobile;
         }
 
+        function syncDashboardLowerGrid() {
+            const eventsPresent = Boolean(document.querySelector('#weather-events details'));
+            document.getElementById('telegram-bot-promo').classList.toggle('lg:col-span-4', eventsPresent);
+            document.getElementById('telegram-bot-promo').classList.toggle('lg:col-span-full', !eventsPresent);
+        }
+
         chartDetails.addEventListener('toggle', function() {
             if (!chartDetails.open) return;
             initializeCharts();
@@ -223,7 +233,7 @@
             }
         }, true);
         document.body.addEventListener('htmx:afterSwap', function(event) {
-            if (event.target.id === 'weather-events') syncEventJournal();
+            if (event.target.id === 'weather-events') { syncEventJournal(); syncDashboardLowerGrid(); }
             if (event.target.id === 'current-weather') {
                 const astronomyDetails = event.target.querySelector('#current-astronomy-details');
                 if (astronomyDetails) astronomyDetails.open = astronomyDetailsOpen;
@@ -234,6 +244,7 @@
         }, true);
         syncChartVisibility();
         syncEventJournal();
+        syncDashboardLowerGrid();
     });
 </script>
 {{end}}

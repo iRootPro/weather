@@ -1,19 +1,22 @@
 {{if .Events}}<details class="ui-surface" open>
-    <summary class="flex min-h-11 cursor-pointer items-center justify-between gap-3 px-4 py-3">
-        <h2 class="ui-card-heading">Погодные события (24 часа)</h2>
-        <span class="inline-flex h-5 w-5 text-gray-500 dark:text-gray-400" aria-hidden="true">{{icon "circle-alert"}}</span>
+    <summary class="ui-event-summary flex min-h-11 cursor-pointer items-center gap-3 px-4 py-3">
+        <span class="inline-flex h-5 w-5 shrink-0 text-gray-500 dark:text-gray-400" aria-hidden="true">{{icon "book-open-text"}}</span>
+        <h2 class="ui-card-heading min-w-0 flex-1 text-gray-900 dark:text-white"><span class="block">Погодные события</span><span class="block text-xs font-normal text-gray-500 dark:text-gray-400">За последние 24 часа</span></h2>
+        <span class="ui-tabular shrink-0 text-xs font-semibold text-gray-600 dark:text-gray-300">Всего: {{len .Events}}</span>
+        <span class="ui-disclosure-chevron inline-flex h-5 w-5 shrink-0 text-gray-500 dark:text-gray-400" aria-hidden="true">{{icon "chevron-down"}}</span>
     </summary>
 
     <div class="space-y-3 border-t border-gray-200 px-4 pb-4 pt-3 dark:border-gray-700">
         {{range .Events}}
-        <div class="flex items-start space-x-3 text-sm border-l-2 border-gray-200 dark:border-gray-700 pl-3 hover:border-blue-500 dark:hover:border-blue-400 transition-colors">
-            <span class="mt-0.5 inline-flex h-5 w-5 flex-shrink-0 text-gray-500 dark:text-gray-400" aria-hidden="true">{{eventIcon .Type}}</span>
+        <div class="ui-event-timeline items-start gap-x-3 text-sm">
+            <time class="ui-event-time pt-0.5 text-xs text-gray-500 dark:text-gray-400">{{.Time.Format "15:04"}}</time>
+            <span class="mt-0.5 inline-flex h-5 w-5 text-gray-500 dark:text-gray-400" aria-hidden="true">{{eventIcon .Type}}</span>
             <div class="flex-1 min-w-0">
                 <p class="text-gray-900 dark:text-white font-medium">{{.Description}}</p>
                 {{if .Details}}
                 <p class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">{{.Details}}</p>
                 {{end}}
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{.Time.Format "15:04"}}, {{russianDate .Time "short"}}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{russianDate .Time "short"}}</p>
             </div>
         </div>
         {{end}}
