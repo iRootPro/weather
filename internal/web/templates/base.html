@@ -152,6 +152,38 @@
             box-shadow: var(--ui-shadow);
         }
 
+        .ui-current-metric { display: flex !important; flex-direction: column; }
+        .ui-current-metric.ui-attention,
+        .ui-current-metric.ui-attention:hover {
+            background: var(--attention-bg);
+            box-shadow: none;
+            border-color: transparent;
+        }
+        .ui-attention-heat { --attention-bg: #fff4e8; }
+        .ui-attention-cold { --attention-bg: #eff6ff; }
+        .ui-attention-wind { --attention-bg: #edfafa; }
+        .ui-attention-rain { --attention-bg: #edf7ff; }
+        .ui-attention-solar { --attention-bg: #fffbeb; }
+        .dark .ui-attention-heat { --attention-bg: #35251d; }
+        .dark .ui-attention-cold { --attention-bg: #1a2941; }
+        .dark .ui-attention-wind { --attention-bg: #183432; }
+        .dark .ui-attention-rain { --attention-bg: #192f40; }
+        .dark .ui-attention-solar { --attention-bg: #332d1b; }
+        .ui-metric-attention {
+            order: 10;
+            margin-top: 0.75rem;
+            font-size: 0.8125rem;
+            line-height: 1.45;
+            color: var(--ui-text);
+        }
+        .ui-attention-notice {
+            padding: 0.75rem;
+            border-left: 3px solid var(--ui-warning);
+            background: var(--ui-surface-subtle);
+            color: var(--ui-text);
+            font-size: 0.875rem;
+        }
+
         .ui-icon {
             display: block;
             height: 100%;

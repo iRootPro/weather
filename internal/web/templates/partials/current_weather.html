@@ -4,24 +4,13 @@
         <span class="ui-tabular text-xs text-gray-500 dark:text-gray-400 sm:text-sm">Измерено {{.ObservationTime}} · обновлено {{.UpdatedAt}}</span>
     </div>
 
-    {{if or .IsRaining .IsFoggy .IsWindy}}
+    {{with .Attention.Notice}}<p class="ui-attention-notice mb-4">{{.}}</p>{{end}}
+    {{if .IsFoggy}}
     <div class="mb-4 flex flex-wrap gap-2">
-        {{if .IsRaining}}
-        <div class="inline-flex items-center px-3 py-1.5 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-full">
-            <span class="mr-1.5 inline-flex h-4 w-4 text-blue-500" aria-hidden="true">{{icon "droplet"}}</span>
-            <span class="text-sm font-medium text-blue-700 dark:text-blue-300">{{.RainIntensity}}</span>
-        </div>
-        {{end}}
         {{if .IsFoggy}}
         <div class="inline-flex items-center px-3 py-1.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-full">
             <span class="mr-1.5 inline-flex h-4 w-4 text-gray-500 dark:text-gray-400" aria-hidden="true">{{icon "cloud-fog"}}</span>
             <span class="text-sm font-medium text-gray-600 dark:text-gray-300">туман</span>
-        </div>
-        {{end}}
-        {{if .IsWindy}}
-        <div class="inline-flex items-center px-3 py-1.5 bg-teal-50 dark:bg-teal-900/30 border border-teal-200 dark:border-teal-800 rounded-full">
-            <span class="mr-1.5 inline-flex h-4 w-4 text-teal-500" aria-hidden="true">{{icon "wind"}}</span>
-            <span class="text-sm font-medium text-teal-700 dark:text-teal-300">{{.WindIntensity}}</span>
         </div>
         {{end}}
     </div>
@@ -29,9 +18,10 @@
 
     <div class="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4 lg:grid-cols-3 lg:gap-px lg:overflow-hidden lg:rounded-lg lg:border lg:border-gray-200 dark:lg:border-gray-700">
         <!-- Temperature -->
-        <a href="/detail/temperature" class="ui-current-metric ui-metric-card block cursor-pointer p-3 text-center group sm:p-4 lg:col-span-1 lg:p-4 lg:text-left">
+        <a href="/detail/temperature" class="ui-current-metric ui-metric-card {{with .Attention.Temperature.Title}}ui-attention ui-attention-{{$.Attention.Temperature.Tone}}{{end}} block cursor-pointer p-3 text-center group sm:p-4 lg:col-span-1 lg:p-4 lg:text-left">
+            {{template "metric-attention" .Attention.Temperature}}
             <div class="ui-current-value ui-tabular text-2xl font-bold text-orange-600 dark:text-orange-400 group-hover:text-orange-700 dark:group-hover:text-orange-300 sm:text-3xl lg:text-5xl">
-                {{printf "%.1f" .TempOutdoor}}°
+                {{if .Missing.temperature}}—{{else}}{{printf "%.1f" .TempOutdoor}}°{{end}}
             </div>
             <div class="ui-metric-label text-sm text-gray-600 dark:text-gray-300 mt-1 group-hover:text-gray-900 dark:group-hover:text-white">
                 <span class="inline-flex h-5 w-5 align-text-bottom text-gray-500 dark:text-gray-400">{{icon "thermometer"}}</span>
@@ -39,7 +29,7 @@
                 <span class="ml-1 inline-flex h-3 w-3 align-text-bottom opacity-0 transition-opacity group-hover:opacity-100" aria-hidden="true">{{icon "chevron-right"}}</span>
             </div>
             <div class="text-xs text-gray-400 dark:text-gray-500">
-                ощущается: {{printf "%.1f" .TempFeelsLike}}°
+                ощущается: {{if .Missing.feels}}—{{else}}{{printf "%.1f" .TempFeelsLike}}°{{end}}
             </div>
             {{if .HasTempHourlyData}}
             <div class="mt-1 text-xs {{if gt .TempChange 0.0}}text-red-500{{else if lt .TempChange 0.0}}text-blue-500{{else}}text-gray-400 dark:text-gray-500{{end}}">
@@ -57,7 +47,7 @@
         <!-- Humidity -->
         <a href="/detail/humidity" class="ui-current-metric ui-metric-card block cursor-pointer p-3 text-center group sm:p-4 lg:p-4 lg:text-left">
             <div class="ui-current-value ui-tabular text-2xl font-bold text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300 sm:text-3xl">
-                {{.HumidityOutdoor}}%
+                {{if .Missing.humidity}}—{{else}}{{.HumidityOutdoor}}%{{end}}
             </div>
             <div class="ui-metric-label text-sm text-gray-600 dark:text-gray-300 mt-1 group-hover:text-gray-900 dark:group-hover:text-white">
                 <span class="inline-flex h-5 w-5 align-text-bottom text-gray-500 dark:text-gray-400">{{icon "droplets"}}</span>
@@ -84,8 +74,9 @@
 
         <!-- Pressure -->
         <a href="/detail/pressure" class="ui-current-metric ui-metric-card block cursor-pointer p-3 text-center group sm:p-4 lg:p-4 lg:text-left">
+            {{template "metric-attention" .Attention.Pressure}}
             <div class="ui-current-value ui-tabular text-2xl font-bold text-purple-600 dark:text-purple-400 group-hover:text-purple-700 dark:group-hover:text-purple-300 sm:text-3xl">
-                {{printf "%.0f" .PressureRelative}}
+                {{if .Missing.pressure}}—{{else}}{{printf "%.0f" .PressureRelative}}{{end}}
             </div>
             <div class="ui-metric-label text-sm text-gray-600 dark:text-gray-300 mt-1 group-hover:text-gray-900 dark:group-hover:text-white">
                 <span class="inline-flex h-5 w-5 align-text-bottom text-gray-500 dark:text-gray-400">{{icon "gauge"}}</span>
@@ -107,10 +98,11 @@
         </a>
 
         <!-- Wind -->
-        <a href="/detail/wind" class="ui-current-metric ui-metric-card block cursor-pointer p-3 text-center group sm:p-4 lg:col-span-1 lg:p-4 lg:text-left">
+        <a href="/detail/wind" class="ui-current-metric ui-metric-card {{with .Attention.Wind.Title}}ui-attention ui-attention-wind{{end}} block cursor-pointer p-3 text-center group sm:p-4 lg:col-span-1 lg:p-4 lg:text-left">
+            {{template "metric-attention" .Attention.Wind}}
             <div class="ui-current-value flex items-center justify-center space-x-2 lg:justify-start">
                 <div class="ui-tabular text-2xl font-bold text-teal-600 dark:text-teal-400 group-hover:text-teal-700 dark:group-hover:text-teal-300 sm:text-3xl">
-                    {{printf "%.1f" .WindSpeed}}
+                    {{if .Missing.wind}}—{{else}}{{printf "%.1f" .WindSpeed}}{{end}}
                 </div>
                 {{if .WindDirectionStr}}
                 <div class="relative w-8 h-8">
@@ -142,9 +134,10 @@
         </a>
 
         <!-- Rain -->
-        <a href="/detail/rain" class="ui-current-metric ui-metric-card block cursor-pointer p-3 text-center group sm:p-4 lg:p-4 lg:text-left">
+        <a href="/detail/rain" class="ui-current-metric ui-metric-card {{with .Attention.Rain.Title}}ui-attention ui-attention-rain{{end}} block cursor-pointer p-3 text-center group sm:p-4 lg:p-4 lg:text-left">
+            {{template "metric-attention" .Attention.Rain}}
             <div class="ui-current-value ui-tabular text-2xl font-bold text-cyan-600 dark:text-cyan-400 group-hover:text-cyan-700 dark:group-hover:text-cyan-300 sm:text-3xl">
-                {{printf "%.1f" .RainDaily}}
+                {{if .Missing.rain}}—{{else}}{{printf "%.1f" .RainDaily}}{{end}}
             </div>
             <div class="ui-metric-label text-sm text-gray-600 dark:text-gray-300 mt-1 group-hover:text-gray-900 dark:group-hover:text-white">
                 <span class="inline-flex h-5 w-5 align-text-bottom text-gray-500 dark:text-gray-400">{{icon "cloud-rain"}}</span>
@@ -160,9 +153,10 @@
         </a>
 
         <!-- Solar/UV -->
-        <a href="/detail/solar" class="ui-current-metric ui-metric-card block cursor-pointer p-3 text-center group sm:p-4 lg:p-4 lg:text-left">
+        <a href="/detail/solar" class="ui-current-metric ui-metric-card {{with .Attention.Solar.Title}}ui-attention ui-attention-solar{{end}} block cursor-pointer p-3 text-center group sm:p-4 lg:p-4 lg:text-left">
+            {{template "metric-attention" .Attention.Solar}}
             <div class="ui-current-value ui-tabular text-2xl font-bold text-yellow-600 dark:text-yellow-400 group-hover:text-yellow-700 dark:group-hover:text-yellow-300 sm:text-3xl">
-                {{printf "%.0f" .Illuminance}}
+                {{if .Missing.solar}}—{{else}}{{printf "%.0f" .Illuminance}}{{end}}
             </div>
             <div class="ui-metric-label text-sm text-gray-600 dark:text-gray-300 mt-1 group-hover:text-gray-900 dark:group-hover:text-white">
                 <span class="inline-flex h-5 w-5 align-text-bottom text-gray-500 dark:text-gray-400">{{icon "sun"}}</span>
@@ -171,7 +165,7 @@
             </div>
             <div class="ui-metric-unit hidden text-xs text-gray-400 dark:text-gray-500 lg:block">люкс</div>
             <div class="text-xs text-gray-400 dark:text-gray-500">
-                <span class="sm:hidden">UV {{printf "%.0f" .UVIndex}}</span><span class="hidden sm:inline">{{printf "%.0f" .SolarRadiation}} Вт/м² | UV {{printf "%.0f" .UVIndex}}</span>
+                <span class="sm:hidden">UV {{if .Missing.uv}}—{{else}}{{printf "%.0f" .UVIndex}}{{end}}</span><span class="hidden sm:inline">{{if .Missing.solar}}—{{else}}{{printf "%.0f" .SolarRadiation}}{{end}} Вт/м² | UV {{if .Missing.uv}}—{{else}}{{printf "%.0f" .UVIndex}}{{end}}</span>
             </div>
         </a>
     </div>
@@ -252,3 +246,4 @@
         </div>
     </section>
 </div>
+{{define "metric-attention"}}{{if .Title}}<div class="ui-metric-attention"><p class="font-semibold">{{if .Important}}Важно · {{end}}{{.Title}}</p>{{with .Detail}}<p class="mt-1">{{.}}</p>{{end}}</div>{{end}}{{end}}

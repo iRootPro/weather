@@ -67,6 +67,8 @@ func (h *Handler) CurrentWeatherWidget(w http.ResponseWriter, r *http.Request) {
 
 	// Convert pointer values for template
 	templateData := struct {
+		Attention        currentAttention
+		Missing          map[string]bool
 		ObservationTime  string
 		UpdatedAt        string
 		TempOutdoor      float32
@@ -118,6 +120,17 @@ func (h *Handler) CurrentWeatherWidget(w http.ResponseWriter, r *http.Request) {
 		Water       currentWeatherWaterData
 		Sun         SunTimesData
 	}{
+		Attention: buildCurrentAttention(data, hourAgo, time.Now()),
+		Missing: map[string]bool{
+			"temperature": data.TempOutdoor == nil,
+			"feels":       data.TempFeelsLike == nil && data.TempOutdoor == nil,
+			"humidity":    data.HumidityOutdoor == nil,
+			"pressure":    data.PressureRelative == nil,
+			"wind":        data.WindSpeed == nil,
+			"rain":        data.RainDaily == nil,
+			"solar":       data.SolarRadiation == nil,
+			"uv":          data.UVIndex == nil,
+		},
 		ObservationTime: data.Time.Format("15:04"),
 		UpdatedAt:       time.Now().Format("15:04"),
 		Geomagnetic:     h.buildGeomagneticCard(r.Context()),
