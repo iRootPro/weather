@@ -662,6 +662,21 @@ func TestCurrentWeatherTemplateShowsMeasurementAndRefreshTimes(t *testing.T) {
 	}
 }
 
+func TestCurrentWeatherMetricGridKeepsIntrinsicDesktopRowMinimum(t *testing.T) {
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("could not locate test file")
+	}
+
+	contents, err := os.ReadFile(filepath.Join(filepath.Dir(filename), "..", "..", "web", "templates", "base.html"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Contains(contents, []byte(".ui-current-metrics {\n                grid-template-rows: repeat(2, minmax(min-content, 1fr));")) {
+		t.Fatal("desktop current metric rows must preserve their intrinsic minimum height")
+	}
+}
+
 func TestCurrentWeatherTemplateOmitsSecondaryMetricsWithoutSourceData(t *testing.T) {
 	_, filename, _, ok := runtime.Caller(0)
 	if !ok {
@@ -949,14 +964,14 @@ func TestForecastTemplateUsesCompactGridAndAccessibleLabels(t *testing.T) {
 
 	data := forecastWidgetData{
 		Cards: []forecastCard{{
-			Label: "12:00", Icon: "☀️", TempMain: "20°", AccessibleLabel: "12:00, Ясно, 20°", PrecipitationProbability: 40, HasPrecipitation: true, IsHourly: true,
+			Label: "12:00", Icon: "☀️", TempMain: "20°", AccessibleLabel: "12:00, Ясно, 20°", PrecipitationProbability: 40, HasPrecipitation: true, HasExpectedPrecipitation: true, IsHourly: true,
 		}},
 		HourlyCards: []forecastCard{{
-			Label: "12:00", Icon: "☀️", TempMain: "20°", AccessibleLabel: "12:00, Ясно, 20°", PrecipitationProbability: 40, HasPrecipitation: true, IsHourly: true,
+			Label: "12:00", Icon: "☀️", TempMain: "20°", AccessibleLabel: "12:00, Ясно, 20°", PrecipitationProbability: 40, HasPrecipitation: true, HasExpectedPrecipitation: true, IsHourly: true,
 		}},
 		DailyCards: []forecastCard{
 			{Label: "Пт", Icon: "☀️", TempMain: "-12/-3°", AccessibleLabel: "Пт, Ясно, -12/-3°", DailyPrecipitation: "—", DailyWind: "—", DailyGusts: "—", DailyUV: "—"},
-			{Label: "Сб", Icon: "🌧️", TempMain: "-10/2°", AccessibleLabel: "Сб, Дождь, -10/2°, вероятность осадков 100%", PrecipitationProbability: 100, HasPrecipitation: true, DailyPrecipitation: "3,2 мм · 100%", DailyWind: "8 м/с", DailyGusts: "12", DailyUV: "5"},
+			{Label: "Сб", Icon: "🌧️", TempMain: "-10/2°", AccessibleLabel: "Сб, Дождь, -10/2°, вероятность осадков 100%", PrecipitationProbability: 100, HasPrecipitation: true, HasExpectedPrecipitation: true, DailyPrecipitation: "3,2 мм · 100%", DailyWind: "8 м/с", DailyGusts: "12", DailyUV: "5"},
 		},
 		FetchedAtKnown: true,
 	}

@@ -55,6 +55,38 @@ func TestMetricAttentionTemplateShowsContextAndMissingValues(t *testing.T) {
 	}
 }
 
+func TestCurrentWeatherDesktopGridUsesTwoBorderlessRows(t *testing.T) {
+	h := &Handler{templatesDir: "../../web/templates"}
+	tmpl, err := h.parsePartial("current_weather.html")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var output bytes.Buffer
+	if err := tmpl.Execute(&output, map[string]any{"Missing": map[string]bool{}}); err != nil {
+		t.Fatal(err)
+	}
+	rendered := output.String()
+	for _, want := range []string{
+		"ui-current-metrics grid grid-cols-2",
+		"lg:flex-1 lg:grid-cols-3 lg:gap-0",
+		"lg:h-full lg:p-4 lg:text-left",
+		"mt-5 hidden border-t border-gray-200 pt-4",
+	} {
+		if !strings.Contains(rendered, want) {
+			t.Errorf("rendered current weather missing %q", want)
+		}
+	}
+	for _, unwanted := range []string{
+		"lg:min-h-0",
+		"lg:gap-px lg:overflow-hidden lg:rounded-lg lg:border",
+		"border-l border-gray-200 px-4",
+	} {
+		if strings.Contains(rendered, unwanted) {
+			t.Errorf("rendered current weather contains desktop inner divider %q", unwanted)
+		}
+	}
+}
+
 func TestHeaderSignalsSeverityBoundariesAndFreshness(t *testing.T) {
 	now := time.Now()
 	for _, tc := range []struct {

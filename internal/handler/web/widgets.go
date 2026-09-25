@@ -580,6 +580,7 @@ type forecastCard struct {
 	AccessibleLabel          string
 	PrecipitationProbability int16
 	HasPrecipitation         bool
+	HasExpectedPrecipitation bool
 	Precipitation            string
 	Wind                     string
 	FeelsLike                string
@@ -644,6 +645,8 @@ func buildForecastCards(now time.Time, hourlyForecast []models.HourlyForecast, d
 			AccessibleLabel:          formatForecastAccessibleLabel(hf.Time.Format("15:04"), hf.WeatherDescription, temp, hf.PrecipitationProbability),
 			PrecipitationProbability: hf.PrecipitationProbability,
 			HasPrecipitation:         hf.HasPrecipitation || hf.HasPrecipitationProbability || hf.Precipitation > 0 || hf.PrecipitationProbability > 0,
+			// A zero amount and zero probability are known dry conditions, not precipitation.
+			HasExpectedPrecipitation: hf.Precipitation > 0 || hf.PrecipitationProbability > 0,
 			Precipitation:            precipitation,
 			Wind:                     wind,
 			FeelsLike:                feelsLike,
@@ -672,6 +675,7 @@ func buildForecastCards(now time.Time, hourlyForecast []models.HourlyForecast, d
 			AccessibleLabel:          formatDailyForecastAccessibleLabel(label, df.WeatherDescription, temp, dailyDetails),
 			PrecipitationProbability: df.PrecipitationProbability,
 			HasPrecipitation:         df.HasPrecipitationSum || df.HasPrecipitationProbability || df.PrecipitationSum > 0 || df.PrecipitationProbability > 0,
+			HasExpectedPrecipitation: df.PrecipitationSum > 0 || df.PrecipitationProbability > 0,
 			DailyPrecipitation:       dailyDetails.Precipitation,
 			DailyWind:                dailyDetails.Wind,
 			DailyGusts:               dailyDetails.Gusts,

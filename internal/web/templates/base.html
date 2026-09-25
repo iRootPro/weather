@@ -244,6 +244,10 @@
         .ui-forecast-daily-metrics > div { min-width: 0; }
 
         @media (min-width: 1024px) {
+            .ui-current-metrics {
+                grid-template-rows: repeat(2, minmax(min-content, 1fr));
+            }
+
             .ui-forecast-daily-columns,
             .ui-forecast-daily-compact {
                 align-items: center;

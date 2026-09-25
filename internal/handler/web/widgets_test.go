@@ -78,6 +78,24 @@ func TestFormatDailyDetailsUsesReadableLocalizedNumbers(t *testing.T) {
 	}
 }
 
+func TestForecastCardsMarkOnlyExpectedPrecipitationForBlueTone(t *testing.T) {
+	now := time.Date(2026, time.September, 25, 10, 0, 0, 0, time.UTC)
+	cards := buildForecastCards(now,
+		[]models.HourlyForecast{{
+			Time: now.Add(time.Hour), HasPrecipitation: true, HasPrecipitationProbability: true,
+		}},
+		[]models.DailyForecast{{
+			Date: now.AddDate(0, 0, 1), HasPrecipitationSum: true, HasPrecipitationProbability: true, PrecipitationProbability: 20,
+		}},
+	)
+	if cards[0].HasExpectedPrecipitation {
+		t.Fatal("known 0 mm and 0% hourly conditions must use the neutral precipitation tone")
+	}
+	if !cards[1].HasExpectedPrecipitation {
+		t.Fatal("daily precipitation probability must retain the semantic precipitation tone even with a 0 mm total")
+	}
+}
+
 func TestForecastWidgetDataAndTemplateExposeFreshnessAndPartialStates(t *testing.T) {
 	now := time.Date(2026, time.September, 25, 12, 0, 0, 0, time.UTC)
 	fresh := []models.HourlyForecast{{
