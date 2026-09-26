@@ -498,11 +498,16 @@ func absFloat32(v float32) float32 {
 }
 
 func formatSignedFloat(v float32, format string) string {
+	text := fmt.Sprintf(format, v)
+	zero := fmt.Sprintf(format, float32(0))
+	if text == zero || text == "-"+zero {
+		return zero
+	}
 	prefix := ""
 	if v > 0 {
 		prefix = "+"
 	}
-	return prefix + fmt.Sprintf(format, v)
+	return prefix + text
 }
 
 func changeClass(v float32) string {
